@@ -1,119 +1,167 @@
-create table state (
-  -- anagrafe degli stati, praticamente una tabella costante
-  -- quindi chi la riferisce non gestisce on delete
-  -- non storicizzata
+CREATE TABLE state (
+  -- Anagrafe degli stati, praticamente una tabella costante.
+  -- Non voglio gestire anche la storicizzazione, cioè aggiungere
+  -- l'intervallo temporale all'interno del quale è valido un record.
+  -- Questo perché la nostra anagrafica non ha pretese di ufficialità
+  -- (questioni fiscali, etc.) quindi se gli stati nascono o spariscono
+  -- è abbastanza irrilevante.
 
-  id int not null,
-  iso3 char(3) not null,
-  name varchar(100) not null,
+  id INT NOT NULL AUTO_INCREMENT,
+  iso3 CHAR(3) NOT NULL,
+  name VARCHAR(100) NOT NULL,
 
-  primary key (id),
-  unique (iso3)
+  PRIMARY KEY (id),
+  UNIQUE (iso3)
 );
 
-create table city (
-  -- anagrafe dei comuni, praticamente costante come gli stati
-  -- (perà dobbiamo prevedere di poter aggiungere quelle straniere)
-  -- uso una tabella per poter gestire i form degli indirizzi in
-  -- autocompletamento
+CREATE TABLE city (
+  -- Anagrafe dei comuni, praticamente costante come gli stati.
+  -- La tabella ha lo scopo di gestire i form degli indirizzi in
+  -- autocompletamento.
+  -- Poiché gestiamo anche gli indirizzi stranieri, nuovi record
+  -- possono essere aggiunti a runtime.
 
-  id int not null,
-  name varchar(200) not null,
-  zip_code varchar(10) not null,
-  state_id int not null,
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(200) NOT NULL,
+  -- Lo zip code in italia è il cap. Le grandi città hanno più di un cap.
+  -- In quei casi qui è indicato quello principale, negli indirizzi
+  -- (vedi street_address) si riporta lo specifico.
+  -- Eg. Pisa è 56100, San Piero, frazione di Pisa è 56125.
+  -- Non mi interessa normalizzare gli zip code o validarli.
+  zip_code VARCHAR(10),
+  state_id INT NOT NULL,
 
-  primary key (id)
+  PRIMARY KEY (id),
+  FOREIGN KEY (state_id) REFERENCES state(id)
 );
 
-create table street_address (
-  id int not null,
-  first_line varchar(200),
-  second_line varchar(200),
-  city_id int,
-  zip_code varchar(10),
-  --state_id varchar(3), -- lo recupero dalla città
-  description text,
+CREATE TABLE street_address (
+  -- Gli indirizzi li gestisco in realzione molti a molti,
+  -- anche se di fatto l'interfaccia web si limiterà a una
+  -- associazione 1:1 (ogni persona avrà il suo indirizzo, anche
+  -- chi convive...)
 
-  primary key (id)
+  id INT NOT NULL AUTO_INCREMENT,
+  first_line VARCHAR(200), -- Eg. via Spippoli 45a
+  second_line VARCHAR(200), -- Eg. Scala, c/o, Frazione, etc.
+  city_id INT,
+  zip_code VARCHAR(10), -- In italia le grandi città hanno più di un cap. Qui o si ripete quello della città o si indica lo specifico.
+  --state_id int, -- Lo recupero dalla città.
+  description TEXT, -- Note aggiuntive per raggiungere la persona, eg. "Suonare XXX".
+
+  PRIMARY KEY (id),
+  FOREIGN KEY (city_id) REFERENCES city(id)
 );
 
-alter table street_address
-  add constraint street_address_state_id_fk
-  foreign key (state_id)
-  references state(iso3);
+CREATE TABLE contact_address (
+  id INT NOT NULL AUTO_INCREMENT,
+  address VARCHAR(100), -- Il numero del telefono, l'indirzzo email, etc.
+  kind CHAR(1) NOT NULL DEFAULT 'M', -- (T)elephone, (M)obile, (E)mail, (F)ax
+  contact_type VARCHAR(20), -- Testo libero: cell, ufficio, casa...
 
-create table contact_address (
-  id int not null,
-  address varchar(100),
-  kind char(1) not null, -- (T)elephone, (M)obile, (E)mail, (F)ax
-  contact_type varchar(20), -- testo libero: cell, ufficio, casa...
-
-  primary key (id)
+  PRIMARY KEY (id)
 );
 
-create table delivery_place (
+CREATE TABLE delivery_place (
   -- punto di consegna
-  id int not null,
-  address_id int not null,
-  description text,
 
-  primary key (id)
+  id INT NOT NULL AUTO_INCREMENT,
+  address_id INT NOT NULL,
+  description TEXT,
+
+  PRIMARY KEY (id)
 );
 
-create table person (
-  id int not null,
-  first_name varchar (100),
-  middle_name varchar (100),
-  last_name varchar (100),
-  default_delivery_place_id int,
-  address_id int,
-  current_account_id int,
+-- TODO: permessi
 
-  primary key (id)
+CREATE TABLE person (
+  id INT NOT NULL AUTO_INCREMENT,
+
+  first_name VARCHAR(100),
+  middle_name VARCHAR(100),
+  last_name VARCHAR(100),
+  default_delivery_place_id INT,
+  address_id INT,
+  current_account_id INT,
+  cash_treshold DECIMAL(15,2) NOT NULL DEFAULT 0,
+
+  PRIMARY KEY (id),
+  FOREIGN KEY (address_id) REFERENCES street_address(id),
+  -- TODO: FOREIGN KEY (current_account_id) REFERENCES account(id)
 );
 
-create table person_contact (
-  id int not null,
+CREATE TABLE person_contact (
+  id INT NOT NULL AUTO_INCREMENT,
 
-  person_id not null,
-  address_id not null,
-  priority int not null default 0,
+  person_id INT NOT NULL,
+  address_id INT NOT NULL,
+  priority INT NOT NULL DEFAULT 0,
 
-  primary key (id)
+  PRIMARY KEY (id),
+  FOREIGN KEY (person_id) REFERENCES person(id) ON DELETE CASCADE,
+  FOREIGN KEY (address_id) REFERENCES contact_address(id) ON DELETE CASCADE
 );
+
+
+CREATE TABLE product (
+  id INT NOT NULL AUTO_INCREMENT,
+
+  name VARCHAR(100),
+  description TEXT,
+  -- no foto...
+
+  PRIMARY KEY (id)
+);
+
+
+CREATE TABLE producer (
+  id INT NOT NULL AUTO_INCREMENT,
+
+  name VARCHAR(100),
+  description TEXT,
+  account_id INT NOT NULL,
+  -- TODO: blog
+
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE producer_person (
+  id INT NOT NULL AUTO_INCREMENT,
+  producer_id INT NOT NULL,
+  person_id INT NOT NULL,
+
+  PRIMARY KEY (id),
+  FOREIGN KEY (producer_id) REFERENCES producer(id) ON DELETE CASCADE,
+  FOREIGN KEY (person_id) REFERENCES person(id) ON DELETE CASCADE
+);
+
+CREATE TABLE producer_product (
+  id INT NOT NULL AUTO_INCREMENT,
+  producer_id INT NOT NULL,
+  product_id INT NOT NULL,
+
+  PRIMARY KEY (id),
+  FOREIGN KEY (producer_id) REFERENCES producer(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE
+);
+
 
 create table turn (
-  id int not null,
+  id INT NOT NULL AUTO_INCREMENT,
+
 
   turn_date date not null,
   delivery_place_id int not null,
   person_id int not null,
   work_type char(100), -- testo libero: apertura, consegna...
 
-  primary key (id)
+  PRIMARY KEY (id)
 );
 
-create table producer (
-  id int not null,
 
-  persone
-  nome
-  descrizione
-  prodotto
-  conto
-
-  primary key (id)
-);
-
-create table product (
-  id int not null,
-
-  descrizione
-  a-unità: prezzo unitario
-  a-peso: prezzo peso (eg. formaggio)
-
-  primary key (id)
-);
+--  descrizione
+--  a-unit√†: prezzo unitario
+--  a-peso: prezzo peso (eg. formaggio)
 
 
 ordine-singolo-produttore
@@ -122,118 +170,144 @@ ordine-singolo-produttore
    persona
 
 
-create table cassa (
-  id int not null,
-  description text,
+--create table cassa (
+--  id INT NOT NULL AUTO_INCREMENT,
 
-  primary key (id)
-);
+--  description text,
+--
+--  PRIMARY KEY (id)
+--);
 
 
-create table account (
-  id int not null,
-  state char(1) not null, -- (O)pen, (C)losing, close(D), (F)usion pending
+CREATE TABLE account (
+  id INT NOT NULL AUTO_INCREMENT,
 
-  cassa_id int not null,
+  state CHAR(1) NOT NULL DEFAULT 'O', -- (O)pen, (C)losing, close(D), (F)usion pending
+
+--  cassa_id int not null,
 --  saldo CURRENCY not null, -- magari si calcola con una join?
 -- perché potrei avere problemi di concorrenza
 
-  primary key (id)
+  PRIMARY KEY (id)
 );
 
-create table account_person (
+CREATE TABLE account_person (
   -- una volta che una persona diventa intestataria di un conto si crea
-  -- una riga qui, con from_date che è la data da cui inizia l'intestazione
+  -- una riga qui, con from_date che √® la data da cui inizia l'intestazione
   -- se la persona cambia conto, qui si registra in to_date la data in cui
   -- smette di essere intestataria
-  -- quindi l'intestazione è valida, cioè si può addebitare sul conto,
-  -- solo se to_date è null
+  -- quindi l'intestazione √® valida, cio√® si pu√≤ addebitare sul conto,
+  -- solo se to_date √® null
   -- mantengo la storicizzazione per poter mostrare alle persone la loro
   -- storia di movimenti non solo limitatamente all'ultimo conto di cui
   -- sono intestatari
 
-  id int not null,
-  from_date date not null,
-  to_date date,
-  person_id int not null,
-  account_id int not null,
+  id INT NOT NULL AUTO_INCREMENT,
 
-  primary key (id)
+  from_date DATETIME NOT NULL,
+  to_date DATETIME,
+  person_id INT NOT NULL,
+  account_id INT NOT NULL,
+
+  PRIMARY KEY (id),
+  FOREIGN KEY (person_id) REFERENCES person(id),
+  FOREIGN KEY (account_id) REFERENCES account(id)
 );
 
-create table account_request (
-  -- quando una persona richiede la cointestazione di un conto
-  -- creo una riga qui per ogni intestatario
-  -- se tutti danno l'assenso (Y) o smettono di essere intestatari (U)
-  -- allora dò accesso, cioè cancello tutte le account_request e creo
-  -- una account_person
+CREATE TABLE account_request (
+  -- Quando una persona richiede la cointestazione di un conto
+  -- creo una riga qui per ogni intestatario.
+  -- Se tutti danno l'assenso (Y) o smettono di essere intestatari (U)
+  -- allora do accesso, cioè cancello tutte le account_request e creo
+  -- una account_person.
 
-  id int not null,
-  account_id int not null, -- recuperabile da account_owner_id ma meglio duplicarlo
-  requester_id int not null,
-  account_owner_id int not null,
-  use_granted char(1) not null default 'X', -- (X)tobeanswered, (Y)es, (N)o, (U)nnecessary anymore (requester not owner anymore)
+  id INT NOT NULL AUTO_INCREMENT,
 
-  primary key (id),
-  unique (requester_id) -- una persona può richiedere accesso ad un conto alla volta
+  account_id INT NOT NULL, -- Recuperabile da account_owner_id ma meglio duplicarlo.
+  requester_id INT NOT NULL,
+  account_owner_id INT NOT NULL,
+  use_granted CHAR(1) NOT NULL DEFAULT 'X', -- (X)tobeanswered, (Y)es, (N)o, (U)nnecessary anymore (requester not owner anymore)
+
+  PRIMARY KEY (id),
+  UNIQUE (requester_id), -- una persona può richiedere accesso ad un conto alla volta
+  FOREIGN KEY (account_id) REFERENCES account(id),
+  FOREIGN KEY (requester_id) REFERENCES person(id),
+  FOREIGN KEY (account_owner_id) REFERENCES person(id)
+);
+
+CREATE TABLE transaction (
+  -- Una transazione è uno spostamento di denaro da un conto all'altro.
+  -- Qui però si gestiscono le "split transactions" con la regola che
+  -- la sommatoria delle transaction_line.amount di una transaction deve essere 0.
+  -- Quindi una transazione "standard" da partita doppia classica avrà
+  -- due transaction_line, com amount opposti mentre più in generale le split
+  -- avranno un numero di line > 2, ma i totali saranno comunque sempre 0.
+
+  id INT NOT NULL AUTO_INCREMENT,
+
+--  cassa_id int not null,
+  description VARCHAR(200),
+  transaction_date DATETIME NOT NULL,
+
+  -- Le transazioni e le loro line sono oggetti write once / read only.
+  -- Modificare una transazione significa creare una nuova transazione con
+  -- i dati modificati e marcare la vecchia come sovrascritta/sostituita
+  -- dalla nuova.
+  -- Qualsiasi modifica, la descrizione di una line, il suo mount, etc.
+  -- produce una transazione completamente nuova.
+  -- Questo aumenta lo spazio richiesto ma mantiene lo schema del db più
+  -- semplice.
+  -- In alternativa si puà fare che le line possono sovrascriversi
+  -- DECIDERLO PIÙ TARDI
+  -- Per cancellare una transazione se ne crea una senza line.
+  modified_by_id INT, -- fk alla transazione che sovrascrive (annullando) questa
+
+  PRIMARY KEY (id),
+  FOREIGN KEY (modified_by_id) REFERENCES transaction(id)
+);
+
+CREATE TABLE transaction_line (
+  id INT NOT NULL AUTO_INCREMENT,
+
+  transaction_id INT NOT NULL,
+  account_id INT NOT NULL,
+  description VARCHAR(200),
+  amount DECIMAL(15,2) NOT NULL, -- currency
+
+  PRIMARY KEY (id),
+  FOREIGN KEY (transaction_id) REFERENCES transaction(id),
+  FOREIGN KEY (account_id) REFERENCES account(id)
+);
+
+CREATE TABLE transaction_log (
+  id INT NOT NULL AUTO_INCREMENT,
+
+--  cassa_id int not null,
+  log_date DATETIME NOT NULL,
+  operator_id INT NOT NULL,
+
+  op_type CHAR(1) NOT NULL, -- (A)dded, (D)eleted, (M)odified
+  transaction_id INT NOT NULL,
+
+  PRIMARY KEY (id),
+  FOREIGN KEY (operator_id) REFERENCES person(id),
+  FOREIGN KEY (transaction_id) REFERENCES transaction(id)
 );
 
 
-create table transaction (
-  id int not null,
 
-  cassa_id int not null,
-  description varchar(200),
-  transaction_date date not null,
-
-  -- le transazioni possono essere modificate
-  -- la modifica crea una nuova transazione e la vecchia rimane
-  -- ma viene marcata come cancellata valorizzando modified_by_id
-  -- con l'id della nuova
-  modified_by_id int, -- fk alla transazione che sovrascrive (annullando) questa
-
-  primary key (id)
-);
-
-create table transaction_line (
-  id int not null,
-
-  transaction_id int not null,
-  account_id int not null,
-  description varchar(200),
-  amount number(6,2) not null,
-  -- currency
-
-  primary key (id)
-);
-
-
-create table cassa_log (
-  id int not null,
-
-  cassa_id int not null,
-  log_date date not null,
-  operator_id int not null,
-
-  op_type char(1) not null, -- Added, Deleted, Modified
-  transaction_id int not null,
-
-  primary key (id)
-);
 
 create table  (
-  id int not null,
+  id INT NOT NULL AUTO_INCREMENT,
 
-  primary key (id)
+
+  PRIMARY KEY (id)
 );
 
 todo:
-cassa in inglese
-alcune tabelle
 gli ordini
 agganciare le transazioni agli ordini
 contestazione delle transazioni
-l'autenticazione si fa con openid
 ma ci deve essere lo stato dell'account:
  * raccomandato da
  * valori di limite (sulla cassa, tipo soglie pre acquisto)
