@@ -163,11 +163,82 @@ create table turn (
 --  a-unit√†: prezzo unitario
 --  a-peso: prezzo peso (eg. formaggio)
 
+CREATE TABLE product_order (
+  id INT NOT NULL AUTO_INCREMENT,
+  state CHAR(1) NOT NULL DEFAULT 'D', -- (D)raft, (O)pen, (C)losed, (P)roducers contacted, in deliver(Y), (A)rchivied, cancelled/(S)uspended
+  placements_closing DATETIME,
+  placements_closed DATETIME, -- quando effettivamente sono passato da O a C
+  name VARCHAR(100),
+  notes TEXT,
 
-ordine-singolo-produttore
-  produttore
-  partecipanti
-   persona
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE order_producer (
+  -- TODO: mettere fornitore invece di producer
+  -- chi sono i fornitori dell'ordine?
+  id INT NOT NULL AUTO_INCREMENT,
+  order_id INT NOT NULL,
+  producer_id INT NOT NULL,
+
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE order_producer_delivery_place (
+  -- dove può consegnare ciascun fornitore?
+  id INT NOT NULL AUTO_INCREMENT,
+  order_producer_id INT NOT NULL,
+  delivery_place_id INT NOT NULL,
+  -- è possibile che la consegna sia articolata al punto che lo stesso produttore
+  -- può dare date specifiche per ogni punto di consegna
+  delivery_date DATETIME,
+  notes TEXT,
+
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE order_producer_delivery_assistant (
+  -- chi gestisce l'ordine? e quale funzione svolge?
+  -- specifico della coppia produttore / punto di consegna
+  id INT NOT NULL AUTO_INCREMENT,
+  delivery_place_id INT NOT NULL,
+  producer_check CHAR(1) NOT NULL DEFAULT 'N', -- Y/N, controllo che il produttore abbia consegnato esattamente quanto ordinato
+  customer_check CHAR(1) NOT NULL DEFAULT 'N', -- Y/N, controllo che chi ha ordinato ritiri quello che ha ordinato
+  delivery_place_opening CHAR(1) NOT NULL DEFAULT 'N', -- Y/N, apertura del punto di consegna
+  delivery_place_closing CHAR(1) NOT NULL DEFAULT 'N', -- Y/N, chiusura del punto di consegna
+
+  FOREIGN KEY (delivery_place_id) REFERENCES order_producer_delivery_place(id),
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE order_product (
+  id INT NOT NULL AUTO_INCREMENT,
+  order_id INT NOT NULL,
+  product_id INT NOT NULL,
+  notes TEXT,
+
+  selling_mode CHAR(1) NOT NULL DEFAULT 'U', -- (U)nit, (W)eight
+  package_size INT NOT NULL DEFAULT 1,
+  minimum_quantity INT NOT NULL DEFAULT 0, -- si mette? ha senso?
+  maximum_quantity INT,
+
+  PRIMARY KEY (id)
+);
+
+
+CREATE TABLE order_placement (
+  id INT NOT NULL AUTO_INCREMENT,
+  customer_id INT NOT NULL,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL DEFAULT 0,
+
+  placement_date DATETIME NOT NULL,
+
+  FOREIGN KEY (customer_id) REFERENCES person(id),
+  FOREIGN KEY (product_id) REFERENCES order_product(id),
+  UNIQUE (customer_id, product_id),
+  PRIMARY KEY (id)
+);
 
 
 --create table cassa (
@@ -311,3 +382,7 @@ contestazione delle transazioni
 ma ci deve essere lo stato dell'account:
  * raccomandato da
  * valori di limite (sulla cassa, tipo soglie pre acquisto)
+
+resoconti sugli ordini:
+ * commenti sui prodotti
+ * valutazioni personali o pubbliche
