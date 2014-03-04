@@ -233,13 +233,6 @@ class importGnucash (object):
                 s.description != dbs[2] or
                 s.value != decimal.Decimal(dbs[3])):
                 self.log('Transaction split changed: t=%s (%s), split=%s (%s)' % (t.dbId, t.id, dbs[0], s.id))
-                # FIXME: scazzo a leggere le stringhe utf8 dal db
-#                mi ritorna una stringa 
-#>>> cur.execute('select description from transaction_line where id=9696')
-#1
-#>>> list(cur)
-#[('uno per sÃ© uno per "mauro roberta renzo"',)]
-
                 return False
             s.dbId = s.id
         return True
