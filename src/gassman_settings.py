@@ -12,6 +12,8 @@ DB_USER='gassman'
 DB_PASSWORD='gassman'
 DB_NAME='gassman'
 
+COOKIE_SECRET='DEVELOPMENT_XSRF_SECRET'
+
 LOG={
     'version': 1,
     'root': {
