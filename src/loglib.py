@@ -3,6 +3,7 @@
 import sys
 import logging
 import re
+import traceback
 
 _reset = '\033[0m'
 _colors = dict([ (k if i < 8 else 'BG_%s' % k, '\033[%dm' % (30 + i if i < 8 else 32 + i)) for i, k in enumerate(['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE'] * 2) ])
@@ -32,3 +33,10 @@ class ColoredFormatter (logging.Formatter):
         else:
             s = super(ColoredFormatter, self).format(record)
         return formatter_message(color + s + _reset, self.colors)
+
+class TracebackFormatter (object):
+    def __init__ (self, tb):
+        self.tb = tb
+
+    def __str__ (self):
+        return ''.join(traceback.format_tb(self.tb))

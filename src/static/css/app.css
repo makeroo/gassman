@@ -1,0 +1,41 @@
+/* app css stylesheet */
+
+body {
+	font-family: Arial, sans-serif;
+}
+
+.account-details {
+	
+}
+
+.account-details .movements {
+	width:500px;
+	margin: auto;
+}
+
+.account-details .movements .mov-row {
+	height: 30px;
+}
+
+.account-details .movements .mov-row:hover {
+	background-color: #99e;
+}
+
+.account-details .movements td {
+	vertical-align: middle;
+}
+
+.account-details .movements .mov-desc {
+	text-align: left;
+}
+
+.account-details .movements .mov-amount {
+	text-align: right;
+}
+
+.account-details .amount {
+	width: 500px;
+	margin: auto;
+	display: block;
+	text-align: right;
+}

@@ -13,11 +13,13 @@ import os.path
 import pymysql
 import tornado.ioloop
 import tornado.web
+import tornado.auth
+import tornado.gen
+import tornado.escape
 
 import gassman_settings as settings
 import jsonlib
 import sql
-
 
 logging.config.dictConfig(settings.LOG)
 
@@ -33,6 +35,7 @@ class GassmanWebApp (tornado.web.Application):
         handlers = [
             (r'/', IndexHandler),
             (r'/home.html', HomeHandler),
+            (r'/auth/google', GoogleAuthLoginHandler),
             (r'/account/movements/(\d+)/(\d+)', AccountMovementsHandler),
             (r'/account/amount', AccountAmountHandler),
             ]
@@ -48,7 +51,19 @@ class GassmanWebApp (tornado.web.Application):
 
 class IndexHandler (tornado.web.RequestHandler):
     def get (self):
-        self.redirect('/home.html')
+        self.render('frontpage.html')
+
+class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleMixin):
+    @tornado.gen.coroutine
+    def get (self):
+        if self.get_argument("openid.mode", None):
+            user = yield self.get_authenticated_user()
+            self.set_secure_cookie("chatdemo_user",
+                                   tornado.escape.json_encode(user))
+            self.redirect("/home.html")
+            return
+        self.authenticate_redirect(ax_attrs=["name"])
+
 
 class HomeHandler (tornado.web.RequestHandler):
     def get (self):
@@ -62,12 +77,21 @@ class AccountMovementsHandler (tornado.web.RequestHandler):
         data = list(self.application.cur)
         jsonlib.write_json(data, self)
 
+    def write_error(self, status_code, **kwargs):
+        self.clear_header('Content-Type')
+        self.add_header('Content-Type', 'application/json')
+        etype, evalue, _ = kwargs.get('exc_info', ('', '', None))
+        # tanto logga tornado
+        #log_gassman.error('unexpected exception: %s/%s', etype, evalue)
+        #log_gassman.debug('full stacktrace:\n', loglib.TracebackFormatter(tb))
+        jsonlib.write_json([ str(etype), str(evalue) ], self)
+
 class AccountAmountHandler (tornado.web.RequestHandler):
     def get (self):
         self.clear_header('Content-Type')
         self.add_header('Content-Type', 'application/json')
-        self.application.cur.execute(*self.application.sql.account_movements(ACCOUNT, 0, 5))
-        data = self.application.cur.fetchone()
+        self.application.cur.execute(*self.application.sql.account_amount(ACCOUNT))
+        data = [ self.application.cur.fetchone()[0], '€' ]
         jsonlib.write_json(data, self)
 
 if __name__ == '__main__':

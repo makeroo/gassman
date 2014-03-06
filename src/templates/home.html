@@ -1,5 +1,55 @@
-<!DOCTYPE html>
-<html>
-<head></head>
-<body>ciao</body>
+<!doctype html>
+<html ng-app="gassmanApp">
+<head>
+ <meta charset="utf-8">
+ <title>GASsMan</title>
+ <link rel="stylesheet" href="{{ static_url('css/html5reset-1.6.1.css') }}">
+ <link rel="stylesheet" href="{{ static_url('css/app.css') }}">
+<!--<link rel="stylesheet" href="css/bootstrap.css">-->
+ <script src="{{ static_url('lib/angular/angular.js') }}"></script>
+ <script src="{{ static_url('lib/angular/i18n/angular-locale_it-it.js') }}"></script>
+ <script src="{{ static_url('js/controllers.js') }}"></script>
+</head>
+<body ng-controller="AccountDetail">
+
+<div ng-switch="uiMode">
+
+<div ng-switch-when="accountLoading">
+
+  <div class="message">Sto caricando i dati, un'attimo di pazienza.</div>
+
+</div>
+
+<div ng-switch-when="accountOk" class="account-details">
+  <table class="movements">
+    <thead>
+      <th class="mov-data">Data</th>
+      <th class="mov-desc">Descrizione</th>
+      <th class="mov-amount">Importo</th>
+    </thead>
+    <tbody>
+      <tr ng-repeat="mov in movements" class="mov-row">
+        <td class="mov-data">{{! mov[1] | date:"shortDate" }}</td>
+        <td class="mov-desc">{{!mov[0]}}</td>
+        <td class="mov-amount">{{!mov[3] | currency }}</td> <!-- TODO: moneta quale? -->
+      </tr>
+    </tbody>
+  </table>
+  <span class="amount">Saldo: {{! amount }}</span>
+</div>
+
+<div ng-switch-when="accountFailed">
+  <div class="server-error">
+    <p>Qualcosa è andato storto, <a href="#" ng-click="toggleErrorMessage()">clicca per saperne di più</a>.</p>
+    <p ng-show="showErrorMessage" class="message">{{!serverError}}</p> <!-- TODO: serverError è html... -->
+    <p>Se il messaggio non ti dice niente prova a ricaricare la pagina.
+       Dopo qualche tentativo fallito, contatta il cassiere direttamente o sulla mailing list.
+       </p>
+  </div>
+
+</div>
+
+</div>
+
+</body>
 </html>
