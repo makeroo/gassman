@@ -19,25 +19,54 @@ gassmanApp.filter('noFractionCurrency',
 		    };
 		  } ]);
 */
+
+
+gassmanApp.directive('whenScrolled', function() {
+    return function (scope, elm, attr) {
+        var raw = elm[0];
+
+        elm.bind('scroll', function() {
+            if (raw.scrollTop + raw.offsetHeight >= raw.scrollHeight) {
+                scope.$apply(attr.whenScrolled);
+            }
+        });
+    };
+});
+
 gassmanApp.controller('AccountDetail', function($scope, $http, $filter) {
 	$scope.uiMode = 'accountLoading';
+	$scope.movements = [];
 
 	$scope.toggleErrorMessage = function () {
 		$scope.showErrorMessage = ! $scope.showErrorMessage;
 	};
 
-	$http.get('/account/movements/0/5').
+	var start = 0;
+	var blockSize = 15;
+	var concluded = false;
+
+	$scope.loadMore = function () {
+		
+		if (concluded) return;
+
+		$http.get('/account/movements/' + start + '/' + (start + blockSize)).
 		success(function (data, status, headers, config) {
+			concluded = data.length < blockSize;
+			start += data.length;
 			$scope.uiMode = 'accountOk';
-			$scope.movements = data;
+			$scope.movements = $scope.movements.concat(data);
 		}).
 		error (function (data, status, headers, config) {
+			concluded = true;
 			$scope.serverError = data[1];
 			console.log('movements error:', data)
 			$scope.showErrorMessage = false;
 			$scope.uiMode = 'accountFailed';
 			//console.log('error', data, status, headers, config);
 		});
+	};
+
+	$scope.loadMore();
 
 	$http.get('/account/amount').
 		success(function (data, status, headers, config) {

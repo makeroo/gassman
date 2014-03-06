@@ -21,20 +21,20 @@
 </div>
 
 <div ng-switch-when="accountOk" class="account-details">
-  <table class="movements">
-    <thead>
-      <th class="mov-data">Data</th>
-      <th class="mov-desc">Descrizione</th>
-      <th class="mov-amount">Importo</th>
-    </thead>
-    <tbody>
-      <tr ng-repeat="mov in movements" class="mov-row">
-        <td class="mov-data">{{! mov[1] | date:"shortDate" }}</td>
-        <td class="mov-desc">{{!mov[0]}}</td>
-        <td class="mov-amount">{{!mov[3] | currency }}</td> <!-- TODO: moneta quale? -->
-      </tr>
-    </tbody>
-  </table>
+  <div class="movements">
+    <div class="header">
+      <div class="mov-data">Data</div>
+      <div class="mov-desc">Descrizione</div>
+      <div class="mov-amount">Importo</div>
+    </div>
+    <div class="body" when-scrolled="loadMore()">
+      <div ng-repeat="mov in movements" class="mov-row">
+        <div class="mov-data">{{! mov[1] | date:"shortDate" }}</div>
+        <div class="mov-desc">{{!mov[0]}}</div>
+        <div class="mov-amount">{{!mov[3] | currency }}</div> <!-- TODO: moneta quale? -->
+      </div>
+    </div>
+  </div>
   <span class="amount">Saldo: {{! amount }}</span>
 </div>
 

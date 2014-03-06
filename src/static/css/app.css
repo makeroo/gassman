@@ -10,32 +10,66 @@ body {
 
 .account-details .movements {
 	width:500px;
+	height: 400px;
 	margin: auto;
 }
 
+.account-details .movements .header {
+	position: relative;
+	height: 40px;
+	font-weight: bold;
+}
+
+.account-details .movements .body {
+	width:500px;
+	height: 360px;
+	overflow: auto;
+}
+
 .account-details .movements .mov-row {
+	position: relative;
 	height: 30px;
 }
 
 .account-details .movements .mov-row:hover {
-	background-color: #99e;
+	background-color: #eef;
 }
 
-.account-details .movements td {
-	vertical-align: middle;
+.account-details .movements .mov-data {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100px;
+	height: 30px;
+
+	line-height: 30px;
 }
 
 .account-details .movements .mov-desc {
-	text-align: left;
+	position: absolute;
+	left: 102px;
+	top: 0;
+	width: 296px;
+	height: 30px;
+
+	line-height: 30px;
 }
 
 .account-details .movements .mov-amount {
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 100px;
+	height: 30px;
+
 	text-align: right;
+
+	line-height: 30px;
 }
 
 .account-details .amount {
 	width: 500px;
-	margin: auto;
+	margin: 7px auto 0;
 	display: block;
 	text-align: right;
 }
