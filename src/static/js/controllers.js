@@ -1,5 +1,18 @@
 'use strict';
 
+function getCookie (name) {
+    var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+    return r ? r[1] : undefined;
+}
+
+/*jQuery.postJSON = function(url, args, callback) {
+    args._xsrf = getCookie("_xsrf");
+    $.ajax({url: url, data: $.param(args), dataType: "text", type: "POST",
+        success: function(response) {
+        callback(eval("(" + response + ")"));
+    }});
+};*/
+
 /* Controllers */
 
 var gassmanApp = angular.module('gassmanApp', []);
@@ -42,14 +55,14 @@ gassmanApp.controller('AccountDetail', function($scope, $http, $filter) {
 	};
 
 	var start = 0;
-	var blockSize = 15;
+	var blockSize = 25;
 	var concluded = false;
 
 	$scope.loadMore = function () {
 		
 		if (concluded) return;
 
-		$http.get('/account/movements/' + start + '/' + (start + blockSize)).
+		$http.post('/account/movements/' + start + '/' + (start + blockSize) + '?_xsrf=' + getCookie('_xsrf')). // null, { xsrfCookieName:'_xsrf' }).
 		success(function (data, status, headers, config) {
 			concluded = data.length < blockSize;
 			start += data.length;
@@ -68,12 +81,16 @@ gassmanApp.controller('AccountDetail', function($scope, $http, $filter) {
 
 	$scope.loadMore();
 
-	$http.get('/account/amount').
+	$http.post('/account/amount?_xsrf=' + getCookie('_xsrf')).
 		success(function (data, status, headers, config) {
-			$scope.amount = $filter('currency')(data[0], data[1]);
-			//console.log($scope.amount, data, status, headers, config);
+			$scope.amount = parseFloat( data[0] );
+			$scope.currencySymbol = data[1];
+
+			$scope.amountClass = $scope.amount < 0.0 ? 'negative' : 'positive';
+//				$filter('currency')(data[0], data[1]);
 		}).
 		error (function (data, status, headers, config) {
+			$scope.amountClass = 'error';
 			//console.log('error', data, status, headers, config);
 		});
 });

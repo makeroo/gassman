@@ -12,7 +12,7 @@
 </head>
 <body ng-controller="AccountDetail">
 
-<div ng-switch="uiMode">
+<div ng-switch="uiMode" class="main">
 
 <div ng-switch-when="accountLoading">
 
@@ -35,7 +35,7 @@
       </div>
     </div>
   </div>
-  <span class="amount">Saldo: {{! amount }}</span>
+  <span class="amount {{! amountClass }}">Saldo: {{! amount | currency : currencySymbol }}</span>
 </div>
 
 <div ng-switch-when="accountFailed">

@@ -60,7 +60,7 @@ CREATE TABLE street_address (
 CREATE TABLE contact_address (
   id INT NOT NULL AUTO_INCREMENT,
   address VARCHAR(100), -- Il numero del telefono, l'indirzzo email, etc.
-  kind CHAR(1) NOT NULL DEFAULT 'M', -- (T)elephone, (M)obile, (E)mail, (F)ax
+  kind CHAR(1) NOT NULL DEFAULT 'M', -- (T)elephone, (M)obile, (E)mail, (F)ax, (I)d
   contact_type VARCHAR(20), -- Testo libero: cell, ufficio, casa...
 
   PRIMARY KEY (id)
