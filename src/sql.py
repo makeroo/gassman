@@ -22,3 +22,9 @@ def create_contact (addr, kind, contactType):
 
 def create_person (first, middle, last):
     return 'INSERT INTO person (first_name, middle_name, last_name) VALUES (%s,%s,%s)', [first, middle, last]
+
+def assign_contact (contact, person):
+    return 'INSERT INTO person_contact (person_id, address_id) VALUES (%s, %s)', [ person, contact ]
+
+def find_person (pid):
+    return 'SELECT id, first_name, middle_name, last_name, current_account_id FROM PERSON WHERE id=%s', [ pid ]
