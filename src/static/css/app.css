@@ -66,6 +66,7 @@
 	top: 0;
 	width: 296px;
 	height: 30px;
+	overflow: hidden;
 
 	line-height: 30px;
 }
