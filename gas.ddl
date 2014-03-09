@@ -91,11 +91,11 @@ CREATE TABLE account (
 -- perché potrei avere problemi di concorrenza
 
   -- colonne destinate a sparire, usate solo per il periodo di transizione gnucash
-  gc_id = CHAR(32),
-  gc_name = VARCHAR(255),
-  gc_desc = VARCHAR(255),
-  gc_type = VARCHAR(255),
-  gc_parent = CHAR(32),
+  gc_id CHAR(32),
+  gc_name VARCHAR(255),
+  gc_desc VARCHAR(255),
+  gc_type VARCHAR(255),
+  gc_parent CHAR(32),
 
   UNIQUE (gc_id),
   PRIMARY KEY (id)
