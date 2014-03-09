@@ -58,8 +58,11 @@ class Person (object):
         self.lastName = p_last_name
         self.account = p_current_account_id
 
+    def __str__ (self):
+        return '%s (%s %s)' % (self.id, self.firstName, self.lastName)
+
 class GassmanWebApp (tornado.web.Application):
-    def __init__ (self, cur, sql):
+    def __init__ (self, conn, sql):
         handlers = [
             (r'^/$', IndexHandler),
             (r'^/home.html$', HomeHandler),
@@ -77,7 +80,8 @@ class GassmanWebApp (tornado.web.Application):
             login_url = '/',
             )
         super().__init__(handlers, **sett)
-        self.cur = cur
+        self.conn = conn
+        self.cur = self.conn.cursor()
         self.sql = sql
         self.sessions = dict()
 
@@ -86,17 +90,21 @@ class GassmanWebApp (tornado.web.Application):
         try:
             p = Person(*self.cur.fetchone())
         except TypeError:
-            # non ho trovato niente su db
-            self.cur.execute(*self.sql.create_contact(user.userId, 'I', user.authenticator))
-            contactId = self.cur.lastrowid
-            self.cur.execute(*self.sql.create_person(user.firstName, user.middleName, user.lastName))
-            p_id = self.cur.lastrowid
-            self.cur.execute(*self.sql.assign_contact(contactId, p_id))
-            if user.email:
-                self.cur.execute(*self.sql.create_contact(user.email, 'E', ''))
-                emailId = self.cur.lastrowid
-                self.cur.execute(*self.sql.assign_contact(emailId, p_id))
-            p = Person(p_id, user.firstName, user.middleName, user.lastName, None)
+            try:
+                # non ho trovato niente su db
+                self.cur.execute(*self.sql.create_contact(user.userId, 'I', user.authenticator))
+                contactId = self.cur.lastrowid
+                self.cur.execute(*self.sql.create_person(user.firstName, user.middleName, user.lastName))
+                p_id = self.cur.lastrowid
+                self.cur.execute(*self.sql.assign_contact(contactId, p_id))
+                if user.email:
+                    self.cur.execute(*self.sql.create_contact(user.email, 'E', ''))
+                    emailId = self.cur.lastrowid
+                    self.cur.execute(*self.sql.assign_contact(emailId, p_id))
+                p = Person(p_id, user.firstName, user.middleName, user.lastName, None)
+                self.conn.commit()
+            except:
+                self.conn.rollback()
         requestHandler.set_secure_cookie("user", tornado.escape.json_encode(p.id))
         return p
         # TODO: transazioni
@@ -217,7 +225,7 @@ if __name__ == '__main__':
                            passwd=settings.DB_PASSWORD,
                            db=settings.DB_NAME,
                            charset='utf8')
-    application = GassmanWebApp(conn.cursor(), sql)
+    application = GassmanWebApp(conn, sql)
     application.listen(settings.HTTP_PORT)
     log_gassman.info('GASsMAN web server up and running...')
     io_loop.start()

@@ -6,7 +6,7 @@ Created on 03/mar/2014
 
 HTTP_PORT=8180
 
-DB_HOST=''
+DB_HOST='127.0.0.1'
 DB_PORT=3306
 DB_USER='gassman'
 DB_PASSWORD='gassman'
