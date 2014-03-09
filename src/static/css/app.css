@@ -1,5 +1,31 @@
 /* app css stylesheet */
 
+.frontpage {
+	font-family: Arial, sans-serif;
+}
+
+.frontpage .title {
+	text-align: center;
+	font-weight: bold;
+	font-size: 20px;
+	margin-top: 20px;
+}
+
+.frontpage p {
+	
+}
+
+.frontpage a {
+	display: block;
+	text-align: center;
+}
+
+.frontpage .notes {
+	font-size: small;
+	margin-top: 30px;
+	color: gray;
+}
+
 .main {
 	font-family: Arial, sans-serif;
 

@@ -7,11 +7,28 @@
 <!--<link rel="stylesheet" href="css/bootstrap.css">-->
 </head>
 <body>
-<h1>Benvenuto sul sito della rete dei GAS di Lucca</h1>
-<p>Se sei un membro della comunità entra:</p>
-<a href="/auth/google"><img alt="Autenticazione tramite account Google" src=""></a>
+<div class="frontpage">
+<div class="title">Benvenuto sul sito della rete dei GAS di Lucca</div>
+
+<p>In questa pagina potete leggere lo stato cassa, i pagamenti e gli accrediti effettuati.</p>
+
+<p>Per poter accedere è necessario autenticarsi. Utilizza o crea un account Google (ovvero GMail).</p>
+
+<p>Se è la prima volta che visiti questa pagina, dopo l'autenticazione il cassiere dovrà completare
+   la registrazione. Riceverai una mail quando potrai riprovare l'accesso.</p>
+
+<p>Adesso clicca sull'immagine sottostante e segui le istruzioni.</p>
+
+<a href="/auth/google"><img alt="Autenticazione tramite account Google" src="{{ static_url('img/btn_g+normal.png') }}"></a>
+
+<!--
 <a href=""><img alt="Autenticazione tramite account Facebook" src=""></a>
 <a href=""><img alt="Autenticazione tramite account Twitter" src=""></a>
-<div class="note">Attenzione: questo sito non riceve né memorizza la password che userai per accedere.</div>
+-->
+
+<div class="notes">Attenzione: questo sito non riceve né memorizza la password che userai per accedere.</div>
+</div>
+
+
 </body>
 </html>
