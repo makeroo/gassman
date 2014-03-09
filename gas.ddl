@@ -221,7 +221,7 @@ CREATE TABLE transaction (
   -- In alternativa si puà fare che le line possono sovrascriversi
   -- DECIDERLO PIÙ TARDI
   -- Per cancellare una transazione se ne crea una senza line.
-  modified_by_id INT, -- fk alla transazione che sovrascrive (annullando) questa
+  modified_by_id INT,
 
   gc_id CHAR(32),
 
