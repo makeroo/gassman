@@ -301,7 +301,6 @@ class IncompleteProfilesHandler (JsonBaseHandler):
 
 if __name__ == '__main__':
     io_loop = tornado.ioloop.IOLoop.instance()
-    conn = pymysql.connect()
     application = GassmanWebApp(sql,
                                 host=settings.DB_HOST,
                                 port=settings.DB_PORT,
