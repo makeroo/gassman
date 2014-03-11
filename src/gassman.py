@@ -7,10 +7,10 @@ Created on 01/mar/2014
 @author: makeroo
 '''
 
+import sys
 import logging.config
 import os.path
 
-import pymysql
 import tornado.ioloop
 import tornado.web
 import tornado.auth
@@ -19,6 +19,7 @@ import tornado.gen
 
 import gassman_settings as settings
 import jsonlib
+import pymysql
 import sql
 
 logging.config.dictConfig(settings.LOG)
@@ -62,7 +63,7 @@ class Person (object):
         return '%s (%s %s)' % (self.id, self.firstName, self.lastName)
 
 class GassmanWebApp (tornado.web.Application):
-    def __init__ (self, conn, sql):
+    def __init__ (self, sql, **connArgs):
         handlers = [
             (r'^/$', IndexHandler),
             (r'^/home.html$', HomeHandler),
@@ -80,34 +81,63 @@ class GassmanWebApp (tornado.web.Application):
             login_url = '/',
             )
         super().__init__(handlers, **sett)
-        self.conn = conn
-        self.cur = self.conn.cursor()
+        self.connArgs = connArgs
+        self.conn = None
         self.sql = sql
         self.sessions = dict()
+        self.connect()
+        tornado.ioloop.PeriodicCallback(self.checkConn, settings.DB_CHECK_INTERVAL).start()
+
+    def connect (self):
+        if self.conn is not None:
+            try:
+                self.conn.close()
+                self.conn = None
+            except:
+                pass
+        self.conn = pymysql.connect(**self.connArgs)
+
+    def checkConn (self):
+        try:
+            try:
+                with self.conn as cur:
+                    cur.execute(self.sql.checkConn())
+                    list(cur)
+            except pymysql.err.OperationalError as e:
+                if e.args[0] == 2013: # pymysql.err.OperationalError: (2013, 'Lost connection to MySQL server during query')
+                    # provo a riconnettermi
+                    log_gassman.warning('mysql closed connection, reconnecting')
+                    self.conn = self.connect()
+                else:
+                    raise
+        except:
+            etype, evalue, _ = sys.exc_info()
+            log_gassman.error('db connection failed: cause=%s/%s', etype, evalue)
+            # TODO: invia email
 
     def checkProfile (self, requestHandler, user):
-        self.cur.execute(*self.sql.check_user(user.userId, user.authenticator))
-        try:
-            p = Person(*self.cur.fetchone())
-        except TypeError:
+        with self.conn as cur:
+            cur.execute(*self.sql.check_user(user.userId, user.authenticator))
             try:
-                # non ho trovato niente su db
-                self.cur.execute(*self.sql.create_contact(user.userId, 'I', user.authenticator))
-                contactId = self.cur.lastrowid
-                self.cur.execute(*self.sql.create_person(user.firstName, user.middleName, user.lastName))
-                p_id = self.cur.lastrowid
-                self.cur.execute(*self.sql.assign_contact(contactId, p_id))
-                if user.email:
-                    self.cur.execute(*self.sql.create_contact(user.email, 'E', ''))
-                    emailId = self.cur.lastrowid
-                    self.cur.execute(*self.sql.assign_contact(emailId, p_id))
-                p = Person(p_id, user.firstName, user.middleName, user.lastName, None)
-                self.conn.commit()
-            except:
-                self.conn.rollback()
+                p = Person(*cur.fetchone())
+            except TypeError:
+                try:
+                    # non ho trovato niente su db
+                    cur.execute(*self.sql.create_contact(user.userId, 'I', user.authenticator))
+                    contactId = cur.lastrowid
+                    cur.execute(*self.sql.create_person(user.firstName, user.middleName, user.lastName))
+                    p_id = cur.lastrowid
+                    cur.execute(*self.sql.assign_contact(contactId, p_id))
+                    if user.email:
+                        cur.execute(*self.sql.create_contact(user.email, 'E', ''))
+                        emailId = cur.lastrowid
+                        cur.execute(*self.sql.assign_contact(emailId, p_id))
+                    p = Person(p_id, user.firstName, user.middleName, user.lastName, None)
+                    self.conn.commit()
+                except:
+                    self.conn.rollback()
         requestHandler.set_secure_cookie("user", tornado.escape.json_encode(p.id))
         return p
-        # TODO: transazioni
 
     def session (self, requestHandler):
         xt = requestHandler.xsrf_token
@@ -117,16 +147,22 @@ class GassmanWebApp (tornado.web.Application):
             self.sessions[xt] = s
             pid = requestHandler.current_user
             if pid:
-                self.cur.execute(*self.sql.find_person(pid))
-                pdata = self.cur.fetchone()
-                if pdata:
-                    s.logged_user = Person(*pdata)
-                    log_gassman.info('created session: token=%s, user=%s', xt, s.logged_user)
-                else:
-                    log_gassman.warning('created session, user not found: token=%s, pid=%s', xt, pid)
+                with self.conn as cur:
+                    cur.execute(*self.sql.find_person(pid))
+                    pdata = cur.fetchone()
+                    if pdata:
+                        s.logged_user = Person(*pdata)
+                        log_gassman.info('created session: token=%s, user=%s', xt, s.logged_user)
+                    else:
+                        log_gassman.warning('created session, user not found: token=%s, pid=%s', xt, pid)
             else:
                 log_gassman.info('created session: token=%s', xt)
         return s
+
+    def hasPermission (self, perm, personId):
+        with self.conn as cur:
+            cur.execute(*self.sql.has_permission(perm, personId))
+            return int(cur.fetchone()[0]) > 0
 
 
 class BaseHandler (tornado.web.RequestHandler):
@@ -190,13 +226,10 @@ class HomeHandler (BaseHandler):
     def get (self):
         self.render('home.html')
 
-class AccountMovementsHandler (BaseHandler):
-    def post (self, fromIdx, toIdx):
+class JsonBaseHandler (BaseHandler):
+    def write_response (self, data):
         self.clear_header('Content-Type')
         self.add_header('Content-Type', 'application/json')
-        a = self.application.session(self).logged_user.account
-        self.application.cur.execute(*self.application.sql.account_movements(a, int(fromIdx), int(toIdx)))
-        data = list(self.application.cur)
         jsonlib.write_json(data, self)
 
     def write_error(self, status_code, **kwargs):
@@ -208,24 +241,74 @@ class AccountMovementsHandler (BaseHandler):
         #log_gassman.debug('full stacktrace:\n', loglib.TracebackFormatter(tb))
         jsonlib.write_json([ str(etype), str(evalue) ], self)
 
-class AccountAmountHandler (BaseHandler):
+class AccountMovementsHandler (JsonBaseHandler):
+    def post (self, fromIdx, toIdx):
+        a = self.application.session(self).get_logged_user('not authenticated').account
+        with self.application.conn as cur:
+            cur.execute(*self.application.sql.account_movements(a, int(fromIdx), int(toIdx)))
+            data = list(cur)
+        self.write_response(data)
+
+class AccountAmountHandler (JsonBaseHandler):
     def post (self):
-        self.clear_header('Content-Type')
-        self.add_header('Content-Type', 'application/json')
-        a = self.application.session(self).logged_user.account
-        self.application.cur.execute(*self.application.sql.account_amount(a))
-        data = [ self.application.cur.fetchone()[0], '€' ]
-        jsonlib.write_json(data, self)
+        a = self.application.session(self).get_logged_user('not authenticated').account
+        with self.application.conn as cur:
+            cur.execute(*self.application.sql.account_amount(a))
+            data = [ cur.fetchone()[0], '€' ]
+        self.write_response(data)
+
+class PermissionsHandler (JsonBaseHandler):
+    '''Restituisce tutti i permessi visibili dall'utente loggato.
+    '''
+    def post (self):
+        u = self.application.session(self).get_logged_user('not authenticated')
+        with self.application.conn as cur:
+            cur.execute(*self.application.sql.find_visible_permissions(u.id))
+            data = list(cur)
+        self.write_response(data)
+
+class ProfileInfoHandler (JsonBaseHandler):
+    def post (self):
+        u = self.application.session(self).get_logged_user('not authenticated')
+        with self.application.conn as cur:
+            cur.execute(*self.application.sql.find_user_permissions(u.id))
+            pp = list(cur)
+            cur.execute(*self.application.sql.find_user_csa(u.id))
+            csa = list(cur)
+            data = dict(
+                    logged_user = u,
+                    permissions = pp,
+                    csa = csa
+                    )
+        self.write_response(data)
+
+class IncompleteProfilesHandler (JsonBaseHandler):
+    '''
+    Restituisce le persone senza account.
+    '''
+    def post (self):
+        u = self.application.session(self).get_logged_user('not authenticated')
+        if not self.application.hasPermission(sql.P_canAssignAccounts, u.id):
+            raise Exception('permission denied')
+        with self.application.conn as cur:
+            cur.execute(*self.application.sql.find_users_without_account())
+            pwa = list(cur)
+            data = dict(
+                        users_without_account=pwa
+                        )
+        self.write_response(data)
+
 
 if __name__ == '__main__':
     io_loop = tornado.ioloop.IOLoop.instance()
-    conn = pymysql.connect(host=settings.DB_HOST,
-                           port=settings.DB_PORT,
-                           user=settings.DB_USER,
-                           passwd=settings.DB_PASSWORD,
-                           db=settings.DB_NAME,
-                           charset='utf8')
-    application = GassmanWebApp(conn, sql)
+    conn = pymysql.connect()
+    application = GassmanWebApp(sql,
+                                host=settings.DB_HOST,
+                                port=settings.DB_PORT,
+                                user=settings.DB_USER,
+                                passwd=settings.DB_PASSWORD,
+                                db=settings.DB_NAME,
+                                charset='utf8')
     application.listen(settings.HTTP_PORT)
     log_gassman.info('GASsMAN web server up and running...')
     io_loop.start()

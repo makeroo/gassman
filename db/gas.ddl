@@ -1,3 +1,5 @@
+-- version 2
+
 SET SESSION storage_engine = "MyISAM";
 SET SESSION time_zone = "+0:00";
 ALTER DATABASE CHARACTER SET "utf8";
@@ -162,13 +164,16 @@ CREATE TABLE csa (
 
   id INT NOT NULL AUTO_INCREMENT,
 
+  name VARCHAR(255),
+  description TEXT,
+
   -- Cassa comune
   kitty_id INT NOT NULL,
   -- Quanto versano, ogni anno, i partecipanti del gas in cassa comune
   -- TODO: gestire il caso di persone che appartengano a più gas: magari versano in un gas solo? O un po' in tutti?
   annual_kitty_amount DECIMAL(15,2) NOT NULL DEFAULT 0,
   -- Soglia di default per i nuovi arrivati
-  default_account_treshold DECIMAL(15,2) NOT NULL DEFAULT 0,
+  default_account_threshold DECIMAL(15,2) NOT NULL DEFAULT 0,
 
   FOREIGN KEY (kitty_id) REFERENCES account(id),
   PRIMARY KEY (id)
@@ -179,6 +184,7 @@ CREATE TABLE permission (
   name VARCHAR(32) NOT NULL,
   description TEXT,
   visibility INT NOT NULL DEFAULT 0,
+  ord INT NOT NULL DEFAULT 0,
   PRIMARY KEY (id)
 );
 

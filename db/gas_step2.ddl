@@ -234,7 +234,6 @@ CREATE TABLE transaction_log (
 
 
 
-INSERT INTO permission (name, visibility) VALUES ('membership', 10);
 INSERT INTO permission (name, visibility) VALUES ('canPlaceOrders', 50);
 INSERT INTO permission (name, visibility) VALUES ('canEditTurns', 100);
 -- Creare account significa in sostanza raccomandare nuovi membri nella comunità.
