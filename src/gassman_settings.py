@@ -21,7 +21,8 @@ FB_APP_KEY='TODO'
 
 SMTP_SERVER=None
 SMTP_PORT=25
-SMTP_SENDER='gassman@gassmanager.og'
+SMTP_SENDER='gassman@gassmanager.org'
+SMTP_RECEIVER=None
 
 LOG={
     'version': 1,
