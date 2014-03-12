@@ -33,6 +33,9 @@ def assign_contact (contact, person):
 def find_person (pid):
     return 'SELECT id, first_name, middle_name, last_name, current_account_id FROM person WHERE id=%s', [ pid ]
 
+def find_current_account (pid):
+    return 'SELECT current_account_id FROM person WHERE id=%s', [ pid ]
+
 def find_visible_permissions (personId):
     return 'SELECT id, name, description, visibility FROM permission p WHERE visibility <= (SELECT MAX(p.visibility) FROM permission p JOIN permission_grant g ON p.id=g.perm_id JOIN person u ON g.person_id=u.id WHERE u.id=%s) ORDER BY visibility, ord, name', [ personId ]
 

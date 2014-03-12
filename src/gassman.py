@@ -54,6 +54,15 @@ class Session (object):
                 raise Exception(error)
             else:
                 return None
+        if self.logged_user.account is None:
+            # controllo per vedere se è avvenuta la registrazione
+            with self.application.conn as cur:
+                cur.execute(*self.application.sql.find_current_account(self.logged_user.id))
+                try:
+                    self.logged_user.account = int(cur.fetchone()[0])
+                except:
+                    etype, evalue, _ = sys.exc_info()
+                    log_gassman.debug('account not found: user=%s, cause=%s/%s', self.logged_user.id, etype, evalue)
         return self.logged_user
 
 class Person (object):
@@ -215,11 +224,13 @@ class IncompleteProfileHandler (tornado.web.RequestHandler):
     def get (self):
         s = self.application.session(self)
         p = s.get_logged_user(None)
-        if not s.registrationNotificationSent and p is not None and p.account is None:
+        if not p or p.account is not None:
+            self.redirect('/')
+        elif not s.registrationNotificationSent:
             s.registrationNotificationSent = self.application.notify('INFO', 'Complete registration for %s %s' %
                                                                      (p.firstName, p.lastName),
                                                                      'User without account: %s' % p)
-        self.render('incomplete_profile.html')
+            self.render('incomplete_profile.html')
 
 #class GoogleAuthLoginHandler2 (tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
 #    @tornado.gen.coroutine
