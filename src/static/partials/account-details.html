@@ -1,0 +1,38 @@
+<div ng-switch="uiMode" class="main">
+
+<div ng-switch-when="accountLoading">
+
+  <div class="message">Sto caricando i dati, un'attimo di pazienza.</div>
+
+</div>
+
+<div ng-switch-when="accountOk" class="account-details">
+  <div class="movements">
+    <div class="header">
+      <div class="mov-data">Data</div>
+      <div class="mov-desc">Descrizione</div>
+      <div class="mov-amount">Importo</div>
+    </div>
+    <div class="body" when-scrolled="loadMore()">
+      <div ng-repeat="mov in movements" class="mov-row">
+        <div class="mov-data">{{ mov[1] | date:"shortDate" }}</div>
+        <div class="mov-desc">{{ mov[0] }}</div>
+        <div class="mov-amount">{{ mov[3] | currency }}</div> <!-- TODO: moneta quale? -->
+      </div>
+    </div>
+  </div>
+  <span class="amount {{ amountClass }}">Saldo: {{ amount | currency : currencySymbol }}</span>
+</div>
+
+<div ng-switch-when="accountFailed">
+  <div class="server-error">
+    <p>Qualcosa è andato storto, <a href="#" ng-click="toggleErrorMessage()">clicca per saperne di più</a>.</p>
+    <p ng-show="showErrorMessage" class="message">{{ serverError }}</p> <!-- TODO: serverError è html... -->
+    <p>Se il messaggio non ti dice niente prova a ricaricare la pagina.
+       Dopo qualche tentativo fallito, contatta il cassiere direttamente o sulla mailing list.
+       </p>
+  </div>
+
+</div>
+
+</div>

@@ -1,52 +1,8 @@
 'use strict';
 
-function getCookie (name) {
-    var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
-    return r ? r[1] : undefined;
-}
+var gassmanControllers = angular.module('gassmanControllers', []);
 
-/*jQuery.postJSON = function(url, args, callback) {
-    args._xsrf = getCookie("_xsrf");
-    $.ajax({url: url, data: $.param(args), dataType: "text", type: "POST",
-        success: function(response) {
-        callback(eval("(" + response + ")"));
-    }});
-};*/
-
-/* Controllers */
-
-var gassmanApp = angular.module('gassmanApp', []);
-/*
-gassmanApp.filter('noFractionCurrency',
-		  [ '$filter', '$locale',
-		  function(filter, locale) {
-		    var currencyFilter = filter('currency');
-		    var formats = locale.NUMBER_FORMATS;
-		    return function(amount, currencySymbol) {
-		      var value = currencyFilter(amount, currencySymbol);
-		      var sep = value.indexOf(formats.DECIMAL_SEP);
-		      if(amount >= 0) { 
-		        return value.substring(0, sep);
-		      }
-		      return value.substring(0, sep) + ')';
-		    };
-		  } ]);
-*/
-
-
-gassmanApp.directive('whenScrolled', function() {
-    return function (scope, elm, attr) {
-        var raw = elm[0];
-
-        elm.bind('scroll', function() {
-            if (raw.scrollTop + raw.offsetHeight >= raw.scrollHeight) {
-                scope.$apply(attr.whenScrolled);
-            }
-        });
-    };
-});
-
-gassmanApp.controller('AccountDetail', function($scope, $http, $filter) {
+gassmanControllers.controller('AccountDetails', function($scope, $http, $filter) {
 	$scope.uiMode = 'accountLoading';
 	$scope.movements = [];
 
@@ -59,7 +15,7 @@ gassmanApp.controller('AccountDetail', function($scope, $http, $filter) {
 	var concluded = false;
 
 	$scope.loadMore = function () {
-		
+
 		if (concluded) return;
 
 		$http.post('/account/movements/' + start + '/' + (start + blockSize) + '?_xsrf=' + getCookie('_xsrf')). // null, { xsrfCookieName:'_xsrf' }).
@@ -93,4 +49,8 @@ gassmanApp.controller('AccountDetail', function($scope, $http, $filter) {
 			$scope.amountClass = 'error';
 			//console.log('error', data, status, headers, config);
 		});
+});
+
+gassmanControllers.controller('AccountsIndex', function($scope, $http, $filter) {
+	
 });
