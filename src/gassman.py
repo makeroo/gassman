@@ -216,8 +216,9 @@ class IncompleteProfileHandler (tornado.web.RequestHandler):
         s = self.application.session(self)
         p = s.get_logged_user(None)
         if not s.registrationNotificationSent and p is not None and p.account is None:
-            s.registrationNotificationSent = self.application.notify('INFO', 'Complete registration for %s %s' % p.firstName, p.lastName,
-                                    'User without account: %s' % p)
+            s.registrationNotificationSent = self.application.notify('INFO', 'Complete registration for %s %s' %
+                                                                     (p.firstName, p.lastName),
+                                                                     'User without account: %s' % p)
         self.render('incomplete_profile.html')
 
 #class GoogleAuthLoginHandler2 (tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
