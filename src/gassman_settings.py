@@ -19,6 +19,10 @@ COOKIE_MAX_AGE_DAYS=15
 FB_APP_ID='TODO'
 FB_APP_KEY='TODO'
 
+SMTP_SERVER=None
+SMTP_PORT=25
+SMTP_SENDER='gassman@gassmanager.og'
+
 LOG={
     'version': 1,
     'root': {

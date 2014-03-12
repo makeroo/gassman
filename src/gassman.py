@@ -7,20 +7,23 @@ Created on 01/mar/2014
 @author: makeroo
 '''
 
-import sys
+import datetime
 import logging.config
 import os.path
+import sys
 
 import tornado.ioloop
 import tornado.web
 import tornado.auth
 import tornado.gen
-#import tornado.escape
+import tornado.escape
 
 import gassman_settings as settings
 import jsonlib
 import pymysql
 import sql
+import loglib
+import smtplib
 
 logging.config.dictConfig(settings.LOG)
 
@@ -42,6 +45,8 @@ class Session (object):
     def __init__ (self, app):
         self.application = app
         self.logged_user = None
+        self.created = datetime.datetime.utcnow()
+        self.registrationNotificationSent = False
 
     def get_logged_user (self, error='not authenticated'):
         if not self.logged_user:
@@ -111,15 +116,35 @@ class GassmanWebApp (tornado.web.Application):
                 else:
                     raise
         except:
-            etype, evalue, _ = sys.exc_info()
-            log_gassman.error('db connection failed: cause=%s/%s', etype, evalue)
-            # TODO: invia email
+            etype, evalue, tb = sys.exc_info()
+            log_gassman.fatal('db connection failed: cause=%s/%s', etype, evalue)
+            self.notify('FATAL', 'No db connection', 'Connection error: %s/%s.\nTraceback:\n%s' %
+                           (etype, evalue, loglib.TracebackFormatter(tb))
+                           )
+
+    def notify (self, level, subject, body):
+        if settings.SMTP_SERVER is None:
+            log_gassman.info('SMTP not configured, mail not sent: %s / %s', subject, body)
+            return
+        try:
+            smtp = smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT)
+            smtp.sendmail(settings.SMTP_SENDER, settings.SMTP_RECEIVER,
+                          'Subject: [GASsMan] %s %s\n\n%s' % (level, subject, body))
+            smtp.quit()
+            return True
+        except:
+            etype, evalue, tb = sys.exc_info()
+            log_gassman.error('can\'t send mail: subject=%s, cause=%s/%s', subject, etype, evalue)
+            log_gassman.debug('email body: %s', body)
+            log_gassman.debug('full stacktrace:\n%s', loglib.TracebackFormatter(tb))
+            return False
 
     def checkProfile (self, requestHandler, user):
         with self.conn as cur:
             cur.execute(*self.sql.check_user(user.userId, user.authenticator))
             try:
                 p = Person(*cur.fetchone())
+                log_gassman.debug('found profile: authId=%s, person=%s', user.userId, p)
             except TypeError:
                 try:
                     # non ho trovato niente su db
@@ -133,9 +158,13 @@ class GassmanWebApp (tornado.web.Application):
                         emailId = cur.lastrowid
                         cur.execute(*self.sql.assign_contact(emailId, p_id))
                     p = Person(p_id, user.firstName, user.middleName, user.lastName, None)
-                    self.conn.commit()
                 except:
-                    self.conn.rollback()
+                    etype, evalue, tb = sys.exc_info()
+                    log_gassman.error('profile creation failed: cause=%s/%s\nfull stacktrace:\n%s', etype, evalue, loglib.TracebackFormatter(tb))
+                    self.notify('ERROR', 'User profile creation failed', 'Cause: %s/%s\nAuthId: %s (%s %s)\nTraceback:\n%s' %
+                                   (etype, evalue, user.userId, user.firstName, user.lastName, loglib.TracebackFormatter(tb))
+                                   )
+                    return None
         requestHandler.set_secure_cookie("user", tornado.escape.json_encode(p.id))
         return p
 
@@ -162,7 +191,9 @@ class GassmanWebApp (tornado.web.Application):
     def hasPermission (self, perm, personId):
         with self.conn as cur:
             cur.execute(*self.sql.has_permission(perm, personId))
-            return int(cur.fetchone()[0]) > 0
+            r = int(cur.fetchone()[0]) > 0
+            log_gassman.debug('has permission: user=%s, perm=%s, r=%s', personId, perm, r)
+            return r
 
 
 class BaseHandler (tornado.web.RequestHandler):
@@ -182,6 +213,11 @@ class IndexHandler (BaseHandler):
 
 class IncompleteProfileHandler (tornado.web.RequestHandler):
     def get (self):
+        s = self.application.session(self)
+        p = s.get_logged_user(None)
+        if not s.registrationNotificationSent and p is not None and p.account is None:
+            s.registrationNotificationSent = self.application.notify('INFO', 'Complete registration for %s %s' % p.firstName, p.lastName,
+                                    'User without account: %s' % p)
         self.render('incomplete_profile.html')
 
 #class GoogleAuthLoginHandler2 (tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
