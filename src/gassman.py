@@ -228,8 +228,9 @@ class IncompleteProfileHandler (tornado.web.RequestHandler):
         if not p or p.account is not None:
             self.redirect('/')
         elif not s.registrationNotificationSent:
-            s.registrationNotificationSent = self.application.notify('INFO', 'Complete registration for %s %s' %
-                                                                     (p.firstName, p.lastName),
+            s.registrationNotificationSent = self.application.notify('INFO',
+                                                                     'Complete registration for %s %s\nEmail: %s' %
+                                                                     (p.firstName, p.lastName, p.email),
                                                                      'User without account: %s' % p)
             self.render('incomplete_profile.html')
 
