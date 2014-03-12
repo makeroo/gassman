@@ -37,6 +37,14 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter)
 
 	$scope.loadMore();
 
+	$http.post('/profile-info?_xsrf=' + getCookie('_xsrf')).
+		success(function (data, status, headers, config) {
+			$scope.profile = data;
+		}).
+		error (function (data, status, headers, config) {
+			
+		});
+
 	$http.post('/account/amount?_xsrf=' + getCookie('_xsrf')).
 		success(function (data, status, headers, config) {
 			$scope.amount = parseFloat( data[0] );

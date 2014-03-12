@@ -1,13 +1,22 @@
-<div ng-switch="uiMode" class="main">
+<div class="main">
 
-<div ng-switch-when="accountLoading">
+ <div class="left-col">
 
-  <div class="message">Sto caricando i dati, un'attimo di pazienza.</div>
+  <div class="profile-info">
+   <p>{{profile.logged_user.firstName}} {{profile.logged_user.middleName}} {{profile.logged_user.lastName}}</p>
+   <p class="amount {{ amountClass }}">Saldo: {{ amount | currency : currencySymbol }}</p>
+  </div>
+  <div class="functions"></div>
 
-</div>
+ </div>
 
-<div ng-switch-when="accountOk" class="account-details">
-  <div class="movements">
+ <div ng-switch="uiMode" class="account-details">
+
+  <div ng-switch-when="accountLoading">
+   <div class="message">Sto caricando i dati, un'attimo di pazienza.</div>
+  </div>
+
+  <div ng-switch-when="accountOk" class="movements">
     <div class="header">
       <div class="mov-data">Data</div>
       <div class="mov-desc">Descrizione</div>
@@ -21,18 +30,18 @@
       </div>
     </div>
   </div>
-  <span class="amount {{ amountClass }}">Saldo: {{ amount | currency : currencySymbol }}</span>
-</div>
 
-<div ng-switch-when="accountFailed">
-  <div class="server-error">
+  <div ng-switch-when="accountFailed">
+   <div class="server-error">
     <p>Qualcosa è andato storto, <a href="#" ng-click="toggleErrorMessage()">clicca per saperne di più</a>.</p>
     <p ng-show="showErrorMessage" class="message">{{ serverError }}</p> <!-- TODO: serverError è html... -->
     <p>Se il messaggio non ti dice niente prova a ricaricare la pagina.
        Dopo qualche tentativo fallito, contatta il cassiere direttamente o sulla mailing list.
        </p>
+   </div>
   </div>
 
-</div>
+ </div>
+
 
 </div>

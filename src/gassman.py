@@ -85,6 +85,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/incomplete_profile.html$', IncompleteProfileHandler),
             (r'^/account/movements/(\d+)/(\d+)$', AccountMovementsHandler),
             (r'^/account/amount$', AccountAmountHandler),
+            (r'^/profile-info$', ProfileInfoHandler),
             ]
         codeHome = os.path.dirname(__file__)
         sett = dict(
