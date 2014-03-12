@@ -167,6 +167,7 @@ class GassmanWebApp (tornado.web.Application):
                         emailId = cur.lastrowid
                         cur.execute(*self.sql.assign_contact(emailId, p_id))
                     p = Person(p_id, user.firstName, user.middleName, user.lastName, None)
+                    log_gassman.info('profile created: newUser=%s', p)
                 except:
                     etype, evalue, tb = sys.exc_info()
                     log_gassman.error('profile creation failed: cause=%s/%s\nfull stacktrace:\n%s', etype, evalue, loglib.TracebackFormatter(tb))
