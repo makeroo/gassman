@@ -18,6 +18,20 @@ def account_movements (accountDbId, fromLine, toLine):
 def account_amount (accountDbId):
     return 'SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s', [ accountDbId ]
 
+def accounts_index (fromLine, toLine):
+    return '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount)\
+ FROM person p\
+ JOIN account a ON a.id=p.current_account_id\
+ JOIN transaction_line l ON l.account_id=a.id\
+ JOIN transaction t ON t.id=l.transaction_id\
+ WHERE t.modified_by_id IS NULL\
+ GROUP BY p.id, a.id\
+ LIMIT %s OFFSET %s
+''', [
+      toLine - fromLine + 1,
+      fromLine
+      ]
+
 def check_user (userId, authenticator):
     return 'SELECT p.id, p.first_name, p.middle_name, p.last_name, p.current_account_id FROM contact_address c JOIN person_contact pc ON c.id=pc.address_id JOIN person p ON p.id=pc.person_id WHERE c.kind=%s AND c.contact_type=%s AND c.address=%s', [ 'I', authenticator, userId ]
 
@@ -52,4 +66,4 @@ def has_permission (perm, personId):
     return 'SELECT count(*) FROM permission_grant WHERE perm_id=%s AND person_id=%s', [ perm, personId ]
 
 def checkConn ():
-    return 'SELECT 1 FROM DUAL'
+    return 'SELECT 1'

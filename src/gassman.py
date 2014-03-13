@@ -86,6 +86,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/account/movements/(\d+)/(\d+)$', AccountMovementsHandler),
             (r'^/account/amount$', AccountAmountHandler),
             (r'^/profile-info$', ProfileInfoHandler),
+            (r'^/accounts/index/(\d+)/(\d+)$', AccountsIndexHandler),
             ]
         codeHome = os.path.dirname(__file__)
         sett = dict(
@@ -323,7 +324,7 @@ class ProfileInfoHandler (JsonBaseHandler):
         u = self.application.session(self).get_logged_user('not authenticated')
         with self.application.conn as cur:
             cur.execute(*self.application.sql.find_user_permissions(u.id))
-            pp = list(cur)
+            pp = [ p[0] for p in cur]
             cur.execute(*self.application.sql.find_user_csa(u.id))
             csa = list(cur)
             data = dict(
@@ -331,6 +332,16 @@ class ProfileInfoHandler (JsonBaseHandler):
                     permissions = pp,
                     csa = csa
                     )
+        self.write_response(data)
+
+class AccountsIndexHandler (JsonBaseHandler):
+    def post (self, fromIdx, toIdx):
+        u = self.application.session(self).get_logged_user('not authenticated')
+        if not self.application.hasPermission(sql.P_canCheckAccounts, u.id):
+            raise Exception('permission denied')
+        with self.application.conn as cur:
+            cur.execute(*self.application.sql.accounts_index(int(fromIdx), int(toIdx)))
+            data = list(cur)
         self.write_response(data)
 
 class IncompleteProfilesHandler (JsonBaseHandler):

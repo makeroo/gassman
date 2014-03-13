@@ -5,6 +5,7 @@ var gassmanControllers = angular.module('gassmanControllers', []);
 gassmanControllers.controller('AccountDetails', function($scope, $http, $filter) {
 	$scope.uiMode = 'accountLoading';
 	$scope.movements = [];
+	$scope.functions = [];
 
 	$scope.toggleErrorMessage = function () {
 		$scope.showErrorMessage = ! $scope.showErrorMessage;
@@ -19,7 +20,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter)
 		if (concluded) return;
 
 		$http.post('/account/movements/' + start + '/' + (start + blockSize) + '?_xsrf=' + getCookie('_xsrf')). // null, { xsrfCookieName:'_xsrf' }).
-		success(function (data, status, headers, config) {
+		success (function (data, status, headers, config) {
 			concluded = data.length < blockSize;
 			start += data.length;
 			$scope.uiMode = 'accountOk';
@@ -40,6 +41,13 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter)
 	$http.post('/profile-info?_xsrf=' + getCookie('_xsrf')).
 		success(function (data, status, headers, config) {
 			$scope.profile = data;
+
+			for (var i in data.permissions) {
+				var f = gassmanApp.permissions[data.permissions[i]];
+				if (f.f) {
+					$scope.functions.push(f);
+				}
+			}
 		}).
 		error (function (data, status, headers, config) {
 			
@@ -60,5 +68,28 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter)
 });
 
 gassmanControllers.controller('AccountsIndex', function($scope, $http, $filter) {
-	
+	$scope.uiMode = 'accountsLoading';
+	$scope.accounts = [];
+
+	var start = 0;
+	var blockSize = 25;
+	var concluded = false;
+
+	$scope.loadMore = function () {
+		if (concluded) return;
+
+		$http.post('/accounts/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + getCookie('_xsrf')).
+		success (function (data, status, headers, config) {
+			concluded = data.length < blockSize;
+			start += data.length;
+			$scope.uiMode = 'accountsOk';
+			$scope.accounts = $scope.accounts.concat(data);
+		}).
+		error (function (data, status, headers, config) {
+			concluded = true;
+			// TODO: mostrare errore
+		});
+	};
+
+	$scope.loadMore();
 });

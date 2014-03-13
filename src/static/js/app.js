@@ -11,6 +11,14 @@ var gassmanApp = angular.module('gassmanApp', [
 	'ngRoute',
 	'gassmanControllers'
 	]);
+
+gassmanApp.permissions = [
+	null,
+	{ v:1, n:'membership', f:null },
+	{ v:2, n:'canCheckAccounts', f:'#/accounts-index', l:'Tutti gli account' },
+	{ v:3, n:'canAssignAccounts', f:null }
+	];
+
 /*
 gassmanApp.filter('noFractionCurrency',
 		  [ '$filter', '$locale',

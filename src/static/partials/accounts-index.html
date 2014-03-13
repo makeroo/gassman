@@ -1,3 +1,16 @@
-<div>
-TODO
+<div ng-switch="uiMode" class="main">
+
+ <div ng-switch-when="accountsLoading">
+  Sto caricando i dati...
+ </div>
+
+ <div ng-switch-when="accountsOk" class="accounts-index">
+  <div when-scrolled="loadMore()" class="body">
+   <div ng-repeat="a in accounts" class="acc-row">
+    <div class="acc-name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
+    <div class="acc-amount">{{ a[5] | currency }}</div>
+   </div>
+  </div>
+ </div>
+
 </div>

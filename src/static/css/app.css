@@ -57,6 +57,51 @@
 	padding: 5px;
 }
 
+.accounts-index {
+	width: 500px;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}
+
+.accounts-index .body {
+	width:500px;
+	overflow: auto;
+	flex-grow: 1;
+}
+
+.accounts-index .body .acc-row {
+	position: relative;
+	height: 30px;
+}
+
+.accounts-index .body .acc-row:hover {
+	background-color: #eef;
+}
+
+.accounts-index .body .acc-name {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 400px;
+	height: 30px;
+
+	line-height: 30px;
+}
+
+.accounts-index .body .acc-amount {
+	position: absolute;
+	right: 0px;
+	top: 0;
+	width: 100px;
+	height: 30px;
+	overflow: hidden;
+
+	line-height: 30px;
+}
+
+
 .account-details {
 	width: 500px;
 	display: flex;

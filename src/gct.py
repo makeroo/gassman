@@ -261,9 +261,9 @@ if __name__ == '__main__':
     opt.define('f', help='GnuCash data file')
     opt.define('host', default='localhost', help='MySQL database host')
     opt.define('port', default=3306, help='MySQL database port')
-    opt.define('db', default='gassman', help='MySQL database name')
-    opt.define('user', default='gassman', help='MySQL database user')
-    opt.define('password', default='gassman', help='MySQL database user password')
+    opt.define('d', help='MySQL database name')
+    opt.define('u', help='MySQL database user')
+    opt.define('p', help='MySQL database user password')
 
     opt.parse_command_line()
 
