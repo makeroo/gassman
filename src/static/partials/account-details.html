@@ -1,20 +1,4 @@
-<div class="main">
 
- <div class="left-col">
-
-  <div class="profile-info">
-   <p>{{profile.logged_user.firstName}} {{profile.logged_user.middleName}} {{profile.logged_user.lastName}}</p>
-   <p class="amount {{ amountClass }}">Saldo: {{ amount | currency : currencySymbol }}</p>
-  </div>
-  <div class="functions" ng-show="functions.length">
-   <ul>
-    <li ng-repeat="f in functions">
-     <a href="{{f.f}}">{{f.l}}</a>
-    </li>
-   </ul>
-  </div>
-
- </div>
 
  <div ng-switch="uiMode" class="account-details">
 
@@ -50,4 +34,3 @@
  </div>
 
 
-</div>

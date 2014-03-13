@@ -14,8 +14,8 @@ var gassmanApp = angular.module('gassmanApp', [
 
 gassmanApp.permissions = [
 	null,
-	{ v:1, n:'membership', f:null },
-	{ v:2, n:'canCheckAccounts', f:'#/accounts-index', l:'Tutti gli account' },
+	{ v:1, n:'membership', f:'#/account/detail', l:'Il tuo conto' },
+	{ v:2, n:'canCheckAccounts', f:'#/accounts/index', l:'Tutti i conti' },
 	{ v:3, n:'canAssignAccounts', f:null }
 	];
 
@@ -43,7 +43,7 @@ gassmanApp.config([ '$routeProvider',
 				templateUrl: 'static/partials/account-details.html',
 				controller: 'AccountDetails'
 			}).
-			when('/accounts-index', {
+			when('/accounts/index', {
 				templateUrl: 'static/partials/accounts-index.html',
 				controller: 'AccountsIndex'
 			}).
