@@ -36,10 +36,10 @@ class GoogleUser (object):
 
     def __init__ (self, userInfo):
         self.userId = userInfo['claimed_id']
-        self.firstName = userInfo['first_name']
+        self.firstName = userInfo.get('first_name', '')
         self.middleName = None
-        self.lastName = userInfo['last_name']
-        self.email = userInfo['email']
+        self.lastName = userInfo.get('last_name', '')
+        self.email = userInfo.get('email', '')
 
 class Session (object):
     def __init__ (self, app):
@@ -231,8 +231,8 @@ class IncompleteProfileHandler (tornado.web.RequestHandler):
             self.redirect('/')
         elif not s.registrationNotificationSent:
             s.registrationNotificationSent = self.application.notify('INFO',
-                                                                     'Complete registration for %s %s\nEmail: %s' %
-                                                                     (p.firstName, p.lastName, p.email),
+                                                                     'Complete registration for %s %s' %
+                                                                     (p.firstName, p.lastName),
                                                                      'User without account: %s' % p)
             self.render('incomplete_profile.html')
 
