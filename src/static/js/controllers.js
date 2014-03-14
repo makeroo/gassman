@@ -34,7 +34,7 @@ gassmanControllers.controller('MenuController', function($scope, $http, $filter)
 	});
 });
 
-gassmanControllers.controller('AccountDetails', function($scope, $http, $filter) {
+gassmanControllers.controller('AccountDetails', function($scope, $http, $filter, $routeParams) {
 	$scope.uiMode = 'accountLoading';
 	$scope.movements = [];
 
@@ -42,6 +42,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter)
 		$scope.showErrorMessage = ! $scope.showErrorMessage;
 	};
 
+	var accId = $routeParams['accountId'];
 	var start = 0;
 	var blockSize = 25;
 	var concluded = false;
@@ -50,7 +51,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter)
 
 		if (concluded) return;
 
-		$http.post('/account/movements/' + start + '/' + (start + blockSize) + '?_xsrf=' + getCookie('_xsrf')). // null, { xsrfCookieName:'_xsrf' }).
+		$http.post('/account/' + (accId == undefined ? '' : (accId + '/')) + 'movements/' + start + '/' + (start + blockSize) + '?_xsrf=' + getCookie('_xsrf')). // null, { xsrfCookieName:'_xsrf' }).
 		success (function (data, status, headers, config) {
 			concluded = data.length < blockSize;
 			start += data.length;
@@ -71,7 +72,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter)
 
 });
 
-gassmanControllers.controller('AccountsIndex', function($scope, $http, $filter) {
+gassmanControllers.controller('AccountsIndex', function($scope, $http, $filter, $location) {
 	$scope.uiMode = 'accountsLoading';
 	$scope.accounts = [];
 
@@ -93,6 +94,10 @@ gassmanControllers.controller('AccountsIndex', function($scope, $http, $filter) 
 			concluded = true;
 			// TODO: mostrare errore
 		});
+	};
+
+	$scope.showAccount = function (accountId) {
+		$location.path('/account/' + accountId + '/details');
 	};
 
 	$scope.loadMore();

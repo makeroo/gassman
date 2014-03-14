@@ -39,7 +39,11 @@ gassmanApp.filter('noFractionCurrency',
 gassmanApp.config([ '$routeProvider',
 	function ($routeProvider) {
 		$routeProvider.
-			when('/account-details', {
+			when('/account/self/details', {
+				templateUrl: 'static/partials/account-details.html',
+				controller: 'AccountDetails'
+			}).
+			when('/account/:accountId/details', {
 				templateUrl: 'static/partials/account-details.html',
 				controller: 'AccountDetails'
 			}).
@@ -48,7 +52,7 @@ gassmanApp.config([ '$routeProvider',
 				controller: 'AccountsIndex'
 			}).
 			otherwise({
-				redirectTo: '/account-details'
+				redirectTo: '/account/self/details'
 			})
 	}]);
 

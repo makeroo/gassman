@@ -83,7 +83,8 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/home.html$', HomeHandler),
             (r'^/auth/google$', GoogleAuthLoginHandler),
             (r'^/incomplete_profile.html$', IncompleteProfileHandler),
-            (r'^/account/movements/(\d+)/(\d+)$', AccountMovementsHandler),
+            (r'^/account/movements/(\d+)/(\d+)$', SelfAccountMovementsHandler),
+            (r'^/account/(\d+)/movements/(\d+)/(\d+)$', AccountMovementsHandler),
             (r'^/account/amount$', AccountAmountHandler),
             (r'^/profile-info$', ProfileInfoHandler),
             (r'^/accounts/index/(\d+)/(\d+)$', AccountsIndexHandler),
@@ -293,13 +294,23 @@ class JsonBaseHandler (BaseHandler):
         #log_gassman.debug('full stacktrace:\n', loglib.TracebackFormatter(tb))
         jsonlib.write_json([ str(etype), str(evalue) ], self)
 
-class AccountMovementsHandler (JsonBaseHandler):
+class SelfAccountMovementsHandler (JsonBaseHandler):
     def post (self, fromIdx, toIdx):
         a = self.application.session(self).get_logged_user('not authenticated').account
+        self.fetchMovements(a, fromIdx, toIdx)
+
+    def fetchMovements (self, a, fromIdx, toIdx):
         with self.application.conn as cur:
             cur.execute(*self.application.sql.account_movements(a, int(fromIdx), int(toIdx)))
             data = list(cur)
         self.write_response(data)
+
+class AccountMovementsHandler (SelfAccountMovementsHandler):
+    def post (self, accId, fromIdx, toIdx):
+        u = self.application.session(self).get_logged_user('not authenticated')
+        if not self.application.hasPermission(sql.P_canCheckAccounts, u.id):
+            raise Exception('permission denied')
+        self.fetchMovements(accId, fromIdx, toIdx)
 
 class AccountAmountHandler (JsonBaseHandler):
     def post (self):
