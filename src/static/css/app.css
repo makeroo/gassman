@@ -214,3 +214,72 @@
 	color: #f77;
 	font-weight: bolder;
 }
+
+.transaction-details {
+	margin-left: 20px;
+	overflow: hidden;
+}
+
+.transaction-details .title {
+	position: relative;
+	height: 40px;
+	font-weight: bold;
+	text-align: center;
+}
+
+.transaction-details .lines {
+	margin-top: 10px;
+	overflow: auto;
+}
+
+.transaction-details .header {
+	position: relative;
+	height: 40px;
+	font-weight: bold;
+}
+
+.transaction-details .body {
+	overflow: auto;
+}
+
+.transaction-details .row {
+	position: relative;
+	height: 30px;
+}
+
+.transaction-details .row:hover {
+	background-color: #eef;
+}
+
+.transaction-details .lines .desc {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 100px;
+	height: 30px;
+
+	line-height: 30px;
+}
+
+.transaction-details .lines .account {
+	position: absolute;
+	left: 102px;
+	right: 102px;
+	top: 0;
+	height: 30px;
+	overflow: hidden;
+
+	line-height: 30px;
+}
+
+.transaction-details .lines .amount {
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 100px;
+	height: 30px;
+
+	text-align: right;
+
+	line-height: 30px;
+}

@@ -34,9 +34,10 @@ gassmanControllers.controller('MenuController', function($scope, $http, $filter)
 	});
 });
 
-gassmanControllers.controller('AccountDetails', function($scope, $http, $filter, $routeParams) {
+gassmanControllers.controller('AccountDetails', function($scope, $http, $filter, $routeParams, $location) {
 	$scope.uiMode = 'accountLoading';
 	$scope.movements = [];
+	$scope.transaction = null;
 
 	$scope.toggleErrorMessage = function () {
 		$scope.showErrorMessage = ! $scope.showErrorMessage;
@@ -46,6 +47,31 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter,
 	var start = 0;
 	var blockSize = 25;
 	var concluded = false;
+
+	$scope.transactionAccount = function (accId) {
+		try {
+			var p = $scope.transaction.people[accId];
+			if (p)
+				// p: [id, fist, middle, last, accId]
+				return p[1] + (p[2] ? ' ' + p[2] : '') + ' ' + p[3];
+			var n = $scope.transaction.accounts[accId];
+			return n ? n : 'N/D';
+		} catch (e) {
+			return 'N/D';
+		}
+	};
+
+	$scope.showTransaction = function (mov) {
+		$http.post('/transaction/' + mov[4] + '/detail?_xsrf=' + getCookie('_xsrf')).
+		success (function (data, status, headers, config) {
+			data.mov = mov;
+			$scope.transaction = data;
+		}).
+		error (function (data, status, headers, config) {
+			$scope.transaction = null;
+			// TODO: errore
+		});
+	};
 
 	$scope.loadMore = function () {
 

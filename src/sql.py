@@ -9,7 +9,7 @@ P_canCheckAccounts = 2
 P_canAssignAccounts = 3
 
 def account_movements (accountDbId, fromLine, toLine):
-    return 'SELECT t.description, t.transaction_date, l.description, l.amount FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s ORDER BY t.transaction_date DESC LIMIT %s OFFSET %s', [
+    return 'SELECT t.description, t.transaction_date, l.description, l.amount, t.id FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s ORDER BY t.transaction_date DESC LIMIT %s OFFSET %s', [
         accountDbId,
         toLine - fromLine + 1,
         fromLine
@@ -64,6 +64,15 @@ def find_users_without_account ():
 
 def has_permission (perm, personId):
     return 'SELECT count(*) FROM permission_grant WHERE perm_id=%s AND person_id=%s', [ perm, personId ]
+
+def transaction_lines (tid):
+    return 'SELECT id, account_id, description, amount FROM transaction_line WHERE transaction_id=%s ORDER BY id', [ tid ]
+
+def transaction_people (tid):
+    return 'SELECT DISTINCT p.id, p.first_name, p.middle_name, p.last_name, p.current_account_id FROM transaction_line l JOIN person p ON p.current_account_id=l.account_id WHERE transaction_id=%s', [ tid ]
+
+def transaction_account_gc_names (tid):
+    return 'SELECT DISTINCT a.id, a.gc_name FROM transaction_line l JOIN account a ON a.id=l.account_id WHERE transaction_id=%s', [ tid ]
 
 def checkConn ():
     return 'SELECT 1'
