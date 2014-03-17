@@ -368,7 +368,7 @@ class TransactionDetailHandler (JsonBaseHandler):
             lines = list(cur)
             cur.execute(*self.application.sql.transaction_people(tid))
             people = dict([ (c[4], c) for c in cur])
-            if not u.id in people and \
+            if not u.id in [c[0] for c in people.values()] and \
                 not self.application.hasPermission(sql.P_canCheckAccounts, u.id):
                 raise Exception('permission denied')
             cur.execute(*self.application.sql.transaction_account_gc_names(tid))
