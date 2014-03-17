@@ -132,14 +132,6 @@
 	align-items: stretch;
 }
 
-.transaction-details {
-	position: absolute;
-	left: 50%;
-	right: 0;
-	top: 0;
-	bottom: 0;
-}
-
 .account-details .movements {
 	overflow: hidden;
 	flex-grow: 1;
@@ -215,7 +207,14 @@
 	font-weight: bolder;
 }
 
+
 .transaction-details {
+	position: absolute;
+	left: 50%;
+	right: 0;
+	top: 0;
+	bottom: 0;
+
 	margin-left: 20px;
 	overflow: hidden;
 }
@@ -225,15 +224,31 @@
 	height: 40px;
 	font-weight: bold;
 	text-align: center;
+	line-height: 30px;
+}
+
+.transaction-details .theader {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	height: 110px;
 }
 
 .transaction-details .lines {
-	margin-top: 10px;
+	position: absolute;
+	top: 110px;
+	left: 0;
+	right: 0;
+	bottom: 0;
 	overflow: auto;
 }
 
 .transaction-details .header {
-	position: relative;
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
 	height: 40px;
 	font-weight: bold;
 }
@@ -251,7 +266,7 @@
 	background-color: #eef;
 }
 
-.transaction-details .lines .desc {
+.transaction-details .desc {
 	position: absolute;
 	left: 0;
 	top: 0;
@@ -261,7 +276,7 @@
 	line-height: 30px;
 }
 
-.transaction-details .lines .account {
+.transaction-details .account {
 	position: absolute;
 	left: 102px;
 	right: 102px;
@@ -272,7 +287,7 @@
 	line-height: 30px;
 }
 
-.transaction-details .lines .amount {
+.transaction-details .amount {
 	position: absolute;
 	right: 0;
 	top: 0;

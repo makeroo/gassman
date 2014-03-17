@@ -32,16 +32,17 @@
 </div>
 
 <div class="transaction-details" ng-show="transaction" class="transaction-detail">
- <p class="title">Dettagli della transazione</p>
- <p class="date">Data: {{ transaction.mov[1] | date:"shortDate" }}</p>
- <p class="desc">Descrizione: {{ transaction.mov[0] }}</p>
-
- <div class="lines">
+ <div class="theader">
+ <p class="title">Movimento del {{ transaction.mov[1] | date:"shortDate" }}</p>
+ <p class="tdesc">{{ transaction.mov[0] }}</p>
   <div class="header">
    <div class="desc">Descrizione</div>
    <div class="account">Conto</div>
    <div class="amount">Importo</div>
   </div>
+ </div>
+
+ <div class="lines">
   <div ng-repeat="l in transaction.lines" class="row">
   <!-- 0:id 1:accId 2:desc 3:amount -->
    <div class="desc">{{ l[2] }}</div>
