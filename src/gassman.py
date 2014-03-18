@@ -80,6 +80,9 @@ class GassmanWebApp (tornado.web.Application):
     def __init__ (self, sql, **connArgs):
         handlers = [
             (r'^/$', IndexHandler),
+            (r'^/faq.html$', FaqHandler),
+            (r'^/help.html$', HelpHandler),
+            (r'^/project.html$', ProjectHandler),
             (r'^/home.html$', HomeHandler),
             (r'^/auth/google$', GoogleAuthLoginHandler),
             (r'^/incomplete_profile.html$', IncompleteProfileHandler),
@@ -209,11 +212,25 @@ class GassmanWebApp (tornado.web.Application):
             log_gassman.debug('has permission: user=%s, perm=%s, r=%s', personId, perm, r)
             return r
 
-
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user (self):
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
+
+# faq, help e project per ora sono banali template statici
+# ma in futuro potrebbero evolvere, quindi li imposto già così
+
+class FaqHandler (BaseHandler):
+    def get (self):
+        self.render("faq.html")
+
+class HelpHandler (BaseHandler):
+    def get (self):
+        self.render("help.html")
+
+class ProjectHandler (BaseHandler):
+    def get (self):
+        self.render("project.html")
 
 class IndexHandler (BaseHandler):
     def get (self):
