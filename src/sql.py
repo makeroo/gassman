@@ -8,6 +8,9 @@ P_membership = 1
 P_canCheckAccounts = 2
 P_canAssignAccounts = 3
 
+def account_owners (accountId):
+    return 'SELECT first_name, middle_name, last_name FROM person WHERE current_account_id=%s', [ accountId ]
+
 def account_movements (accountDbId, fromLine, toLine):
     return 'SELECT t.description, t.transaction_date, l.description, l.amount, t.id FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s ORDER BY t.transaction_date DESC LIMIT %s OFFSET %s', [
         accountDbId,
@@ -45,7 +48,7 @@ def assign_contact (contact, person):
     return 'INSERT INTO person_contact (person_id, address_id) VALUES (%s, %s)', [ person, contact ]
 
 def find_person (pid):
-    return 'SELECT id, first_name, middle_name, last_name, current_account_id FROM person WHERE id=%s', [ pid ]
+    return 'SELECT id, first_name, middle_name, last_name, current_account_id, rss_feed_id FROM person WHERE id=%s', [ pid ]
 
 def find_current_account (pid):
     return 'SELECT current_account_id FROM person WHERE id=%s', [ pid ]
@@ -73,6 +76,20 @@ def transaction_people (tid):
 
 def transaction_account_gc_names (tid):
     return 'SELECT DISTINCT a.id, a.gc_name FROM transaction_line l JOIN account a ON a.id=l.account_id WHERE transaction_id=%s', [ tid ]
+
+def rss_feed (rssId):
+    return 'SELECT t.description, t.transaction_date, l.amount, l.id FROM transaction_line l JOIN transaction t ON t.id=l.transaction_id JOIN account a ON l.account_id=a.id JOIN person p ON p.current_account_id=a.id WHERE p.rss_feed_id=%s ORDER BY t.transaction_date DESC LIMIT 8', [ rssId ]
+
+def rss_user (rssId):
+    return 'SELECT first_name, middle_name, last_name FROM person WHERE rss_feed_id=%s', [ rssId ]
+
+def rss_id (personId):
+    return 'SELECT rss_feed_id FROM person WHERE id=%s', [ personId ]
+
+# FIXME: questa assume un solo csa!
+# FIXME: correggere il 4.5 in gnucash!
+def csa_amount ():
+    return 'SELECT 4.5+SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id WHERE t.modified_by_id IS NULL AND a.gc_type=%s', [ 'ASSET' ]
 
 def checkConn ():
     return 'SELECT 1'

@@ -5,6 +5,7 @@
   </div>
 
   <div ng-switch-when="accountOk" class="movements">
+    <div class="header">Conto di <span ng-repeat="o in accountOwner">{{ o[0] }} {{ o[1] }} {{ o[2] }}{{$last ? '' : ', '}}</span></div>
     <div class="header">
       <div class="mov-data">Data</div>
       <div class="mov-desc">Descrizione</div>

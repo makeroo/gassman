@@ -1,10 +1,13 @@
-<div ng-switch="uiMode">
+<div ng-switch="uiMode" class="accounts-index">
 
  <div ng-switch-when="accountsLoading">
   Sto caricando i dati...
  </div>
 
- <div ng-switch-when="accountsOk" class="accounts-index">
+ <div ng-switch-when="accountsOk" class="table">
+  <div class="header">
+   Tutti i conti
+  </div>
   <div when-scrolled="loadMore()" class="body">
    <div ng-repeat="a in accounts" class="acc-row" ng-click="showAccount(a[4])">
     <div class="acc-name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>

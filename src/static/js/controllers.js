@@ -4,6 +4,7 @@ var gassmanControllers = angular.module('gassmanControllers', []);
 
 gassmanControllers.controller('MenuController', function($scope, $http, $filter) {
 	$scope.functions = [];
+	$scope.totalAmount = null;
 
 	$http.post('/profile-info?_xsrf=' + getCookie('_xsrf')).
 	success(function (data, status, headers, config) {
@@ -13,6 +14,16 @@ gassmanControllers.controller('MenuController', function($scope, $http, $filter)
 			var f = gassmanApp.permissions[data.permissions[i]];
 			if (f.f) {
 				$scope.functions.push(f);
+
+				if (f.v == gassmanApp.P_canCheckAccounts) {
+					$http.post('/csa/total_amount?_xsrf=' + getCookie('_xsrf')).
+					success(function (data, status, headers, config) {
+						$scope.totalAmount = data;
+					}).
+					error (function (data, status, headers, config) {
+						
+					});
+				}
 			}
 		}
 	}).
@@ -38,6 +49,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter,
 	$scope.uiMode = 'accountLoading';
 	$scope.movements = [];
 	$scope.transaction = null;
+	$scope.accountOwner = '';
 
 	$scope.toggleErrorMessage = function () {
 		$scope.showErrorMessage = ! $scope.showErrorMessage;
@@ -47,6 +59,14 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter,
 	var start = 0;
 	var blockSize = 25;
 	var concluded = false;
+
+	$http.post('/account/' + (accId == undefined ? 'self' : accId) + '/owner?_xsrf=' + getCookie('_xsrf')).
+	success (function (data, status, headers, config) {
+		$scope.accountOwner = data;
+	}).
+	error (function (data, status, headers, config) {
+		// TODO: errore
+	});
 
 	$scope.transactionAccount = function (accId) {
 		try {
@@ -127,4 +147,13 @@ gassmanControllers.controller('AccountsIndex', function($scope, $http, $filter, 
 	};
 
 	$scope.loadMore();
+});
+
+gassmanControllers.controller('HelpController', function() {
+});
+
+gassmanControllers.controller('FaqController', function() {
+});
+
+gassmanControllers.controller('ProjectController', function() {
 });

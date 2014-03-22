@@ -66,12 +66,13 @@ class Session (object):
         return self.logged_user
 
 class Person (object):
-    def __init__ (self, p_id, p_first_name, p_middle_name, p_last_name, p_current_account_id):
+    def __init__ (self, p_id, p_first_name, p_middle_name, p_last_name, p_current_account_id, p_rss_feed_id):
         self.id = p_id
         self.firstName = p_first_name
         self.middleName = p_middle_name
         self.lastName = p_last_name
         self.account = p_current_account_id
+        self.rssFeedId = p_rss_feed_id
 
     def __str__ (self):
         return '%s (%s %s)' % (self.id, self.firstName, self.lastName)
@@ -80,18 +81,18 @@ class GassmanWebApp (tornado.web.Application):
     def __init__ (self, sql, **connArgs):
         handlers = [
             (r'^/$', IndexHandler),
-            (r'^/faq.html$', FaqHandler),
-            (r'^/help.html$', HelpHandler),
-            (r'^/project.html$', ProjectHandler),
             (r'^/home.html$', HomeHandler),
             (r'^/auth/google$', GoogleAuthLoginHandler),
             (r'^/incomplete_profile.html$', IncompleteProfileHandler),
             (r'^/account/movements/(\d+)/(\d+)$', SelfAccountMovementsHandler),
+            (r'^/account/(\d+|self)/owner$', AccountOwnerHandler),
             (r'^/account/(\d+)/movements/(\d+)/(\d+)$', AccountMovementsHandler),
             (r'^/account/amount$', AccountAmountHandler),
             (r'^/profile-info$', ProfileInfoHandler),
             (r'^/accounts/index/(\d+)/(\d+)$', AccountsIndexHandler),
             (r'^/transaction/(\d+)/detail$', TransactionDetailHandler),
+            (r'^/csa/total_amount$', CsaAmountHandler),
+            (r'^/rss/(.+)$', RssFeedHandler),
             ]
         codeHome = os.path.dirname(__file__)
         sett = dict(
@@ -217,21 +218,6 @@ class BaseHandler (tornado.web.RequestHandler):
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
-# faq, help e project per ora sono banali template statici
-# ma in futuro potrebbero evolvere, quindi li imposto già così
-
-class FaqHandler (BaseHandler):
-    def get (self):
-        self.render("faq.html")
-
-class HelpHandler (BaseHandler):
-    def get (self):
-        self.render("help.html")
-
-class ProjectHandler (BaseHandler):
-    def get (self):
-        self.render("project.html")
-
 class IndexHandler (BaseHandler):
     def get (self):
         p = self.application.session(self).get_logged_user(None)
@@ -295,7 +281,11 @@ class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleMix
 class HomeHandler (BaseHandler):
     @tornado.web.authenticated
     def get (self):
-        self.render('home.html')
+        u = self.application.session(self).get_logged_user('not authenticated')
+        with self.application.conn as cur:
+            cur.execute(*self.application.sql.rss_id(u.id))
+        self.render('home.html',
+                    rssId=cur.fetchone()[0])
 
 class JsonBaseHandler (BaseHandler):
     def write_response (self, data):
@@ -323,6 +313,16 @@ class SelfAccountMovementsHandler (JsonBaseHandler):
             data = list(cur)
         self.write_response(data)
 
+class AccountOwnerHandler (SelfAccountMovementsHandler):
+    def post (self, accId):
+        u = self.application.session(self).get_logged_user('not authenticated')
+        if accId not in ('self', u.account) and not self.application.hasPermission(sql.P_canCheckAccounts, u.id):
+            raise Exception('permission denied')
+        with self.application.conn as cur:
+            cur.execute(*self.application.sql.account_owners(accId if accId != 'self' else u.account))
+            data = list(cur)
+            self.write_response(data)
+
 class AccountMovementsHandler (SelfAccountMovementsHandler):
     def post (self, accId, fromIdx, toIdx):
         u = self.application.session(self).get_logged_user('not authenticated')
@@ -335,7 +335,17 @@ class AccountAmountHandler (JsonBaseHandler):
         a = self.application.session(self).get_logged_user('not authenticated').account
         with self.application.conn as cur:
             cur.execute(*self.application.sql.account_amount(a))
-            data = [ cur.fetchone()[0], '€' ]
+            data = [ cur.fetchone()[0], '€' ] # FIXME: pescare currency da db
+        self.write_response(data)
+
+class CsaAmountHandler (JsonBaseHandler):
+    def post (self):
+        u = self.application.session(self).get_logged_user('not authenticated')
+        if not self.application.hasPermission(sql.P_canCheckAccounts, u.id):
+            raise Exception('permission denied')
+        with self.application.conn as cur:
+            cur.execute(*self.application.sql.csa_amount())
+            data = [ cur.fetchone()[0], '€' ] # FIXME: pescare currency da db
         self.write_response(data)
 
 class PermissionsHandler (JsonBaseHandler):
@@ -413,6 +423,33 @@ class IncompleteProfilesHandler (JsonBaseHandler):
                         users_without_account=pwa
                         )
         self.write_response(data)
+
+def shortDate (d):
+    return d.strftime('%Y/%m/%d')
+
+def pubDate (d):
+    # Wed, 27 Nov 2013 15:17:32 GMT
+    return d.strftime('%a, %d %b %Y %H:%M:%S GMT')
+    #return d.strftime('%Y/%m/%dT%H:%M:%SZ')
+
+def currency (s):
+    return '%s€' % s
+
+class RssFeedHandler (tornado.web.RequestHandler):
+    def get (self, rssId):
+        self.clear_header('Content-Type')
+        self.add_header('Content-Type', 'text/xml')
+        with self.application.conn as cur:
+            cur.execute(*self.application.sql.rss_user(rssId))
+            p = cur.fetchone()
+            cur.execute(*self.application.sql.rss_feed(rssId))
+            self.render('rss.xml',
+                        person=p,
+                        items=cur,
+                        shortDate=shortDate,
+                        pubDate=pubDate,
+                        currency=currency,
+                        )
 
 
 if __name__ == '__main__':

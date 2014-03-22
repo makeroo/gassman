@@ -19,6 +19,9 @@ gassmanApp.permissions = [
 	{ v:3, n:'canAssignAccounts', f:null }
 	];
 
+gassmanApp.P_membership = 1;
+gassmanApp.P_canCheckAccounts = 2;
+
 /*
 gassmanApp.filter('noFractionCurrency',
 		  [ '$filter', '$locale',
@@ -50,6 +53,18 @@ gassmanApp.config([ '$routeProvider',
 			when('/accounts/index', {
 				templateUrl: 'static/partials/accounts-index.html',
 				controller: 'AccountsIndex'
+			}).
+			when('/help', {
+				templateUrl: 'static/partials/help.html',
+				controller: 'HelpController'
+			}).
+			when('/faq', {
+				templateUrl: 'static/partials/faq.html',
+				controller: 'FaqController'
+			}).
+			when('/project', {
+				templateUrl: 'static/partials/project.html',
+				controller: 'ProjectController'
 			}).
 			otherwise({
 				redirectTo: '/account/self/details'

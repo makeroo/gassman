@@ -17,7 +17,13 @@ select p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount)
  group by p.id, a.id;
 
 
+-- verifica partita doppia
+-- QUESTA DEVE RISULTARE 0.00!
+SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL ;
 
+-- totale in cassa (contanti in mano al tesoriere)
+-- il 4.5 è una transazione su sbilancio che deve essere corretta!
+SELECT 4.5+SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id WHERE t.modified_by_id IS NULL AND a.gc_type='ASSET';
 
 -- persone senza conto
 select p.id, p.first_name, p.last_name, c.address

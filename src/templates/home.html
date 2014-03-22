@@ -3,6 +3,7 @@
 <head>
  <meta charset="utf-8">
  <title>GASsMan</title>
+ <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss/{{ rssId }}" />
  <link rel="stylesheet" href="{{ static_url('css/html5reset-1.6.1.css') }}">
  <link rel="stylesheet" href="{{ static_url('css/app.css') }}">
 <!--<link rel="stylesheet" href="css/bootstrap.css">-->
@@ -27,7 +28,15 @@
     <li ng-repeat="f in functions">
      <a href="{{!f.f}}">{{!f.l}}</a>
     </li>
+    <li ng-show="totalAmount != null">Totale in cassa {{! totalAmount[0] | currency : totalAmount[1] }}</li>
    </ul>
+  </div>
+
+  <div class="footer">
+   <a href="#/faq" class="faq">FAQ</a>
+   <a href="#/help" class="troubleshoting">Aiuto</a>
+   <a href="#/project" class="project">Progetto</a>
+   <a href="/rss/{{! profile.logged_user.rssFeedId }}">RSS</a>
   </div>
 
  </div>

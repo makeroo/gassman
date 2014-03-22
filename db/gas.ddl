@@ -1,8 +1,17 @@
--- version 2
+-- version 3
 
 SET SESSION storage_engine = "MyISAM";
 SET SESSION time_zone = "+0:00";
 ALTER DATABASE CHARACTER SET "utf8";
+
+CREATE TABLE currency (
+  id INT NOT NULL AUTO_INCREMENT,
+  iso_4217 CHAR(3),
+  symbol VARCHAR(4) NOT NULL,
+  description TEXT,
+
+  PRIMARY KEY (id)
+);
 
 CREATE TABLE state (
   -- Anagrafe degli stati, praticamente una tabella costante.
@@ -88,6 +97,9 @@ CREATE TABLE account (
 
   state CHAR(1) NOT NULL DEFAULT 'O', -- (O)pen, (C)losing, close(D), (F)usion pending
 
+  csa_id INT NOT NULL,
+  currency_id INT NOT NULL,
+
 --  cassa_id int not null,
 --  saldo CURRENCY not null, -- magari si calcola con una join?
 -- perché potrei avere problemi di concorrenza
@@ -100,6 +112,8 @@ CREATE TABLE account (
   gc_parent CHAR(32),
 
   UNIQUE (gc_id),
+  FOREIGN KEY (csa_id) REFERENCES csa(id),
+  FOREIGN KEY (currency_id) REFERENCES currency(id),
   PRIMARY KEY (id)
 );
 
@@ -115,6 +129,7 @@ CREATE TABLE person (
   address_id INT,
   current_account_id INT,
   cash_treshold DECIMAL(15,2) NOT NULL DEFAULT 0,
+  rss_feed_id CHAR(64),
 
   FOREIGN KEY (address_id) REFERENCES street_address(id),
   FOREIGN KEY (current_account_id) REFERENCES account(id),

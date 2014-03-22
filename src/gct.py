@@ -269,7 +269,7 @@ if __name__ == '__main__':
 
     g = GnucashFile(opt.options.f)
 
-    conn = pymysql.connect(host=opt.options.host, port=opt.options.port, user=opt.options.user, passwd=opt.options.password, db=opt.options.db, charset='utf8')
+    conn = pymysql.connect(host=opt.options.host, port=opt.options.port, user=opt.options.u, passwd=opt.options.p, db=opt.options.d, charset='utf8')
 
     importGnucash(g, conn, print)
 

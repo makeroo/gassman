@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0">
+<channel>
+<title>Aggiornamenti di cassa per {{ person[0] or '' }} {{ person[1] or '' }} {{ person[2] or '' }}</title>
+<link>http://www.gassmanager.org/</link>
+<description>Ultimi movimenti registrati</description>
+{% for l in items %}
+<item>
+<title>{{ l[0] }} ({{ currency(l[2]) }})</title>
+<link>http://www.gassmanager.org/</link>
+<guid>{{ l[3] }}</guid>
+<pubDate>{{ pubDate(l[1]) }}</pubDate>
+<description>{{ shortDate(l[1]) }}: {{ l[0] }}, importo {{ currency(l[2]) }}.</description>
+</item>
+{% end %}
+</channel>
+</rss>
