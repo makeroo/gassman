@@ -42,7 +42,10 @@ def create_contact (addr, kind, contactType):
     return 'INSERT INTO contact_address (address, kind, contact_type) VALUES (%s,%s,%s)', [ addr, kind, contactType ]
 
 def create_person (first, middle, last):
-    return 'INSERT INTO person (first_name, middle_name, last_name) VALUES (%s,%s,%s)', [first, middle, last]
+    return 'INSERT INTO person (first_name, middle_name, last_name) VALUES (%s,%s,%s)', [ first, middle, last ]
+
+def assign_rss_feed_id (personId, rss_feed_id):
+    return 'UPDATE person SET rss_feed_id=%s WHERE id=%s', [ rss_feed_id, personId ]
 
 def assign_contact (contact, person):
     return 'INSERT INTO person_contact (person_id, address_id) VALUES (%s, %s)', [ person, contact ]

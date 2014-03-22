@@ -8,6 +8,7 @@ Created on 01/mar/2014
 '''
 
 import datetime
+import hashlib
 import logging.config
 import os.path
 import sys
@@ -30,6 +31,9 @@ logging.config.dictConfig(settings.LOG)
 log_gassman = logging.getLogger('gassman.application')
 
 # TODO: db asincrono
+
+def rss_feed_id (pid):
+    return hashlib.sha256((settings.COOKIE_SECRET + str(pid)).encode('utf-8')).hexdigest()
 
 class GoogleUser (object):
     authenticator = 'Google'
@@ -66,13 +70,13 @@ class Session (object):
         return self.logged_user
 
 class Person (object):
-    def __init__ (self, p_id, p_first_name, p_middle_name, p_last_name, p_current_account_id, p_rss_feed_id):
+    def __init__ (self, p_id, p_first_name, p_middle_name, p_last_name, p_current_account_id):
         self.id = p_id
         self.firstName = p_first_name
         self.middleName = p_middle_name
         self.lastName = p_last_name
         self.account = p_current_account_id
-        self.rssFeedId = p_rss_feed_id
+        #self.rssFeedId = p_rss_feed_id
 
     def __str__ (self):
         return '%s (%s %s)' % (self.id, self.firstName, self.lastName)
@@ -169,6 +173,8 @@ class GassmanWebApp (tornado.web.Application):
                     contactId = cur.lastrowid
                     cur.execute(*self.sql.create_person(user.firstName, user.middleName, user.lastName))
                     p_id = cur.lastrowid
+                    rfi = rss_feed_id(p_id)
+                    cur.execute(*self.sql.assign_rss_feed_id(p_id, rfi))
                     cur.execute(*self.sql.assign_contact(contactId, p_id))
                     if user.email:
                         cur.execute(*self.sql.create_contact(user.email, 'E', ''))
