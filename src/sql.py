@@ -30,6 +30,7 @@ def accounts_index (fromLine, toLine):
  JOIN transaction t ON t.id=l.transaction_id\
  WHERE t.modified_by_id IS NULL\
  GROUP BY p.id, a.id\
+ ORDER BY p.first_name, p.last_name\
  LIMIT %s OFFSET %s
 ''', [
       toLine - fromLine + 1,
