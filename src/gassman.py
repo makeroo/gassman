@@ -180,7 +180,7 @@ class GassmanWebApp (tornado.web.Application):
                         cur.execute(*self.sql.create_contact(user.email, 'E', ''))
                         emailId = cur.lastrowid
                         cur.execute(*self.sql.assign_contact(emailId, p_id))
-                    p = Person(p_id, user.firstName, user.middleName, user.lastName, None)
+                    p = Person(p_id, user.firstName, user.middleName, user.lastName, None, rfi)
                     log_gassman.info('profile created: newUser=%s', p)
                 except:
                     etype, evalue, tb = sys.exc_info()
