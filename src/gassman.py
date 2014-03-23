@@ -341,7 +341,7 @@ class AccountAmountHandler (JsonBaseHandler):
         a = self.application.session(self).get_logged_user('not authenticated').account
         with self.application.conn as cur:
             cur.execute(*self.application.sql.account_amount(a))
-            data = [ cur.fetchone()[0], '€' ] # FIXME: pescare currency da db
+            data = cur.fetchone()
         self.write_response(data)
 
 class CsaAmountHandler (JsonBaseHandler):
@@ -350,8 +350,8 @@ class CsaAmountHandler (JsonBaseHandler):
         if not self.application.hasPermission(sql.P_canCheckAccounts, u.id):
             raise Exception('permission denied')
         with self.application.conn as cur:
-            cur.execute(*self.application.sql.csa_amount())
-            data = [ cur.fetchone()[0], '€' ] # FIXME: pescare currency da db
+            cur.execute(*self.application.sql.csa_amount(1)) # FIXME: selezionare csa
+            data = cur.fetchone()
         self.write_response(data)
 
 class PermissionsHandler (JsonBaseHandler):
@@ -431,15 +431,13 @@ class IncompleteProfilesHandler (JsonBaseHandler):
         self.write_response(data)
 
 def shortDate (d):
-    return d.strftime('%Y/%m/%d')
+    return d.strftime('%Y/%m/%d') # FIXME il formato dipende dal locale dell'utente
 
 def pubDate (d):
-    # Wed, 27 Nov 2013 15:17:32 GMT
     return d.strftime('%a, %d %b %Y %H:%M:%S GMT')
-    #return d.strftime('%Y/%m/%dT%H:%M:%SZ')
 
-def currency (s):
-    return '%s€' % s
+def currency (v, sym):
+    return '%s%s' % (v, sym)
 
 class RssFeedHandler (tornado.web.RequestHandler):
     def get (self, rssId):

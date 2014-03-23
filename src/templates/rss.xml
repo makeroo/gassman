@@ -6,11 +6,11 @@
 <description>Ultimi movimenti registrati</description>
 {% for l in items %}
 <item>
-<title>{{ l[0] }} ({{ currency(l[2]) }})</title>
+<title>{{ l[0] }} ({{ currency(l[2], l[4]) }})</title>
 <link>http://www.gassmanager.org/</link>
 <guid>{{ l[3] }}</guid>
 <pubDate>{{ pubDate(l[1]) }}</pubDate>
-<description>{{ shortDate(l[1]) }}: {{ l[0] }}, importo {{ currency(l[2]) }}.</description>
+<description>{{ shortDate(l[1]) }}: {{ l[0] }}, importo {{ currency(l[2], l[4]) }}.</description>
 </item>
 {% end %}
 </channel>

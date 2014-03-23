@@ -19,7 +19,8 @@ def account_movements (accountDbId, fromLine, toLine):
         ]
 
 def account_amount (accountDbId):
-    return 'SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s', [ accountDbId ]
+    return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a on l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND l.account_id=%s', [ accountDbId ]
+    #return 'SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s', [ accountDbId ]
 
 def accounts_index (fromLine, toLine):
     return '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount)\
@@ -81,7 +82,7 @@ def transaction_account_gc_names (tid):
     return 'SELECT DISTINCT a.id, a.gc_name FROM transaction_line l JOIN account a ON a.id=l.account_id WHERE transaction_id=%s', [ tid ]
 
 def rss_feed (rssId):
-    return 'SELECT t.description, t.transaction_date, l.amount, l.id FROM transaction_line l JOIN transaction t ON t.id=l.transaction_id JOIN account a ON l.account_id=a.id JOIN person p ON p.current_account_id=a.id WHERE p.rss_feed_id=%s ORDER BY t.transaction_date DESC LIMIT 8', [ rssId ]
+    return 'SELECT t.description, t.transaction_date, l.amount, l.id, c.symbol FROM transaction_line l JOIN transaction t ON t.id=l.transaction_id JOIN account a ON l.account_id=a.id JOIN person p ON p.current_account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE p.rss_feed_id=%s ORDER BY t.transaction_date DESC LIMIT 8', [ rssId ]
 
 def rss_user (rssId):
     return 'SELECT first_name, middle_name, last_name FROM person WHERE rss_feed_id=%s', [ rssId ]
@@ -89,10 +90,10 @@ def rss_user (rssId):
 def rss_id (personId):
     return 'SELECT rss_feed_id FROM person WHERE id=%s', [ personId ]
 
-# FIXME: questa assume un solo csa!
 # FIXME: correggere il 4.5 in gnucash!
-def csa_amount ():
-    return 'SELECT 4.5+SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id WHERE t.modified_by_id IS NULL AND a.gc_type=%s', [ 'ASSET' ]
+def csa_amount (csaId):
+    #return 'SELECT 4.5+SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id WHERE t.modified_by_id IS NULL AND a.gc_type=%s', [ 'ASSET' ]
+    return 'SELECT 4.5+SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND a.gc_type=%s AND a.csa_id=%s GROUP BY c.symbol', [ 'ASSET', csaId ]
 
 def checkConn ():
     return 'SELECT 1'
