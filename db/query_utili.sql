@@ -16,6 +16,13 @@ select p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount)
  where t.modified_by_id is null
  group by p.id, a.id;
 
+-- conti anche senza persone e loro amount
+select a.gc_name, sum(l.amount)
+ from account a
+ join transaction_line l on l.account_id=a.id
+ join transaction t on t.id=l.transaction_id
+ where t.modified_by_id is null
+ group by p.id, a.id;
 
 -- verifica partita doppia
 -- QUESTA DEVE RISULTARE 0.00!
