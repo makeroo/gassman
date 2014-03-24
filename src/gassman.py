@@ -169,6 +169,11 @@ class GassmanWebApp (tornado.web.Application):
                 p = Person(*cur.fetchone())
                 log_gassman.debug('found profile: authId=%s, person=%s', user.userId, p)
             except TypeError:
+                etype, evalue, tb = sys.exc_info()
+                log_gassman.debug('check_user failed: userId=%s, authenticator=%s, cause=%s/%s',
+                                  user.userId, user.authenticator,
+                                  etype, evalue)
+                log_gassman.debug('full stacktrace:\n%s', loglib.TracebackFormatter(tb))
                 try:
                     # non ho trovato niente su db
                     cur.execute(*self.sql.create_contact(user.userId, 'I', user.authenticator))
