@@ -234,6 +234,14 @@ a {
 	overflow: hidden;
 }
 
+.account-details .movements .header-error {
+	position: relative;
+	height: 30px;
+	flex: none;
+	line-height: 30px;
+	overflow: hidden;
+}
+
 .account-details .movements .body {
 /*	width:500px;*/
 	overflow: auto;
