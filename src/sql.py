@@ -91,10 +91,8 @@ def rss_user (rssId):
 def rss_id (personId):
     return 'SELECT rss_feed_id FROM person WHERE id=%s', [ personId ]
 
-# FIXME: correggere il 4.5 in gnucash!
 def csa_amount (csaId):
-    #return 'SELECT 4.5+SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id WHERE t.modified_by_id IS NULL AND a.gc_type=%s', [ 'ASSET' ]
-    return 'SELECT 4.5+SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND a.gc_type=%s AND a.csa_id=%s GROUP BY c.symbol', [ 'ASSET', csaId ]
+    return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND a.gc_type=%s AND a.csa_id=%s GROUP BY c.symbol', [ 'ASSET', csaId ]
 
 def checkConn ():
     return 'SELECT 1'
