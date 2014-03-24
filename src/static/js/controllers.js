@@ -155,5 +155,11 @@ gassmanControllers.controller('HelpController', function() {
 gassmanControllers.controller('FaqController', function() {
 });
 
-gassmanControllers.controller('ProjectController', function() {
+gassmanControllers.controller('ProjectController', function($scope, $http) {
+	$scope.version = null;
+
+	$http.post('/sys/version?_xsrf=' + getCookie('_xsrf')).
+	success (function (data, status, headers, config) {
+		$scope.version = data[0];
+	}); // non gestisco l'errore
 });

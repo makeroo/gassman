@@ -20,6 +20,7 @@ import tornado.gen
 import tornado.escape
 
 import gassman_settings as settings
+import gassman_version
 import jsonlib
 import pymysql
 import sql
@@ -88,6 +89,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/home.html$', HomeHandler),
             (r'^/auth/google$', GoogleAuthLoginHandler),
             (r'^/incomplete_profile.html$', IncompleteProfileHandler),
+            (r'^/sys/version$', SysVersionHandler),
             (r'^/account/movements/(\d+)/(\d+)$', SelfAccountMovementsHandler),
             (r'^/account/(\d+|self)/owner$', AccountOwnerHandler),
             (r'^/account/(\d+)/movements/(\d+)/(\d+)$', AccountMovementsHandler),
@@ -307,6 +309,12 @@ class JsonBaseHandler (BaseHandler):
         #log_gassman.error('unexpected exception: %s/%s', etype, evalue)
         #log_gassman.debug('full stacktrace:\n', loglib.TracebackFormatter(tb))
         jsonlib.write_json([ str(etype), str(evalue) ], self)
+
+
+class SysVersionHandler (JsonBaseHandler):
+    def post (self):
+        data = [ gassman_version.version ]
+        self.write_response(data)
 
 class SelfAccountMovementsHandler (JsonBaseHandler):
     def post (self, fromIdx, toIdx):
