@@ -3,8 +3,15 @@
 var gassmanControllers = angular.module('gassmanControllers', []);
 
 gassmanControllers.controller('MenuController', function($scope, $http, $filter) {
+	$scope.profile = null;
+	$scope.profileError = null;
 	$scope.functions = [];
 	$scope.totalAmount = null;
+	$scope.totalAmountError = null;
+	$scope.amount = null;
+	$scope.amountError = null;
+	$scope.currencySymbol = null;
+	$scope.amountClass = null;
 
 	$http.post('/profile-info?_xsrf=' + getCookie('_xsrf')).
 	success(function (data, status, headers, config) {
@@ -21,14 +28,14 @@ gassmanControllers.controller('MenuController', function($scope, $http, $filter)
 						$scope.totalAmount = data;
 					}).
 					error (function (data, status, headers, config) {
-						
+						$scope.totalAmountError = data;
 					});
 				}
 			}
 		}
 	}).
 	error (function (data, status, headers, config) {
-		
+		$scope.profileError = data;
 	});
 
 	$http.post('/account/amount?_xsrf=' + getCookie('_xsrf')).
@@ -37,19 +44,20 @@ gassmanControllers.controller('MenuController', function($scope, $http, $filter)
 		$scope.currencySymbol = data[1];
 
 		$scope.amountClass = $scope.amount < 0.0 ? 'negative' : 'positive';
-//			$filter('currency')(data[0], data[1]);
 	}).
 	error (function (data, status, headers, config) {
-		$scope.amountClass = 'error';
-		//console.log('error', data, status, headers, config);
+		$scope.amountError = data;
 	});
 });
 
 gassmanControllers.controller('AccountDetails', function($scope, $http, $filter, $routeParams, $location) {
-	$scope.uiMode = 'accountLoading';
 	$scope.movements = [];
+	$scope.movementsError = null;
 	$scope.transaction = null;
-	$scope.accountOwner = '';
+	$scope.transactionError = null;
+	$scope.accountOwner = null;
+	$scope.accountOwnerError = null;
+	$scope.selectedMovement = null;
 
 	$scope.toggleErrorMessage = function () {
 		$scope.showErrorMessage = ! $scope.showErrorMessage;
@@ -65,7 +73,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter,
 		$scope.accountOwner = data;
 	}).
 	error (function (data, status, headers, config) {
-		// TODO: errore
+		$scope.accountOwnerError = data;
 	});
 
 	$scope.transactionAccount = function (accId) {
@@ -82,26 +90,26 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter,
 	};
 
 	$scope.showTransaction = function (mov) {
+		$scope.transaction = null;
+		$scope.transactionError = null;
+		$scope.selectedMovement = mov[4];
 		$http.post('/transaction/' + mov[4] + '/detail?_xsrf=' + getCookie('_xsrf')).
 		success (function (data, status, headers, config) {
 			data.mov = mov;
 			$scope.transaction = data;
 		}).
 		error (function (data, status, headers, config) {
-			$scope.transaction = null;
-			// TODO: errore
+			$scope.transactionError = data;
 		});
 	};
 
 	$scope.loadMore = function () {
-
 		if (concluded) return;
 
 		$http.post('/account/' + (accId == undefined ? '' : (accId + '/')) + 'movements/' + start + '/' + (start + blockSize) + '?_xsrf=' + getCookie('_xsrf')). // null, { xsrfCookieName:'_xsrf' }).
 		success (function (data, status, headers, config) {
 			concluded = data.length < blockSize;
 			start += data.length;
-			$scope.uiMode = 'accountOk';
 			$scope.movements = $scope.movements.concat(data);
 		}).
 		error (function (data, status, headers, config) {
@@ -109,7 +117,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter,
 			$scope.serverError = data[1];
 			console.log('movements error:', data)
 			$scope.showErrorMessage = false;
-			$scope.uiMode = 'accountFailed';
+			$scope.movementsError = data;
 			//console.log('error', data, status, headers, config);
 		});
 	};
@@ -119,8 +127,8 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter,
 });
 
 gassmanControllers.controller('AccountsIndex', function($scope, $http, $filter, $location) {
-	$scope.uiMode = 'accountsLoading';
 	$scope.accounts = [];
+	$scope.accountsError = null;
 
 	var start = 0;
 	var blockSize = 25;
@@ -133,12 +141,11 @@ gassmanControllers.controller('AccountsIndex', function($scope, $http, $filter, 
 		success (function (data, status, headers, config) {
 			concluded = data.length < blockSize;
 			start += data.length;
-			$scope.uiMode = 'accountsOk';
 			$scope.accounts = $scope.accounts.concat(data);
 		}).
 		error (function (data, status, headers, config) {
 			concluded = true;
-			// TODO: mostrare errore
+			$scope.accountsError = data;
 		});
 	};
 

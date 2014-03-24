@@ -1,38 +1,40 @@
-<div ng-switch="uiMode" class="account-details">
+<div class="account-details">
 
-  <div ng-switch-when="accountLoading">
-   <div class="message">Sto caricando i dati, un'attimo di pazienza.</div>
-  </div>
-
-  <div ng-switch-when="accountOk" class="movements">
-    <div class="header">Conto di <span ng-repeat="o in accountOwner">{{ o[0] }} {{ o[1] }} {{ o[2] }}{{$last ? '' : ', '}}</span></div>
+  <div class="movements">
+    <div ng-show="accountOwner == accountOwnerError">Sto caricando...</div>
+    <div class="header" ng-show="accountOwner">Conto di <span ng-repeat="o in accountOwner">{{ o[0] }} {{ o[1] }} {{ o[2] }}{{$last ? '' : ', '}}</span></div>
+    <div class="header-error" ng-show="accountOwnerError">Informazioni sul titolare del conto non disponibili: {{ accountOwnerError }}.</div>
     <div class="header">
       <div class="mov-data">Data</div>
       <div class="mov-desc">Descrizione</div>
       <div class="mov-amount">Importo</div>
     </div>
     <div class="body" when-scrolled="loadMore()">
-      <div ng-repeat="mov in movements" class="mov-row" ng-click="showTransaction(mov)">
+      <div ng-show="!movements.length && !movementsError">
+       <div class="message">Sto caricando i dati, un'attimo di pazienza.</div>
+      </div>
+      <div ng-repeat="mov in movements" class="mov-row {{mov[4] == selectedMovement ? 'xx' : ''}}" ng-click="showTransaction(mov)">
         <div class="mov-data">{{ mov[1] | date:"shortDate" }}</div>
         <div class="mov-desc">{{ mov[0] }}</div>
         <div class="mov-amount">{{ mov[3] | currency }}</div> <!-- TODO: moneta quale? -->
       </div>
+      <div ng-show="movementsError">
+       <div class="server-error">
+        <p>Qualcosa è andato storto, <a href="" ng-click="toggleErrorMessage()">clicca per saperne di più</a>.</p>
+        <p ng-show="showErrorMessage" class="message">{{ serverError }}</p> <!-- TODO: serverError è html... -->
+        <p>Se il messaggio non ti dice niente prova a ricaricare la pagina.
+           Dopo qualche tentativo fallito, contatta il cassiere direttamente o sulla mailing list.
+           </p>
+       </div>
+      </div>
     </div>
-  </div>
-
-  <div ng-switch-when="accountFailed">
-   <div class="server-error">
-    <p>Qualcosa è andato storto, <a href="" ng-click="toggleErrorMessage()">clicca per saperne di più</a>.</p>
-    <p ng-show="showErrorMessage" class="message">{{ serverError }}</p> <!-- TODO: serverError è html... -->
-    <p>Se il messaggio non ti dice niente prova a ricaricare la pagina.
-       Dopo qualche tentativo fallito, contatta il cassiere direttamente o sulla mailing list.
-       </p>
-   </div>
   </div>
 
 </div>
 
-<div class="transaction-details" ng-show="transaction" class="transaction-detail">
+<div class="transaction-details" ng-show="transactionError">Dati della transazione non disponibili: {{transactionError}}.</div>
+
+<div class="transaction-details" ng-show="transaction">
  <div class="theader">
  <p class="title">Movimento del {{ transaction.mov[1] | date:"shortDate" }}</p>
  <p class="tdesc">{{ transaction.mov[0] }}</p>

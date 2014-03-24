@@ -19,16 +19,26 @@
 
  <div class="left-col" ng-controller="MenuController">
 
-  <div class="profile-info">
+  <div class="profile-info" ng-show="profile == profileError">
+   <p>Caricamento in corso...</p>
+  </div>
+  <div class="profile-info" ng-show="profileError">
+   <p>Dati personali non disponibili: {{!profileError}}.</p>
+  </div>
+  <div class="profile-info" ng-show="profile">
    <p>{{!profile.logged_user.firstName}} {{! profile.logged_user.middleName}} {{! profile.logged_user.lastName}}</p>
-   <p class="amount {{! amountClass }}">Saldo: {{! amount | currency : currencySymbol }}</p>
+   <p ng-show="amount == amountError">Caricamento in corso...</p>
+   <p ng-show="amountError">Saldo personale non disponible: {{! amountError }}.</p>
+   <p ng-show="amount" class="amount {{! amountClass }}">Saldo: {{! amount | currency : currencySymbol }}</p>
   </div>
   <div class="functions" ng-show="functions.length">
    <ul>
     <li ng-repeat="f in functions">
      <a href="{{!f.f}}">{{!f.l}}</a>
     </li>
-    <li ng-show="totalAmount != null">Totale in cassa {{! totalAmount[0] | currency : totalAmount[1] }}</li>
+    <li ng-show="totalAmount == totalAmountError">Caricamento in corso...</li>
+    <li ng-show="totalAmountError">Totale cassa non disponible: {{! totalAmountError }}.</li>
+    <li ng-show="totalAmount">Totale in cassa {{! totalAmount[0] | currency : totalAmount[1] }}</li>
    </ul>
   </div>
 
