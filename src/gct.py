@@ -148,6 +148,7 @@ class importGnucash (object):
         self.conn = conn
         self.cursor = conn.cursor()
         self.log = log
+        self.now = datetime.datetime.utcnow()
         try:
             self.checkAccounts()
             self.checkTransactions()
@@ -198,8 +199,18 @@ class importGnucash (object):
 
     def checkTransactions (self):
         self.log('Checking transactions...')
+        gTransIds = set()
         for t in self.g.transactions:
+            gTransIds.add(t.id)
             self.checkTransaction(t)
+        self.cursor.execute('select gc_id from transaction where modified_by_id is null')
+        for dbTransId in self.cursor:
+            if dbTransId not in gTransIds:
+                self.log('Should delete transaction %s, gnu cash file does not contain it anymore' % dbTransId)
+                # TODO: chiedo conferma?
+                self.cursor.execute('insert into transaction (description, transaction_date) values (%s, %s)', [ 'Deleted from gnucash', self.now ])
+                newTransId = self.cursor.lastrowid
+                self.cursor.execute('update transaction set modified_by_id=%s where gc_id=%s', [ newTransId, dbTransId ])
 
     def checkTransaction (self, t):
         self.cursor.execute('SELECT id, description, transaction_date FROM transaction WHERE gc_id=%s AND modified_by_id IS NULL', [ t.id ])
