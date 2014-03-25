@@ -57,7 +57,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter,
 	$scope.transactionError = null;
 	$scope.accountOwner = null;
 	$scope.accountOwnerError = null;
-	$scope.selectedMovement = null;
+//	$scope.selectedMovement = null;
 
 	$scope.toggleErrorMessage = function () {
 		$scope.showErrorMessage = ! $scope.showErrorMessage;
@@ -92,7 +92,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $http, $filter,
 	$scope.showTransaction = function (mov) {
 		$scope.transaction = null;
 		$scope.transactionError = null;
-		$scope.selectedMovement = mov[4];
+//		$scope.selectedMovement = mov[4];
 		$http.post('/transaction/' + mov[4] + '/detail?_xsrf=' + getCookie('_xsrf')).
 		success (function (data, status, headers, config) {
 			data.mov = mov;

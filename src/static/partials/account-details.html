@@ -13,7 +13,7 @@
       <div ng-show="!movements.length && !movementsError">
        <div class="message">Sto caricando i dati, un'attimo di pazienza.</div>
       </div>
-      <div ng-repeat="mov in movements" class="mov-row {{mov[4] == selectedMovement ? 'xx' : ''}}" ng-click="showTransaction(mov)">
+      <div ng-repeat="mov in movements" class="mov-row" ng-click="showTransaction(mov)">
         <div class="mov-data">{{ mov[1] | date:"shortDate" }}</div>
         <div class="mov-desc">{{ mov[0] }}</div>
         <div class="mov-amount">{{ mov[3] | currency }}</div> <!-- TODO: moneta quale? -->
