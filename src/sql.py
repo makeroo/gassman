@@ -7,6 +7,8 @@ Created on 03/mar/2014
 P_membership = 1
 P_canCheckAccounts = 2
 P_canAssignAccounts = 3
+P_canEnterDeposit = 4
+P_canEnterPayments = 5
 
 def account_owners (accountId):
     return 'SELECT first_name, middle_name, last_name FROM person WHERE current_account_id=%s', [ accountId ]
