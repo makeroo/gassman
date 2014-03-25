@@ -12,15 +12,32 @@ var gassmanApp = angular.module('gassmanApp', [
 	'gassmanControllers'
 	]);
 
-gassmanApp.permissions = [
-	null,
-	{ v:1, n:'membership', f:'#/account/detail', l:'Il tuo conto' },
-	{ v:2, n:'canCheckAccounts', f:'#/accounts/index', l:'Tutti i conti' },
-	{ v:3, n:'canAssignAccounts', f:null }
-	];
-
 gassmanApp.P_membership = 1;
 gassmanApp.P_canCheckAccounts = 2;
+//gassmanApp.P_canAssignAccounts = 3;
+gassmanApp.P_canEnterDeposit = 4;
+gassmanApp.P_canEnterPayments = 5;
+
+gassmanApp.functions = [
+	{ p:gassmanApp.P_membership, f:'#/account/detail', l:'Il tuo conto' },
+	{ p:gassmanApp.P_canCheckAccounts, f:'#/accounts/index', l:'Tutti i conti',
+	  justAdded: function ($scope, $http) {
+		$http.post('/csa/total_amount?_xsrf=' + getCookie('_xsrf')).
+		success(function (data, status, headers, config) {
+			$scope.totalAmount = data;
+		}).
+		error (function (data, status, headers, config) {
+			$scope.totalAmountError = data;
+		});
+	  }},
+	//{ v:P_canAssignAccounts, f:null },
+	{ p:gassmanApp.P_canEnterDeposit, f:'#/transaction/new/deposit', l:'Registra accrediti' },
+	{ p:gassmanApp.P_canEnterPayments, f:'#/transaction/new/payment', l:'Registra pagamenti' },
+	{ e:function (pp) {
+		return pp.indexOf(gassmanApp.P_canEnterPayments) != -1 ||
+		       pp.indexOf(gassmanApp.P_canEnterDeposit) != -1
+	  }, f:'#/transactions/index', l:' Movimenti inseriti' }
+	];
 
 /*
 gassmanApp.filter('noFractionCurrency',

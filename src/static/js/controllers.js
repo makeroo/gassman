@@ -17,6 +17,18 @@ gassmanControllers.controller('MenuController', function($scope, $http, $filter)
 	success(function (data, status, headers, config) {
 		$scope.profile = data;
 
+		for (var i in gassmanApp.functions) {
+			var f = gassmanApp.functions[i];
+
+			if (data.permissions.indexOf(f.p) != -1 ||
+				('e' in f && f.e(data.permissions))) {
+				$scope.functions.push(f);
+
+				if ('justAdded' in f)
+					f.justAdded($scope, $http);
+			}
+		}
+/*
 		for (var i in data.permissions) {
 			var f = gassmanApp.permissions[data.permissions[i]];
 			if (f.f) {
@@ -33,6 +45,7 @@ gassmanControllers.controller('MenuController', function($scope, $http, $filter)
 				}
 			}
 		}
+*/
 	}).
 	error (function (data, status, headers, config) {
 		$scope.profileError = data;
