@@ -38,7 +38,7 @@ def accounts_index (fromLine, toLine):
       ]
 
 def check_user (userId, authenticator):
-    return 'SELECT p.id, p.first_name, p.middle_name, p.last_name, p.current_account_id FROM contact_address c JOIN person_contact pc ON c.id=pc.address_id JOIN person p ON p.id=pc.person_id WHERE c.kind=%s AND c.contact_type=%s AND c.address=%s', [ 'I', authenticator, userId ]
+    return 'SELECT p.id, p.first_name, p.middle_name, p.last_name, p.current_account_id, p.rss_feed_id FROM contact_address c JOIN person_contact pc ON c.id=pc.address_id JOIN person p ON p.id=pc.person_id WHERE c.kind=%s AND c.contact_type=%s AND c.address=%s', [ 'I', authenticator, userId ]
 
 def create_contact (addr, kind, contactType):
     return 'INSERT INTO contact_address (address, kind, contact_type) VALUES (%s,%s,%s)', [ addr, kind, contactType ]

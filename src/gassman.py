@@ -71,6 +71,9 @@ class Session (object):
         return self.logged_user
 
 class Person (object):
+    class DoesNotExist (Exception):
+        pass
+
     def __init__ (self, p_id, p_first_name, p_middle_name, p_last_name, p_current_account_id, p_rss_feed_id):
         self.id = p_id
         self.firstName = p_first_name
@@ -166,14 +169,14 @@ class GassmanWebApp (tornado.web.Application):
         with self.conn as cur:
             cur.execute(*self.sql.check_user(user.userId, user.authenticator))
             try:
-                p = Person(*cur.fetchone())
+                pp = list(cur)
+                if len(pp) == 0:
+                    raise Person.DoesNotExist
+                p = Person(*pp[0])
+                if len(pp) > 1:
+                    self.notify('ERROR', 'Multiple auth id for %s' % p, 'Check auth id %s' % user.userId)
                 log_gassman.debug('found profile: authId=%s, person=%s', user.userId, p)
-            except TypeError:
-                etype, evalue, tb = sys.exc_info()
-                log_gassman.debug('check_user failed: userId=%s, authenticator=%s, cause=%s/%s',
-                                  user.userId, user.authenticator,
-                                  etype, evalue)
-                log_gassman.debug('full stacktrace:\n%s', loglib.TracebackFormatter(tb))
+            except Person.DoesNotExist:
                 try:
                     # non ho trovato niente su db
                     cur.execute(*self.sql.create_contact(user.userId, 'I', user.authenticator))
