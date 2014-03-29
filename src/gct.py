@@ -203,8 +203,9 @@ class importGnucash (object):
         for t in self.g.transactions:
             gTransIds.add(t.id)
             self.checkTransaction(t)
-        self.cursor.execute('select gc_id from transaction where modified_by_id is null')
-        for dbTransId in self.cursor:
+        self.cursor.execute('select gc_id from transaction where gc_id is not null and modified_by_id is null')
+        for tline in self.cursor:
+            dbTransId = tline[0]
             if dbTransId not in gTransIds:
                 self.log('Should delete transaction %s, gnu cash file does not contain it anymore' % dbTransId)
                 # TODO: chiedo conferma?
