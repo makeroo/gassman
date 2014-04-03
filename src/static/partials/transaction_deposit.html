@@ -1,0 +1,98 @@
+<form novalidate name="deposit" class="deposit"> <!-- TODO: validazione -->
+ <div class="lines-table">
+  <div class="header">
+   Inserisci gli accrediti:
+  </div>
+  <!--
+  <div class="header">
+   <div class="row-who">Chi ha versato</div>
+   <div class="row-amount">Quanto</div>
+   <div class="row-notes">Note</div>
+  </div>
+  -->
+  <div class="body">
+   <div ng-repeat="l in lines" class="row">
+    <div class="row-who {{l.nameClass}}">
+     <input type="text" placeholder="Chi ha versato" ng-model="l.name" ng-blur="$last && l.name && $parent.checkLine(l)" required /> 
+    </div>
+    <div class="row-amount {{l.amountClass}}">
+     <input type="number" placeholder="Quanto" ng-model="l.amount" ng-blur="$parent.updateTotalAmount()" min="0" required /> <!-- TODO: fare text + smart-float! -->
+    </div>
+    <div class="row-notes">
+     <input type="text" placeholder="Note" ng-model="l.notes" /> 
+    </div>
+   </div>
+  </div>
+ </div>
+ <div class="actions">
+  <div>Totale accrediti: {{totalAmount | currency : $scope.currency }}</div>
+  <button ng-click="saveDeposit()">Registra in cassa</button>
+  <button ng-disabled="confirmDelete" ng-click="confirmCancelDeposit()">Elimina la registrazione degli accrediti</button>
+  <button ng-show="confirmDelete" ng-click="cancelDeposit()">Conferma eliminazione</button>
+ </div>
+</form>
+
+<!--
+<div class="account-details">
+
+  <div class="movements">
+    <div ng-show="accountOwner == accountOwnerError">Sto caricando...</div>
+    <div class="header" ng-show="accountOwner">Conto di <span ng-repeat="o in accountOwner">{{ o[0] }} {{ o[1] }} {{ o[2] }}{{$last ? '' : ', '}}</span></div>
+    <div class="header-error" ng-show="accountOwnerError">Informazioni sul titolare del conto non disponibili: {{ accountOwnerError }}.</div>
+    <div class="header">
+      <div class="mov-data">Data</div>
+      <div class="mov-desc">Descrizione</div>
+      <div class="mov-amount">Importo</div>
+    </div>
+    <div class="body" when-scrolled="loadMore()">
+      <div ng-show="!movements.length && !movementsError">
+       <div class="message">Sto caricando i dati, un'attimo di pazienza.</div>
+      </div>
+      <div ng-repeat="mov in movements" class="mov-row" ng-click="showTransaction(mov)">
+        <div class="mov-data">{{ mov[1] | date:"shortDate" }}</div>
+        <div class="mov-desc">{{ mov[0] }}</div>
+        <div class="mov-amount">{{ mov[3] | currency }}</div> <!-- TODO: moneta quale? - ->
+      </div>
+      <div ng-show="movementsError">
+       <div class="server-error">
+        <p>Qualcosa è andato storto, <a href="" ng-click="toggleErrorMessage()">clicca per saperne di più</a>.</p>
+        <p ng-show="showErrorMessage" class="message">{{ serverError }}</p> <!-- TODO: serverError è html... - ->
+        <p>Se il messaggio non ti dice niente prova a ricaricare la pagina.
+           Dopo qualche tentativo fallito, contatta il cassiere direttamente o sulla mailing list.
+           </p>
+       </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="transaction-details" ng-show="transactionError">Dati della transazione non disponibili: {{transactionError}}.</div>
+
+<div class="transaction-details" ng-show="transaction">
+ <div class="theader">
+ <p class="title">Movimento del {{ transaction.mov[1] | date:"shortDate" }}</p>
+ <p class="tdesc">{{ transaction.mov[0] }}</p>
+  <div class="header">
+   <div class="desc">Descrizione</div>
+   <div class="account">Conto</div>
+   <div class="amount">Importo</div>
+  </div>
+ </div>
+
+ <div class="lines">
+  <div ng-repeat="l in transaction.lines" class="row">
+  <!-- 0:id 1:accId 2:desc 3:amount - ->
+   <div class="desc">{{ l[2] }}</div>
+   <div class="account">{{ transactionAccount(l[1]) }}</div>
+   <div class="amount">{{ l[3] | currency }}</div>
+  </div>
+ </div>
+<!--
+ <div ng-switch="transaction.lines.length">
+  <div ng-switch-when="1"></div>
+  <dov ng-switch-default></dov>
+ </div>
+- ->
+</div>
+-->

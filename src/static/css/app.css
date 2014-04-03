@@ -302,6 +302,74 @@ a {
 	font-weight: bolder;
 }
 
+.deposit {
+	position: absolute;
+	left: 0;
+	right: 50%;
+	top: 0;
+	bottom: 0;
+
+	overflow: hidden;
+}
+
+.deposit .lines-table {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 3em;
+}
+
+.deposit .lines-table .header {
+	position: relative;
+	height: 30px;
+	line-height: 30px;
+}
+
+.deposit .lines-table .row {
+	position: relative;
+	height: 30px;
+	line-height: 30px;
+}
+
+.deposit .lines-table .row input {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	width: 100%;
+	border: 0;
+	border-bottom: 1px solid gray;
+}
+
+.deposit .lines-table .row-who {
+	position: absolute;
+	left: 0;
+	right: 208px;
+	top: 0;
+}
+
+.deposit .lines-table .row-amount {
+	position: absolute;
+	right: 104px;
+	top: 0;
+	width: 100px;
+}
+
+.deposit .lines-table .row-notes {
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 100px;
+}
+
+.deposit .actions {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 3em;
+}
 
 .transaction-details {
 	position: absolute;
