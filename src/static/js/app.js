@@ -1,15 +1,11 @@
 'use strict';
 
-function getCookie (name) {
-	var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
-	return r ? r[1] : undefined;
-}
-
-/* Controllers */
-
 var gassmanApp = angular.module('gassmanApp', [
 	'ngRoute',
-	'gassmanControllers'
+	'ngCookies',
+	'ngStorage',
+	'gassmanControllers',
+	'gassmanServices'
 	]);
 
 gassmanApp.P_membership = 1;
@@ -21,13 +17,14 @@ gassmanApp.P_canEnterPayments = 5;
 gassmanApp.functions = [
 	{ p:gassmanApp.P_membership, f:'#/account/detail', l:'Il tuo conto' },
 	{ p:gassmanApp.P_canCheckAccounts, f:'#/accounts/index', l:'Tutti i conti',
-	  justAdded: function ($scope, $http) {
-		$http.post('/csa/total_amount?_xsrf=' + getCookie('_xsrf')).
-		success(function (data, status, headers, config) {
-			$scope.totalAmount = data;
+	  justAdded: function ($scope, gdata) {
+		gdata.selectedCsa().
+		then(function (csaId) { return gdata.totalAmount(csaId); }).
+		then(function (r) {
+			$scope.totalAmount = r.data;
 		}).
-		error (function (data, status, headers, config) {
-			$scope.totalAmountError = data;
+		then (undefined, function (error) {
+			$scope.totalAmountError = error;
 		});
 	  }},
 	//{ v:P_canAssignAccounts, f:null },
@@ -70,6 +67,18 @@ gassmanApp.config([ '$routeProvider',
 			when('/accounts/index', {
 				templateUrl: 'static/partials/accounts-index.html',
 				controller: 'AccountsIndex'
+			}).
+			when('/transaction/new/deposit', {
+				templateUrl: 'static/partials/transaction_deposit.html',
+				controller: 'TransactionDeposit'
+			}).
+			when('/transaction/new/payment', {
+				templateUrl: 'static/partials/transaction_payment.html',
+				controller: 'TransactionPayment'
+			}).
+			when('/transactions/index', {
+				templateUrl: 'static/partials/transactions_index.html',
+				controller: 'TransactionsIndex'
 			}).
 			when('/help', {
 				templateUrl: 'static/partials/help.html',

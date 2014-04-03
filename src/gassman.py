@@ -12,6 +12,7 @@ import hashlib
 import logging.config
 import os.path
 import sys
+import json
 
 import tornado.ioloop
 import tornado.web
@@ -59,27 +60,27 @@ class Session (object):
                 raise Exception(error)
             else:
                 return None
-        if self.logged_user.account is None:
-            # controllo per vedere se è avvenuta la registrazione
-            with self.application.conn as cur:
-                cur.execute(*self.application.sql.find_current_account(self.logged_user.id))
-                try:
-                    self.logged_user.account = int(cur.fetchone()[0])
-                except:
-                    etype, evalue, _ = sys.exc_info()
-                    log_gassman.debug('account not found: user=%s, cause=%s/%s', self.logged_user.id, etype, evalue)
+#        if self.logged_user.account is None:
+#            # controllo per vedere se è avvenuta la registrazione
+#            with self.application.conn as cur:
+#                cur.execute(*self.application.sql.find_current_account(self.logged_user.id))
+#                try:
+#                    self.logged_user.account = int(cur.fetchone()[0])
+#                except:
+#                    etype, evalue, _ = sys.exc_info()
+#                    log_gassman.debug('account not found: user=%s, cause=%s/%s', self.logged_user.id, etype, evalue)
         return self.logged_user
 
 class Person (object):
     class DoesNotExist (Exception):
         pass
 
-    def __init__ (self, p_id, p_first_name, p_middle_name, p_last_name, p_current_account_id, p_rss_feed_id):
+    def __init__ (self, p_id, p_first_name, p_middle_name, p_last_name, p_rss_feed_id):
         self.id = p_id
         self.firstName = p_first_name
         self.middleName = p_middle_name
         self.lastName = p_last_name
-        self.account = p_current_account_id
+        #self.account = p_current_account_id
         self.rssFeedId = p_rss_feed_id
 
     def __str__ (self):
@@ -93,14 +94,16 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/auth/google$', GoogleAuthLoginHandler),
             (r'^/incomplete_profile.html$', IncompleteProfileHandler),
             (r'^/sys/version$', SysVersionHandler),
-            (r'^/account/movements/(\d+)/(\d+)$', SelfAccountMovementsHandler),
-            (r'^/account/(\d+|self)/owner$', AccountOwnerHandler),
+#            (r'^/account/movements/(\d+)/(\d+)$', SelfAccountMovementsHandler),
+            (r'^/account/(\d+)/owner$', AccountOwnerHandler),
             (r'^/account/(\d+)/movements/(\d+)/(\d+)$', AccountMovementsHandler),
-            (r'^/account/amount$', AccountAmountHandler),
+            (r'^/account/(\d+)/amount$', AccountAmountHandler),
             (r'^/profile-info$', ProfileInfoHandler),
-            (r'^/accounts/index/(\d+)/(\d+)$', AccountsIndexHandler),
-            (r'^/transaction/(\d+)/detail$', TransactionDetailHandler),
-            (r'^/csa/total_amount$', CsaAmountHandler),
+            (r'^/accounts/(\d+)/index/(\d+)/(\d+)$', AccountsIndexHandler),
+            (r'^/accounts/(\d+)/names$', AccountsNamesHandler),
+            (r'^/transaction/(\d+)/(\d+)/detail$', TransactionDetailHandler),
+            (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
+            (r'^/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/rss/(.+)$', RssFeedHandler),
             ]
         codeHome = os.path.dirname(__file__)
@@ -165,6 +168,15 @@ class GassmanWebApp (tornado.web.Application):
             log_gassman.debug('full stacktrace:\n%s', loglib.TracebackFormatter(tb))
             return False
 
+    def hasAccounts (self, pid):
+        with self.conn as cur:
+            cur.execute(*self.sql.has_accounts(pid))
+            return cur.fetchone()[0] > 0
+
+    def hasAccount (self, cur, pid, accId):
+        cur.execute(*self.sql.has_account(pid, accId))
+        return cur.fetchone()[0] > 0
+
     def checkProfile (self, requestHandler, user):
         with self.conn as cur:
             cur.execute(*self.sql.check_user(user.userId, user.authenticator))
@@ -190,7 +202,7 @@ class GassmanWebApp (tornado.web.Application):
                         cur.execute(*self.sql.create_contact(user.email, 'E', ''))
                         emailId = cur.lastrowid
                         cur.execute(*self.sql.assign_contact(emailId, p_id))
-                    p = Person(p_id, user.firstName, user.middleName, user.lastName, None, rfi)
+                    p = Person(p_id, user.firstName, user.middleName, user.lastName, rfi)
                     log_gassman.info('profile created: newUser=%s', p)
                 except:
                     etype, evalue, tb = sys.exc_info()
@@ -222,12 +234,23 @@ class GassmanWebApp (tornado.web.Application):
                 log_gassman.info('created session: token=%s', xt)
         return s
 
-    def hasPermission (self, perm, personId):
-        with self.conn as cur:
-            cur.execute(*self.sql.has_permission(perm, personId))
-            r = int(cur.fetchone()[0]) > 0
-            log_gassman.debug('has permission: user=%s, perm=%s, r=%s', personId, perm, r)
-            return r
+    def hasPermissionByAccount (self, cur, perm, personId, accId):
+        cur.execute(*self.sql.has_permission_by_account(perm, personId, accId))
+        r = int(cur.fetchone()[0]) > 0
+        log_gassman.debug('has permission: user=%s, perm=%s, r=%s', personId, perm, r)
+        return r
+
+    def hasPermissionByCsa (self, cur, perm, personId, csaId):
+        cur.execute(*self.sql.has_permission_by_csa(perm, personId, csaId))
+        r = int(cur.fetchone()[0]) > 0
+        log_gassman.debug('has permission: user=%s, perm=%s, r=%s', personId, perm, r)
+        return r
+
+    def hasPermissions (self, cur, perms, personId, csaId):
+        cur.execute(*self.sql.has_permissions(perms, personId, csaId))
+        r = int(cur.fetchone()[0]) > 0
+        log_gassman.debug('has permissions: user=%s, perm=%s, r=%s', personId, perms, r)
+        return r
 
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user (self):
@@ -239,16 +262,16 @@ class IndexHandler (BaseHandler):
         p = self.application.session(self).get_logged_user(None)
         if p is None:
             self.render('frontpage.html')
-        elif p.account is None:
-            self.redirect("/incomplete_profile.html")
-        else:
+        elif self.application.hasAccounts(p.id):
             self.redirect("/home.html")
+        else:
+            self.redirect("/incomplete_profile.html")
 
 class IncompleteProfileHandler (tornado.web.RequestHandler):
     def get (self):
         s = self.application.session(self)
         p = s.get_logged_user(None)
-        if not p or p.account is not None:
+        if not p or self.application.hasAccounts(p.id):
             self.redirect('/')
         elif not s.registrationNotificationSent:
             s.registrationNotificationSent = self.application.notify('INFO',
@@ -283,7 +306,7 @@ class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleMix
             #log_gassman.debug('user received: %s', user)
             person = self.application.checkProfile(self, GoogleUser(user))
             self.application.session(self).logged_user = person
-            if person.account:
+            if self.application.hasAccounts(person.id):
                 self.redirect("/home.html")
             else:
                 self.redirect("/incomplete_profile.html")
@@ -304,6 +327,11 @@ class HomeHandler (BaseHandler):
                     rssId=cur.fetchone()[0])
 
 class JsonBaseHandler (BaseHandler):
+    def post (self, *args):
+        with self.application.conn as cur:
+            r = self.do(cur, *args)
+            self.write_response(r)
+
     def write_response (self, data):
         self.clear_header('Content-Type')
         self.add_header('Content-Type', 'application/json')
@@ -318,133 +346,183 @@ class JsonBaseHandler (BaseHandler):
         #log_gassman.debug('full stacktrace:\n', loglib.TracebackFormatter(tb))
         jsonlib.write_json([ str(etype), str(evalue) ], self)
 
+    @property
+    def payload (self):
+        if not hasattr(self, '_payload'):
+            try:
+                self._payload = json.loads(self.request.body) # in teoria dovrebbe mantenere ascii ma non è così... .encode('us-ascii'))
+            except:
+                etype, evalue, tb = sys.exc_info()
+                log_gassman.error('illegal payload: cause=%s/%s', etype, evalue)
+                log_gassman.debug('full stacktrace:\n%s', loglib.TracebackFormatter(tb))
+                raise Exception('illegal payload')
+        return self._payload
 
 class SysVersionHandler (JsonBaseHandler):
     def post (self):
         data = [ gassman_version.version ]
         self.write_response(data)
 
-class SelfAccountMovementsHandler (JsonBaseHandler):
-    def post (self, fromIdx, toIdx):
-        a = self.application.session(self).get_logged_user('not authenticated').account
-        self.fetchMovements(a, fromIdx, toIdx)
+#class SelfAccountMovementsHandler (JsonBaseHandler):
+#    def post (self, fromIdx, toIdx):
+#        a = self.application.session(self).get_logged_user('not authenticated').account
+#        self.fetchMovements(a, fromIdx, toIdx)
 
-    def fetchMovements (self, a, fromIdx, toIdx):
-        with self.application.conn as cur:
-            cur.execute(*self.application.sql.account_movements(a, int(fromIdx), int(toIdx)))
-            data = list(cur)
-        self.write_response(data)
-
-class AccountOwnerHandler (SelfAccountMovementsHandler):
-    def post (self, accId):
+class AccountOwnerHandler (JsonBaseHandler):
+    def do (self, cur, accId):
         u = self.application.session(self).get_logged_user('not authenticated')
-        if accId not in ('self', u.account) and not self.application.hasPermission(sql.P_canCheckAccounts, u.id):
+        if not self.application.hasAccount(cur, u.id, accId) and not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId):
             raise Exception('permission denied')
-        with self.application.conn as cur:
-            cur.execute(*self.application.sql.account_owners(accId if accId != 'self' else u.account))
-            data = list(cur)
-            self.write_response(data)
+        cur.execute(*self.application.sql.account_owners(accId))
+        return list(cur)
 
-class AccountMovementsHandler (SelfAccountMovementsHandler):
-    def post (self, accId, fromIdx, toIdx):
+class AccountMovementsHandler (JsonBaseHandler):
+    def do (self, cur, accId, fromIdx, toIdx):
         u = self.application.session(self).get_logged_user('not authenticated')
-        if not self.application.hasPermission(sql.P_canCheckAccounts, u.id):
+        if not self.application.hasAccount(cur, u.id, accId) and not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId):
             raise Exception('permission denied')
-        self.fetchMovements(accId, fromIdx, toIdx)
+        cur.execute(*self.application.sql.account_movements(accId, int(fromIdx), int(toIdx)))
+        return list(cur)
 
 class AccountAmountHandler (JsonBaseHandler):
-    def post (self):
-        a = self.application.session(self).get_logged_user('not authenticated').account
-        with self.application.conn as cur:
-            cur.execute(*self.application.sql.account_amount(a))
-            data = cur.fetchone()
-        self.write_response(data)
+    def do (self, cur, accId):
+        u = self.application.session(self).get_logged_user('not authenticated')
+        if not self.application.hasAccount(cur, u.id, accId) and not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId):
+            raise Exception('permission denied')
+        cur.execute(*self.application.sql.account_amount(accId))
+        return cur.fetchone()
 
 class CsaAmountHandler (JsonBaseHandler):
-    def post (self):
+    def do (self, cur, csaId):
         u = self.application.session(self).get_logged_user('not authenticated')
-        if not self.application.hasPermission(sql.P_canCheckAccounts, u.id):
+        if not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
             raise Exception('permission denied')
-        with self.application.conn as cur:
-            cur.execute(*self.application.sql.csa_amount(1)) # FIXME: selezionare csa
-            data = cur.fetchone()
-        self.write_response(data)
+        cur.execute(*self.application.sql.csa_amount(1)) # FIXME: selezionare csa
+        return cur.fetchone()
 
-class PermissionsHandler (JsonBaseHandler):
-    '''Restituisce tutti i permessi visibili dall'utente loggato.
-    '''
-    def post (self):
-        u = self.application.session(self).get_logged_user('not authenticated')
-        with self.application.conn as cur:
-            cur.execute(*self.application.sql.find_visible_permissions(u.id))
-            data = list(cur)
-        self.write_response(data)
+# TODO: riprisitnare quando si edita il profilo utente
+#class PermissionsHandler (JsonBaseHandler):
+#    '''Restituisce tutti i permessi visibili dall'utente loggato.
+#    '''
+#    def do (self, cur):
+#        u = self.application.session(self).get_logged_user('not authenticated')
+#        cur.execute(*self.application.sql.find_visible_permissions(u.id))
+#        return list(cur)
 
 class ProfileInfoHandler (JsonBaseHandler):
-    def post (self):
+    def do (self, cur):
         u = self.application.session(self).get_logged_user('not authenticated')
-        with self.application.conn as cur:
-            cur.execute(*self.application.sql.find_user_permissions(u.id))
-            pp = [ p[0] for p in cur]
-            cur.execute(*self.application.sql.find_user_csa(u.id))
-            csa = list(cur)
-            data = dict(
-                    logged_user = u,
-                    permissions = pp,
-                    csa = csa
-                    )
-        self.write_response(data)
+        cur.execute(*self.application.sql.find_user_permissions(u.id))
+        pp = [ p[0] for p in cur ]
+        cur.execute(*self.application.sql.find_user_csa(u.id))
+        csa = dict(cur)
+        cur.execute(*self.application.sql.find_user_accounts(u.id))
+        accs = list(cur)
+        return dict(
+                logged_user = u,
+                permissions = pp,
+                csa = csa,
+                accounts = accs
+                )
 
 class AccountsIndexHandler (JsonBaseHandler):
-    def post (self, fromIdx, toIdx):
+    def do (self, cur, csaId, fromIdx, toIdx):
         u = self.application.session(self).get_logged_user('not authenticated')
-        if not self.application.hasPermission(sql.P_canCheckAccounts, u.id):
+        if not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
             raise Exception('permission denied')
-        with self.application.conn as cur:
-            cur.execute(*self.application.sql.accounts_index(int(fromIdx), int(toIdx)))
-            data = list(cur)
-        self.write_response(data)
+        cur.execute(*self.application.sql.accounts_index(int(fromIdx), int(toIdx)))
+        return list(cur)
+
+class AccountsNamesHandler (JsonBaseHandler):
+    def do (self, cur, csaId):
+        u = self.application.session(self).get_logged_user('not authenticated')
+        if not self.application.hasPermissions([sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id):
+            raise Exception('permission denied')
+        cur.execute(*self.application.sql.account_names(csaId))
+        accountNames = list(cur)
+        cur.execute(*self.application.sql.account_people(csaId))
+        accountPeople = list(cur)
+        cur.execute(*self.application.sql.account_people_addresses(csaId))
+        accountPeopleAddresses = list(cur)
+        return dict(
+            accountNames = accountNames,
+            accountPeople = accountPeople,
+            accountPeopleAddresses = accountPeopleAddresses
+            )
 
 class TransactionDetailHandler (JsonBaseHandler):
-    def post (self, tid):
+    def do (self, cur, csaId, tid):
         # restituisco:
         # lines: [ id, desc, amount, accId ]
         # people: [ id, first, middle, last, accId ]
         # accounts: [ id, gc_name ]
         u = self.application.session(self).get_logged_user('not authenticated')
-        with self.application.conn as cur:
-            cur.execute(*self.application.sql.transaction_lines(tid))
-            lines = list(cur)
-            cur.execute(*self.application.sql.transaction_people(tid))
-            people = dict([ (c[4], c) for c in cur])
-            if not u.id in [c[0] for c in people.values()] and \
-                not self.application.hasPermission(sql.P_canCheckAccounts, u.id):
-                raise Exception('permission denied')
-            cur.execute(*self.application.sql.transaction_account_gc_names(tid))
-            accs = dict([ c for c in cur])
-            data = dict(
-                        lines = lines,
-                        people = people,
-                        accounts = accs,
-                        )
-        self.write_response(data)
-
-
-class IncompleteProfilesHandler (JsonBaseHandler):
-    '''
-    Restituisce le persone senza account.
-    '''
-    def post (self):
-        u = self.application.session(self).get_logged_user('not authenticated')
-        if not self.application.hasPermission(sql.P_canAssignAccounts, u.id):
+        cur.execute(*self.application.sql.transaction_lines(tid))
+        lines = list(cur)
+        cur.execute(*self.application.sql.transaction_people(tid))
+        people = dict([ (c[4], c) for c in cur])
+        if not u.id in [c[0] for c in people.values()] and \
+            not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
             raise Exception('permission denied')
-        with self.application.conn as cur:
-            cur.execute(*self.application.sql.find_users_without_account())
-            pwa = list(cur)
-            data = dict(
-                        users_without_account=pwa
-                        )
-        self.write_response(data)
+        cur.execute(*self.application.sql.transaction_account_gc_names(tid))
+        accs = dict([ c for c in cur])
+        return dict(
+                    lines = lines,
+                    people = people,
+                    accounts = accs,
+                    )
+
+class TransactionSaveHandler (JsonBaseHandler):
+    def du (self, cur, csaId):
+        u = self.application.session(self).get_logged_user('not authenticated')
+        tdef = self.payload
+        ttype = tdef['cc_type']
+        tlines = tdef['lines']
+        tdate = tdef['date']
+        tdesc = tdef['description']
+        if ttype == 'D':
+            if not self.application.hasPermissionByCsa(cur, sql.P_canEnterDeposit, u.id):
+                raise Exception('permission denied')
+            # TODO: scrivi
+            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, ttype))
+            tid = cur.lastrowid
+            for l in tlines:
+                desc = l['notes']
+                amount = l['amount']
+                accId = l['accId']
+                cur.execute(*self.application.sql.insert_transaction_line(tid, desc, amount, accId))
+            # TODO: fare che scrivo prima con cc_type (d)raft
+            # e lo trasformo nel tipo vero solo alla fine
+            # se è tutto ok, così in caso di problemi di non corrompo la cassa
+            # TODO: devo sapere il csa e nella insert di transaction_line devo verificare anche la csa
+            # TODO: stabilire come si passa il csa: è un dato di sessione oppure si comunica sempre dal client?
+            # TODO: inoltre il csa oltre al kitty deve anche avere un account entrate (e uno uscite anche se temporaneo...)
+        elif ttype == 'P':
+            if not self.application.hasPermissionByCsa(cur, sql.P_canEnterPayments, u.id):
+                raise Exception('permission denied')
+            # TODO: scrivi
+        else:
+            log_gassman.error('illegal transaction type: %s', tdef)
+            raise Exception('illegal transaction type')
+        # per prima cosa la salvo
+        # poi se tdef.id è definito allora aggiorno il modified_by_id
+
+# TODO: ripristinare se si fa la pagina di associazione conto
+#class IncompleteProfilesHandler (JsonBaseHandler):
+#    '''
+#    Restituisce le persone senza account.
+#    '''
+#    def post (self):
+#        u = self.application.session(self).get_logged_user('not authenticated')
+#        if not self.application.hasPermission(sql.P_canAssignAccounts, u.id):
+#            raise Exception('permission denied')
+#        with self.application.conn as cur:
+#            cur.execute(*self.application.sql.find_users_without_account())
+#            pwa = list(cur)
+#            data = dict(
+#                        users_without_account=pwa
+#                        )
+#        self.write_response(data)
 
 def shortDate (d):
     return d.strftime('%Y/%m/%d') # FIXME il formato dipende dal locale dell'utente

@@ -1,19 +1,23 @@
 -- prospetto degli utenti e dei loro conti
-select p.id, p.first_name, p.last_name, c.address, a.gc_name
+select p.id, p.first_name, p.last_name, c.address, a.gc_name, k.name
  from person p
  join person_contact pc on pc.person_id=p.id
  join contact_address c on pc.address_id=c.id
- left join account a on a.id=p.current_account_id
- where c.kind='E'
+ left join account_person ap on ap.person_id=p.id
+ left join account a on a.id=ap.account_id
+ left join csa k on k.id=a.csa_id
+ where ap.to_date is null and c.kind='E'
  order by p.id;
 
 -- conti e loro amount
-select p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount)
+select p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount), k.name
  from person p
- join account a on a.id=p.current_account_id
+ join account_person ap on ap.person_id=p.id
+ join account a on a.id=ap.account_id
  join transaction_line l on l.account_id=a.id
  join transaction t on t.id=l.transaction_id
- where t.modified_by_id is null
+ join csa k on k.id=a.csa_id
+ where t.modified_by_id is null and ap.to_date is null
  group by p.id, a.id;
 
 -- conti anche senza persone e loro amount
@@ -29,20 +33,20 @@ select a.gc_name, sum(l.amount)
 SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL ;
 
 -- totale in cassa (contanti in mano al tesoriere)
--- il 4.5 è una transazione su sbilancio che deve essere corretta!
-SELECT 4.5+SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id WHERE t.modified_by_id IS NULL AND a.gc_type='ASSET';
+SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id WHERE t.modified_by_id IS NULL AND a.gc_type='ASSET';
 
 -- persone senza conto
 select p.id, p.first_name, p.last_name, c.address
  from person p
  join person_contact pc on pc.person_id=p.id
  join contact_address c on pc.address_id=c.id
- where c.kind='E' and p.current_account_id is null
+ left join account_person ap on ap.person_id=p.id
+ where c.kind='E' and ap.from_date is null
  order by p.id;
 
 -- conti non ancora assegnati
 select * from account
- where id not in (select current_account_id from person where current_account_id is not null)
+ where id not in (select account_id from account_person where to_date is null)
    and gc_parent = 'acf998ffe1edbcd44bc30850813650ac';
 
 -- profili doppi
@@ -71,5 +75,5 @@ select * from permission_grant where person_id=40;
 
 
 select * from account where gc_name like '%igong%';
-update person set current_account_id =83 where id=15;
+insert into account_person (from_date, person_id, account_id) values (now(), 83, 15);
 

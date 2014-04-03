@@ -1,4 +1,4 @@
--- version 3
+-- version 4
 
 SET SESSION storage_engine = "MyISAM";
 SET SESSION time_zone = "+0:00";
@@ -127,12 +127,10 @@ CREATE TABLE person (
   last_name VARCHAR(100),
   default_delivery_place_id INT,
   address_id INT,
-  current_account_id INT,
   cash_treshold DECIMAL(15,2) NOT NULL DEFAULT 0,
   rss_feed_id CHAR(64),
 
   FOREIGN KEY (address_id) REFERENCES street_address(id),
-  FOREIGN KEY (current_account_id) REFERENCES account(id),
   PRIMARY KEY (id)
 );
 
@@ -245,6 +243,7 @@ CREATE TABLE transaction (
   modified_by_id INT,
 
   gc_id CHAR(32),
+  cc_type CHAR(1) NOT NULL DEFAULT 'G', -- (G)nucash/generic, (D)eposit, (P)ayment implica il tipo di form presentato dal sito
 
   --UNIQUE (gc_id), -- non è unico a causa del rewrite!
   FOREIGN KEY (modified_by_id) REFERENCES transaction(id),
