@@ -149,6 +149,10 @@ class importGnucash (object):
         self.cursor = conn.cursor()
         self.log = log
         self.now = datetime.datetime.utcnow()
+        # TODO: questi dovrei prenderli da linea di comando
+        # e currency in realtà dovrei leggerlo da gnucash
+        self.CSA_ID = 1
+        self.CURRENCY_ID = 1
         try:
             self.checkAccounts()
             self.checkTransactions()
@@ -186,13 +190,15 @@ class importGnucash (object):
                     pass
             else:
                 #self.log('Account not found, it will be created: gc_id=%s' % a.id)
-                self.cursor.execute('INSERT INTO account (gc_id, gc_name, gc_desc, gc_type, gc_parent) VALUES (%s, %s, %s, %s, %s)',
+                self.cursor.execute('INSERT INTO account (gc_id, gc_name, gc_desc, gc_type, gc_parent, csa_id, currency_id) VALUES (%s, %s, %s, %s, %s, %s, %s)',
                                     [
                                      a.id,
                                      dbText(a.name),
                                      dbText(a.description),
                                      a.type,
                                      a.parent,
+                                     self.CSA_ID,
+                                     self.CURRENCY_ID
                                      ])
                 a.dbId = self.cursor.lastrowid
                 self.log('Created account: name=%s, gc_id=%s, id=%s' % (a.name, a.id, a.dbId))
