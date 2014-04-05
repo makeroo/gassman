@@ -1,6 +1,9 @@
 'use strict';
 
-var gassmanControllers = angular.module('gassmanControllers', []);
+var gassmanControllers = angular.module('gassmanControllers', [
+    'gassmanServices',
+    'Mac'
+    ]);
 
 gassmanControllers.controller('MenuController', function($scope, $filter, gdata) {
 	$scope.profile = null;
@@ -160,18 +163,22 @@ gassmanControllers.controller('AccountsIndex', function($scope, $filter, $locati
 	$scope.loadMore();
 });
 
-gassmanControllers.controller('TransactionDeposit', function($scope, $routeParams, gdata) {
+gassmanControllers.controller('TransactionDeposit', function($scope, $routeParams, $timeout, gdata) {
 	$scope.transId = $routeParams['transId'];
 	$scope.lines = [];
+	$scope.tdate = new Date();
+	$scope.tdesc = 'Accredito';
 	$scope.totalAmount = 0.0;
 	$scope.confirmDelete = false;
 	$scope.currency = '';
 	$scope.autocompletionData = [];
 	$scope.autocompletionDataError = null;
+	$scope.csaId = null;
 
 	var newLine = function () {
 		return {
-			name: '',
+			accountName: '',
+			account: null,
 			amount: '',
 			notes: '',
 			nameClass: '',
@@ -199,14 +206,16 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		var data = {
 			id: $scope.transId,
 			cc_type: 'D',
-			lines: []
+			lines: [],
+			date: $scope.tdate,
+			description: $scope.tdesc
 		};
 
 		for (var i in $scope.lines) {
 			var l = $scope.lines[i];
 
 			if (l.amount > 0.0) {
-				if (l.name) {
+				if (l.account) {
 					l.nameClass = '';
 					data.lines.push(l);
 				} else {
@@ -225,7 +234,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		}
 
 		//data = angular.toJson(data)
-		gdata.transactionSave(csaId, data)
+		gdata.transactionSave($scope.csaId, data).
 		then (function (r) {
 			
 		}).
@@ -237,6 +246,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 
 	$scope.confirmCancelDeposit = function () {
 		$scope.confirmDelete = true;
+		$timeout(function () { $scope.confirmDelete = false; }, 3200.0);
 	};
 
 	$scope.cancelDeposit = function () {
@@ -251,8 +261,13 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		// TODO: carica la transazione
 	}
 
+	$scope.selectedAccount = function (l, o) {
+		console.log("SELZ!!", l, o);
+		l.account = o.acc;
+	}
+
 	gdata.selectedCsa().
-	then (function (csaId) { return gdata.ccountsNames(csaId); }).
+	then (function (csaId) { $scope.csaId = csaId; return gdata.accountsNames(csaId); }).
 	then (function (r) {
 		// trasforma data in autocompletionData
 		var accountNames = r.data.accountNames;

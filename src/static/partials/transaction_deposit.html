@@ -13,7 +13,14 @@
   <div class="body">
    <div ng-repeat="l in lines" class="row">
     <div class="row-who {{l.nameClass}}">
-     <input type="text" placeholder="Chi ha versato" ng-model="l.name" ng-blur="$last && l.name && $parent.checkLine(l)" required /> 
+     <mac-autocomplete
+            mac-placeholder="'Chi ha versato'"
+            mac-autocomplete-source="autocompletionData"
+            mac-autocomplete-on-select="selectedAccount(l, selected)"
+            mac-autocomplete-delay="300"
+            ng-model="l.accountName"
+            ng-blur="$last && l.account && $parent.checkLine(l)"
+            required />
     </div>
     <div class="row-amount {{l.amountClass}}">
      <input type="number" placeholder="Quanto" ng-model="l.amount" ng-blur="$parent.updateTotalAmount()" min="0" required /> <!-- TODO: fare text + smart-float! -->
@@ -25,9 +32,10 @@
   </div>
  </div>
  <div class="actions">
-  <div>Totale accrediti: {{totalAmount | currency : $scope.currency }}</div>
-  <button ng-click="saveDeposit()">Registra in cassa</button>
-  <button ng-disabled="confirmDelete" ng-click="confirmCancelDeposit()">Elimina la registrazione degli accrediti</button>
+  <div>Data consegna: <input type="date" ng-model="tdate"/>, note: <input type="text" ng-model="tdesc"/><br/>
+       Totale accrediti: {{totalAmount | currency : $scope.currency }}</div>
+  <button ng-enabled="csaId" ng-click="saveDeposit()">Registra in cassa</button>
+  <button ng-disabled="confirmDelete" ng-show="transId" ng-click="confirmCancelDeposit()">Elimina la registrazione degli accrediti</button>
   <button ng-show="confirmDelete" ng-click="cancelDeposit()">Conferma eliminazione</button>
  </div>
 </form>
