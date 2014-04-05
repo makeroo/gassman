@@ -70,7 +70,8 @@ def find_visible_permissions (personId):
     return 'SELECT id, name, description, visibility FROM permission p WHERE visibility <= (SELECT MAX(p.visibility) FROM permission p JOIN permission_grant g ON p.id=g.perm_id JOIN person u ON g.person_id=u.id WHERE u.id=%s) ORDER BY visibility, ord, name', [ personId ]
 
 def find_user_permissions (personId):
-    return 'SELECT p.id FROM person u JOIN permission_grant g ON g.person_id=u.id JOIN permission p ON g.perm_id=p.id WHERE u.id=%s', [ personId ]
+    return 'SELECT g.perm_id FROM person u JOIN permission_grant g ON g.person_id=u.id WHERE u.id=%s', [ personId ]
+    #return 'SELECT p.id FROM person u JOIN permission_grant g ON g.person_id=u.id JOIN permission p ON g.perm_id=p.id WHERE u.id=%s', [ personId ]
 
 def find_user_csa (personId):
     return 'SELECT c.id, c.name FROM csa c JOIN permission_grant g ON c.id=g.csa_id WHERE g.person_id=%s AND g.perm_id=%s', [ personId, P_membership ]
@@ -134,6 +135,18 @@ def insert_transaction (desc, tDate, ccType):
 
 def insert_transaction_line (tid, desc, amount, accId):
     return 'INSERT INTO transaction_line (transaction_id, account_id, description, amount) SELECT %s, a.id, %s, %s FROM account a WHERE a.id = %s', [ tid, desc, amount, accId ]
+
+def check_transaction_coherency (tid):
+    return 'SELECT DISTINCT a.currency_id, a.csa_id FROM transaction_line l JOIN account a ON a.id=l.account_id WHERE l.transaction_id = %s', [ tid ]
+
+def complete_deposit (tid, csaId):
+    return 'INSERT INTO transaction_line (transaction_id, account_id, amount) SELECT l.transaction_id, c.income_id, - SUM(l.amount) FROM csa c, transaction_line l WHERE c.id=%s AND l.transaction_id=%s', [ csaId, tid ]
+
+def finalize_transaction (tid, ttype):
+    return 'UPDATE transaction SET cc_type=%s WHERE id=%s', [ ttype, tid ]
+
+def log_transaction (tid, opId, logType, logDesc, tDate):
+    return 'INSERT INTO transaction_log (log_date, operator_id, op_type, transaction_id, notes) VALUES (%s, %s, %s, %s, %s)', [ tDate, opId, logType, tid, logDesc ] 
 
 def checkConn ():
     return 'SELECT 1'

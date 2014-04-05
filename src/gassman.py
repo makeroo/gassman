@@ -350,7 +350,9 @@ class JsonBaseHandler (BaseHandler):
     def payload (self):
         if not hasattr(self, '_payload'):
             try:
-                self._payload = json.loads(self.request.body) # in teoria dovrebbe mantenere ascii ma non è così... .encode('us-ascii'))
+                x = self.request.body
+                s = x.decode('utf8')
+                self._payload = json.loads(s)
             except:
                 etype, evalue, tb = sys.exc_info()
                 log_gassman.error('illegal payload: cause=%s/%s', etype, evalue)
@@ -436,7 +438,7 @@ class AccountsIndexHandler (JsonBaseHandler):
 class AccountsNamesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         u = self.application.session(self).get_logged_user('not authenticated')
-        if not self.application.hasPermissions([sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id):
+        if not self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId):
             raise Exception('permission denied')
         cur.execute(*self.application.sql.account_names(csaId))
         accountNames = list(cur)
@@ -473,30 +475,51 @@ class TransactionDetailHandler (JsonBaseHandler):
                     )
 
 class TransactionSaveHandler (JsonBaseHandler):
-    def du (self, cur, csaId):
+    def do (self, cur, csaId):
+        csaId = int(csaId)
         u = self.application.session(self).get_logged_user('not authenticated')
         tdef = self.payload
+        # TODO: modifica di transazione preesistente
         ttype = tdef['cc_type']
         tlines = tdef['lines']
-        tdate = tdef['date']
+        if len(tlines) == 0:
+            raise Exception('no lines')
+        tdate = jsonlib.decode_date(tdef['date'])
         tdesc = tdef['description']
+        tlogType = None
+        tlogDesc = ''
         if ttype == 'D':
-            if not self.application.hasPermissionByCsa(cur, sql.P_canEnterDeposit, u.id):
+            if not self.application.hasPermissionByCsa(cur, sql.P_canEnterDeposit, u.id, csaId):
                 raise Exception('permission denied')
             # TODO: scrivi
-            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, ttype))
+            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, 'd'))
             tid = cur.lastrowid
             for l in tlines:
                 desc = l['notes']
                 amount = l['amount']
-                accId = l['accId']
+                accId = l['account']
+                if amount <= 0:
+                    ttype = 'e'
+                    tlogType = 'e'
+                    tlogDesc = 'negative amount'
+                    break
                 cur.execute(*self.application.sql.insert_transaction_line(tid, desc, amount, accId))
-            # TODO: fare che scrivo prima con cc_type (d)raft
-            # e lo trasformo nel tipo vero solo alla fine
-            # se è tutto ok, così in caso di problemi di non corrompo la cassa
-            # TODO: devo sapere il csa e nella insert di transaction_line devo verificare anche la csa
-            # TODO: stabilire come si passa il csa: è un dato di sessione oppure si comunica sempre dal client?
-            # TODO: inoltre il csa oltre al kitty deve anche avere un account entrate (e uno uscite anche se temporaneo...)
+            if ttype != 'e':
+                cur.execute(*self.application.sql.check_transaction_coherency(tid))
+                v = list(cur)
+                if len(v) != 1:
+                    ttype = 'e'
+                    tlogType = 'e'
+                    tlogDesc = 'accounts not omogeneous for currency and/or csa'
+                elif v[0][1] != csaId:
+                    ttype = 'e'
+                    tlogType = 'e'
+                    tlogDesc = 'accounts do not belong to csa'
+                else:
+                    cur.execute(*self.application.sql.complete_deposit(tid, csaId))
+                    tlogType = 'A' # TODO: oppure M se modifico
+            cur.execute(*self.application.sql.finalize_transaction(tid, ttype))
+            cur.execute(*self.application.sql.log_transaction(tid, u.id, tlogType, tlogDesc, datetime.datetime.utcnow()))
         elif ttype == 'P':
             if not self.application.hasPermissionByCsa(cur, sql.P_canEnterPayments, u.id):
                 raise Exception('permission denied')
