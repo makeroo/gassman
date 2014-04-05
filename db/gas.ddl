@@ -187,8 +187,14 @@ CREATE TABLE csa (
   annual_kitty_amount DECIMAL(15,2) NOT NULL DEFAULT 0,
   -- Soglia di default per i nuovi arrivati
   default_account_threshold DECIMAL(15,2) NOT NULL DEFAULT 0,
+  -- Conto per le uscite (finché si rimane al modello salvadenaio...)
+  expenses_id INT NOT NULL,
+  -- Conto per le entrate (finché si rimane al modello salvadenaio, poi scompare)
+  income_id INT NOT NULL,
 
   FOREIGN KEY (kitty_id) REFERENCES account(id),
+  FOREIGN KEY (expenses_id) REFERENCES account(id),
+  FOREIGN KEY (income_id) REFERENCES account(id),
   PRIMARY KEY (id)
 );
 
@@ -206,11 +212,14 @@ CREATE TABLE permission_grant (
 
   csa_id INT NOT NULL,
   person_id INT NOT NULL,
-  perm_id VARCHAR(32) NOT NULL,
+  perm_id INT NOT NULL,
 
   -- I permessi sono specifici di un csa. La stessa persona può avere
   -- diritti diversi su csa diversi.
   UNIQUE (csa_id, person_id, perm_id),
+  FOREIGN KEY (csa_id) REFERENCES csa(id),
+  FOREIGN KEY (person_id) REFERENCES person(id),
+  FOREIGN KEY (perm_id) REFERENCES permission(id),
   PRIMARY KEY (id)
 );
 
@@ -243,7 +252,14 @@ CREATE TABLE transaction (
   modified_by_id INT,
 
   gc_id CHAR(32),
-  cc_type CHAR(1) NOT NULL DEFAULT 'G', -- (G)nucash/generic, (D)eposit, (P)ayment implica il tipo di form presentato dal sito
+  -- tipi di transazione:
+  -- (G)nucash/generic
+  -- (D)eposit
+  -- (P)ayment implica il tipo di form presentato dal sito
+  -- (d)raft: è in corso di salvataggio
+  -- (e)rror: è stato richiesto il salvataggio di una transazione, ma i dati non sono corretti
+  --          eg. account non appartenenti al csa indicato, o monete non uniformi
+  cc_type CHAR(1) NOT NULL DEFAULT 'G',
 
   --UNIQUE (gc_id), -- non è unico a causa del rewrite!
   FOREIGN KEY (modified_by_id) REFERENCES transaction(id),
@@ -263,5 +279,21 @@ CREATE TABLE transaction_line (
   --UNIQUE (gc_id), -- non è unico a causa del rewrite!
   FOREIGN KEY (transaction_id) REFERENCES transaction(id),
   FOREIGN KEY (account_id) REFERENCES account(id),
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE transaction_log (
+  id INT NOT NULL AUTO_INCREMENT,
+
+--  cassa_id int not null,
+  log_date DATETIME NOT NULL,
+  operator_id INT NOT NULL,
+
+  op_type CHAR(1) NOT NULL, -- (A)dded, (D)eleted, (M)odified, (e)rror
+  transaction_id INT NOT NULL,
+  notes TEXT, -- in caso di errore, il motivo
+
+  FOREIGN KEY (operator_id) REFERENCES person(id),
+  FOREIGN KEY (transaction_id) REFERENCES transaction(id),
   PRIMARY KEY (id)
 );

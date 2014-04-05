@@ -1,4 +1,4 @@
-s
+
 
 
 
@@ -216,20 +216,6 @@ CREATE TABLE account_request (
 );
 
 
-CREATE TABLE transaction_log (
-  id INT NOT NULL AUTO_INCREMENT,
-
---  cassa_id int not null,
-  log_date DATETIME NOT NULL,
-  operator_id INT NOT NULL,
-
-  op_type CHAR(1) NOT NULL, -- (A)dded, (D)eleted, (M)odified
-  transaction_id INT NOT NULL,
-
-  FOREIGN KEY (operator_id) REFERENCES person(id),
-  FOREIGN KEY (transaction_id) REFERENCES transaction(id),
-  PRIMARY KEY (id)
-);
 
 
 
