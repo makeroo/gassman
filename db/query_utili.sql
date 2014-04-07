@@ -9,6 +9,14 @@ select p.id, p.first_name, p.last_name, c.address, a.gc_name, k.name
  where ap.to_date is null and c.kind='E'
  order by p.id;
 
+-- persone non ancora registrate
+select * from account
+ where gc_parent = 'acf998ffe1edbcd44bc30850813650ac'
+   and gc_id not in ('4d5b627c2ec72d94d95e95543aa5cd1f', '5ba64cec222104efb491ceafd6dd1812')
+   and id not in (select current_account_id from person where current_account_id is not null)
+ order by gc_name;
+
+
 -- conti e loro amount
 select p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount), k.name
  from person p
