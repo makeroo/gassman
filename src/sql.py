@@ -14,14 +14,15 @@ def account_owners (accountId):
     return 'SELECT p.first_name, p.middle_name, p.last_name FROM person p JOIN account_person ap ON ap.person_id=p.id WHERE ap.account_id=%s AND ap.to_date IS NULL', [ accountId ]
 
 def account_movements (accountDbId, fromLine, toLine):
-    return 'SELECT t.description, t.transaction_date, l.description, l.amount, t.id FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s ORDER BY t.transaction_date DESC LIMIT %s OFFSET %s', [
+    return 'SELECT t.description, t.transaction_date, l.description, l.amount, t.id FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s ORDER BY t.transaction_date DESC LIMIT %s OFFSET %s', [
+        'd', 'e',
         accountDbId,
         toLine - fromLine + 1,
         fromLine
         ]
 
 def account_amount (accountDbId):
-    return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a on l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND l.account_id=%s', [ accountDbId ]
+    return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a on l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s', [ 'd', 'e', accountDbId ]
     #return 'SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s', [ accountDbId ]
 
 def accounts_index (fromLine, toLine):
@@ -31,10 +32,11 @@ def accounts_index (fromLine, toLine):
  JOIN account a ON a.id=ap.account_id\
  JOIN transaction_line l ON l.account_id=a.id\
  JOIN transaction t ON t.id=l.transaction_id\
- WHERE t.modified_by_id IS NULL\
+ WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) \
  GROUP BY p.id, a.id\
  ORDER BY p.first_name, p.last_name\
  LIMIT %s OFFSET %s''', [
+      'd', 'e',
       toLine - fromLine + 1,
       fromLine
       ]
@@ -107,7 +109,7 @@ def transaction_account_gc_names (tid):
     return 'SELECT DISTINCT a.id, a.gc_name FROM transaction_line l JOIN account a ON a.id=l.account_id WHERE transaction_id=%s', [ tid ]
 
 def rss_feed (rssId):
-    return 'SELECT t.description, t.transaction_date, l.amount, l.id, c.symbol FROM transaction_line l JOIN transaction t ON t.id=l.transaction_id JOIN account_person ap ON ap.account_id=l.account_id JOIN account a ON l.account_id=a.id JOIN person p ON p.id=ap.person_id JOIN currency c ON c.id=a.currency_id WHERE p.rss_feed_id=%s AND ap.to_date IS NULL ORDER BY t.transaction_date DESC LIMIT 8', [ rssId ]
+    return 'SELECT t.description, t.transaction_date, l.amount, l.id, c.symbol FROM transaction_line l JOIN transaction t ON t.id=l.transaction_id JOIN account_person ap ON ap.account_id=l.account_id JOIN account a ON l.account_id=a.id JOIN person p ON p.id=ap.person_id JOIN currency c ON c.id=a.currency_id WHERE p.rss_feed_id=%s AND ap.to_date IS NULL AND t.cc_type NOT IN (%s, %s) ORDER BY t.transaction_date DESC LIMIT 8', [ rssId, 'd', 'e' ]
 
 def rss_user (rssId):
     return 'SELECT first_name, middle_name, last_name FROM person WHERE rss_feed_id=%s', [ rssId ]
@@ -116,7 +118,7 @@ def rss_id (personId):
     return 'SELECT rss_feed_id FROM person WHERE id=%s', [ personId ]
 
 def csa_amount (csaId):
-    return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND a.gc_type=%s AND a.csa_id=%s GROUP BY c.symbol', [ 'ASSET', csaId ]
+    return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND a.gc_type=%s AND a.csa_id=%s GROUP BY c.symbol', [ 'd', 'e', 'ASSET', csaId ]
 
 def account_names (csaId):
     '''Tutti i nomi di conti di una comunità escluso gli Scomparsi.
