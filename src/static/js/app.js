@@ -2,10 +2,9 @@
 
 var gassmanApp = angular.module('gassmanApp', [
 	'ngRoute',
-	'ngCookies',
-	'ngStorage',
 	'gassmanControllers',
-	'gassmanServices'
+	'gassmanServices',
+	'gassmanDirectives'
 	]);
 
 gassmanApp.P_membership = 1;
@@ -68,7 +67,7 @@ gassmanApp.config([ '$routeProvider',
 				templateUrl: 'static/partials/accounts-index.html',
 				controller: 'AccountsIndex'
 			}).
-			when('/transaction/new/deposit', {
+			when('/transaction/:transId/deposit', {
 				templateUrl: 'static/partials/transaction_deposit.html',
 				controller: 'TransactionDeposit'
 			}).
@@ -96,15 +95,3 @@ gassmanApp.config([ '$routeProvider',
 				redirectTo: '/account/self/details'
 			})
 	}]);
-
-gassmanApp.directive('whenScrolled', function() {
-	return function (scope, elm, attr) {
-		var raw = elm[0];
-
-		elm.bind('scroll', function() {
-			if (raw.scrollTop + raw.offsetHeight >= raw.scrollHeight) {
-				scope.$apply(attr.whenScrolled);
-			}
-		});
-	};
-});

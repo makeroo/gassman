@@ -2,6 +2,7 @@
 
 var gassmanControllers = angular.module('gassmanControllers', [
     'gassmanServices',
+    'gassmanDirectives',
     'Mac'
     ]);
 
@@ -92,9 +93,18 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 				// p: [id, fist, middle, last, accId]
 				return p[1] + (p[2] ? ' ' + p[2] : '') + ' ' + p[3];
 			var n = $scope.transaction.accounts[accId];
-			return n ? n : 'N/D';
+			return n ? n[0] : 'N/D';
 		} catch (e) {
 			return 'N/D';
+		}
+	};
+
+	$scope.transactionCurrency = function (accId) {
+		try {
+			var n = $scope.transaction.accounts[accId];
+			return n ? n[1] : '';
+		} catch (e) {
+			return '';
 		}
 	};
 
@@ -170,19 +180,21 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 	$scope.tdesc = 'Accredito';
 	$scope.totalAmount = 0.0;
 	$scope.confirmDelete = false;
-	$scope.currency = '';
+	$scope.currency = null;
+	$scope.currencyError = false;
+	$scope.currencies = {};
 	$scope.autocompletionData = [];
 	$scope.autocompletionDataError = null;
 	$scope.csaId = null;
+	$scope.tsaveOk = null;
+	$scope.tsaveError = null;
 
 	var newLine = function () {
 		return {
 			accountName: '',
 			account: null,
 			amount: '',
-			notes: '',
-			nameClass: '',
-			amountClass: ''
+			notes: ''
 		};
 	};
 
@@ -203,9 +215,13 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 	}
 
 	$scope.saveDeposit = function () {
+		if ($scope.$invalid || $scope.currencyError)
+			return;
+
 		var data = {
-			id: $scope.transId,
+			id: $scope.transId == 'new' ? null : $scope.transId,
 			cc_type: 'D',
+			currency: $scope.currency[0],
 			lines: [],
 			date: $scope.tdate,
 			description: $scope.tdesc
@@ -216,32 +232,35 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 
 			if (l.amount > 0.0) {
 				if (l.account) {
-					l.nameClass = '';
 					data.lines.push(l);
-				} else {
-					l.nameClass = 'required';
-					// TODO: errore
-
-					return;
 				}
-				l.amountClass = '';
-			} else if (l.amount < 0.0) {
-				l.amountClass = 'negative';
-			} else {
-				l.nameClass = '';
-				l.amountClass = '';
 			}
 		}
 
-		//data = angular.toJson(data)
+		if (data.lines.length == 0) {
+			return;
+		}
+
+		//data = angular.toJson(data) // lo fa già in automatico
 		gdata.transactionSave($scope.csaId, data).
 		then (function (r) {
-			
+			$scope.transId = 'new';
+			$scope.lines = [];
+			$scope.tsaveOk = true;
 		}).
 		then (undefined, function (error) {
-			
+			$scope.tsaveError = error.data;
 		});
-		// TODO: salva transazione
+	};
+
+	$scope.newTrans = function () {
+		$scope.tdate = new Date();
+		$scope.tdesc = 'Accredito';
+		$scope.totalAmount = 0.0;
+		$scope.confirmDelete = false;
+		$scope.currency = null;
+		$scope.tsaveOk = null;
+		$scope.lines.push(newLine());
 	};
 
 	$scope.confirmCancelDeposit = function () {
@@ -255,19 +274,54 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		// TODO: cancella transazione
 	}
 
-	if ($scope.transId == undefined) {
+	if ($scope.transId == 'new') {
 		$scope.lines.push(newLine());
 	} else {
 		// TODO: carica la transazione
 	}
 
 	$scope.selectedAccount = function (l, o) {
-		console.log("SELZ!!", l, o);
 		l.account = o.acc;
+		l.accountName = o.name;
+
+//		var curr = $scope.currencies[o.acc];
+//		if (!$scope.currency)
+//			$scope.currency = curr;
+//		else if ($scope.currency != curr)
+//			$scope.currencyError = true;
+		$scope.checkCurrencies();
 	}
 
+	$scope.checkCurrencies = function () {
+		$scope.currency = null;
+
+		for (var i in $scope.lines) {
+			var l = $scope.lines[i];
+			var a = l.account;
+
+			if (!a)
+				continue;
+
+			var curr = $scope.currencies[a];
+
+			if (!$scope.currency) {
+				$scope.currency = curr;
+			} else if ($scope.currency != curr) {
+				$scope.currency = null;
+				$scope.currencyError = true;
+				return;
+			}
+		}
+
+		$scope.currencyError = false;
+	};
+
 	gdata.selectedCsa().
-	then (function (csaId) { $scope.csaId = csaId; return gdata.accountsNames(csaId); }).
+	then (function (csaId) {
+		$scope.csaId = csaId;
+		
+		return gdata.accountsNames(csaId);
+	}).
 	then (function (r) {
 		// trasforma data in autocompletionData
 		var accountNames = r.data.accountNames;
@@ -278,6 +332,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 			var o = accountNames[i];
 			// o è un array gc_name, accId
 			$scope.autocompletionData.push({ name: o[0], acc: o[1] });
+			$scope.currencies[o[1]] = [ o[2], o[3] ];
 		}
 		for (var i in accountPeople) {
 			var o = accountPeople[i];
