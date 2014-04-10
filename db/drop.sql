@@ -12,3 +12,5 @@ DROP TABLE contact_address;
 DROP TABLE street_address;
 DROP TABLE city;
 DROP TABLE state;
+DROP TABLE currency;
+DROP TABLE transaction_log;
