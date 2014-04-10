@@ -261,8 +261,16 @@ CREATE TABLE transaction (
   --          eg. account non appartenenti al csa indicato, o monete non uniformi
   cc_type CHAR(1) NOT NULL DEFAULT 'G',
 
+  -- la currency la posso dedurre dai conti, perché deve essere
+  -- coerente, cioè i conti coinvolti in una transazione devono avere
+  -- la stessa moneta, ma la riporto qua ugualmente:
+  -- 1) riduco banda / query
+  -- 2) la uso per verificare la coerenza
+  currency_id INT NOT NULL,
+
   --UNIQUE (gc_id), -- non è unico a causa del rewrite!
   FOREIGN KEY (modified_by_id) REFERENCES transaction(id),
+  FOREIGN KEY (currency_id) REFERENCES currency(id),
   PRIMARY KEY (id)
 );
 

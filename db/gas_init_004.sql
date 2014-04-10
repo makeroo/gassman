@@ -14,13 +14,12 @@ ALTER TABLE permission_grant ADD FOREIGN KEY (csa_id) REFERENCES csa(id);
 CREATE TABLE transaction_log (
   id INT NOT NULL AUTO_INCREMENT,
 
---  cassa_id int not null,
   log_date DATETIME NOT NULL,
   operator_id INT NOT NULL,
 
-  op_type CHAR(1) NOT NULL, -- (A)dded, (D)eleted, (M)odified, (e)rror
+  op_type CHAR(1) NOT NULL,
   transaction_id INT NOT NULL,
-  notes TEXT, -- in caso di errore, il motivo
+  notes TEXT,
 
   FOREIGN KEY (operator_id) REFERENCES person(id),
   FOREIGN KEY (transaction_id) REFERENCES transaction(id),
@@ -36,3 +35,7 @@ ALTER TABLE csa ADD FOREIGN KEY (income_id) REFERENCES account(id);
 
 update csa set income_id=(select id from account where gc_type='INCOME');
 update csa set expenses_id = ( select id from account where gc_type='EXPENSE' AND gc_parent=(select gc_id from account where gc_type='ROOT'));
+
+ALTER TABLE transaction ADD COLUMN currency_id INT;
+UPDATE transaction SET currency_id = (SELECT id from CURRENCY LIMIT 1);
+ALTER TABLE transaction MODIFY currency_id INT NOT NULL;
