@@ -462,3 +462,16 @@ a {
 
 	line-height: 30px;
 }
+
+input.ng-invalid {
+	background-color: #fcc;
+}
+
+.error-message {
+	position: relative;
+	font-size: 7pt;
+	top: 2.2em;
+	color: #966;
+	font-style: italic;
+	line-height: 8pt;
+}
