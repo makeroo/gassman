@@ -14,7 +14,7 @@ def account_owners (accountId):
     return 'SELECT p.first_name, p.middle_name, p.last_name FROM person p JOIN account_person ap ON ap.person_id=p.id WHERE ap.account_id=%s AND ap.to_date IS NULL', [ accountId ]
 
 def account_movements (accountDbId, fromLine, toLine):
-    return 'SELECT t.description, t.transaction_date, l.description, l.amount, t.id FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s ORDER BY t.transaction_date DESC LIMIT %s OFFSET %s', [
+    return 'SELECT t.description, t.transaction_date, l.description, l.amount, t.id, c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN currency c ON c.id=t.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s ORDER BY t.transaction_date DESC LIMIT %s OFFSET %s', [
         'd', 'e',
         accountDbId,
         toLine - fromLine + 1,
@@ -26,12 +26,13 @@ def account_amount (accountDbId):
     #return 'SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s', [ accountDbId ]
 
 def accounts_index (fromLine, toLine):
-    return '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount)\
+    return '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount), c.symbol\
  FROM person p\
  JOIN account_person ap ON ap.person_id=p.id\
  JOIN account a ON a.id=ap.account_id\
  JOIN transaction_line l ON l.account_id=a.id\
  JOIN transaction t ON t.id=l.transaction_id\
+ JOIN currency c ON c.id=a.currency_id\
  WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) \
  GROUP BY p.id, a.id\
  ORDER BY p.first_name, p.last_name\
@@ -106,7 +107,7 @@ def transaction_people (tid):
     return 'SELECT DISTINCT p.id, p.first_name, p.middle_name, p.last_name, l.account_id FROM transaction_line l JOIN account_person ap ON ap.account_id=l.account_id JOIN person p ON ap.person_id=p.id WHERE transaction_id=%s AND ap.to_date IS NULL', [ tid ]
 
 def transaction_account_gc_names (tid):
-    return 'SELECT DISTINCT a.id, a.gc_name FROM transaction_line l JOIN account a ON a.id=l.account_id WHERE transaction_id=%s', [ tid ]
+    return 'SELECT DISTINCT a.id, a.gc_name, c.symbol FROM transaction_line l JOIN account a ON a.id=l.account_id JOIN currency c ON c.id=a.currency_id WHERE transaction_id=%s', [ tid ]
 
 def rss_feed (rssId):
     return 'SELECT t.description, t.transaction_date, l.amount, l.id, c.symbol FROM transaction_line l JOIN transaction t ON t.id=l.transaction_id JOIN account_person ap ON ap.account_id=l.account_id JOIN account a ON l.account_id=a.id JOIN person p ON p.id=ap.person_id JOIN currency c ON c.id=a.currency_id WHERE p.rss_feed_id=%s AND ap.to_date IS NULL AND t.cc_type NOT IN (%s, %s) ORDER BY t.transaction_date DESC LIMIT 8', [ rssId, 'd', 'e' ]
@@ -124,7 +125,7 @@ def account_names (csaId):
     '''Tutti i nomi di conti di una comunità escluso gli Scomparsi.
     FIXME: prima o poi scompariranno le colonne gc!
     '''
-    return 'SELECT gc_name, id FROM account WHERE csa_id = %s AND gc_parent = %s AND gc_id <> %s', [ csaId, 'acf998ffe1edbcd44bc30850813650ac', '5ba64cec222104efb491ceafd6dd1812' ]
+    return 'SELECT a.gc_name, a.id, c.id, c.symbol FROM account a JOIN currency c ON a.currency_id=c.id WHERE a.csa_id = %s AND a.gc_parent = %s AND a.gc_id <> %s', [ csaId, 'acf998ffe1edbcd44bc30850813650ac', '5ba64cec222104efb491ceafd6dd1812' ]
 
 def account_people (csaId):
     return 'SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id FROM person p JOIN account_person ap ON p.id=ap.person_id JOIN account a ON ap.account_id=a.id WHERE a.csa_id=%s AND ap.to_date IS NULL', [ csaId ]
@@ -132,8 +133,8 @@ def account_people (csaId):
 def account_people_addresses (csaId):
     return 'SELECT c.address, p.id, a.id FROM person p JOIN account_person ap ON ap.person_id=p.id JOIN account a ON ap.account_id=a.id JOIN person_contact pc ON p.id=pc.person_id JOIN contact_address c ON pc.address_id=c.id WHERE a.csa_id=%s AND c.kind IN (%s, %s) AND ap.to_date IS NULL', [ csaId, 'E', 'N' ]
 
-def insert_transaction (desc, tDate, ccType):
-    return 'INSERT INTO transaction (description, transaction_date, cc_type) VALUES (%s, %s, %s)', [ desc, tDate, ccType ]
+def insert_transaction (desc, tDate, ccType, currencyId):
+    return 'INSERT INTO transaction (description, transaction_date, cc_type, currency_id) SELECT %s, %s, %s, id FROM currency WHERE id=%s', [ desc, tDate, ccType, currencyId ]
 
 def insert_transaction_line (tid, desc, amount, accId):
     return 'INSERT INTO transaction_line (transaction_id, account_id, description, amount) SELECT %s, a.id, %s, %s FROM account a WHERE a.id = %s', [ tid, desc, amount, accId ]

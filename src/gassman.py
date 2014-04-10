@@ -329,6 +329,12 @@ class HomeHandler (BaseHandler):
 class JsonBaseHandler (BaseHandler):
     def post (self, *args):
         with self.application.conn as cur:
+            m = cur.execute
+            def logging_execute (sql, *args):
+                if not sql.upper().startswith('SELECT'):
+                    log_gassman.debug('SQL: %s / %s', sql, args)
+                m(sql, *args)
+            cur.execute = logging_execute
             r = self.do(cur, *args)
             self.write_response(r)
 
@@ -457,7 +463,7 @@ class TransactionDetailHandler (JsonBaseHandler):
         # restituisco:
         # lines: [ id, desc, amount, accId ]
         # people: [ id, first, middle, last, accId ]
-        # accounts: [ id, gc_name ]
+        # accounts: [ id, gc_name, currency ]
         u = self.application.session(self).get_logged_user('not authenticated')
         cur.execute(*self.application.sql.transaction_lines(tid))
         lines = list(cur)
@@ -467,7 +473,7 @@ class TransactionDetailHandler (JsonBaseHandler):
             not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
             raise Exception('permission denied')
         cur.execute(*self.application.sql.transaction_account_gc_names(tid))
-        accs = dict([ c for c in cur])
+        accs = dict([( c[0], (c[1], c[2])) for c in cur])
         return dict(
                     lines = lines,
                     people = people,
@@ -481,6 +487,7 @@ class TransactionSaveHandler (JsonBaseHandler):
         tdef = self.payload
         # TODO: modifica di transazione preesistente
         ttype = tdef['cc_type']
+        tcurr = tdef['currency']
         tlines = tdef['lines']
         if len(tlines) == 0:
             raise Exception('no lines')
@@ -491,9 +498,10 @@ class TransactionSaveHandler (JsonBaseHandler):
         if ttype == 'D':
             if not self.application.hasPermissionByCsa(cur, sql.P_canEnterDeposit, u.id, csaId):
                 raise Exception('permission denied')
-            # TODO: scrivi
-            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, 'd'))
+            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, 'd', tcurr))
             tid = cur.lastrowid
+            if tid == 0:
+                raise Exception('illegal currency')
             for l in tlines:
                 desc = l['notes']
                 amount = l['amount']
