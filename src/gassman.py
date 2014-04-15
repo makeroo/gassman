@@ -350,7 +350,8 @@ class HomeHandler (BaseHandler):
         with self.application.conn as cur:
             cur.execute(*self.application.sql.rss_id(u.id))
         self.render('home.html',
-                    rssId=cur.fetchone()[0])
+                    rssId=cur.fetchone()[0],
+                    MINIFIED=settings.MINIFIED)
 
 class JsonBaseHandler (BaseHandler):
     def post (self, *args):
