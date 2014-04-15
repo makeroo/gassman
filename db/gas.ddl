@@ -256,6 +256,7 @@ CREATE TABLE transaction (
   -- (G)nucash/generic
   -- (D)eposit
   -- (P)ayment implica il tipo di form presentato dal sito
+  -- (T)rashed cestinata, significa che non ha linee
   -- (d)raft: è in corso di salvataggio
   -- (e)rror: è stato richiesto il salvataggio di una transazione, ma i dati non sono corretti
   --          eg. account non appartenenti al csa indicato, o monete non uniformi
