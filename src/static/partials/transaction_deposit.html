@@ -50,9 +50,9 @@
   <div>Data consegna: <input type="date" ng-model="tdate"/>, note: <input type="text" ng-model="tdesc"/><br/>
        <span ng-show="!currencyError && totalAmount > 0">Totale accrediti: {{totalAmount | currency : currency[1] }}</span>
        <span ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
-       <span ng-show="!currencyError && !totalAmount">Nessun versamento finora.</span>
+       <span ng-show="!currencyError && !totalAmount">Nessun versamento inserito finora.</span>
        </div>
-  <button ng-enabled="csaId && deposit.$valid" ng-click="saveDeposit()">Registra in cassa</button>
+  <button ng-disabled="!csaId || !deposit.$valid || !totalAmount" ng-click="saveDeposit()">Registra in cassa</button>
   <button ng-disabled="confirmDelete" ng-show="transId != 'new'" ng-click="confirmCancelDeposit()">Elimina la registrazione degli accrediti</button>
   <button ng-show="confirmDelete" ng-click="cancelDeposit()">Conferma eliminazione</button>
  </div>

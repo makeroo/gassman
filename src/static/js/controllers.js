@@ -271,14 +271,25 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 	$scope.cancelDeposit = function () {
 		$scope.confirmDelete = false;
 
-		// TODO: cancella transazione
-	}
+		var data = {
+				id: $scope.transId,
+				cc_type: 'T',
+				currency: $scope.currency[0],
+				lines: [],
+				date: $scope.tdate,
+				description: $scope.tdesc
+			};
 
-	if ($scope.transId == 'new') {
-		$scope.lines.push(newLine());
-	} else {
-		// TODO: carica la transazione
-	}
+		gdata.transactionSave($scope.csaId, data).
+		then (function (r) {
+			$scope.transId = 'new';
+			$scope.lines = [];
+			$scope.tsaveOk = true;
+		}).
+		then (undefined, function (error) {
+			$scope.tsaveError = error.data;
+		});
+	};
 
 	$scope.selectedAccount = function (l, o) {
 		l.account = o.acc;
@@ -316,13 +327,14 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		$scope.currencyError = false;
 	};
 
+	var ai = {};
+
 	gdata.selectedCsa().
 	then (function (csaId) {
 		$scope.csaId = csaId;
-		
-		return gdata.accountsNames(csaId);
-	}).
-	then (function (r) {
+
+		return gdata.accountsNames($scope.csaId);
+	}).then (function (r) {
 		// trasforma data in autocompletionData
 		var accountNames = r.data.accountNames;
 		var accountPeople = r.data.accountPeople;
@@ -333,6 +345,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 			// o è un array gc_name, accId
 			$scope.autocompletionData.push({ name: o[0], acc: o[1] });
 			$scope.currencies[o[1]] = [ o[2], o[3] ];
+			ai[o[1]] = o[0];
 		}
 		for (var i in accountPeople) {
 			var o = accountPeople[i];
@@ -341,13 +354,71 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 			n = n.trim();
 			people[o[0]] = n;
 			$scope.autocompletionData.push({ name: n, acc: o[4], p: o[0] });
+			ai[o[4]] = n; // sovrascrivo, non mi interessa
 		}
 		for (var i in accountPeopleAddresses) {
 			var o = accountPeopleAddresses[i];
 			// o è un array 0:addr 1:pid 2:accId
 			var n = o[0] + ' (' + people[o[1]] + ')';
 			$scope.autocompletionData.push({ name: n, acc: o[2], p: o[1] });
+			if (!ai[o[2]])
+				ai[o[2]] == n; // questa volta non sovrascrivo
 		}
+
+		if ($scope.transId == 'new')
+			return {
+				data: {
+				transId: 'new',
+				description: 'Accredito',
+				date: new Date(),
+				cc_type: 'D',
+				currency: null,
+				lines: []
+			} };
+		else
+			return gdata.transactionForEdit($scope.csaId, $scope.transId);
+	}).then(function (tdata) {
+		var t = tdata.data;
+
+		if (t.cc_type != 'D')
+			throw "illegal type";
+
+		$scope.transId = t.transId;
+		$scope.tdesc = t.description;
+		$scope.tdata = t.data;
+
+		if (!t.lines.length) {
+			t.lines.push(newLine());
+		} else {
+			// caricata quindi rimuovo la riga negativa
+			for (var i in t.lines) {
+				var l = t.lines[i];
+				// il filtro currency digerisce anche le stringhe
+				// mentre input="number" no, devo prima convertire in float
+				// i Decimal su db vengono convertiti in json in stringa
+				var x = parseFloat(l.amount);
+
+				//console.log(x, typeof(x));
+				if (x < 0) {
+					t.lines.splice(i, 1);
+				} else {
+					l.amount = x;
+				}
+			}
+		}
+
+		for (var i in t.lines) {
+			var l = t.lines[i];
+			if (!l.accountName)
+				l.accountName = ai[l.account];
+		}
+
+		$scope.lines = t.lines;
+		$scope.updateTotalAmount();
+
+		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
+		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
+		// comunque inutilizzabile
 	}).
 	then (undefined, function (error) {
 		$scope.autocompletionDataError = error.data;

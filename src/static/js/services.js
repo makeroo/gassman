@@ -10,6 +10,7 @@ var gassmanServices = angular.module('gassmanServices', [
  * 1) in config non ho disponibilità di $cookies (NON so perché)
  * 2) i transformRequest ricevono solo data
  * 3) gli interceptors ricevono solo config
+ *    MA CONFIG CONTIENE url:''!
 gassmanServices.config(function ($httpProvider) {
 	$httpProvider.defaults.transformRequest.push(function (data) {
 		// TODO: qua devo aggiungere ?_xsrf=$cookies._xsrf alla query
@@ -149,6 +150,10 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies) {
 
 	this.transactionDetail = function (csaId, tid) {
 		return $http.post('/transaction/' + csaId + '/' + tid + '/detail?_xsrf=' + $cookies._xsrf);
+	}
+
+	this.transactionForEdit = function (csaId, tid) {
+		return $http.post('/transaction/' + csaId + '/' + tid + '/edit?_xsrf=' + $cookies._xsrf);
 	}
 
 	this.transactionSave = function (csaId, tData) {

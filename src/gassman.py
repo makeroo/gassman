@@ -102,6 +102,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/accounts/(\d+)/index/(\d+)/(\d+)$', AccountsIndexHandler),
             (r'^/accounts/(\d+)/names$', AccountsNamesHandler),
             (r'^/transaction/(\d+)/(\d+)/detail$', TransactionDetailHandler),
+            (r'^/transaction/(\d+)/(\d+)/edit$', TransactionEditHandler),
             (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
             (r'^/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/rss/(.+)$', RssFeedHandler),
@@ -251,6 +252,20 @@ class GassmanWebApp (tornado.web.Application):
         r = int(cur.fetchone()[0]) > 0
         log_gassman.debug('has permissions: user=%s, perm=%s, r=%s', personId, perms, r)
         return r
+
+    def isTransactionEditor (self, cur, personId, transId):
+        '''
+        Una transazione può essere creata/modificata da chi ha canEnterXX
+        o da chi ha manageTrans.
+        Per verificare devo risalire la catena delle sovrascritture.
+        '''
+        while transId is not None:
+            cur.execute(*self.sql.log_transaction_check_operator(personId, transId))
+            if cur.fetchone()[0] > 0:
+                return True
+            cur.execute(*self.sql.transaction_previuos(transId))
+            transId = cur.fetchone()[0]
+        return False
 
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user (self):
@@ -480,12 +495,40 @@ class TransactionDetailHandler (JsonBaseHandler):
                     accounts = accs,
                     )
 
+class TransactionEditHandler (JsonBaseHandler):
+    def do (self, cur, csaId, transId):
+        u = self.application.session(self).get_logged_user('not authenticated')
+        cur.execute(*self.application.sql.transaction_edit(transId))
+        d = cur.fetchone()
+        r = dict(
+            transId = transId,
+            description = d[0],
+            date = d[1],
+            cc_type = d[2],
+            currency = [ d[3], d[4] ]
+            )
+        # regole per editare:
+        # è D, ho P_canEnterDeposit e l'ho creata io
+        # è P, ho P_canEnterPayments e l'ho creata io
+        # oppure P_canManageTransactions
+        if (not not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId) and
+            not (d[2] in ('D', 'P') and
+                 self.application.hasPermissionByCsa(cur, sql.P_canEnterDeposit if d[2] == 'D' else sql.P_canEnterPayments, u.id, csaId) and
+                 self.application.isTransactionEditor(cur, transId, u.id))
+            ):
+            raise Exception('permission denied')
+        cur.execute(*self.application.sql.transaction_lines(transId))
+        r['lines'] = [ dict(account=l[1], notes=l[2], amount=l[3]) for l in cur]
+        return r
+
 class TransactionSaveHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         csaId = int(csaId)
         u = self.application.session(self).get_logged_user('not authenticated')
         tdef = self.payload
         # TODO: modifica di transazione preesistente
+        # TODO: se modifico verifico che sia coerente (cioè D => D/T, P => D/T, G => G/T, T => niente, le T non si modificano più)
+        transId = tdef['transId']
         ttype = tdef['cc_type']
         tcurr = tdef['currency']
         tlines = tdef['lines']
@@ -496,7 +539,9 @@ class TransactionSaveHandler (JsonBaseHandler):
         tlogType = None
         tlogDesc = ''
         if ttype == 'D':
-            if not self.application.hasPermissionByCsa(cur, sql.P_canEnterDeposit, u.id, csaId):
+            if ((not self.application.hasPermissionByCsa(cur, sql.P_canEnterDeposit, u.id, csaId) or
+                (transId is not None and not self.application.isTransactionEditor(cur, transId, u.id))) and
+                not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId)):
                 raise Exception('permission denied')
             cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, 'd', tcurr))
             tid = cur.lastrowid
@@ -532,6 +577,11 @@ class TransactionSaveHandler (JsonBaseHandler):
             if not self.application.hasPermissionByCsa(cur, sql.P_canEnterPayments, u.id):
                 raise Exception('permission denied')
             # TODO: scrivi
+        elif ttype == 'T':
+            #if not self.application.hasPermissions(cur, [ sql.P_canEnterPayments, , u.id):
+            #    raise Exception('permission denied')
+            # TODO: scrivi
+            pass
         else:
             log_gassman.error('illegal transaction type: %s', tdef)
             raise Exception('illegal transaction type')

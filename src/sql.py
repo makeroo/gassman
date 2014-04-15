@@ -9,6 +9,7 @@ P_canCheckAccounts = 2
 P_canAssignAccounts = 3
 P_canEnterDeposit = 4
 P_canEnterPayments = 5
+P_canManageTransactions = 6
 
 def account_owners (accountId):
     return 'SELECT p.first_name, p.middle_name, p.last_name FROM person p JOIN account_person ap ON ap.person_id=p.id WHERE ap.account_id=%s AND ap.to_date IS NULL', [ accountId ]
@@ -148,8 +149,17 @@ def complete_deposit (tid, csaId):
 def finalize_transaction (tid, ttype):
     return 'UPDATE transaction SET cc_type=%s WHERE id=%s', [ ttype, tid ]
 
+def transaction_edit (tid):
+    return 'SELECT t.description, t.transaction_date, t.cc_type, c.id, c.symbol FROM transaction t JOIN currency c ON c.id=t.currency_id WHERE t.id=%s', [ tid ];
+
 def log_transaction (tid, opId, logType, logDesc, tDate):
     return 'INSERT INTO transaction_log (log_date, operator_id, op_type, transaction_id, notes) VALUES (%s, %s, %s, %s, %s)', [ tDate, opId, logType, tid, logDesc ] 
+
+def log_transaction_check_operator (personId, transId):
+    return 'SELECT COUNT(*) FROM transaction_log WHERE transaction_id=%s AND operator_id=%s', [ transId, personId ]
+
+def transaction_previuos (transId):
+    return 'SELECT id FROM transaction WHERE modified_by_id = %s', [ transId ]
 
 def checkConn ():
     return 'SELECT 1'

@@ -12,6 +12,7 @@ gassmanApp.P_canCheckAccounts = 2;
 //gassmanApp.P_canAssignAccounts = 3;
 gassmanApp.P_canEnterDeposit = 4;
 gassmanApp.P_canEnterPayments = 5;
+gassmanApp.P_canManageTransactions = 6;
 
 gassmanApp.functions = [
 	{ p:gassmanApp.P_membership, f:'#/account/detail', l:'Il tuo conto' },
