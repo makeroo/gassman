@@ -90,6 +90,7 @@ class GassmanWebApp (tornado.web.Application):
     def __init__ (self, sql, **connArgs):
         handlers = [
             (r'^/$', IndexHandler),
+            (r'^/login.html$', LoginHandler),
             (r'^/home.html$', HomeHandler),
             (r'^/auth/google$', GoogleAuthLoginHandler),
             (r'^/incomplete_profile.html$', IncompleteProfileHandler),
@@ -113,7 +114,7 @@ class GassmanWebApp (tornado.web.Application):
             template_path = os.path.join(codeHome, 'templates'),
             static_path = os.path.join(codeHome, "static"),
             xsrf_cookies = True,
-            login_url = '/',
+            login_url = '/login.html',
             )
         super().__init__(handlers, **sett)
         self.connArgs = connArgs
@@ -276,7 +277,17 @@ class IndexHandler (BaseHandler):
     def get (self):
         p = self.application.session(self).get_logged_user(None)
         if p is None:
-            self.render('frontpage.html')
+            self.redirect("/login.html")
+        elif self.application.hasAccounts(p.id):
+            self.redirect("/home.html")
+        else:
+            self.redirect("/incomplete_profile.html")
+
+class LoginHandler (BaseHandler):
+    def get (self):
+        p = self.application.session(self).get_logged_user(None)
+        if p is None:
+            self.render('login.html')
         elif self.application.hasAccounts(p.id):
             self.redirect("/home.html")
         else:
