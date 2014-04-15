@@ -39,3 +39,5 @@ update csa set expenses_id = ( select id from account where gc_type='EXPENSE' AN
 ALTER TABLE transaction ADD COLUMN currency_id INT;
 UPDATE transaction SET currency_id = (SELECT id from CURRENCY LIMIT 1);
 ALTER TABLE transaction MODIFY currency_id INT NOT NULL;
+
+INSERT INTO permission (id, name, visibility) VALUES (6, 'canManageTransactions', 5000);
