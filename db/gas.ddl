@@ -71,7 +71,7 @@ CREATE TABLE street_address (
 CREATE TABLE contact_address (
   id INT NOT NULL AUTO_INCREMENT,
   address VARCHAR(100), -- Il numero del telefono, l'indirzzo email, etc.
-  kind CHAR(1) NOT NULL DEFAULT 'M', -- (T)elephone, (M)obile, (E)mail, (F)ax, (I)d
+  kind CHAR(1) NOT NULL DEFAULT 'M', -- (T)elephone, (M)obile, (E)mail, (F)ax, (I)d, (N)ickname
   contact_type VARCHAR(20), -- Testo libero: cell, ufficio, casa...
 
   PRIMARY KEY (id)
@@ -257,8 +257,8 @@ CREATE TABLE transaction (
   -- (D)eposit
   -- (P)ayment implica il tipo di form presentato dal sito
   -- (T)rashed cestinata, significa che non ha linee
-  -- (d)raft: è in corso di salvataggio
-  -- (e)rror: è stato richiesto il salvataggio di una transazione, ma i dati non sono corretti
+  -- (U)nfinished (ie. draft): è in corso di salvataggio
+  -- (E)rror: è stato richiesto il salvataggio di una transazione, ma i dati non sono corretti
   --          eg. account non appartenenti al csa indicato, o monete non uniformi
   cc_type CHAR(1) NOT NULL DEFAULT 'G',
 
@@ -298,7 +298,7 @@ CREATE TABLE transaction_log (
   log_date DATETIME NOT NULL,
   operator_id INT NOT NULL,
 
-  op_type CHAR(1) NOT NULL, -- (A)dded, (D)eleted, (M)odified, (e)rror
+  op_type CHAR(1) NOT NULL, -- (A)dded, (D)eleted, (M)odified, (E)rror
   transaction_id INT NOT NULL,
   notes TEXT, -- in caso di errore, il motivo
 

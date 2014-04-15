@@ -11,19 +11,43 @@ P_canEnterDeposit = 4
 P_canEnterPayments = 5
 P_canManageTransactions = 6
 
+Tt_Generic = 'G'
+Tt_Deposit = 'D'
+Tt_Payment = 'P'
+Tt_Trashed = 'T'
+Tt_Unfinished = 'U'
+Tt_Error = 'E'
+
+Ck_Telephone = 'T'
+Ck_Mobile = 'M'
+Ck_Email = 'E'
+Ck_Fax = 'F'
+Ck_Id = 'I'
+Ck_Nickname = 'N'
+
+As_Open = 'O'
+As_Closing = 'C'
+As_closeD = 'D'
+As_Fusion_pending = 'F'
+
+Tl_Added = 'A'
+Tl_Deleted = 'D'
+Tl_Modified = 'M'
+Tl_Error = 'E'
+
 def account_owners (accountId):
     return 'SELECT p.first_name, p.middle_name, p.last_name FROM person p JOIN account_person ap ON ap.person_id=p.id WHERE ap.account_id=%s AND ap.to_date IS NULL', [ accountId ]
 
 def account_movements (accountDbId, fromLine, toLine):
     return 'SELECT t.description, t.transaction_date, l.description, l.amount, t.id, c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN currency c ON c.id=t.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s ORDER BY t.transaction_date DESC LIMIT %s OFFSET %s', [
-        'd', 'e',
+        Tt_Unfinished, Tt_Error,
         accountDbId,
         toLine - fromLine + 1,
         fromLine
         ]
 
 def account_amount (accountDbId):
-    return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a on l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s', [ 'd', 'e', accountDbId ]
+    return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a on l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s', [ Tt_Unfinished, Tt_Error, accountDbId ]
     #return 'SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s', [ accountDbId ]
 
 def accounts_index (fromLine, toLine):
@@ -38,7 +62,7 @@ def accounts_index (fromLine, toLine):
  GROUP BY p.id, a.id\
  ORDER BY p.first_name, p.last_name\
  LIMIT %s OFFSET %s''', [
-      'd', 'e',
+      Tt_Unfinished, Tt_Error,
       toLine - fromLine + 1,
       fromLine
       ]
@@ -111,7 +135,7 @@ def transaction_account_gc_names (tid):
     return 'SELECT DISTINCT a.id, a.gc_name, c.symbol FROM transaction_line l JOIN account a ON a.id=l.account_id JOIN currency c ON c.id=a.currency_id WHERE transaction_id=%s', [ tid ]
 
 def rss_feed (rssId):
-    return 'SELECT t.description, t.transaction_date, l.amount, l.id, c.symbol FROM transaction_line l JOIN transaction t ON t.id=l.transaction_id JOIN account_person ap ON ap.account_id=l.account_id JOIN account a ON l.account_id=a.id JOIN person p ON p.id=ap.person_id JOIN currency c ON c.id=a.currency_id WHERE p.rss_feed_id=%s AND ap.to_date IS NULL AND t.cc_type NOT IN (%s, %s) ORDER BY t.transaction_date DESC LIMIT 8', [ rssId, 'd', 'e' ]
+    return 'SELECT t.description, t.transaction_date, l.amount, l.id, c.symbol FROM transaction_line l JOIN transaction t ON t.id=l.transaction_id JOIN account_person ap ON ap.account_id=l.account_id JOIN account a ON l.account_id=a.id JOIN person p ON p.id=ap.person_id JOIN currency c ON c.id=a.currency_id WHERE p.rss_feed_id=%s AND ap.to_date IS NULL AND t.cc_type NOT IN (%s, %s) ORDER BY t.transaction_date DESC LIMIT 8', [ rssId, Tt_Unfinished, Tt_Error ]
 
 def rss_user (rssId):
     return 'SELECT first_name, middle_name, last_name FROM person WHERE rss_feed_id=%s', [ rssId ]
@@ -120,7 +144,7 @@ def rss_id (personId):
     return 'SELECT rss_feed_id FROM person WHERE id=%s', [ personId ]
 
 def csa_amount (csaId):
-    return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND a.gc_type=%s AND a.csa_id=%s GROUP BY c.symbol', [ 'd', 'e', 'ASSET', csaId ]
+    return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND a.gc_type=%s AND a.csa_id=%s GROUP BY c.symbol', [ Tt_Unfinished, Tt_Error, 'ASSET', csaId ]
 
 def account_names (csaId):
     '''Tutti i nomi di conti di una comunità escluso gli Scomparsi.
@@ -132,7 +156,7 @@ def account_people (csaId):
     return 'SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id FROM person p JOIN account_person ap ON p.id=ap.person_id JOIN account a ON ap.account_id=a.id WHERE a.csa_id=%s AND ap.to_date IS NULL', [ csaId ]
 
 def account_people_addresses (csaId):
-    return 'SELECT c.address, p.id, a.id FROM person p JOIN account_person ap ON ap.person_id=p.id JOIN account a ON ap.account_id=a.id JOIN person_contact pc ON p.id=pc.person_id JOIN contact_address c ON pc.address_id=c.id WHERE a.csa_id=%s AND c.kind IN (%s, %s) AND ap.to_date IS NULL', [ csaId, 'E', 'N' ]
+    return 'SELECT c.address, p.id, a.id FROM person p JOIN account_person ap ON ap.person_id=p.id JOIN account a ON ap.account_id=a.id JOIN person_contact pc ON p.id=pc.person_id JOIN contact_address c ON pc.address_id=c.id WHERE a.csa_id=%s AND c.kind IN (%s, %s) AND ap.to_date IS NULL', [ csaId, Ck_Email, Ck_Nickname ]
 
 def insert_transaction (desc, tDate, ccType, currencyId):
     return 'INSERT INTO transaction (description, transaction_date, cc_type, currency_id) SELECT %s, %s, %s, id FROM currency WHERE id=%s', [ desc, tDate, ccType, currencyId ]
@@ -160,6 +184,12 @@ def log_transaction_check_operator (personId, transId):
 
 def transaction_previuos (transId):
     return 'SELECT id FROM transaction WHERE modified_by_id = %s', [ transId ]
+
+def transaction_type (transId):
+    return 'SELECT cc_type FROM transaction WHERE id = %s', [ transId ]
+
+def update_transaction (oldTid, newTid):
+    return 'UPDATE transaction SET modified_by_id = %s WHERE id = %s', [ newTid, oldTid ]
 
 def checkConn ():
     return 'SELECT 1'

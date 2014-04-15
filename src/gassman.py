@@ -193,7 +193,7 @@ class GassmanWebApp (tornado.web.Application):
             except Person.DoesNotExist:
                 try:
                     # non ho trovato niente su db
-                    cur.execute(*self.sql.create_contact(user.userId, 'I', user.authenticator))
+                    cur.execute(*self.sql.create_contact(user.userId, self.sql.Ck_Id, user.authenticator))
                     contactId = cur.lastrowid
                     cur.execute(*self.sql.create_person(user.firstName, user.middleName, user.lastName))
                     p_id = cur.lastrowid
@@ -201,7 +201,7 @@ class GassmanWebApp (tornado.web.Application):
                     cur.execute(*self.sql.assign_rss_feed_id(p_id, rfi))
                     cur.execute(*self.sql.assign_contact(contactId, p_id))
                     if user.email:
-                        cur.execute(*self.sql.create_contact(user.email, 'E', ''))
+                        cur.execute(*self.sql.create_contact(user.email, self.sql.Ck_Email, ''))
                         emailId = cur.lastrowid
                         cur.execute(*self.sql.assign_contact(emailId, p_id))
                     p = Person(p_id, user.firstName, user.middleName, user.lastName, rfi)
@@ -432,7 +432,7 @@ class CsaAmountHandler (JsonBaseHandler):
         u = self.application.session(self).get_logged_user('not authenticated')
         if not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
             raise Exception('permission denied')
-        cur.execute(*self.application.sql.csa_amount(1)) # FIXME: selezionare csa
+        cur.execute(*self.application.sql.csa_amount(csaId))
         return cur.fetchone()
 
 # TODO: riprisitnare quando si edita il profilo utente
@@ -524,8 +524,8 @@ class TransactionEditHandler (JsonBaseHandler):
         # è P, ho P_canEnterPayments e l'ho creata io
         # oppure P_canManageTransactions
         if (not not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId) and
-            not (d[2] in ('D', 'P') and
-                 self.application.hasPermissionByCsa(cur, sql.P_canEnterDeposit if d[2] == 'D' else sql.P_canEnterPayments, u.id, csaId) and
+            not (d[2] in (self.application.sql.Tt_Deposit, self.application.sql.Tt_Payment) and
+                 self.application.hasPermissionByCsa(cur, sql.P_canEnterDeposit if d[2] == self.application.sql.Tt_Deposit else sql.P_canEnterPayments, u.id, csaId) and
                  self.application.isTransactionEditor(cur, transId, u.id))
             ):
             raise Exception('permission denied')
@@ -538,24 +538,29 @@ class TransactionSaveHandler (JsonBaseHandler):
         csaId = int(csaId)
         u = self.application.session(self).get_logged_user('not authenticated')
         tdef = self.payload
-        # TODO: modifica di transazione preesistente
-        # TODO: se modifico verifico che sia coerente (cioè D => D/T, P => D/T, G => G/T, T => niente, le T non si modificano più)
-        transId = tdef['transId']
+        transId = tdef.get('transId', None)
         ttype = tdef['cc_type']
         tcurr = tdef['currency']
         tlines = tdef['lines']
-        if len(tlines) == 0:
-            raise Exception('no lines')
         tdate = jsonlib.decode_date(tdef['date'])
         tdesc = tdef['description']
         tlogType = None
         tlogDesc = ''
-        if ttype == 'D':
+        if transId is None:
+            oldCc = None
+        else:
+            cur.execute(*self.application.sql.transaction_type(transId))
+            oldCc = cur.fetchone()[0]
+        if ttype == self.application.sql.Tt_Deposit:
+            if oldCc is not None and oldCc != self.application.sql.Tt_Deposit:
+                raise Exception('illegal update')
+            if len(tlines) == 0:
+                raise Exception('no lines')
             if ((not self.application.hasPermissionByCsa(cur, sql.P_canEnterDeposit, u.id, csaId) or
                 (transId is not None and not self.application.isTransactionEditor(cur, transId, u.id))) and
                 not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId)):
                 raise Exception('permission denied')
-            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, 'd', tcurr))
+            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr))
             tid = cur.lastrowid
             if tid == 0:
                 raise Exception('illegal currency')
@@ -564,41 +569,51 @@ class TransactionSaveHandler (JsonBaseHandler):
                 amount = l['amount']
                 accId = l['account']
                 if amount <= 0:
-                    ttype = 'e'
-                    tlogType = 'e'
+                    ttype = self.application.sql.Tt_Error
+                    tlogType = self.application.sql.Tl_Error
                     tlogDesc = 'negative amount'
                     break
                 cur.execute(*self.application.sql.insert_transaction_line(tid, desc, amount, accId))
-            if ttype != 'e':
+            if ttype != self.application.sql.Tt_Error:
                 cur.execute(*self.application.sql.check_transaction_coherency(tid))
                 v = list(cur)
                 if len(v) != 1:
-                    ttype = 'e'
-                    tlogType = 'e'
+                    ttype = self.application.sql.Tt_Error
+                    tlogType = self.application.sql.Tl_Error
                     tlogDesc = 'accounts not omogeneous for currency and/or csa'
                 elif v[0][1] != csaId:
-                    ttype = 'e'
-                    tlogType = 'e'
+                    ttype = self.application.sql.Tt_Error
+                    tlogType = self.application.sql.Tl_Error
                     tlogDesc = 'accounts do not belong to csa'
                 else:
                     cur.execute(*self.application.sql.complete_deposit(tid, csaId))
-                    tlogType = 'A' # TODO: oppure M se modifico
-            cur.execute(*self.application.sql.finalize_transaction(tid, ttype))
-            cur.execute(*self.application.sql.log_transaction(tid, u.id, tlogType, tlogDesc, datetime.datetime.utcnow()))
-        elif ttype == 'P':
+                    tlogType = self.application.sql.Tl_Added if transId is None else self.application.sql.Tl_Modified
+        elif ttype == self.application.sql.Tt_Payment:
+            if oldCc is not None and oldCc != self.application.sql.Tt_Payment:
+                raise Exception('illegal update')
+            if len(tlines) == 0:
+                raise Exception('no lines')
             if not self.application.hasPermissionByCsa(cur, sql.P_canEnterPayments, u.id):
                 raise Exception('permission denied')
             # TODO: scrivi
-        elif ttype == 'T':
-            #if not self.application.hasPermissions(cur, [ sql.P_canEnterPayments, , u.id):
-            #    raise Exception('permission denied')
-            # TODO: scrivi
-            pass
+        elif ttype == self.application.sql.Tt_Trashed:
+            if oldCc not in (self.application.sql.Tt_Deposit, self.application.sql.Tt_Payment, self.application.sql.Tt_Generic):
+                raise Exception('illegal update')
+            if len(tlines) == 0:
+                raise Exception('trashed transactions can not have lines')
+            if transId is None:
+                raise Exception('missing trashId of transaction to be deleted')
+            if ((not self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId) or
+                not self.application.isTransactionEditor(cur, transId, u.id)) and
+                not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId)):
+                raise Exception('permission denied')
         else:
             log_gassman.error('illegal transaction type: %s', tdef)
             raise Exception('illegal transaction type')
-        # per prima cosa la salvo
-        # poi se tdef.id è definito allora aggiorno il modified_by_id
+        cur.execute(*self.application.sql.finalize_transaction(tid, ttype))
+        cur.execute(*self.application.sql.log_transaction(tid, u.id, tlogType, tlogDesc, datetime.datetime.utcnow()))
+        if transId is not None and ttype != self.application.sql.Tt_Error:
+            cur.execute(*self.application.sql.update_transaction(transId, tid))
 
 # TODO: ripristinare se si fa la pagina di associazione conto
 #class IncompleteProfilesHandler (JsonBaseHandler):
