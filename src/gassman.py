@@ -105,6 +105,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/transaction/(\d+)/(\d+)/detail$', TransactionDetailHandler),
             (r'^/transaction/(\d+)/(\d+)/edit$', TransactionEditHandler),
             (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
+            (r'^/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
             (r'^/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/rss/(.+)$', RssFeedHandler),
             ]
@@ -254,7 +255,7 @@ class GassmanWebApp (tornado.web.Application):
         log_gassman.debug('has permissions: user=%s, perm=%s, r=%s', personId, perms, r)
         return r
 
-    def isTransactionEditor (self, cur, personId, transId):
+    def isTransactionEditor (self, cur, transId, personId):
         '''
         Una transazione può essere creata/modificata da chi ha canEnterXX
         o da chi ha manageTrans.
@@ -265,7 +266,8 @@ class GassmanWebApp (tornado.web.Application):
             if cur.fetchone()[0] > 0:
                 return True
             cur.execute(*self.sql.transaction_previuos(transId))
-            transId = cur.fetchone()[0]
+            l = cur.fetchone()
+            transId = l[0] if l is not None else None
         return False
 
 class BaseHandler (tornado.web.RequestHandler):
@@ -512,6 +514,8 @@ class TransactionEditHandler (JsonBaseHandler):
         u = self.application.session(self).get_logged_user('not authenticated')
         cur.execute(*self.application.sql.transaction_edit(transId))
         d = cur.fetchone()
+        if d[5] is not None:
+            raise Exception('already modified')
         r = dict(
             transId = transId,
             description = d[0],
@@ -550,10 +554,12 @@ class TransactionSaveHandler (JsonBaseHandler):
             oldCc = None
         else:
             cur.execute(*self.application.sql.transaction_type(transId))
-            oldCc = cur.fetchone()[0]
+            oldCc, modifiedBy = cur.fetchone()
+            if modifiedBy is not None:
+                raise Exception('already modified')
         if ttype == self.application.sql.Tt_Deposit:
             if oldCc is not None and oldCc != self.application.sql.Tt_Deposit:
-                raise Exception('illegal update')
+                raise Exception('type mismatch')
             if len(tlines) == 0:
                 raise Exception('no lines')
             if ((not self.application.hasPermissionByCsa(cur, sql.P_canEnterDeposit, u.id, csaId) or
@@ -607,6 +613,8 @@ class TransactionSaveHandler (JsonBaseHandler):
                 not self.application.isTransactionEditor(cur, transId, u.id)) and
                 not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId)):
                 raise Exception('permission denied')
+            tlogType = self.application.sql.Tl_Deleted
+            #tlogDesc = ''
         else:
             log_gassman.error('illegal transaction type: %s', tdef)
             raise Exception('illegal transaction type')
@@ -614,6 +622,20 @@ class TransactionSaveHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.log_transaction(tid, u.id, tlogType, tlogDesc, datetime.datetime.utcnow()))
         if transId is not None and ttype != self.application.sql.Tt_Error:
             cur.execute(*self.application.sql.update_transaction(transId, tid))
+
+class TransactionsEditableHandler (JsonBaseHandler):
+    def do (self, cur, csaId, fromIdx, toIdx):
+        u = self.application.session(self).get_logged_user('not authenticated')
+        if self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId):
+            cur.execute(self.application.sql.transactions_all(csaId, fromIdx, toIdx))
+            
+        elif not self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId):
+            #cur.execute(self.application.sql.??(csa, fromIdx, toIdx))
+            pass
+        else:
+            raise Exception('permission denied')
+        return list(cur)
+
 
 # TODO: ripristinare se si fa la pagina di associazione conto
 #class IncompleteProfilesHandler (JsonBaseHandler):

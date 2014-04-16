@@ -219,7 +219,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 			return;
 
 		var data = {
-			id: $scope.transId == 'new' ? null : $scope.transId,
+			transId: $scope.transId == 'new' ? null : $scope.transId,
 			cc_type: 'D',
 			currency: $scope.currency[0],
 			lines: [],
@@ -272,7 +272,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		$scope.confirmDelete = false;
 
 		var data = {
-				id: $scope.transId,
+				transId: $scope.transId,
 				cc_type: 'T',
 				currency: $scope.currency[0],
 				lines: [],
@@ -415,6 +415,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 
 		$scope.lines = t.lines;
 		$scope.updateTotalAmount();
+		$scope.checkCurrencies();
 
 		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
 		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
@@ -429,6 +430,9 @@ gassmanControllers.controller('TransactionPayment', function() {
 });
 
 gassmanControllers.controller('TransactionsIndex', function() {
+	$scope.transactions = [];
+	$scope.transactionsError = null;
+	
 });
 
 gassmanControllers.controller('HelpController', function() {

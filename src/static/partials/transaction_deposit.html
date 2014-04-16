@@ -1,6 +1,6 @@
 <form novalidate name="deposit" class="deposit" ng-submit="return;">
  <div class="lines-table">
-  <div class="header" ng-hide="tsaveOk">
+  <div class="header" ng-hide="tsaveOk || autocompletionDataError">
    Inserisci gli accrediti:
   </div>
   <div class="body">
@@ -43,6 +43,9 @@
    </div>
    <div ng-show="tsaveError">
      Registrazione fallita. Causa: {{tsaveError}}.
+   </div>
+   <div ng-show="autocompletionDataError">
+     Caricamento fallito. Causa: {{autocompletionDataError}}.
    </div>
   </div>
  </div>

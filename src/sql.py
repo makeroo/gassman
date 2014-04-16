@@ -174,7 +174,7 @@ def finalize_transaction (tid, ttype):
     return 'UPDATE transaction SET cc_type=%s WHERE id=%s', [ ttype, tid ]
 
 def transaction_edit (tid):
-    return 'SELECT t.description, t.transaction_date, t.cc_type, c.id, c.symbol FROM transaction t JOIN currency c ON c.id=t.currency_id WHERE t.id=%s', [ tid ];
+    return 'SELECT t.description, t.transaction_date, t.cc_type, c.id, c.symbol, t.modified_by_id FROM transaction t JOIN currency c ON c.id=t.currency_id WHERE t.id=%s', [ tid ];
 
 def log_transaction (tid, opId, logType, logDesc, tDate):
     return 'INSERT INTO transaction_log (log_date, operator_id, op_type, transaction_id, notes) VALUES (%s, %s, %s, %s, %s)', [ tDate, opId, logType, tid, logDesc ] 
@@ -186,10 +186,12 @@ def transaction_previuos (transId):
     return 'SELECT id FROM transaction WHERE modified_by_id = %s', [ transId ]
 
 def transaction_type (transId):
-    return 'SELECT cc_type FROM transaction WHERE id = %s', [ transId ]
+    return 'SELECT cc_type, modified_by_id FROM transaction WHERE id = %s', [ transId ]
 
 def update_transaction (oldTid, newTid):
     return 'UPDATE transaction SET modified_by_id = %s WHERE id = %s', [ newTid, oldTid ]
+
+#select l.log_date, l.op_type, t.id, t.description, t.transaction_date, t.modified_by_id, p.id, p.first_name, p.middle_name, p.last_name  from transaction_log l join transaction t on t.id=l.transaction_id join person p on l.operator_id= p.id where l.op_type in ('A', 'M', 'D') order by l.log_date desc limit 25 offset 1;
 
 def checkConn ():
     return 'SELECT 1'
