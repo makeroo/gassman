@@ -19,7 +19,6 @@ from tornado import options as opt
 
 import xml.etree.ElementTree as etree
 
-
 def convertValue (v):
     '''Converte un import monetario GnuCash in Decimal.
     Esempio: '-560/100' -> decimal.Decimal('5.6')
@@ -215,7 +214,7 @@ class importGnucash (object):
             if dbTransId not in gTransIds:
                 self.log('Should delete transaction %s, gnu cash file does not contain it anymore' % dbTransId)
                 # TODO: chiedo conferma?
-                self.cursor.execute('insert into transaction (description, transaction_date) values (%s, %s)', [ 'Deleted from gnucash', self.now ])
+                self.cursor.execute('insert into transaction (description, transaction_date, currency_id) values (%s, %s, %s)', [ 'Deleted from gnucash', self.now, self.CURRENCY_ID ])
                 newTransId = self.cursor.lastrowid
                 self.cursor.execute('update transaction set modified_by_id=%s where gc_id=%s', [ newTransId, dbTransId ])
 
@@ -256,10 +255,11 @@ class importGnucash (object):
         return True
 
     def insertTransaction (self, t, oldTid):
-        self.cursor.execute('INSERT INTO transaction (description, transaction_date, gc_id) VALUES (%s, %s, %s)',
+        self.cursor.execute('INSERT INTO transaction (description, transaction_date, gc_id, currency_id) VALUES (%s, %s, %s, %s)',
                             [ dbText(t.description),
                               t.date,
-                              t.id
+                              t.id,
+                              self.CURRENCY_ID
                               ])
         t.dbId = self.cursor.lastrowid
         for s in t.splits:
