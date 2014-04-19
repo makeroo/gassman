@@ -72,7 +72,7 @@ gassmanApp.config([ '$routeProvider',
 				templateUrl: 'static/partials/transaction_deposit.html',
 				controller: 'TransactionDeposit'
 			}).
-			when('/transaction/new/payment', {
+			when('/transaction/:transId/payment', {
 				templateUrl: 'static/partials/transaction_payment.html',
 				controller: 'TransactionPayment'
 			}).

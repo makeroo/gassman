@@ -599,9 +599,32 @@ class TransactionSaveHandler (JsonBaseHandler):
                 raise Exception('illegal update')
             if len(tlines) == 0:
                 raise Exception('no lines')
-            if not self.application.hasPermissionByCsa(cur, sql.P_canEnterPayments, u.id):
+            if ((not self.application.hasPermissionByCsa(cur, sql.P_canEnterPayments, u.id, csaId) or
+                (transId is not None and not self.application.isTransactionEditor(cur, transId, u.id))) and
+                not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId)):
                 raise Exception('permission denied')
-            # TODO: scrivi
+            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr))
+            tid = cur.lastrowid
+            if tid == 0:
+                raise Exception('illegal currency')
+            for l in tlines:
+                desc = l['notes']
+                amount = l['amount']
+                accId = l['account']
+                cur.execute(*self.application.sql.insert_transaction_line(tid, desc, amount, accId))
+            cur.execute(*self.application.sql.check_transaction_coherency(tid))
+            v = list(cur)
+            if len(v) != 1:
+                ttype = self.application.sql.Tt_Error
+                tlogType = self.application.sql.Tl_Error
+                tlogDesc = 'accounts not omogeneous for currency and/or csa'
+            elif v[0][1] != csaId:
+                ttype = self.application.sql.Tt_Error
+                tlogType = self.application.sql.Tl_Error
+                tlogDesc = 'accounts do not belong to csa'
+            else:
+                cur.execute(*self.application.sql.complete_deposit(tid, csaId))
+                tlogType = self.application.sql.Tl_Added if transId is None else self.application.sql.Tl_Modified
         elif ttype == self.application.sql.Tt_Trashed:
             if oldCc not in (self.application.sql.Tt_Deposit, self.application.sql.Tt_Payment, self.application.sql.Tt_Generic):
                 raise Exception('illegal update')

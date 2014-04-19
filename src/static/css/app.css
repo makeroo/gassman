@@ -318,6 +318,7 @@ a {
 	right: 0;
 	top: 0;
 	bottom: 4em;
+	overflow: auto;
 }
 
 .deposit .lines-table .header {
