@@ -1,5 +1,5 @@
 /**
- * MacGyver v0.2.7
+ * MacGyver v0.2.9
  * @link http://starttheshift.github.io/MacGyver
  * @license MIT
  */
@@ -7488,6 +7488,28 @@ angular.module("Mac").directive("macAffix", [
 @description
 A directive for providing suggestions while typing into the field
 
+Autocomplete allows for custom html templating in the dropdown and some properties are exposed on the local scope on each template instance, including:
+
+| Variable  | Type    | Details                                                                     |
+|-----------|---------|-----------------------------------------------------------------------------|
+| `$index`  | Number  | iterator offset of the repeated element (0..length-1)                       |
+| `$first`  | Boolean | true if the repeated element is first in the iterator.                      |
+| `$middle` | Boolean | true if the repeated element is between the first and last in the iterator. |
+| `$last`   | Boolean | true if the repeated element is last in the iterator.                       |
+| `$even`   | Boolean | true if the iterator position `$index` is even (otherwise false).           |
+| `$odd`    | Boolean | true if the iterator position `$index` is odd (otherwise false).            |
+| `item`    | Object  | item object with `value` and `label` if label-key is set                    |
+
+To use custom templating
+
+```
+<mac-autocomplete mac-autocomplete-url="someUrl" ng-model="model">
+  <span> {{item.label}} </span>
+</mac-autocomplete>
+```
+
+Template default to `{{item.label}}` if not defined
+
 @dependencies
 - mac-menu
 
@@ -7518,6 +7540,8 @@ Source support multiple types:
 @param {String}  mac-autocomplete-label The label to display to the users (default "name")
 @param {String}  mac-autocomplete-query The query parameter on GET command (default "q")
 @param {Integer} mac-autocomplete-delay Delay on fetching autocomplete data after keyup (default 800)
+
+@param {Expr} mac-menu-class Classes for mac-menu used by mac-autocomplete. For more info, check [ngClass](http://docs.angularjs.org/api/ng/directive/ngClass)
 */
 
 angular.module("Mac").directive("macAutocomplete", [
@@ -7525,9 +7549,10 @@ angular.module("Mac").directive("macAutocomplete", [
     return {
       restrict: "EA",
       template: "<input type=\"text\"/>",
+      transclude: true,
       replace: true,
       require: "ngModel",
-      link: function($scope, element, attrs, ctrl) {
+      link: function($scope, element, attrs, ctrl, transclude) {
         var $menuScope, appendMenu, autocompleteUrl, clickHandler, currentAutocomplete, delay, disabled, getData, inside, labelKey, menuEl, onError, onSelect, onSelectBool, onSuccess, positionMenu, queryData, queryKey, reset, source, timeoutId, updateItem;
         labelKey = attrs.macAutocompleteLabel || "name";
         queryKey = attrs.macAutocompleteQuery || "q";
@@ -7542,15 +7567,19 @@ angular.module("Mac").directive("macAutocomplete", [
         currentAutocomplete = [];
         timeoutId = null;
         onSelectBool = false;
-        $menuScope = $rootScope.$new(true);
+        $menuScope = $scope.$new();
         $menuScope.items = [];
         $menuScope.index = 0;
-        menuEl = angular.element("<mac-menu></mac-menu>");
+        menuEl = angular.element(document.createElement("mac-menu"));
         menuEl.attr({
+          "ng-class": attrs.macMenuClass || null,
           "mac-menu-items": "items",
           "mac-menu-style": "style",
           "mac-menu-select": "select(index)",
           "mac-menu-index": "index"
+        });
+        transclude($menuScope, function(clone) {
+          return menuEl.append(clone);
         });
         $compile(menuEl)($menuScope);
         ctrl.$parsers.push(function(value) {
@@ -7646,21 +7675,27 @@ angular.module("Mac").directive("macAutocomplete", [
         */
 
         updateItem = function(data) {
-          var item, label, value, _i, _len;
           if (data == null) {
             data = [];
           }
           if (data.length > 0) {
             currentAutocomplete = data;
-            $menuScope.items = [];
-            for (_i = 0, _len = data.length; _i < _len; _i++) {
-              item = data[_i];
-              label = value = item[labelKey] || item;
-              $menuScope.items.push({
-                label: label,
-                value: value
-              });
-            }
+            $menuScope.items = data.map(function(item) {
+              if (angular.isObject(item)) {
+                if (item.value == null) {
+                  item.value = item[labelKey] || "";
+                }
+                if (item.label == null) {
+                  item.label = item[labelKey] || "";
+                }
+                return item;
+              } else {
+                return {
+                  label: item,
+                  value: item
+                };
+              }
+            });
             return positionMenu();
           }
         };
@@ -8666,6 +8701,29 @@ angular.module("Mac").factory("keys", function() {
 @description
 A directive for creating a menu with multiple items
 
+Menu allows for custom html templating for each item.
+
+Since macMenu is using ngRepeat, some ngRepeat properties along with `item` are exposed on the local scope of each template instance, including:
+
+| Variable  | Type    | Details                                                                     |
+|-----------|---------|-----------------------------------------------------------------------------|
+| `$index`  | Number  | iterator offset of the repeated element (0..length-1)                       |
+| `$first`  | Boolean | true if the repeated element is first in the iterator.                      |
+| `$middle` | Boolean | true if the repeated element is between the first and last in the iterator. |
+| `$last`   | Boolean | true if the repeated element is last in the iterator.                       |
+| `$even`   | Boolean | true if the iterator position `$index` is even (otherwise false).           |
+| `$odd`    | Boolean | true if the iterator position `$index` is odd (otherwise false).            |
+| `item`    | Object  | item object                                                                 |
+
+To use custom templating
+```
+<mac-menu>
+  <span> {{item.label}} </span>
+</mac-menu>
+```
+
+Template default to `{{item.label}}` if not defined
+
 @param {Expression} mac-menu-items List of items to display in the menu
         Each item should have a `label` key as display text
 @param {Function} mac-menu-select Callback on select
@@ -8679,7 +8737,9 @@ angular.module("Mac").directive("macMenu", [
     return {
       restrict: "EA",
       replace: true,
-      template: "<div ng-class=\"{'visible': items.length}\" ng-style=\"style\" class=\"mac-menu\"><ul><li ng-repeat=\"item in items\" ng-click=\"selectItem($index)\" ng-class=\"{'active': $index == index}\" mac-mouseenter=\"setIndex($index)\" class=\"mac-menu-item\">{{item.label}}</li></ul></div>",
+      template: "<div ng-style=\"style\" class=\"mac-menu\"><ul><li mac-menu-transclude=\"mac-menu-transclude\" ng-repeat=\"item in items\" ng-click=\"selectItem($index)\" ng-class=\"{'active': $index == index}\" mac-mouseenter=\"setIndex($index)\" class=\"mac-menu-item\"></li></ul></div>",
+      transclude: true,
+      controller: angular.noop,
       scope: {
         items: "=macMenuItems",
         style: "=macMenuStyle",
@@ -8699,10 +8759,31 @@ angular.module("Mac").directive("macMenu", [
           }
         };
         if (attrs.macMenuIndex != null) {
-          return $scope.$watch("pIndex", function(value) {
+          $scope.$watch("pIndex", function(value) {
             return $scope.index = parseInt(value);
           });
         }
+        return $scope.$watch("items.length", function(value) {
+          if (!!value) {
+            return attrs.$addClass("visible");
+          } else {
+            return attrs.$removeClass("visible");
+          }
+        });
+      }
+    };
+  }
+]).directive("macMenuTransclude", [
+  "$compile", function($compile) {
+    return {
+      link: function($scope, element, attrs, ctrls, transclude) {
+        return transclude($scope, function(clone) {
+          element.empty();
+          if (clone.length === 0) {
+            clone = $compile("<span>{{item.label}}</span>")($scope);
+          }
+          return element.append(clone);
+        });
       }
     };
   }
@@ -9903,7 +9984,16 @@ angular.module("Mac").directive("macTableSelectable", [
       link: function($scope, $element, $attrs, controllers) {
         controllers[2].parentController = controllers[1];
         return $element.on("click", function(event) {
+          var selection;
           if (!$scope.$eval($attrs.macTableSelectable)) {
+            return;
+          }
+          if ($window.getSelection) {
+            selection = $window.getSelection();
+          } else if ($document.selection) {
+            selection = $document.selection.createRange();
+          }
+          if (selection.toString()) {
             return;
           }
           return controllers[2].selectRow($scope.row);
