@@ -61,7 +61,7 @@
             name="amount"
             placeholder="Quanto"
             ng-model="l.amount"
-            ng-blur="$parent.updateTotalInvoice()"
+            ng-blur="$parent.updateTotalInvoice(lineForm)"
             gm-amount
             /> <!-- TODO: fare text + smart-float! -->
 	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>

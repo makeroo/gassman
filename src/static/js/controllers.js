@@ -445,6 +445,16 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 	$scope.tsaveOk = null;
 	$scope.tsaveError = null;
 
+	var autoCompileTotalInvoice = true;
+
+	var autoCompilingTotalInvoice = function () {
+		return (
+			$scope.producers.length < 3 &&
+			($scope.producers.length == 1 || (!$scope.producers[1].accountName && !$scope.producers[1].amount)) &&
+			$scope.producers[0].amount == $scope.totalInvoice
+			);
+	};
+
 	var newLine = function () {
 		return {
 			accountName: '',
@@ -469,10 +479,21 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 
 		$scope.totalAmount = t;
 
-		$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice);
+		if (autoCompileTotalInvoice) {
+			$scope.producers[0].amount = $scope.totalAmount;
+
+			$scope.updateTotalInvoice();
+		} else {
+			$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice);
+		}
 	}
 
-	$scope.updateTotalInvoice = function () {
+	$scope.updateTotalInvoice = function (f) {
+		if (f !== undefined && !autoCompilingTotalInvoice()) {
+			autoCompileTotalInvoice = false;
+		}
+
+		//console.log('update total invoice', f);
 		var t = 0.0;
 		for (var i in $scope.producers) {
 			var l = $scope.producers[i];
