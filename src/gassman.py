@@ -612,6 +612,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                 amount = l['amount']
                 accId = l['account']
                 cur.execute(*self.application.sql.insert_transaction_line(tid, desc, amount, accId))
+                lastLineId = cur.lastrowid
             cur.execute(*self.application.sql.check_transaction_coherency(tid))
             v = list(cur)
             if len(v) != 1:
@@ -623,7 +624,9 @@ class TransactionSaveHandler (JsonBaseHandler):
                 tlogType = self.application.sql.Tl_Error
                 tlogDesc = 'accounts do not belong to csa'
             else:
-                cur.execute(*self.application.sql.complete_deposit(tid, csaId))
+                cur.execute(*self.application.sql.transaction_calc_last_line_amount(tid, lastLineId))
+                a = cur.fetchone()[0]
+                cur.execute(*self.application.sql.transaction_fix_amount(lastLineId, a))
                 tlogType = self.application.sql.Tl_Added if transId is None else self.application.sql.Tl_Modified
         elif ttype == self.application.sql.Tt_Trashed:
             if oldCc not in (self.application.sql.Tt_Deposit, self.application.sql.Tt_Payment, self.application.sql.Tt_Generic):

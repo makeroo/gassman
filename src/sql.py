@@ -170,6 +170,12 @@ def check_transaction_coherency (tid):
 def complete_deposit (tid, csaId):
     return 'INSERT INTO transaction_line (transaction_id, account_id, amount) SELECT l.transaction_id, c.income_id, - SUM(l.amount) FROM csa c, transaction_line l WHERE c.id=%s AND l.transaction_id=%s', [ csaId, tid ]
 
+def transaction_calc_last_line_amount (tid, tlineId):
+    return 'SELECT - SUM(amount) FROM transaction_line WHERE transaction_id = %s AND id != %s', [ tid, tlineId ]
+
+def transaction_fix_amount (tlineId, amount):
+    return 'UPDATE transaction_line SET amount = %s WHERE id = %s', [ amount, tlineId ]
+
 def finalize_transaction (tid, ttype):
     return 'UPDATE transaction SET cc_type=%s WHERE id=%s', [ ttype, tid ]
 
