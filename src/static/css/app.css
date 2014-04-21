@@ -476,3 +476,7 @@ input.ng-invalid {
 	font-style: italic;
 	line-height: 8pt;
 }
+
+.mac-menu {
+	z-index: 1;
+}
