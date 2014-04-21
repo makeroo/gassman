@@ -701,31 +701,30 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		var clients = [];
 		var producers = [];
 
-		if (!t.lines.length) {
-			clients.push(newLine());
-			producers.push(newLine());
-		} else {
-			// caricata quindi rimuovo la riga negativa
-			for (var i in t.lines) {
-				var l = t.lines[i];
-				// il filtro currency digerisce anche le stringhe
-				// mentre input="number" no, devo prima convertire in float
-				// i Decimal su db vengono convertiti in json in stringa
-				var x = parseFloat(l.amount);
+		for (var i in t.lines) {
+			var l = t.lines[i];
+			// il filtro currency digerisce anche le stringhe
+			// mentre input="number" no, devo prima convertire in float
+			// i Decimal su db vengono convertiti in json in stringa
+			var x = parseFloat(l.amount);
 
-				//console.log(x, typeof(x));
-				if (x < 0) {
-					clients.push(l);
-					l.amount = -x;
-				} else {
-					producers.push(l);
-					l.amount = x;
-				}
-
-				if (!l.accountName)
-					l.accountName = ai[l.account];
+			//console.log(x, typeof(x));
+			if (x < 0) {
+				clients.push(l);
+				l.amount = -x;
+			} else {
+				producers.push(l);
+				//l.amount = x;
 			}
+
+			if (!l.accountName)
+				l.accountName = ai[l.account];
 		}
+
+		if (!clients.length)
+			clients.push(newLine());
+		if (!producers.length)
+			producers.push(newLine());
 
 		$scope.lines = clients;
 		$scope.producers = producers;
