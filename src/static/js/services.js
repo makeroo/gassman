@@ -23,6 +23,18 @@ gassmanServices.config(function ($httpProvider) {
 gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies) {
 	var profileInfo = null;
 
+	this.E_class = "<class 'Exception'>";
+	this.E_already_modified = 'already modified';
+
+	this.isError = function (rdata, ecode) {
+		return (
+			angular.isArray(rdata) &&
+			rdata.length > 1 &&
+			rdata[0] == this.E_class &&
+			(ecode == undefined || rdata[1] == ecode)
+			);
+	};
+
 	this.sysVersion = function () {
 		return $http.post('/sys/version?_xsrf=' + $cookies._xsrf);
 	}

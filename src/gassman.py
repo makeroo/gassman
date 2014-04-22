@@ -376,10 +376,14 @@ class JsonBaseHandler (BaseHandler):
         self.clear_header('Content-Type')
         self.add_header('Content-Type', 'application/json')
         etype, evalue, _ = kwargs.get('exc_info', ('', '', None))
+        if hasattr(evalue, 'args'):
+            i = [ str(etype) ] + list(evalue.args)
+        else:
+            i = [ str(etype), str(evalue) ]
         # tanto logga tornado
         #log_gassman.error('unexpected exception: %s/%s', etype, evalue)
         #log_gassman.debug('full stacktrace:\n', loglib.TracebackFormatter(tb))
-        jsonlib.write_json([ str(etype), str(evalue) ], self)
+        jsonlib.write_json(i, self)
 
     @property
     def payload (self):
@@ -515,7 +519,7 @@ class TransactionEditHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.transaction_edit(transId))
         d = cur.fetchone()
         if d[5] is not None:
-            raise Exception('already modified')
+            raise Exception('already modified', d[5])
         r = dict(
             transId = transId,
             description = d[0],

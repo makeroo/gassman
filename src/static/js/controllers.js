@@ -50,7 +50,7 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 	done()*/;
 });
 
-gassmanControllers.controller('AccountDetails', function($scope, $filter, $routeParams, $location, gdata) {
+gassmanControllers.controller('AccountDetails', function($scope, $filter, $routeParams, gdata) {
 	$scope.movements = [];
 	$scope.movementsError = null;
 	$scope.transaction = null;
@@ -426,7 +426,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 	});
 });
 
-gassmanControllers.controller('TransactionPayment', function($scope, $routeParams, $timeout, gdata) {
+gassmanControllers.controller('TransactionPayment', function($scope, $routeParams, $location, $timeout, gdata) {
 	$scope.transId = $routeParams['transId'];
 	$scope.lines = [];
 	$scope.producers = [];
@@ -737,7 +737,11 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		// comunque inutilizzabile
 	}).
 	then (undefined, function (error) {
-		$scope.autocompletionDataError = error.data;
+		if (gdata.isError(error.data, gdata.E_already_modified)) {
+			$location.path('/transaction/' + error.data[2] + '/payment');
+		} else {
+			$scope.autocompletionDataError = error.data;
+		}
 	});
 });
 
