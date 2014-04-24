@@ -1,19 +1,25 @@
 -- prospetto degli utenti e dei loro conti
 select p.id, p.first_name, p.last_name, c.address, a.gc_name, k.name
  from person p
- join person_contact pc on pc.person_id=p.id
- join contact_address c on pc.address_id=c.id
+ left join person_contact pc on pc.person_id=p.id
+ left join contact_address c on pc.address_id=c.id
  left join account_person ap on ap.person_id=p.id
  left join account a on a.id=ap.account_id
  left join csa k on k.id=a.csa_id
- where ap.to_date is null and c.kind='E'
+ where ap.to_date is null and (c.kind='E' or c.kind is null)
  order by p.id;
+
+-- conti senza transazioni
+select * from account where id not in
+  (select distinct l.account_id from transaction_line l
+                                join transaction t on t.id=l.transaction_id
+                                where t.modified_by_id is null);
 
 -- persone non ancora registrate
 select * from account
  where gc_parent = 'acf998ffe1edbcd44bc30850813650ac'
    and gc_id not in ('4d5b627c2ec72d94d95e95543aa5cd1f', '5ba64cec222104efb491ceafd6dd1812')
-   and id not in (select current_account_id from person where current_account_id is not null)
+   and id not in (select distinct account_id from account_person)
  order by gc_name;
 
 
