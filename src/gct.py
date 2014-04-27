@@ -94,7 +94,7 @@ class Transaction (object):
     def __init__ (self, transactionElem):
         self.id = gnucashId(transactionElem, '{http://www.gnucash.org/XML/trn}id')
         self.splits = [ Split(s) for s in transactionElem.findall('.//{http://www.gnucash.org/XML/trn}split')]
-        self.date = xmlDate(transactionElem, '{http://www.gnucash.org/XML/trn}date-entered')
+        self.date = xmlDate(transactionElem, '{http://www.gnucash.org/XML/trn}date-posted')
         self.description = xmlText(transactionElem, '{http://www.gnucash.org/XML/trn}description')
 
 class Split (object):
@@ -226,9 +226,12 @@ class importGnucash (object):
 
             self.cursor.execute('SELECT id, account_id, description, amount, gc_id FROM transaction_line WHERE transaction_id=%s', [ t.dbId ])
             dbSplits = list(self.cursor)
-            if description != t.description or transaction_date != t.date or  not self.matchSplits(t, dbSplits):
-                self.log('Transaction changed, rewriting: id=%s, gcId=%s' % (t.id, t.dbId))
+            if not self.matchSplits(t, dbSplits):
+                self.log('Transaction lines changed, rewriting: id=%s, gcId=%s' % (t.id, t.dbId))
                 self.insertTransaction(t, t.dbId)
+            elif description != t.description or transaction_date != t.date:
+                self.log('Transaction date/desc changed, updating: id=%s, gcId=%s' % (t.id, t.dbId))
+                self.updateTransaction(t, t.dbId)
             else:
                 #self.log('Transaction found, attributes unchanged')
                 pass
@@ -253,6 +256,13 @@ class importGnucash (object):
                 return False
             s.dbId = s.id
         return True
+
+    def updateTransaction (self, t, tid):
+        self.cursor.execute('UPDATE transaction SET description=%s, transaction_date=%s WHERE id=%s',
+                            [ dbText(t.description),
+                              t.date,
+                              tid
+                            ])
 
     def insertTransaction (self, t, oldTid):
         self.cursor.execute('INSERT INTO transaction (description, transaction_date, gc_id, currency_id) VALUES (%s, %s, %s, %s)',
