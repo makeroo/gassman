@@ -471,7 +471,7 @@ class AccountsIndexHandler (JsonBaseHandler):
         u = self.application.session(self).get_logged_user('not authenticated')
         if not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
             raise Exception('permission denied')
-        cur.execute(*self.application.sql.accounts_index(int(fromIdx), int(toIdx)))
+        cur.execute(*self.application.sql.accounts_index(csaId, int(fromIdx), int(toIdx)))
         return list(cur)
 
 class AccountsNamesHandler (JsonBaseHandler):
@@ -570,7 +570,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                 (transId is not None and not self.application.isTransactionEditor(cur, transId, u.id))) and
                 not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId)):
                 raise Exception('permission denied')
-            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr))
+            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csaId))
             tid = cur.lastrowid
             if tid == 0:
                 raise Exception('illegal currency')
@@ -607,7 +607,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                 (transId is not None and not self.application.isTransactionEditor(cur, transId, u.id))) and
                 not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId)):
                 raise Exception('permission denied')
-            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr))
+            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csaId))
             tid = cur.lastrowid
             if tid == 0:
                 raise Exception('illegal currency')
@@ -657,11 +657,9 @@ class TransactionsEditableHandler (JsonBaseHandler):
     def do (self, cur, csaId, fromIdx, toIdx):
         u = self.application.session(self).get_logged_user('not authenticated')
         if self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId):
-            cur.execute(self.application.sql.transactions_all(csaId, fromIdx, toIdx))
-            
-        elif not self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId):
-            #cur.execute(self.application.sql.??(csa, fromIdx, toIdx))
-            pass
+            cur.execute(*self.application.sql.transactions_all(csaId, int(fromIdx), int(toIdx)))
+        elif self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId):
+            cur.execute(*self.application.sql.transactions_by_editor(csaId, u, int(fromIdx), int(toIdx)))
         else:
             raise Exception('permission denied')
         return list(cur)

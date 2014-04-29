@@ -464,6 +464,110 @@ a {
 	line-height: 30px;
 }
 
+.transactions-index {
+	position: absolute;
+	left: 0;
+	right: 50%;
+	top: 0;
+	bottom: 0;
+
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}
+
+.transactions-index .movements {
+	overflow: hidden;
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}
+
+.transactions-index .movements .header {
+	position: relative;
+	height: 30px;
+	font-weight: bold;
+	flex: none;
+	line-height: 30px;
+	overflow: hidden;
+}
+
+.transactions-index .movements .body {
+/*	width:500px;*/
+	overflow: auto;
+	flex-grow: 1;
+}
+
+.transactions-index .movements .mov-row {
+	position: relative;
+	height: 30px;
+}
+
+.transactions-index .movements .mov-row.mod {
+	color: gray;
+}
+
+.transactions-index .movements .mov-row:hover {
+	background-color: #eef;
+}
+
+.transactions-index .movements .header .mov-odate {
+	line-height: 15px;
+}
+
+.transactions-index .movements .mov-odate {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 68px;
+	height: 30px;
+
+	line-height: 30px;
+}
+
+.transactions-index .movements .mov-tdesc {
+	position: absolute;
+	left: 70px;
+	right: 220px;
+	top: 0;
+	height: 30px;
+
+	line-height: 30px;
+}
+
+.transactions-index .movements .mov-tdesc .otype {
+	font-size: 8px;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	line-height: 8px;
+}
+
+.transactions-index .movements .header .mov-tdate {
+	line-height: 15px;
+}
+
+.transactions-index .movements .mov-tdate {
+	position: absolute;
+	right: 152px;
+	top: 0;
+	width: 66px;
+	height: 30px;
+
+	line-height: 30px;
+}
+
+.transactions-index .movements .mov-oper {
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 150px;
+	height: 30px;
+
+	line-height: 30px;
+}
+
 input.ng-invalid {
 	background-color: #fcc;
 }
@@ -479,4 +583,8 @@ input.ng-invalid {
 
 .mac-menu {
 	z-index: 1;
+}
+
+.centered {
+	text-align: center;
 }

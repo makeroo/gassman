@@ -171,4 +171,8 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies) {
 	this.transactionSave = function (csaId, tData) {
 		return $http.post('/transaction/' + csaId + '/save?_xsrf=' + $cookies._xsrf, tData);
 	}
+
+	this.transactionsLog = function (csaId, start, blockSize) {
+		return $http.post('/transactions/' + csaId + '/editable/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf);
+	}
 });

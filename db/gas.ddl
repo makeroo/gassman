@@ -1,4 +1,4 @@
--- version 4
+-- version 5
 
 SET SESSION storage_engine = "MyISAM";
 SET SESSION time_zone = "+0:00";
@@ -246,19 +246,17 @@ CREATE TABLE transaction (
   -- produce una transazione completamente nuova.
   -- Questo aumenta lo spazio richiesto ma mantiene lo schema del db più
   -- semplice.
-  -- In alternativa si puà fare che le line possono sovrascriversi
-  -- DECIDERLO PIÙ TARDI
   -- Per cancellare una transazione se ne crea una senza line.
   modified_by_id INT,
 
   gc_id CHAR(32),
   -- tipi di transazione:
-  -- (G)nucash/generic
-  -- (D)eposit
-  -- (P)ayment implica il tipo di form presentato dal sito
-  -- (T)rashed cestinata, significa che non ha linee
-  -- (U)nfinished (ie. draft): è in corso di salvataggio
-  -- (E)rror: è stato richiesto il salvataggio di una transazione, ma i dati non sono corretti
+  -- (g)nucash/generic
+  -- (d)eposit
+  -- (p)ayment implica il tipo di form presentato dal sito
+  -- (t)rashed cestinata, significa che non ha linee
+  -- (u)nfinished (ie. draft): è in corso di salvataggio
+  -- (e)rror: è stato richiesto il salvataggio di una transazione, ma i dati non sono corretti
   --          eg. account non appartenenti al csa indicato, o monete non uniformi
   cc_type CHAR(1) NOT NULL DEFAULT 'G',
 
@@ -269,9 +267,15 @@ CREATE TABLE transaction (
   -- 2) la uso per verificare la coerenza
   currency_id INT NOT NULL,
 
+  -- idem per currency, ho bisogno di avere qua la csa senza passare dalle line
+  -- tanto più nel caso di una transaction_log deleted per cui per sapere il csa
+  -- devo passare dalla transaction cancellata
+  csa_id INT NOT NULL,
+
   --UNIQUE (gc_id), -- non è unico a causa del rewrite!
   FOREIGN KEY (modified_by_id) REFERENCES transaction(id),
   FOREIGN KEY (currency_id) REFERENCES currency(id),
+  FOREIGN KEY (csa_id) REFERENCES csa(id),
   PRIMARY KEY (id)
 );
 

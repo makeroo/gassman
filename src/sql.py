@@ -11,12 +11,12 @@ P_canEnterDeposit = 4
 P_canEnterPayments = 5
 P_canManageTransactions = 6
 
-Tt_Generic = 'G'
-Tt_Deposit = 'D'
-Tt_Payment = 'P'
-Tt_Trashed = 'T'
-Tt_Unfinished = 'U'
-Tt_Error = 'E'
+Tt_Generic = 'g'
+Tt_Deposit = 'd'
+Tt_Payment = 'p'
+Tt_Trashed = 't'
+Tt_Unfinished = 'u'
+Tt_Error = 'e'
 
 Ck_Telephone = 'T'
 Ck_Mobile = 'M'
@@ -50,7 +50,7 @@ def account_amount (accountDbId):
     return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a on l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s', [ Tt_Unfinished, Tt_Error, accountDbId ]
     #return 'SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s', [ accountDbId ]
 
-def accounts_index (fromLine, toLine):
+def accounts_index (csaId, fromLine, toLine):
     return '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount), c.symbol\
  FROM person p\
  JOIN account_person ap ON ap.person_id=p.id\
@@ -58,10 +58,11 @@ def accounts_index (fromLine, toLine):
  JOIN transaction_line l ON l.account_id=a.id\
  JOIN transaction t ON t.id=l.transaction_id\
  JOIN currency c ON c.id=a.currency_id\
- WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) \
+ WHERE a.csa_id=%s AND t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) \
  GROUP BY p.id, a.id\
  ORDER BY p.first_name, p.last_name\
  LIMIT %s OFFSET %s''', [
+      csaId,
       Tt_Unfinished, Tt_Error,
       toLine - fromLine + 1,
       fromLine
@@ -158,8 +159,8 @@ def account_people (csaId):
 def account_people_addresses (csaId):
     return 'SELECT c.address, p.id, a.id FROM person p JOIN account_person ap ON ap.person_id=p.id JOIN account a ON ap.account_id=a.id JOIN person_contact pc ON p.id=pc.person_id JOIN contact_address c ON pc.address_id=c.id WHERE a.csa_id=%s AND c.kind IN (%s, %s) AND ap.to_date IS NULL', [ csaId, Ck_Email, Ck_Nickname ]
 
-def insert_transaction (desc, tDate, ccType, currencyId):
-    return 'INSERT INTO transaction (description, transaction_date, cc_type, currency_id) SELECT %s, %s, %s, id FROM currency WHERE id=%s', [ desc, tDate, ccType, currencyId ]
+def insert_transaction (desc, tDate, ccType, currencyId, csaId):
+    return 'INSERT INTO transaction (description, transaction_date, cc_type, currency_id, csa_id) SELECT %s, %s, %s, id, %s FROM currency WHERE id=%s', [ desc, tDate, ccType, csaId, currencyId ]
 
 def insert_transaction_line (tid, desc, amount, accId):
     return 'INSERT INTO transaction_line (transaction_id, account_id, description, amount) SELECT %s, a.id, %s, %s FROM account a WHERE a.id = %s', [ tid, desc, amount, accId ]
@@ -197,7 +198,22 @@ def transaction_type (transId):
 def update_transaction (oldTid, newTid):
     return 'UPDATE transaction SET modified_by_id = %s WHERE id = %s', [ newTid, oldTid ]
 
-#select l.log_date, l.op_type, t.id, t.description, t.transaction_date, t.modified_by_id, p.id, p.first_name, p.middle_name, p.last_name  from transaction_log l join transaction t on t.id=l.transaction_id join person p on l.operator_id= p.id where l.op_type in ('A', 'M', 'D') order by l.log_date desc limit 25 offset 1;
+def transactions_all (csaId, fromLine, toLine):
+    return 'SELECT l.id, l.log_date, l.op_type, t.id, t.description, t.transaction_date, t.modified_by_id, t.cc_type, p.id, p.first_name, p.middle_name, p.last_name FROM transaction_log l JOIN transaction t ON t.id=l.transaction_id JOIN person p ON l.operator_id= p.id WHERE t.csa_id=%s AND l.op_type IN (%s, %s, %s) ORDER BY l.log_date DESC LIMIT %s OFFSET %s', [
+            csaId,
+            'A', 'M', 'D',
+            toLine - fromLine + 1,
+            fromLine
+            ]
+
+def transactions_by_editor (csaId, operator, fromLine, toLine):
+    return 'SELECT l.id, l.log_date, l.op_type, t.id, t.description, t.transaction_date, t.modified_by_id, t.cc_type, p.id, p.first_name, p.middle_name, p.last_name FROM transaction_log l JOIN transaction t ON t.id=l.transaction_id JOIN person p ON l.operator_id= p.id WHERE t.csa_id=%s AND l.operator_id=%s AND l.op_type IN (%s, %s, %s) ORDER BY l.log_date DESC LIMIT %s OFFSET %s', [
+            csaId,
+            operator.id,
+            'A', 'M', 'D',
+            toLine - fromLine + 1,
+            fromLine
+            ]
 
 def checkConn ():
     return 'SELECT 1'

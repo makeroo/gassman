@@ -133,6 +133,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 		}).
 		then (undefined, function (error) {
 			concluded = true;
+			// TODO: FIXME: qui ho 2 errori...
 			$scope.serverError = error.data[1];
 			console.log('movements error:', error.data)
 			$scope.showErrorMessage = false;
@@ -220,7 +221,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 
 		var data = {
 			transId: $scope.transId == 'new' ? null : $scope.transId,
-			cc_type: 'D',
+			cc_type: 'd',
 			currency: $scope.currency[0],
 			lines: [],
 			date: $scope.tdate,
@@ -371,7 +372,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 				transId: 'new',
 				description: 'Accredito',
 				date: new Date(),
-				cc_type: 'D',
+				cc_type: 'd',
 				currency: null,
 				lines: []
 			} };
@@ -380,7 +381,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 	}).then(function (tdata) {
 		var t = tdata.data;
 
-		if (t.cc_type != 'D')
+		if (t.cc_type != 'd')
 			throw "illegal type";
 
 		$scope.transId = t.transId;
@@ -515,7 +516,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 
 		var data = {
 			transId: $scope.transId == 'new' ? null : $scope.transId,
-			cc_type: 'P',
+			cc_type: 'p',
 			currency: $scope.currency[0],
 			lines: [],
 			date: $scope.tdate,
@@ -682,7 +683,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 				transId: 'new',
 				description: 'Pagamento',
 				date: new Date(),
-				cc_type: 'P',
+				cc_type: 'p',
 				currency: null,
 				lines: []
 			} };
@@ -691,7 +692,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 	}).then(function (tdata) {
 		var t = tdata.data;
 
-		if (t.cc_type != 'P')
+		if (t.cc_type != 'p')
 			throw "illegal type";
 
 		$scope.transId = t.transId;
@@ -745,10 +746,39 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 	});
 });
 
-gassmanControllers.controller('TransactionsIndex', function() {
-	$scope.transactions = [];
+gassmanControllers.controller('TransactionsIndex', function($scope, $location, gdata) {
+	$scope.transactions = null;
 	$scope.transactionsError = null;
-	
+	$scope.loadError = null;
+	$scope.lastTransId = null;
+
+	var concluded = false;
+	var start = 0;
+	var blockSize = 25;
+
+	gdata.selectedCsa().
+	then (function (csaId) { $scope.csaId = csaId; $scope.loadMore(); }).
+	then (undefined, function (error) { $scope.loadError = error.data; });
+
+	$scope.loadMore = function () {
+		if (concluded) return;
+
+		gdata.transactionsLog($scope.csaId, start, blockSize).
+		then (function (r) {
+			concluded = r.data.length < blockSize;
+			start += r.data.length;
+			$scope.transactions = $scope.transactions == null ? r.data : $scope.transactions.concat(r.data);
+		}).
+		then (undefined, function (error) {
+			concluded = true;
+			$scope.loadError = error.data[1];
+			console.log('transactions log error: ', error.data);
+		});
+	};
+
+	$scope.showTransaction = function (tl) {
+		$location.path('/transaction/' + tl[3] + '/' + tl[7]);
+	};
 });
 
 gassmanControllers.controller('HelpController', function() {

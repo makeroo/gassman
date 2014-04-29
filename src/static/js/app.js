@@ -28,8 +28,8 @@ gassmanApp.functions = [
 		});
 	  }},
 	//{ v:P_canAssignAccounts, f:null },
-	{ p:gassmanApp.P_canEnterDeposit, f:'#/transaction/new/deposit', l:'Registra accrediti' },
-	{ p:gassmanApp.P_canEnterPayments, f:'#/transaction/new/payment', l:'Registra pagamenti' },
+	{ p:gassmanApp.P_canEnterDeposit, f:'#/transaction/new/d', l:'Registra accrediti' },
+	{ p:gassmanApp.P_canEnterPayments, f:'#/transaction/new/p', l:'Registra pagamenti' },
 	{ e:function (pp) {
 		return pp.indexOf(gassmanApp.P_canEnterPayments) != -1 ||
 		       pp.indexOf(gassmanApp.P_canEnterDeposit) != -1
@@ -68,11 +68,11 @@ gassmanApp.config([ '$routeProvider',
 				templateUrl: 'static/partials/accounts-index.html',
 				controller: 'AccountsIndex'
 			}).
-			when('/transaction/:transId/deposit', {
+			when('/transaction/:transId/d', {
 				templateUrl: 'static/partials/transaction_deposit.html',
 				controller: 'TransactionDeposit'
 			}).
-			when('/transaction/:transId/payment', {
+			when('/transaction/:transId/p', {
 				templateUrl: 'static/partials/transaction_payment.html',
 				controller: 'TransactionPayment'
 			}).

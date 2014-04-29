@@ -214,7 +214,7 @@ class importGnucash (object):
             if dbTransId not in gTransIds:
                 self.log('Should delete transaction %s, gnu cash file does not contain it anymore' % dbTransId)
                 # TODO: chiedo conferma?
-                self.cursor.execute('insert into transaction (description, transaction_date, currency_id) values (%s, %s, %s)', [ 'Deleted from gnucash', self.now, self.CURRENCY_ID ])
+                self.cursor.execute('insert into transaction (description, transaction_date, currency_id, csa_id) values (%s, %s, %s, %s)', [ 'Deleted from gnucash', self.now, self.CURRENCY_ID, self.CSA_ID ])
                 newTransId = self.cursor.lastrowid
                 self.cursor.execute('update transaction set modified_by_id=%s where gc_id=%s', [ newTransId, dbTransId ])
 
@@ -265,11 +265,12 @@ class importGnucash (object):
                             ])
 
     def insertTransaction (self, t, oldTid):
-        self.cursor.execute('INSERT INTO transaction (description, transaction_date, gc_id, currency_id) VALUES (%s, %s, %s, %s)',
+        self.cursor.execute('INSERT INTO transaction (description, transaction_date, gc_id, currency_id, csa_id) VALUES (%s, %s, %s, %s, %s)',
                             [ dbText(t.description),
                               t.date,
                               t.id,
-                              self.CURRENCY_ID
+                              self.CURRENCY_ID,
+                              self.CSA_ID
                               ])
         t.dbId = self.cursor.lastrowid
         for s in t.splits:
