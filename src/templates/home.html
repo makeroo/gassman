@@ -43,7 +43,7 @@
     <li ng-repeat="f in functions">
      <a href="{{!f.f}}">{{!f.l}}</a>
     </li>
-    <li ng-show="totalAmount == totalAmountError">Caricamento in corso...</li>
+    <!--li ng-show="totalAmount == totalAmountError">Caricamento in corso...</li-->
     <li ng-show="totalAmountError">Totale cassa non disponible: {{! totalAmountError }}.</li>
     <li ng-show="totalAmount">Totale in cassa {{! totalAmount[0] | currency : totalAmount[1] }}</li>
    </ul>
