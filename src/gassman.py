@@ -643,6 +643,10 @@ class TransactionSaveHandler (JsonBaseHandler):
                 not self.application.isTransactionEditor(cur, transId, u.id)) and
                 not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId)):
                 raise Exception('permission denied')
+            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csaId))
+            tid = cur.lastrowid
+            if tid == 0:
+                raise Exception('illegal currency')
             tlogType = self.application.sql.Tl_Deleted
             #tlogDesc = ''
         else:
@@ -652,6 +656,9 @@ class TransactionSaveHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.log_transaction(tid, u.id, tlogType, tlogDesc, datetime.datetime.utcnow()))
         if transId is not None and ttype != self.application.sql.Tt_Error:
             cur.execute(*self.application.sql.update_transaction(transId, tid))
+        if ttype == self.application.sql.Tt_Error:
+            raise Exception(tlogDesc)
+        return tid
 
 class TransactionsEditableHandler (JsonBaseHandler):
     def do (self, cur, csaId, fromIdx, toIdx):
