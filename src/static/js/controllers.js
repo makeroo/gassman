@@ -174,7 +174,7 @@ gassmanControllers.controller('AccountsIndex', function($scope, $filter, $locati
 	$scope.loadMore();
 });
 
-gassmanControllers.controller('TransactionDeposit', function($scope, $routeParams, $timeout, gdata) {
+gassmanControllers.controller('TransactionDeposit', function($scope, $routeParams, $location, $timeout, gdata) {
 	$scope.transId = $routeParams['transId'];
 	$scope.lines = [];
 	$scope.tdate = new Date();
@@ -245,6 +245,8 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		//data = angular.toJson(data) // lo fa già in automatico
 		gdata.transactionSave($scope.csaId, data).
 		then (function (r) {
+			console.log(r);
+			$scope.savedTransId = r.data;
 			$scope.transId = 'new';
 			$scope.lines = [];
 			$scope.tsaveOk = true;
@@ -262,6 +264,10 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		$scope.currency = null;
 		$scope.tsaveOk = null;
 		$scope.lines.push(newLine());
+	};
+
+	$scope.viewLastTrans = function () {
+		$location.path('/transaction/' + $scope.savedTransId + '/d');
 	};
 
 	$scope.confirmCancelDeposit = function () {
@@ -283,6 +289,8 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 
 		gdata.transactionSave($scope.csaId, data).
 		then (function (r) {
+			console.log(r);
+			$scope.savedTransId = r.data;
 			$scope.transId = 'new';
 			$scope.lines = [];
 			$scope.tsaveOk = true;
@@ -423,7 +431,11 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		// comunque inutilizzabile
 	}).
 	then (undefined, function (error) {
-		$scope.autocompletionDataError = error.data;
+		if (gdata.isError(error.data, gdata.E_already_modified)) {
+			$location.path('/transaction/' + error.data[2] + '/d');
+		} else {
+			$scope.autocompletionDataError = error.data;
+		}
 	});
 });
 
@@ -547,6 +559,8 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		//data = angular.toJson(data) // lo fa già in automatico
 		gdata.transactionSave($scope.csaId, data).
 		then (function (r) {
+			console.log(r);
+			$scope.savedTransId = r.data;
 			$scope.transId = 'new';
 			$scope.lines = [];
 			$scope.producers = [];
@@ -588,6 +602,8 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 
 		gdata.transactionSave($scope.csaId, data).
 		then (function (r) {
+			console.log(r);
+			$scope.savedTransId = r.data;
 			$scope.transId = 'new';
 			$scope.lines = [];
 			$scope.producers = [];
@@ -739,7 +755,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 	}).
 	then (undefined, function (error) {
 		if (gdata.isError(error.data, gdata.E_already_modified)) {
-			$location.path('/transaction/' + error.data[2] + '/payment');
+			$location.path('/transaction/' + error.data[2] + '/p');
 		} else {
 			$scope.autocompletionDataError = error.data;
 		}

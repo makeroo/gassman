@@ -1,6 +1,6 @@
 <form novalidate name="deposit" class="deposit" ng-submit="return;">
  <div class="lines-table">
-  <div class="header" ng-hide="tsaveOk || autocompletionDataError">
+  <div class="header" ng-hide="autocompletionDataError">
    Inserisci gli accrediti:
   </div>
   <div class="body">
@@ -37,19 +37,13 @@
     </div>
     </ng:form>
    </div>
-   <div ng-show="tsaveOk">
-     Versamento registrato correttamente.
-     <a ng-click="newTrans()">Inseriscine un'altro.</a>
-   </div>
-   <div ng-show="tsaveError">
-     Registrazione fallita. Causa: {{tsaveError}}.
-   </div>
+
    <div ng-show="autocompletionDataError">
      Caricamento fallito. Causa: {{autocompletionDataError}}.
    </div>
   </div>
  </div>
- <div class="actions" ng-hide="tsaveOk">
+ <div class="actions">
   <div>Data consegna: <input type="date" ng-model="tdate"/>, note: <input type="text" ng-model="tdesc"/><br/>
        <span ng-show="!currencyError && totalAmount > 0">Totale accrediti: {{totalAmount | currency : currency[1] }}</span>
        <span ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
@@ -60,3 +54,15 @@
   <button ng-show="confirmDelete" ng-click="cancelDeposit()">Conferma eliminazione</button>
  </div>
 </form>
+<div ng-show="tsaveOk || tsaveError" class="deposit-post-save">
+   <div ng-show="tsaveOk" class="msg">
+     Versamento registrato correttamente. Adesso:
+     <ul>
+     <li>C'è del lavoro da fare! <button ng-click="newTrans()">Ne inserisco un altro.</button></li>
+     <li>Sarà stato salvato correttamente? <button ng-click="viewLastTrans()">Fammi dare un'occhiata...</button></li>
+     </ul>
+   </div>
+   <div ng-show="tsaveError" class="msg">
+     Registrazione fallita. Causa: {{tsaveError}}.
+   </div>
+</div>

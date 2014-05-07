@@ -372,6 +372,30 @@ a {
 	height: 4em;
 }
 
+.deposit-post-save {
+	position: absolute;
+	left: 0;
+	right: 50%;
+	top: 0;
+	bottom: 0;
+	background-color: rgba(255,255,255,.7);
+}
+
+.deposit-post-save .msg {
+	background-color: white;
+	margin-top: 10%;
+	margin-left: 30px;
+	margin-right: 30px;
+	line-height: 30px;
+	border: 1px solid gray;
+	padding: 5px;
+	border-radius: 10px;
+}
+
+.deposit-post-save .msg ul {
+	padding-left: 20px;
+}
+
 .transaction-details {
 	position: absolute;
 	left: 50%;
