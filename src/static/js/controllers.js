@@ -583,6 +583,10 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		$scope.producers.push(newLine());
 	};
 
+	$scope.viewLastTrans = function () {
+		$location.path('/transaction/' + $scope.savedTransId + '/p');
+	};
+
 	$scope.confirmCancelPayment = function () {
 		$scope.confirmDelete = true;
 		$timeout(function () { $scope.confirmDelete = false; }, 3200.0);
