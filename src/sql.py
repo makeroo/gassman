@@ -159,6 +159,15 @@ def account_people (csaId):
 def account_people_addresses (csaId):
     return 'SELECT c.address, p.id, a.id FROM person p JOIN account_person ap ON ap.person_id=p.id JOIN account a ON ap.account_id=a.id JOIN person_contact pc ON p.id=pc.person_id JOIN contact_address c ON pc.address_id=c.id WHERE a.csa_id=%s AND c.kind IN (%s, %s) AND ap.to_date IS NULL', [ csaId, Ck_Email, Ck_Nickname ]
 
+def expenses_accounts (csaId):
+    return 'SELECT id, gc_name, gc_id, gc_parent, currency_id FROM account where gc_type =%s AND csa_id=%s AND state=%s', [ 'EXPENSE', csaId, 'O']
+
+def expenses_line_descriptions (csaId):
+    return 'SELECT DISTINCT l.description FROM transaction_line l JOIN account a ON l.account_id=a.id WHERE a.gc_type=%s AND a.csa_id=%s AND l.description IS NOT NULL', [ 'EXPENSE', csaId ]
+
+def expenses_transaction_descriptions (csaId):
+    return 'SELECT DISTINCT t.description FROM transaction_line l JOIN account a ON l.account_id=a.id JOIN transaction t ON l.transaction_id=t.id WHERE a.gc_type=%s AND a.csa_id=%s AND t.description IS NOT NULL', [ 'EXPENSE', csaId ]
+
 def insert_transaction (desc, tDate, ccType, currencyId, csaId):
     return 'INSERT INTO transaction (description, transaction_date, cc_type, currency_id, csa_id) SELECT %s, %s, %s, id, %s FROM currency WHERE id=%s', [ desc, tDate, ccType, csaId, currencyId ]
 
@@ -169,7 +178,7 @@ def check_transaction_coherency (tid):
     return 'SELECT DISTINCT a.currency_id, a.csa_id FROM transaction_line l JOIN account a ON a.id=l.account_id WHERE l.transaction_id = %s', [ tid ]
 
 def complete_deposit (tid, csaId):
-    return 'INSERT INTO transaction_line (transaction_id, account_id, amount) SELECT l.transaction_id, c.income_id, - SUM(l.amount) FROM csa c, transaction_line l WHERE c.id=%s AND l.transaction_id=%s', [ csaId, tid ]
+    return 'INSERT INTO transaction_line (transaction_id, account_id, amount) SELECT t.id, ca.id, - SUM(l.amount) FROM csa c JOIN account_csa ac ON ac.csa_id=c.id JOIN account ca ON ac.account_id=ca.id, transaction_line l JOIN transaction t ON l.transaction_id=t.id WHERE c.id=%s AND ca.gc_type=%s AND ca.currency_id=t.currency_id AND t.id=%s', [ csaId, 'INCOME', tid ]
 
 def transaction_calc_last_line_amount (tid, tlineId):
     return 'SELECT - SUM(amount) FROM transaction_line WHERE transaction_id = %s AND id != %s', [ tid, tlineId ]

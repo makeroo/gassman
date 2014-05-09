@@ -1,4 +1,4 @@
--- version 5
+-- version 6
 
 SET SESSION storage_engine = "MyISAM";
 SET SESSION time_zone = "+0:00";
@@ -92,6 +92,35 @@ CREATE TABLE delivery_place (
 
 
 
+CREATE TABLE csa (
+  -- Una comunità. Le persone possono partecipare a più comunità.
+  -- La partecipazione è indicata dai permessi (membership).
+
+  id INT NOT NULL AUTO_INCREMENT,
+
+  name VARCHAR(255),
+  description TEXT,
+
+  -- Cassa comune
+  --kitty_id INT NOT NULL,
+  -- Quanto versano, ogni anno, i partecipanti del gas in cassa comune
+  -- TODO: gestire il caso di persone che appartengano a più gas: magari versano in un gas solo? O un po' in tutti?
+  annual_kitty_amount DECIMAL(15,2) NOT NULL DEFAULT 0,
+  -- Soglia di default per i nuovi arrivati
+  default_account_threshold DECIMAL(15,2) NOT NULL DEFAULT 0,
+  -- Conto per le uscite (finché si rimane al modello salvadenaio...)
+  --expenses_id INT NOT NULL,
+  -- Conto per le entrate (finché si rimane al modello salvadenaio, poi scompare)
+  --income_id INT NOT NULL,
+
+--  FOREIGN KEY (kitty_id) REFERENCES account(id),
+--  FOREIGN KEY (expenses_id) REFERENCES account(id),
+--  FOREIGN KEY (income_id) REFERENCES account(id),
+  PRIMARY KEY (id)
+);
+
+
+
 CREATE TABLE account (
   id INT NOT NULL AUTO_INCREMENT,
 
@@ -105,6 +134,14 @@ CREATE TABLE account (
 -- perché potrei avere problemi di concorrenza
 
   -- colonne destinate a sparire, usate solo per il periodo di transizione gnucash
+  -- gc_type può valere:
+  -- ASSET: i membri della comunità + cassa comune (lucca ha anche Attività e Scomparsi)
+  -- EXPENSE: le spese (lucca ha una gerarchia che non userò più)
+  -- ROOT: una radice, non la userò più (retaggio gnucash)
+  -- EQUITY: capitali, bilanci d'apertura, non li userò più (retaggio gnucash)
+  -- INCOME: versamenti
+  -- BANK: sbilancio eur, orfano eur, non li userò più (retaggio gnucash)
+  -- in realtà a me un tipo serve: Expenses, Income, Asset e Kitty (Asset)
   gc_id CHAR(32),
   gc_name VARCHAR(255),
   gc_desc VARCHAR(255),
@@ -114,6 +151,20 @@ CREATE TABLE account (
   UNIQUE (gc_id),
   FOREIGN KEY (csa_id) REFERENCES csa(id),
   FOREIGN KEY (currency_id) REFERENCES currency(id),
+  PRIMARY KEY (id)
+);
+
+
+-- ogni csa ha 3 conti per ogni currency che usa
+-- i conti sono: kitty (cassa comune): ASSET
+-- Uscite: EXPENSES, Entrate: INCOME
+CREATE TABLE account_csa (
+  id INT NOT NULL AUTO_INCREMENT,
+  csa_id INT NOT NULL,
+  account_id INT NOT NULL,
+
+  FOREIGN KEY (csa_id) REFERENCES csa(id),
+  FOREIGN KEY (account_id) REFERENCES account(id),
   PRIMARY KEY (id)
 );
 
@@ -169,34 +220,6 @@ CREATE TABLE account_person (
   PRIMARY KEY (id)
 );
 
-
-
-CREATE TABLE csa (
-  -- Una comunità. Le persone possono partecipare a più comunità.
-  -- La partecipazione è indicata dai permessi (membership).
-
-  id INT NOT NULL AUTO_INCREMENT,
-
-  name VARCHAR(255),
-  description TEXT,
-
-  -- Cassa comune
-  kitty_id INT NOT NULL,
-  -- Quanto versano, ogni anno, i partecipanti del gas in cassa comune
-  -- TODO: gestire il caso di persone che appartengano a più gas: magari versano in un gas solo? O un po' in tutti?
-  annual_kitty_amount DECIMAL(15,2) NOT NULL DEFAULT 0,
-  -- Soglia di default per i nuovi arrivati
-  default_account_threshold DECIMAL(15,2) NOT NULL DEFAULT 0,
-  -- Conto per le uscite (finché si rimane al modello salvadenaio...)
-  expenses_id INT NOT NULL,
-  -- Conto per le entrate (finché si rimane al modello salvadenaio, poi scompare)
-  income_id INT NOT NULL,
-
-  FOREIGN KEY (kitty_id) REFERENCES account(id),
-  FOREIGN KEY (expenses_id) REFERENCES account(id),
-  FOREIGN KEY (income_id) REFERENCES account(id),
-  PRIMARY KEY (id)
-);
 
 CREATE TABLE permission (
   id INT NOT NULL AUTO_INCREMENT,
@@ -273,11 +296,12 @@ CREATE TABLE transaction (
   csa_id INT NOT NULL,
 
   --UNIQUE (gc_id), -- non è unico a causa del rewrite!
-  FOREIGN KEY (modified_by_id) REFERENCES transaction(id),
   FOREIGN KEY (currency_id) REFERENCES currency(id),
   FOREIGN KEY (csa_id) REFERENCES csa(id),
   PRIMARY KEY (id)
 );
+
+ALTER TABLE transaction ADD FOREIGN KEY (modified_by_id) REFERENCES transaction(id);
 
 CREATE TABLE transaction_line (
   id INT NOT NULL AUTO_INCREMENT,
