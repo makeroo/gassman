@@ -453,6 +453,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 	$scope.currencyError = false;
 	$scope.currencies = {};
 	$scope.autocompletionData = [];
+	$scope.autocompletionExpenses = [];
 	$scope.autocompletionDataError = null;
 	$scope.csaId = null;
 	$scope.tsaveOk = null;
@@ -696,6 +697,19 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			if (!ai[o[2]])
 				ai[o[2]] = n; // questa volta non sovrascrivo
 		}
+		return gdata.expensesTags($scope.csaId);
+	}).then(function (r) {
+		var expensesAccounts = r.data.accounts;
+		var expensesTags = r.data.tags;
+
+		angular.forEach(expensesAccounts, function (account) {
+			// 0:id, 1:gc_name, 2:gc_id, 3:gc_parent, 4:currency_id
+			$scope.autocompletionExpenses.push(account[1]);
+		});
+
+		angular.forEach(expensesTags, function (tag) {
+			$scope.autocompletionExpenses.push(tag);
+		});
 
 		if ($scope.transId == 'new')
 			return {

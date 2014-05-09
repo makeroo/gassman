@@ -102,6 +102,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/profile-info$', ProfileInfoHandler),
             (r'^/accounts/(\d+)/index/(\d+)/(\d+)$', AccountsIndexHandler),
             (r'^/accounts/(\d+)/names$', AccountsNamesHandler),
+            (r'^/expenses/(\d+)/tags$', ExpensesNamesHandler),
             (r'^/transaction/(\d+)/(\d+)/detail$', TransactionDetailHandler),
             (r'^/transaction/(\d+)/(\d+)/edit$', TransactionEditHandler),
             (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
@@ -490,6 +491,20 @@ class AccountsNamesHandler (JsonBaseHandler):
             accountPeople = accountPeople,
             accountPeopleAddresses = accountPeopleAddresses
             )
+
+class ExpensesNamesHandler (JsonBaseHandler):
+    def do (self, cur, csaId):
+        u = self.application.session(self).get_logged_user('not authenticated')
+        if not self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId):
+            raise Exception('permission denied')
+        r = {}
+        cur.execute(*self.application.sql.expenses_accounts(csaId))
+        r['accounts'] = list(cur)
+        cur.execute(*self.application.sql.expenses_line_descriptions(csaId))
+        r['tags'] = list(cur)
+        cur.execute(*self.application.sql.expenses_transaction_descriptions(csaId))
+        r['tags'] += list(cur)
+        return r
 
 class TransactionDetailHandler (JsonBaseHandler):
     def do (self, cur, csaId, tid):

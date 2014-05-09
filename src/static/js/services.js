@@ -145,7 +145,11 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies) {
 	}
 
 	this.accountsNames = function (csaId) {
-		return $http.post('/accounts/1/names?_xsrf=' + $cookies._xsrf);
+		return $http.post('/accounts/' + csaId + '/names?_xsrf=' + $cookies._xsrf);
+	}
+
+	this.expensesTags = function (csaId) {
+		return $http.post('/expenses/' + csaId + '/tags?_xsrf=' + $cookies._xsrf);
 	}
 
 	this.accountAmount = function (accId) {
