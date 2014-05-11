@@ -443,10 +443,13 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 	$scope.transId = $routeParams['transId'];
 	$scope.lines = [];
 	$scope.producers = [];
+	$scope.expenses = [];
+	$scope.accounts = {};
 	$scope.tdate = new Date();
 	$scope.tdesc = 'Pagamento';
 	$scope.totalAmount = 0.0;
 	$scope.totalInvoice = 0.0;
+	$scope.totalExpenses = 0.0;
 	$scope.difference = 0.0;
 	$scope.confirmDelete = false;
 	$scope.currency = null;
@@ -459,14 +462,24 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 	$scope.tsaveOk = null;
 	$scope.tsaveError = null;
 
-	var autoCompileTotalInvoice = true;
+	var autoCompileTotalInvoice = 2;
 
 	var autoCompilingTotalInvoice = function () {
-		return (
+		if (
 			$scope.producers.length < 3 &&
 			($scope.producers.length == 1 || (!$scope.producers[1].accountName && !$scope.producers[1].amount)) &&
-			$scope.producers[0].amount == $scope.totalInvoice
-			);
+			$scope.producers[0].amount == $scope.totalInvoice &&
+			$scope.expenses.length == 1 &&
+			!$scope.expenses[0].desc && !$scope.expenses[0].amount
+			)
+			return 2;
+		if (
+			$scope.expenses.length < 3 &&
+			($scope.expenses.length == 1 || (!$scope.expenses[1].desc && !$scope.expenses[1].amount)) &&
+			$scope.expenses[0].amount == $scope.totalAmount - $scope.totalInvoice
+			)
+			return 1;
+		return 0;
 	};
 
 	var newLine = function () {
@@ -493,18 +506,21 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 
 		$scope.totalAmount = t;
 
-		if (autoCompileTotalInvoice) {
+		if (autoCompileTotalInvoice == 2) {
 			$scope.producers[0].amount = $scope.totalAmount;
 
 			$scope.updateTotalInvoice();
+		} else if (autoCompileTotalInvoice == 1) {
+			$scope.expenses[0].amount = $scope.totalAmount - $scope.totalInvoice;
 		} else {
-			$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice);
+			$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice - $scope.totalExpenses);
 		}
 	}
 
 	$scope.updateTotalInvoice = function (f) {
-		if (f !== undefined && !autoCompilingTotalInvoice()) {
-			autoCompileTotalInvoice = false;
+		var ac = autoCompilingTotalInvoice();
+		if (f !== undefined && ac < autoCompileTotalInvoice) {
+			autoCompileTotalInvoice = ac;
 		}
 
 		//console.log('update total invoice', f);
@@ -518,7 +534,27 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 
 		$scope.totalInvoice = t;
 
-		$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice);
+		$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice - $scope.totalExpenses);
+	}
+
+	$scope.updateTotalExpenses = function (f) {
+		var ac = autoCompilingTotalInvoice();
+		if (f !== undefined && ac < autoCompileTotalInvoice) {
+			autoCompileTotalInvoice = ac;
+		}
+
+		//console.log('update total invoice', f);
+		var t = 0.0;
+		for (var i in $scope.expenses) {
+			var l = $scope.expenses[i];
+			var a = parseFloat(l.amount);
+			if (!isNaN(a))
+				t += a;
+		}
+
+		$scope.totalExpenses = t;
+
+		$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice - $scope.totalExpenses);
 	}
 
 	$scope.savePayment = function () {
@@ -565,6 +601,8 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			$scope.transId = 'new';
 			$scope.lines = [];
 			$scope.producers = [];
+			$scope.expenses = [];
+			$scope.accounts = {};
 			$scope.tsaveOk = true;
 		}).
 		then (undefined, function (error) {
@@ -577,11 +615,13 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		$scope.tdesc = 'Pagamento';
 		$scope.totalAmount = 0.0;
 		$scope.totalInvoice = 0.0;
+		$scope.totalExpenses = 0.0;
 		$scope.confirmDelete = false;
 		$scope.currency = null;
 		$scope.tsaveOk = null;
 		$scope.lines.push(newLine());
 		$scope.producers.push(newLine());
+		$scope.expenses.push(newLine());
 	};
 
 	$scope.viewLastTrans = function () {
@@ -612,6 +652,8 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			$scope.transId = 'new';
 			$scope.lines = [];
 			$scope.producers = [];
+			$scope.expenses = [];
+			$scope.accounts = {};
 			$scope.tsaveOk = true;
 		}).
 		then (undefined, function (error) {
@@ -660,8 +702,6 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		}
 	};
 
-	var ai = {};
-
 	gdata.selectedCsa().
 	then (function (csaId) {
 		$scope.csaId = csaId;
@@ -678,7 +718,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			// o è un array gc_name, accId
 			$scope.autocompletionData.push({ name: o[0], acc: o[1] });
 			$scope.currencies[o[1]] = [ o[2], o[3] ];
-			ai[o[1]] = o[0];
+			$scope.accounts[o[1]] = o[0];
 		}
 		for (var i in accountPeople) {
 			var o = accountPeople[i];
@@ -687,15 +727,15 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			n = n.trim();
 			people[o[0]] = n;
 			$scope.autocompletionData.push({ name: n, acc: o[4], p: o[0] });
-			ai[o[4]] = n; // sovrascrivo, non mi interessa
+			$scope.accounts[o[4]] = n; // sovrascrivo, non mi interessa
 		}
 		for (var i in accountPeopleAddresses) {
 			var o = accountPeopleAddresses[i];
 			// o è un array 0:addr 1:pid 2:accId
 			var n = o[0] + ' (' + people[o[1]] + ')';
 			$scope.autocompletionData.push({ name: n, acc: o[2], p: o[1] });
-			if (!ai[o[2]])
-				ai[o[2]] = n; // questa volta non sovrascrivo
+			if (!$scope.accounts[o[2]])
+				$scope.accounts[o[2]] = n; // questa volta non sovrascrivo
 		}
 		return gdata.expensesTags($scope.csaId);
 	}).then(function (r) {
@@ -735,6 +775,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 
 		var clients = [];
 		var producers = [];
+		var expenses = [];
 
 		for (var i in t.lines) {
 			var l = t.lines[i];
@@ -747,22 +788,27 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			if (x < 0) {
 				clients.push(l);
 				l.amount = -x;
+			} else if (l.account in $scope.accounts){
+				expenses.push(l);
 			} else {
 				producers.push(l);
 				//l.amount = x;
 			}
 
 			if (!l.accountName)
-				l.accountName = ai[l.account];
+				l.accountName = $scope.accounts[l.account];
 		}
 
-		if (!clients.length)
+//		if (!clients.length)
 			clients.push(newLine());
-		if (!producers.length)
+//		if (!producers.length)
 			producers.push(newLine());
+//		if (!expenses.length)
+			expenses.push(newLine());
 
 		$scope.lines = clients;
 		$scope.producers = producers;
+		$scope.expenses = expenses;
 		$scope.updateTotalAmount();
 		$scope.updateTotalInvoice();
 		$scope.checkCurrencies();
