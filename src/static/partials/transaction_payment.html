@@ -87,7 +87,9 @@
             mac-autocomplete-delay="300"
             ng-model="l.notes"
             ng-blur="$last && $parent.checkLine(l, expenses)"
+            gm-expense
             /></div>
+	 <div class="error-message" ng-show="lineForm.notes.$error.expenseDefined">Specificare la spesa</div>
     </div>
     <div class="row-amount">
      <input type="number"

@@ -84,6 +84,34 @@ gassmanDirectives.directive('gmAccount', function () {
     };
 });
 
+gassmanDirectives.directive('gmExpense', function () {
+    return {
+    	restrict: 'A',
+    	require: 'ngModel',
+    	link: function (scope, elem, attrs, ctrl) {
+    		var descDefined = function (desc, amount) {
+    			console.log('checking expense:', desc, amount, scope.l)
+    			f = amount == '' || amount == null || (desc && amount > 0);
+    			ctrl.$setValidity('expenseDefined', f);
+
+    			return f ? desc : null;
+    		};
+
+    		scope.$watch(function () {
+    			return scope.l.amount;
+    		},
+    		function (value) {
+    			descDefined(scope.l.desc, value);
+    		}
+    		);
+
+    		ctrl.$parsers.push(function (value) {
+    			descDefined(value, scope.l.amount);
+    		});
+    	}
+    };
+});
+
 gassmanDirectives.directive('whenScrolled', function() {
 	return function (scope, elm, attr) {
 		var raw = elm[0];
