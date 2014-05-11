@@ -503,7 +503,7 @@ class ExpensesNamesHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.expenses_line_descriptions(csaId))
         r['tags'] = list(cur)
         cur.execute(*self.application.sql.expenses_transaction_descriptions(csaId))
-        r['tags'] += list(cur)
+        r['tags'] += [ x[0] for x in cur]
         return r
 
 class TransactionDetailHandler (JsonBaseHandler):
