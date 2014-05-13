@@ -84,9 +84,11 @@
             name="notes"
             mac-placeholder="'Descrizione della spesa'"
             mac-autocomplete-source="autocompletionExpenses"
+            mac-autocomplete-on-select="fillNotes(l, selected)"
             mac-autocomplete-delay="300"
+            mac-autocomplete-mandatory="false"
             ng-model="l.notes"
-            ng-blur="$last && $parent.checkLine(l, expenses)"
+            ng-blur="$last && $parent.checkExp(l, expenses)"
             gm-expense
             /></div>
 	 <div class="error-message" ng-show="lineForm.notes.$error.expenseDefined">Specificare la spesa</div>
@@ -116,7 +118,7 @@
        <span ng-show="!currencyError && totalAmount > 0 && difference < .01">Totale pagamenti: {{totalAmount | currency : currency[1] }}</span>
        <span ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
        <span ng-show="!currencyError && !totalAmount">Nessun pagamento inserito finora.</span>
-       <span ng-show="!currencyError && difference >= .01">Discrepanza fra contanti versati e pagamenti richiesti: {{totalInvoice - totalAmount - totalExpenses | currency: currency[1] }}</span>
+       <span ng-show="!currencyError && difference >= .01">Discrepanza fra contanti versati e pagamenti richiesti: {{totalInvoice - totalAmount + totalExpenses | currency: currency[1] }}</span>
        </div>
   <button ng-disabled="!csaId || !payment.$valid || !totalAmount || difference >= .01" ng-click="savePayment()">Registra in cassa</button>
   <button ng-disabled="confirmDelete" ng-show="transId != 'new'" ng-click="confirmCancelPayment()">Elimina la registrazione dei pagamenti</button>
