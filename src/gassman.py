@@ -626,10 +626,13 @@ class TransactionSaveHandler (JsonBaseHandler):
             tid = cur.lastrowid
             if tid == 0:
                 raise Exception('illegal currency')
+            # calcolo il conto spese
+            cur.execute(*self.application.sql.csa_account(csaId, 'EXPENSE', tcurr))
+            expenseAccountId = cur.fetchone()[0]
             for l in tlines:
                 desc = l['notes']
                 amount = l['amount']
-                accId = l['account']
+                accId = l['account'] or expenseAccountId # qui assumo che account id non sia zero!
                 cur.execute(*self.application.sql.insert_transaction_line(tid, desc, amount, accId))
                 lastLineId = cur.lastrowid
             cur.execute(*self.application.sql.check_transaction_coherency(tid))
