@@ -122,6 +122,7 @@ CREATE TABLE csa (
 
 
 CREATE TABLE account (
+  -- ATTENZIONE: non sono ammessi conti con id 0 (vedi save transaction di tipo payment)
   id INT NOT NULL AUTO_INCREMENT,
 
   state CHAR(1) NOT NULL DEFAULT 'O', -- (O)pen, (C)losing, close(D), (F)usion pending
