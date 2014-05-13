@@ -39,7 +39,7 @@ gassmanDirectives.directive('gmAccount', function () {
     	link: function (scope, elem, attrs, ctrl) {
     		var accountDefined = function (account, amount) {
     			console.log('checking defined:', account, amount, scope.l)
-    			f = amount == '' || amount == null || (account && amount > 0);
+    			var f = amount == '' || amount == null || (account && amount > 0);
     			ctrl.$setValidity('accountDefined', f);
 
     			return f ? account : null;
@@ -91,7 +91,7 @@ gassmanDirectives.directive('gmExpense', function () {
     	link: function (scope, elem, attrs, ctrl) {
     		var descDefined = function (desc, amount) {
     			console.log('checking expense:', desc, amount, scope.l)
-    			f = amount == '' || amount == null || (desc && amount > 0);
+    			var f = amount == '' || amount == null || (desc && amount > 0);
     			ctrl.$setValidity('expenseDefined', f);
 
     			return f ? desc : null;
@@ -101,7 +101,7 @@ gassmanDirectives.directive('gmExpense', function () {
     			return scope.l.amount;
     		},
     		function (value) {
-    			descDefined(scope.l.desc, value);
+    			descDefined(scope.l.notes, value);
     		}
     		);
 

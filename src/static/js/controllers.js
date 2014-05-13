@@ -492,7 +492,13 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 	};
 
 	$scope.checkLine = function (e, ll) {
-		ll.push(newLine());
+		if (e.account)
+			ll.push(newLine());
+	};
+
+	$scope.checkExp = function (e, ll) {
+		if (e.notes)
+			ll.push(newLine());
 	};
 
 	$scope.updateTotalAmount = function () {
@@ -588,6 +594,17 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		angular.forEach($scope.lines, cc);
 		f = +1;
 		angular.forEach($scope.producers, cc);
+		angular.forEach($scope.expenses, function (l) {
+			// a differenza di clienti e produttori, qui non ho il conto:
+			// lo inserisce il server in base a csa e currency
+			if (l.amount > 0.0) {
+				data.lines.push({
+					amount: l.amount,
+					notes: l.notes,
+					account: null
+				});
+			}
+		});
 
 		if (data.lines.length == 0) {
 			return;
@@ -671,6 +688,13 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 //		else if ($scope.currency != curr)
 //			$scope.currencyError = true;
 		$scope.checkCurrencies();
+	}
+
+	$scope.fillNotes = function (l, o) {
+		l.notes = o;
+		if (l == $scope.expenses[$scope.expenses.length - 1])
+			$scope.checkExp(l, $scope.expenses);
+		return true;
 	}
 
 	$scope.checkCurrencies = function () {
@@ -789,10 +813,11 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 				clients.push(l);
 				l.amount = -x;
 			} else if (l.account in $scope.accounts){
-				expenses.push(l);
-			} else {
 				producers.push(l);
-				//l.amount = x;
+				l.amount = +x;
+			} else {
+				expenses.push(l);
+				l.amount = +x;
 			}
 
 			if (!l.accountName)
@@ -809,8 +834,12 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		$scope.lines = clients;
 		$scope.producers = producers;
 		$scope.expenses = expenses;
+
+		autoCompileTotalInvoice = t.transId != null ? 0 : 2;
+
 		$scope.updateTotalAmount();
 		$scope.updateTotalInvoice();
+		$scope.updateTotalExpenses()
 		$scope.checkCurrencies();
 
 		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
