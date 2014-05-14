@@ -54,22 +54,22 @@ class Session (object):
         self.created = datetime.datetime.utcnow()
         self.registrationNotificationSent = False
 
-    def get_logged_user (self, error='not authenticated'):
-        if not self.logged_user:
-            if error:
-                raise Exception(error)
-            else:
-                return None
-#        if self.logged_user.account is None:
-#            # controllo per vedere se è avvenuta la registrazione
-#            with self.application.conn as cur:
-#                cur.execute(*self.application.sql.find_current_account(self.logged_user.id))
-#                try:
-#                    self.logged_user.account = int(cur.fetchone()[0])
-#                except:
-#                    etype, evalue, _ = sys.exc_info()
-#                    log_gassman.debug('account not found: user=%s, cause=%s/%s', self.logged_user.id, etype, evalue)
-        return self.logged_user
+#    def get_logged_user (self, error='not authenticated'):
+#        if not self.logged_user:
+#            if error:
+#                raise Exception(error)
+#            else:
+#                return None
+##        if self.logged_user.account is None:
+##            # controllo per vedere se è avvenuta la registrazione
+##            with self.application.conn as cur:
+##                cur.execute(*self.application.sql.find_current_account(self.logged_user.id))
+##                try:
+##                    self.logged_user.account = int(cur.fetchone()[0])
+##                except:
+##                    etype, evalue, _ = sys.exc_info()
+##                    log_gassman.debug('account not found: user=%s, cause=%s/%s', self.logged_user.id, etype, evalue)
+#        return self.logged_user
 
 class Person (object):
     class DoesNotExist (Exception):
@@ -276,9 +276,21 @@ class BaseHandler (tornado.web.RequestHandler):
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
+    def get_logged_user (self, session=None, error='not authenticated'):
+        uid = self.get_current_user()
+        if uid is not None:
+            if session is None:
+                session = self.application.session(self)
+            p = session.logged_user
+            if p.id == uid:
+                return p
+        if error:
+            raise Exception(error)
+        return None
+
 class IndexHandler (BaseHandler):
     def get (self):
-        p = self.application.session(self).get_logged_user(None)
+        p = self.get_logged_user(None, None)
         if p is None:
             self.redirect("/login.html")
         elif self.application.hasAccounts(p.id):
@@ -288,7 +300,7 @@ class IndexHandler (BaseHandler):
 
 class LoginHandler (BaseHandler):
     def get (self):
-        p = self.application.session(self).get_logged_user(None)
+        p = self.get_logged_user(None, None)
         if p is None:
             self.render('login.html')
         elif self.application.hasAccounts(p.id):
@@ -299,7 +311,7 @@ class LoginHandler (BaseHandler):
 class IncompleteProfileHandler (tornado.web.RequestHandler):
     def get (self):
         s = self.application.session(self)
-        p = s.get_logged_user(None)
+        p = self.get_logged_user(s, None)
         if not p or self.application.hasAccounts(p.id):
             self.redirect('/')
         elif not s.registrationNotificationSent:
@@ -349,7 +361,7 @@ class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleMix
 class HomeHandler (BaseHandler):
     @tornado.web.authenticated
     def get (self):
-        u = self.application.session(self).get_logged_user('not authenticated')
+        u = self.get_logged_user()
         with self.application.conn as cur:
             cur.execute(*self.application.sql.rss_id(u.id))
         self.render('home.html',
@@ -412,7 +424,7 @@ class SysVersionHandler (JsonBaseHandler):
 
 class AccountOwnerHandler (JsonBaseHandler):
     def do (self, cur, accId):
-        u = self.application.session(self).get_logged_user('not authenticated')
+        u = self.get_logged_user()
         if not self.application.hasAccount(cur, u.id, accId) and not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId):
             raise Exception('permission denied')
         cur.execute(*self.application.sql.account_owners(accId))
@@ -420,7 +432,7 @@ class AccountOwnerHandler (JsonBaseHandler):
 
 class AccountMovementsHandler (JsonBaseHandler):
     def do (self, cur, accId, fromIdx, toIdx):
-        u = self.application.session(self).get_logged_user('not authenticated')
+        u = self.get_logged_user()
         if not self.application.hasAccount(cur, u.id, accId) and not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId):
             raise Exception('permission denied')
         cur.execute(*self.application.sql.account_movements(accId, int(fromIdx), int(toIdx)))
@@ -428,7 +440,7 @@ class AccountMovementsHandler (JsonBaseHandler):
 
 class AccountAmountHandler (JsonBaseHandler):
     def do (self, cur, accId):
-        u = self.application.session(self).get_logged_user('not authenticated')
+        u = self.get_logged_user()
         if not self.application.hasAccount(cur, u.id, accId) and not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId):
             raise Exception('permission denied')
         cur.execute(*self.application.sql.account_amount(accId))
@@ -436,7 +448,7 @@ class AccountAmountHandler (JsonBaseHandler):
 
 class CsaAmountHandler (JsonBaseHandler):
     def do (self, cur, csaId):
-        u = self.application.session(self).get_logged_user('not authenticated')
+        u = self.get_logged_user()
         if not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
             raise Exception('permission denied')
         cur.execute(*self.application.sql.csa_amount(csaId))
@@ -453,7 +465,7 @@ class CsaAmountHandler (JsonBaseHandler):
 
 class ProfileInfoHandler (JsonBaseHandler):
     def do (self, cur):
-        u = self.application.session(self).get_logged_user('not authenticated')
+        u = self.get_logged_user()
         cur.execute(*self.application.sql.find_user_permissions(u.id))
         pp = [ p[0] for p in cur ]
         cur.execute(*self.application.sql.find_user_csa(u.id))
@@ -469,7 +481,7 @@ class ProfileInfoHandler (JsonBaseHandler):
 
 class AccountsIndexHandler (JsonBaseHandler):
     def do (self, cur, csaId, fromIdx, toIdx):
-        u = self.application.session(self).get_logged_user('not authenticated')
+        u = self.get_logged_user()
         if not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
             raise Exception('permission denied')
         cur.execute(*self.application.sql.accounts_index(csaId, int(fromIdx), int(toIdx)))
@@ -477,7 +489,7 @@ class AccountsIndexHandler (JsonBaseHandler):
 
 class AccountsNamesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
-        u = self.application.session(self).get_logged_user('not authenticated')
+        u = self.get_logged_user()
         if not self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId):
             raise Exception('permission denied')
         cur.execute(*self.application.sql.account_names(csaId))
@@ -494,7 +506,7 @@ class AccountsNamesHandler (JsonBaseHandler):
 
 class ExpensesNamesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
-        u = self.application.session(self).get_logged_user('not authenticated')
+        u = self.get_logged_user()
         if not self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId):
             raise Exception('permission denied')
         r = {}
@@ -512,7 +524,7 @@ class TransactionDetailHandler (JsonBaseHandler):
         # lines: [ id, desc, amount, accId ]
         # people: [ id, first, middle, last, accId ]
         # accounts: [ id, gc_name, currency ]
-        u = self.application.session(self).get_logged_user('not authenticated')
+        u = self.get_logged_user()
         cur.execute(*self.application.sql.transaction_lines(tid))
         lines = list(cur)
         cur.execute(*self.application.sql.transaction_people(tid))
@@ -530,7 +542,7 @@ class TransactionDetailHandler (JsonBaseHandler):
 
 class TransactionEditHandler (JsonBaseHandler):
     def do (self, cur, csaId, transId):
-        u = self.application.session(self).get_logged_user('not authenticated')
+        u = self.get_logged_user()
         cur.execute(*self.application.sql.transaction_edit(transId))
         d = cur.fetchone()
         if d[5] is not None:
@@ -559,7 +571,7 @@ class TransactionEditHandler (JsonBaseHandler):
 class TransactionSaveHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         csaId = int(csaId)
-        u = self.application.session(self).get_logged_user('not authenticated')
+        u = self.get_logged_user()
         tdef = self.payload
         transId = tdef.get('transId', None)
         ttype = tdef['cc_type']
@@ -680,7 +692,7 @@ class TransactionSaveHandler (JsonBaseHandler):
 
 class TransactionsEditableHandler (JsonBaseHandler):
     def do (self, cur, csaId, fromIdx, toIdx):
-        u = self.application.session(self).get_logged_user('not authenticated')
+        u = self.get_logged_user()
         if self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId):
             cur.execute(*self.application.sql.transactions_all(csaId, int(fromIdx), int(toIdx)))
         elif self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId):
