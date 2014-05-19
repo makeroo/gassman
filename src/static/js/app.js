@@ -13,6 +13,8 @@ gassmanApp.P_canCheckAccounts = 2;
 gassmanApp.P_canEnterDeposit = 4;
 gassmanApp.P_canEnterPayments = 5;
 gassmanApp.P_canManageTransactions = 6;
+gassmanApp.P_canEnterCashExchange = 7;
+gassmanApp.P_canEnterWithdrawal = 8;
 
 gassmanApp.functions = [
 	{ p:gassmanApp.P_membership, f:'#/account/detail', l:'Il tuo conto' },
@@ -28,11 +30,16 @@ gassmanApp.functions = [
 		});
 	  }},
 	//{ v:P_canAssignAccounts, f:null },
-	{ p:gassmanApp.P_canEnterDeposit, f:'#/transaction/new/d', l:'Registra accrediti' },
+	{ p:gassmanApp.P_canEnterCashExchange, f:'#/transaction/new/x', l:'Scambio contante' },
 	{ p:gassmanApp.P_canEnterPayments, f:'#/transaction/new/p', l:'Registra pagamenti' },
+	{ p:gassmanApp.P_canEnterDeposit, f:'#/transaction/new/d', l:'Registra accrediti' },
+	{ p:gassmanApp.P_canEnterWithdrawal, f:'#/transaction/new/w', l:'Registra prelievi' },
 	{ e:function (pp) {
 		return pp.indexOf(gassmanApp.P_canEnterPayments) != -1 ||
-		       pp.indexOf(gassmanApp.P_canEnterDeposit) != -1
+		       pp.indexOf(gassmanApp.P_canEnterDeposit) != -1 ||
+		       pp.indexOf(gassmanApp.P_canEnterCashExchange) != -1 ||
+		       pp.indexOf(gassmanApp.P_canEnterWithdrawal) != -1 ||
+		       pp.indexOf(gassmanApp.P_canManageTransactions) != -1
 	  }, f:'#/transactions/index', l:' Movimenti inseriti' }
 	];
 
@@ -75,6 +82,14 @@ gassmanApp.config([ '$routeProvider',
 			when('/transaction/:transId/p', {
 				templateUrl: 'static/partials/transaction_payment.html',
 				controller: 'TransactionPayment'
+			}).
+			when('/transaction/:transId/x', {
+				templateUrl: 'static/partials/transaction_cashexchange.html',
+				controller: 'TransactionCashExchange'
+			}).
+			when('/transaction/:transId/w', {
+				templateUrl: 'static/partials/transaction_withdrawal.html',
+				controller: 'TransactionWithdrawal'
 			}).
 			when('/transactions/index', {
 				templateUrl: 'static/partials/transactions_index.html',

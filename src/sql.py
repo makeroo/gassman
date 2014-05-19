@@ -10,13 +10,38 @@ P_canAssignAccounts = 3
 P_canEnterDeposit = 4
 P_canEnterPayments = 5
 P_canManageTransactions = 6
+P_canEnterCashExchange = 7
+P_canEnterWithdrawal = 8
 
 Tt_Generic = 'g'
 Tt_Deposit = 'd'
 Tt_Payment = 'p'
 Tt_Trashed = 't'
+Tt_CashExchange = 'x'
+Tt_Withdrawal = 'w'
 Tt_Unfinished = 'u'
 Tt_Error = 'e'
+
+transactionPermissions = {
+    Tt_Deposit: P_canEnterDeposit,
+    Tt_Payment: P_canEnterPayments,
+    Tt_CashExchange: P_canEnterCashExchange,
+    Tt_Withdrawal: P_canEnterWithdrawal,
+    }
+
+deletableTransactions = set([
+    Tt_Generic,
+    Tt_Deposit,
+    Tt_Payment,
+    Tt_CashExchange,
+    Tt_Withdrawal,
+    ])
+editableTransactions = set([
+    Tt_Deposit,
+    Tt_Payment,
+    Tt_CashExchange,
+    Tt_Withdrawal,
+    ])
 
 Ck_Telephone = 'T'
 Ck_Mobile = 'M'
@@ -154,6 +179,9 @@ def csa_amount (csaId):
 def csa_account (csaId, accountType, currencyId):
     return 'SELECT a.id FROM account_csa ac JOIN account a ON ac.account_id=a.id WHERE ac.csa_id=%s AND a.gc_type=%s AND a.currency_id=%s', [ csaId, accountType, currencyId ]
 
+def account_currency (accId, csaId, requiredCurr):
+    return 'SELECT count(*) FROM account a WHERE a.id=%s AND a.csa_id=%s AND a.currency_id=%s', [ accId, csaId, requiredCurr ]
+
 def account_names (csaId):
     '''Tutti i nomi di conti di una comunità escluso gli Scomparsi.
     FIXME: prima o poi scompariranno le colonne gc!
@@ -184,8 +212,37 @@ def insert_transaction_line (tid, desc, amount, accId):
 def check_transaction_coherency (tid):
     return 'SELECT DISTINCT a.currency_id, a.csa_id FROM transaction_line l JOIN account a ON a.id=l.account_id WHERE l.transaction_id = %s', [ tid ]
 
-def complete_deposit (tid, csaId):
-    return 'INSERT INTO transaction_line (transaction_id, account_id, amount) SELECT t.id, ca.id, - SUM(l.amount) FROM csa c JOIN account_csa ac ON ac.csa_id=c.id JOIN account ca ON ac.account_id=ca.id, transaction_line l JOIN transaction t ON l.transaction_id=t.id WHERE c.id=%s AND ca.gc_type=%s AND ca.currency_id=t.currency_id AND t.id=%s', [ csaId, At_Income, tid ]
+def complete_deposit_or_withdrawal (tid, csaId, atype):
+    return '''
+INSERT INTO transaction_line (transaction_id, account_id, amount)
+ SELECT t.id, ca.id, - SUM(l.amount)
+  FROM account_csa ac
+  JOIN account ca ON ac.account_id=ca.id,
+
+  transaction_line l
+  JOIN transaction t ON l.transaction_id=t.id
+
+  WHERE ca.csa_id=%s AND ca.gc_type=%s AND ca.currency_id=t.currency_id AND t.id=%s''', [ csaId, atype, tid ]
+
+def complete_cashexchange (tid, receiverId):
+    return '''
+INSERT INTO transaction_line (transaction_id, account_id, amount)
+ SELECT t.id, %s, - SUM(l.amount)
+  FROM transaction_line l
+  JOIN transaction t ON l.transaction_id=t.id
+   WHERE t.id=%s''', [ receiverId, tid ]
+
+#def complete_withdrawal2 (tid, csaId, receiverId):
+#    '''Qui in un colpo solo verifico l'esistenza e la coerenza (per csa e moneta) di chi ritira i soldi
+#    e calcolo il totale del ritiro.
+#    '''
+#INSERT INTO transaction_line (transaction_id, account_id, amount)
+#    return '''
+# SELECT t.id, a.id, - SUM(l.amount)
+#  FROM transaction_line l
+#  JOIN transaction t ON l.transaction_id=t.id,
+#  account a
+#   WHERE t.id=%s AND a.id=%s AND a.csa_id=%s AND a.currency_id=t.currency_id''', [ tid, receiverId, csaId ]
 
 def transaction_calc_last_line_amount (tid, tlineId):
     return 'SELECT - SUM(amount) FROM transaction_line WHERE transaction_id = %s AND id != %s', [ tid, tlineId ]

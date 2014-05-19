@@ -84,6 +84,47 @@ gassmanDirectives.directive('gmAccount', function () {
     };
 });
 
+gassmanDirectives.directive('gmAccount2', function () {
+    return {
+    	restrict: 'A',
+    	require: 'ngModel',
+    	link: function (scope, elem, attrs, ctrl) {
+    		ctrl.$parsers.push(function (value) {
+    			console.log('checking match:', value, elem, attrs);
+
+    			//console.log(scope.l, scope.$parent.autocompletionData);
+    			var acd = scope.autocompletionData;
+    			var empty = !value;
+    			var f = empty;
+
+    			if (!f)
+    				for (var i in acd) {
+    					var acl = acd[i];
+    					if (acl.name == scope.receiver.accountName) {
+    						f = true;
+    						break;
+    					}
+    				}
+
+    			ctrl.$setValidity('accountMatch', f);
+
+    			if (!f || empty)
+    				scope.receiver.account = null;
+
+    			return value;
+    		});
+
+    		ctrl.$parsers.push(function (account) {
+    			console.log('checking defined:', account, scope.receiver)
+    			var f = !!account;
+    			ctrl.$setValidity('accountDefined', f);
+
+    			return f ? account : null;
+    		});
+    	}
+    };
+});
+
 gassmanDirectives.directive('gmExpense', function () {
     return {
     	restrict: 'A',
