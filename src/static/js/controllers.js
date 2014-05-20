@@ -1371,7 +1371,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		$scope.producers = producers;
 		$scope.expenses = expenses;
 
-		autoCompileTotalInvoice = t.transId != null ? 0 : 2;
+		autoCompileTotalInvoice = t.transId != 'new' ? 0 : 2;
 
 		$scope.updateTotalAmount();
 		$scope.updateTotalInvoice();
