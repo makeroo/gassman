@@ -714,7 +714,7 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 	$scope.transId = $routeParams['transId'];
 	$scope.lines = [];
 	$scope.tdate = new Date();
-	$scope.tdesc = 'Accredito';
+	$scope.tdesc = 'Prelievo';
 	$scope.totalAmount = 0.0;
 	$scope.confirmDelete = false;
 	$scope.currency = null;
@@ -751,13 +751,13 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 		$scope.totalAmount = t;
 	}
 
-	$scope.saveDeposit = function () {
+	$scope.saveWithdrawal = function () {
 		if ($scope.$invalid || $scope.currencyError)
 			return;
 
 		var data = {
 			transId: $scope.transId == 'new' ? null : $scope.transId,
-			cc_type: 'd',
+			cc_type: 'w',
 			currency: $scope.currency[0],
 			lines: [],
 			date: $scope.tdate,
@@ -794,7 +794,7 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 
 	$scope.newTrans = function () {
 		$scope.tdate = new Date();
-		$scope.tdesc = 'Accredito';
+		$scope.tdesc = 'Prelievo';
 		$scope.totalAmount = 0.0;
 		$scope.confirmDelete = false;
 		$scope.currency = null;
@@ -803,15 +803,15 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 	};
 
 	$scope.viewLastTrans = function () {
-		$location.path('/transaction/' + $scope.savedTransId + '/d');
+		$location.path('/transaction/' + $scope.savedTransId + '/w');
 	};
 
-	$scope.confirmCancelDeposit = function () {
+	$scope.confirmCancelWithdrawal = function () {
 		$scope.confirmDelete = true;
 		$timeout(function () { $scope.confirmDelete = false; }, 3200.0);
 	};
 
-	$scope.cancelDeposit = function () {
+	$scope.cancelWithdrawal = function () {
 		$scope.confirmDelete = false;
 
 		var data = {
@@ -914,9 +914,9 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 			return {
 				data: {
 				transId: 'new',
-				description: 'Accredito',
+				description: 'Prelievo',
 				date: new Date(),
-				cc_type: 'd',
+				cc_type: 'w',
 				currency: null,
 				lines: []
 			} };
@@ -925,7 +925,7 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 	}).then(function (tdata) {
 		var t = tdata.data;
 
-		if (t.cc_type != 'd')
+		if (t.cc_type != 'w')
 			throw "illegal type";
 
 		$scope.transId = t.transId;
@@ -944,10 +944,10 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 				var x = parseFloat(l.amount);
 
 				//console.log(x, typeof(x));
-				if (x < 0) {
+				if (x > 0) {
 					t.lines.splice(i, 1);
 				} else {
-					l.amount = x;
+					l.amount = - x;
 				}
 			}
 		}
@@ -968,7 +968,7 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 	}).
 	then (undefined, function (error) {
 		if (gdata.isError(error.data, gdata.E_already_modified)) {
-			$location.path('/transaction/' + error.data[2] + '/d');
+			$location.path('/transaction/' + error.data[2] + '/w');
 		} else {
 			$scope.autocompletionDataError = error.data;
 		}

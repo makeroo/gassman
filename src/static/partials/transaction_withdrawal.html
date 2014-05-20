@@ -1,0 +1,68 @@
+<form novalidate name="deposit" class="deposit" ng-submit="return;">
+ <div class="lines-table">
+  <div class="header" ng-hide="autocompletionDataError">
+   Inserisci chi ha prelevato:
+  </div>
+  <div class="body">
+   <div ng-repeat="l in lines" class="row">
+    <ng:form name="lineForm">
+    <div class="row-who">
+     <div><mac-autocomplete
+            name="account"
+            mac-placeholder="'Chi ha prelevato'"
+            mac-autocomplete-source="autocompletionData"
+            mac-autocomplete-on-select="selectedAccount(l, selected)"
+            mac-autocomplete-delay="300"
+            ng-model="l.accountName"
+            ng-blur="$last && l.account && $parent.checkLine(l)"
+            gm-account
+            /></div>
+	 <div class="error-message" ng-show="lineForm.account.$error.accountMatch">Nome non valido</div>
+	 <div class="error-message" ng-show="lineForm.account.$error.accountDefined">Specificare chi ha versato</div>
+    </div>
+    <div class="row-amount">
+     <input type="number"
+            name="amount"
+            placeholder="Quanto"
+            ng-model="l.amount"
+            ng-blur="$parent.updateTotalAmount()"
+            gm-amount
+            /> <!-- TODO: fare text + smart-float! -->
+	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
+	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>
+	 <div class="error-message" ng-show="lineForm.amount.$error.decimals">Troppi decimali</div>
+    </div>
+    <div class="row-notes">
+     <input type="text" placeholder="Note" ng-model="l.notes" />
+    </div>
+    </ng:form>
+   </div>
+
+   <div ng-show="autocompletionDataError">
+     Caricamento fallito. Causa: {{autocompletionDataError}}.
+   </div>
+  </div>
+ </div>
+ <div class="actions">
+  <div>Data ritiro: <input type="date" ng-model="tdate"/>, note: <input type="text" ng-model="tdesc"/><br/>
+       <span ng-show="!currencyError && totalAmount > 0">Totale prelievi: {{totalAmount | currency : currency[1] }}</span>
+       <span ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
+       <span ng-show="!currencyError && !totalAmount">Nessun versamento inserito finora.</span>
+       </div>
+  <button ng-disabled="!csaId || !deposit.$valid || !totalAmount" ng-click="saveWithdrawal()">Registra in cassa</button>
+  <button ng-disabled="confirmDelete" ng-show="transId != 'new'" ng-click="confirmCancelWithdrawal()">Elimina la registrazione dei prelievi</button>
+  <button ng-show="confirmDelete" ng-click="cancelWithdrawal()">Conferma eliminazione</button>
+ </div>
+</form>
+<div ng-show="tsaveOk || tsaveError" class="deposit-post-save">
+   <div ng-show="tsaveOk" class="msg">
+     Versamenti registrati correttamente. Adesso:
+     <ul>
+     <li>C'è del lavoro da fare! <button ng-click="newTrans()">Ne inserisco un altro.</button></li>
+     <li>Sarà stato salvato correttamente? <button ng-click="viewLastTrans()">Fammi dare un'occhiata...</button></li>
+     </ul>
+   </div>
+   <div ng-show="tsaveError" class="msg">
+     Registrazione fallita. Causa: {{tsaveError}}.
+   </div>
+</div>

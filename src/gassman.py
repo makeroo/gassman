@@ -609,6 +609,7 @@ class TransactionSaveHandler (JsonBaseHandler):
             tid = cur.lastrowid
             if tid == 0:
                 raise Exception(error_codes.E_illegal_currency)
+            fam = -1.0 if ttype == self.application.sql.Tt_Withdrawal else 1.0
             for l in tlines:
                 desc = l['notes']
                 amount = l['amount']
@@ -618,7 +619,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                     tlogType = self.application.sql.Tl_Error
                     tlogDesc = error_codes.E_negative_amount
                     break
-                cur.execute(*self.application.sql.insert_transaction_line(tid, desc, amount, accId))
+                cur.execute(*self.application.sql.insert_transaction_line(tid, desc, fam * amount, accId))
             if ttype != self.application.sql.Tt_Error:
                 cur.execute(*self.application.sql.check_transaction_coherency(tid))
                 v = list(cur)
