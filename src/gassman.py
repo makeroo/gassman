@@ -371,6 +371,8 @@ class HomeHandler (BaseHandler):
                     MINIFIED=settings.MINIFIED)
 
 class JsonBaseHandler (BaseHandler):
+    notifyExceptions = False
+
     def post (self, *args):
         with self.application.conn as cur:
             m = cur.execute
@@ -390,7 +392,12 @@ class JsonBaseHandler (BaseHandler):
     def write_error(self, status_code, **kwargs):
         self.clear_header('Content-Type')
         self.add_header('Content-Type', 'application/json')
-        etype, evalue, _ = kwargs.get('exc_info', ('', '', None))
+        etype, evalue, tb = kwargs.get('exc_info', ('', '', None))
+        if self.notifyExceptions:
+            self.application.notify('ERROR',
+                                    'Request error:\ncause=%s/%s\nother args: %s\nTraceback:\n%s' %
+                                    (etype, evalue, kwargs, loglib.TracebackFormatter(tb))
+                                    )
         if hasattr(evalue, 'args'):
             i = [ str(etype) ] + list(evalue.args)
         else:
@@ -572,6 +579,7 @@ class TransactionEditHandler (JsonBaseHandler):
         return r
 
 class TransactionSaveHandler (JsonBaseHandler):
+    notifyExceptions = True
     def do (self, cur, csaId):
         csaId = int(csaId)
         u = self.get_logged_user()
