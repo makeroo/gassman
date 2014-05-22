@@ -80,22 +80,31 @@ def account_amount (accountDbId):
     #return 'SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s', [ accountDbId ]
 
 def accounts_index (csaId, fromLine, toLine):
-    return '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount), c.symbol\
- FROM person p\
- JOIN account_person ap ON ap.person_id=p.id\
- JOIN account a ON a.id=ap.account_id\
- JOIN transaction_line l ON l.account_id=a.id\
- JOIN transaction t ON t.id=l.transaction_id\
- JOIN currency c ON c.id=a.currency_id\
- WHERE a.csa_id=%s AND t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) \
- GROUP BY p.id, a.id\
- ORDER BY p.first_name, p.last_name\
- LIMIT %s OFFSET %s''', [
-      csaId,
-      Tt_Unfinished, Tt_Error,
-      toLine - fromLine + 1,
-      fromLine
-      ]
+    return '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount), c.symbol, MAX(t.transaction_date)
+ FROM person p
+ JOIN permission_grant g ON g.person_id=p.id
+ LEFT JOIN account_person ap ON ap.person_id=p.id
+ JOIN account a on ap.account_id=a.id
+ JOIN currency c ON a.currency_id=c.id
+ LEFT JOIN transaction_line l ON l.account_id=a.id
+ LEFT JOIN transaction t ON t.id=l.transaction_id
+
+ WHERE
+ g.csa_id=%s AND
+ g.perm_id=%s AND
+ ap.to_date IS NULL AND
+ t.modified_by_id IS NULL AND
+ (t.cc_type IS NULL OR t.cc_type NOT IN (%s, %s))
+
+ GROUP BY p.id, a.id
+ ORDER BY p.first_name, p.last_name
+ LIMIT %s OFFSET %s
+''', [ csaId,
+       P_membership,
+       Tt_Unfinished, Tt_Error,
+       toLine - fromLine + 1,
+       fromLine
+       ]
 
 def check_user (userId, authenticator):
     return 'SELECT p.id, p.first_name, p.middle_name, p.last_name, p.rss_feed_id FROM contact_address c JOIN person_contact pc ON c.id=pc.address_id JOIN person p ON p.id=pc.person_id WHERE c.kind=%s AND c.contact_type=%s AND c.address=%s', [ 'I', authenticator, userId ]

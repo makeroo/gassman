@@ -9,8 +9,10 @@
     Sto caricando i dati...
    </div>
    <div ng-repeat="a in accounts" class="acc-row" ng-click="showAccount(a[4])">
-    <div class="acc-name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
+    <div style="opacity: {{ a[7] | alphaTimeDiff }}">
+    <div class="acc-name">{{ a[1] }} {{ a[2] }} {{ a[3] }}<br/><span ng-show="a[7]">Ultimo movimento: {{ a[7] | humanTimeDiff }} (il  {{ a[7] | date }})</span><span ng-hide="a[7]">Ancora nessun movimento effettuato.</span></div>
     <div class="acc-amount">{{ a[5] | currency : a[6] }}</div>
+    </div>
    </div>
    <div ng-show="accountsError">
     Errore nel caricamento dei dati: {{accountsError}}.

@@ -9,6 +9,8 @@ CREATE TABLE account_csa (
 );
 
 insert into account_csa (csa_id, account_id) select id, kitty_id from csa;
+insert into account_csa (csa_id, account_id) select id, expenses_id from csa;
+insert into account_csa (csa_id, account_id) select id, income_id from csa;
 
 ALTER TABLE csa DROP COLUMN kitty_id;
 ALTER TABLE csa DROP COLUMN expenses_id;

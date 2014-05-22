@@ -190,7 +190,13 @@ a {
 	width: 400px;
 	height: 30px;
 
-	line-height: 30px;
+	line-height: 12px;
+}
+
+.accounts-index .body .acc-name span {
+	font-size: 9px;
+	color: gray;
+	font-style: italic;
 }
 
 .accounts-index .body .acc-amount {

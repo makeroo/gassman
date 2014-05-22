@@ -4,7 +4,8 @@ var gassmanApp = angular.module('gassmanApp', [
 	'ngRoute',
 	'gassmanControllers',
 	'gassmanServices',
-	'gassmanDirectives'
+	'gassmanDirectives',
+	'gassmanFilters'
 	]);
 
 gassmanApp.P_membership = 1;
