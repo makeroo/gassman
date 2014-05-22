@@ -395,6 +395,7 @@ class JsonBaseHandler (BaseHandler):
         etype, evalue, tb = kwargs.get('exc_info', ('', '', None))
         if self.notifyExceptions:
             self.application.notify('ERROR',
+                                    'Json API Failed',
                                     'Request error:\ncause=%s/%s\nother args: %s\nTraceback:\n%s' %
                                     (etype, evalue, kwargs, loglib.TracebackFormatter(tb))
                                     )
@@ -610,7 +611,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                 raise Exception(error_codes.E_permission_denied)
             if ttype == sql.Tt_CashExchange:
                 treceiver = tdef['receiver']
-                cur.execute(*self.application.sql.account_currency(csaId, treceiver, tcurr))
+                cur.execute(*self.application.sql.account_currency(treceiver, csaId, tcurr))
                 if cur.fetchone()[0] == 0:
                     raise Exception(error_codes.E_illegal_receiver)
             cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csaId))
