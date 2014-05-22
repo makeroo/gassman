@@ -15,3 +15,6 @@ insert into account_csa (csa_id, account_id) select id, income_id from csa;
 ALTER TABLE csa DROP COLUMN kitty_id;
 ALTER TABLE csa DROP COLUMN expenses_id;
 ALTER TABLE csa DROP COLUMN income_id;
+
+INSERT INTO permission (id, name, visibility) VALUES (7, 'canEnterCashExchange', 1000);
+INSERT INTO permission (id, name, visibility) VALUES (8, 'canEnterWithdrawal', 2000);
