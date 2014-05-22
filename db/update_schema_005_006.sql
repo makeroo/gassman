@@ -18,3 +18,16 @@ ALTER TABLE csa DROP COLUMN income_id;
 
 INSERT INTO permission (id, name, visibility) VALUES (7, 'canEnterCashExchange', 1000);
 INSERT INTO permission (id, name, visibility) VALUES (8, 'canEnterWithdrawal', 2000);
+
+-- tutti i conti ad adarita (account del marito)
+insert into permission_grant(csa_id, person_id, perm_id) values (1,97,2);
+-- ad elena
+insert into permission_grant(csa_id, person_id, perm_id) values (1,4,2);
+-- mariarita non ha account: è un problema
+
+-- tutti i permessi a me
+insert into permission_grant(csa_id, person_id, perm_id) values (1,1,4);
+insert into permission_grant(csa_id, person_id, perm_id) values (1,1,5);
+insert into permission_grant(csa_id, person_id, perm_id) values (1,1,6);
+insert into permission_grant(csa_id, person_id, perm_id) values (1,1,7);
+insert into permission_grant(csa_id, person_id, perm_id) values (1,1,8);
