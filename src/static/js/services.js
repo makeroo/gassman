@@ -20,7 +20,7 @@ gassmanServices.config(function ($httpProvider) {
 });
 */
 
-gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies) {
+gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $rootScope) {
 	var profileInfo = null;
 
 	this.E_class = "<class 'Exception'>";
@@ -173,7 +173,12 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies) {
 	}
 
 	this.transactionSave = function (csaId, tData) {
-		return $http.post('/transaction/' + csaId + '/save?_xsrf=' + $cookies._xsrf, tData);
+		var p = $http.post('/transaction/' + csaId + '/save?_xsrf=' + $cookies._xsrf, tData);
+		p.then(function (r) {
+			$rootScope.$broadcast('AmountsChanged');
+			return r;
+		});
+		return p;
 	}
 
 	this.transactionsLog = function (csaId, start, blockSize) {

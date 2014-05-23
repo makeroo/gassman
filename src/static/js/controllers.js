@@ -16,6 +16,39 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 	$scope.amountError = null;
 	$scope.currencySymbol = null;
 	$scope.amountClass = null;
+	$scope.csaId = null;
+	$scope.accountId = null;
+
+	var reloadAmounts = function () {
+		gdata.accountAmount($scope.accountId).
+		then (function (r) {
+			$scope.amountError = null;
+			$scope.amount = parseFloat( r.data[0] );
+			$scope.currencySymbol = r.data[1];
+
+			$scope.amountClass = $scope.amount < 0.0 ? 'negative' : 'positive';
+		}).
+		then (undefined, function (error) {
+			$scope.amount = null;
+			$scope.currencySymbol = null;
+			$scope.amountError = error.data;
+		})/*.
+		done()*/;
+
+		gdata.totalAmount($scope.csaId).
+		then(function (r) {
+			$scope.totalAmountError = null;
+			$scope.totalAmount = r.data;
+		}).
+		then (undefined, function (error) {
+			$scope.totalAmount = null;
+			$scope.totalAmountError = error;
+		});
+	};
+
+	$scope.$on('AmountsChanged', function () {
+		reloadAmounts();
+	});
 
 	gdata.profileInfo().
 	then (function (pData) {
@@ -38,16 +71,14 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 	});
 
 	gdata.selectedCsa().
-	then (function (csaId) { return gdata.accountByCsa(csaId); }).
-	then (function (accId) { return gdata.accountAmount(accId); }).
-	then (function (r) {
-		$scope.amount = parseFloat( r.data[0] );
-		$scope.currencySymbol = r.data[1];
-
-		$scope.amountClass = $scope.amount < 0.0 ? 'negative' : 'positive';
+	then (function (csaId) {
+		$scope.csaId = csaId;
+		return gdata.accountByCsa(csaId);
 	}).
-	then (undefined, function (error) { $scope.amountError = error.data; })/*.
-	done()*/;
+	then (function (accId) {
+		$scope.accountId = accId;
+		reloadAmounts();
+	});
 });
 
 gassmanControllers.controller('AccountDetails', function($scope, $filter, $routeParams, gdata) {
