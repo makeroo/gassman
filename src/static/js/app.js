@@ -19,17 +19,7 @@ gassmanApp.P_canEnterWithdrawal = 8;
 
 gassmanApp.functions = [
 	{ p:gassmanApp.P_membership, f:'#/account/detail', l:'Il tuo conto' },
-	{ p:gassmanApp.P_canCheckAccounts, f:'#/accounts/index', l:'Tutti i conti',
-	  justAdded: function ($scope, gdata) {
-		gdata.selectedCsa().
-		then(function (csaId) { return gdata.totalAmount(csaId); }).
-		then(function (r) {
-			$scope.totalAmount = r.data;
-		}).
-		then (undefined, function (error) {
-			$scope.totalAmountError = error;
-		});
-	  }},
+	{ p:gassmanApp.P_canCheckAccounts, f:'#/accounts/index', l:'Tutti i conti' },
 	//{ v:P_canAssignAccounts, f:null },
 	{ p:gassmanApp.P_canEnterCashExchange, f:'#/transaction/new/x', l:'Scambio contante' },
 	{ p:gassmanApp.P_canEnterPayments, f:'#/transaction/new/p', l:'Registra pagamenti' },
