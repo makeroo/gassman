@@ -143,13 +143,13 @@ CREATE TABLE account (
   -- INCOME: versamenti
   -- BANK: sbilancio eur, orfano eur, non li userò più (retaggio gnucash)
   -- in realtà a me un tipo serve: Expenses, Income, Asset e Kitty (Asset)
-  gc_id CHAR(32),
+  --gc_id CHAR(32),
   gc_name VARCHAR(255),
-  gc_desc VARCHAR(255),
+  --gc_desc VARCHAR(255),
   gc_type VARCHAR(255),
-  gc_parent CHAR(32),
+  --gc_parent CHAR(32),
 
-  UNIQUE (gc_id),
+  --UNIQUE (gc_id),
   FOREIGN KEY (csa_id) REFERENCES csa(id),
   FOREIGN KEY (currency_id) REFERENCES currency(id),
   PRIMARY KEY (id)
@@ -273,7 +273,7 @@ CREATE TABLE transaction (
   -- Per cancellare una transazione se ne crea una senza line.
   modified_by_id INT,
 
-  gc_id CHAR(32),
+  --gc_id CHAR(32),
   -- tipi di transazione:
   -- (g)nucash/generic
   -- (d)eposit
@@ -312,7 +312,7 @@ CREATE TABLE transaction_line (
   description VARCHAR(200),
   amount DECIMAL(15,2) NOT NULL, -- currency
 
-  gc_id CHAR(32),
+  --gc_id CHAR(32),
 
   --UNIQUE (gc_id), -- non è unico a causa del rewrite!
   FOREIGN KEY (transaction_id) REFERENCES transaction(id),

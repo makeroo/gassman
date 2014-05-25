@@ -376,16 +376,16 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		return gdata.accountsNames($scope.csaId);
 	}).then (function (r) {
 		// trasforma data in autocompletionData
-		var accountNames = r.data.accountNames;
+		var accountCurrencies = r.data.accountCurrencies;
 		var accountPeople = r.data.accountPeople;
 		var accountPeopleAddresses = r.data.accountPeopleAddresses;
 		var people = {};
-		for (var i in accountNames) {
-			var o = accountNames[i];
-			// o è un array gc_name, accId
-			$scope.autocompletionData.push({ name: o[0], acc: o[1] });
-			$scope.currencies[o[1]] = [ o[2], o[3] ];
-			ai[o[1]] = o[0];
+		for (var i in accountCurrencies) {
+			var o = accountCurrencies[i];
+			// o è un array a.id, c.id, c.symbol
+			//$scope.autocompletionData.push({ name: o[0], acc: o[1] });
+			$scope.currencies[o[0]] = [ o[1], o[2] ];
+			//ai[o[1]] = o[0];
 		}
 		for (var i in accountPeople) {
 			var o = accountPeople[i];
@@ -644,16 +644,16 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 		return gdata.accountsNames($scope.csaId);
 	}).then (function (r) {
 		// trasforma data in autocompletionData
-		var accountNames = r.data.accountNames;
+		var accountCurrencies = r.data.accountCurrencies;
 		var accountPeople = r.data.accountPeople;
 		var accountPeopleAddresses = r.data.accountPeopleAddresses;
 		var people = {};
-		for (var i in accountNames) {
-			var o = accountNames[i];
-			// o è un array gc_name, accId
-			$scope.autocompletionData.push({ name: o[0], acc: o[1] });
-			$scope.currencies[o[1]] = [ o[2], o[3] ];
-			ai[o[1]] = o[0];
+		for (var i in accountCurrencies) {
+			var o = accountCurrencies[i];
+			// o è un array a.id, c.id, c.symbol
+			//$scope.autocompletionData.push({ name: o[0], acc: o[1] });
+			$scope.currencies[o[0]] = [ o[1], o[2] ];
+			//ai[o[1]] = o[0];
 		}
 		for (var i in accountPeople) {
 			var o = accountPeople[i];
@@ -910,16 +910,16 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 		return gdata.accountsNames($scope.csaId);
 	}).then (function (r) {
 		// trasforma data in autocompletionData
-		var accountNames = r.data.accountNames;
+		var accountCurrencies = r.data.accountCurrencies;
 		var accountPeople = r.data.accountPeople;
 		var accountPeopleAddresses = r.data.accountPeopleAddresses;
 		var people = {};
-		for (var i in accountNames) {
-			var o = accountNames[i];
-			// o è un array gc_name, accId
-			$scope.autocompletionData.push({ name: o[0], acc: o[1] });
-			$scope.currencies[o[1]] = [ o[2], o[3] ];
-			ai[o[1]] = o[0];
+		for (var i in accountCurrencies) {
+			var o = accountCurrencies[i];
+			// o è un array a.id, c.id, c.symbol
+			//$scope.autocompletionData.push({ name: o[0], acc: o[1] });
+			$scope.currencies[o[0]] = [ o[1], o[2] ];
+			//ai[o[1]] = o[0];
 		}
 		for (var i in accountPeople) {
 			var o = accountPeople[i];
@@ -986,6 +986,8 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 			if (!l.accountName)
 				l.accountName = ai[l.account];
 		}
+
+		t.lines.push(newLine());
 
 		$scope.lines = t.lines;
 		$scope.updateTotalAmount();
@@ -1298,16 +1300,16 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		return gdata.accountsNames($scope.csaId);
 	}).then (function (r) {
 		// trasforma data in autocompletionData
-		var accountNames = r.data.accountNames;
+		var accountCurrencies = r.data.accountCurrencies;
 		var accountPeople = r.data.accountPeople;
 		var accountPeopleAddresses = r.data.accountPeopleAddresses;
 		var people = {};
-		for (var i in accountNames) {
-			var o = accountNames[i];
-			// o è un array gc_name, accId
-			$scope.autocompletionData.push({ name: o[0], acc: o[1] });
-			$scope.currencies[o[1]] = [ o[2], o[3] ];
-			$scope.accounts[o[1]] = o[0];
+		for (var i in accountCurrencies) {
+			var o = accountCurrencies[i];
+			// o è un array a.id, c.id, c.symbol
+			//$scope.autocompletionData.push({ name: o[0], acc: o[1] });
+			$scope.currencies[o[0]] = [ o[1], o[2] ];
+			//$scope.accounts[o[1]] = o[0];
 		}
 		for (var i in accountPeople) {
 			var o = accountPeople[i];
@@ -1332,7 +1334,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		var expensesTags = r.data.tags;
 
 		angular.forEach(expensesAccounts, function (account) {
-			// 0:id, 1:gc_name, 2:gc_id, 3:gc_parent, 4:currency_id
+			// 0:id, 1:gc_name, 3:currency_id
 			$scope.autocompletionExpenses.push(account[1]);
 		});
 

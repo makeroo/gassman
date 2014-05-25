@@ -310,7 +310,7 @@ class LoginHandler (BaseHandler):
         else:
             self.redirect("/incomplete_profile.html")
 
-class IncompleteProfileHandler (tornado.web.RequestHandler):
+class IncompleteProfileHandler (BaseHandler):
     def get (self):
         s = self.application.session(self)
         p = self.get_logged_user(s, None)
@@ -502,14 +502,14 @@ class AccountsNamesHandler (JsonBaseHandler):
         u = self.get_logged_user()
         if not self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId):
             raise Exception(error_codes.E_permission_denied)
-        cur.execute(*self.application.sql.account_names(csaId))
-        accountNames = list(cur)
+        cur.execute(*self.application.sql.account_currencies(csaId))
+        accountCurs = list(cur)
         cur.execute(*self.application.sql.account_people(csaId))
         accountPeople = list(cur)
         cur.execute(*self.application.sql.account_people_addresses(csaId))
         accountPeopleAddresses = list(cur)
         return dict(
-            accountNames = accountNames,
+            accountCurrencies = accountCurs,
             accountPeople = accountPeople,
             accountPeopleAddresses = accountPeopleAddresses
             )

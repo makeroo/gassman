@@ -15,6 +15,9 @@ select * from account where id not in
                                 join transaction t on t.id=l.transaction_id
                                 where t.modified_by_id is null);
 
+-- expenses
+select * from account where gc_type ='EXPENSE';
+
 -- persone non ancora registrate
 select * from account
  where gc_parent = 'acf998ffe1edbcd44bc30850813650ac'
