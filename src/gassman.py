@@ -284,7 +284,7 @@ class BaseHandler (tornado.web.RequestHandler):
             if session is None:
                 session = self.application.session(self)
             p = session.logged_user
-            if p.id == uid:
+            if p is not None and p.id == uid:
                 return p
         if error:
             raise Exception(error)
