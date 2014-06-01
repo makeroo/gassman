@@ -1,3 +1,11 @@
+-- creare un profilo
+insert into person (first_name, last_name) values ('Xxx', 'Xxx');
+select * from person order by id desc limit 1;
+insert into permission_grant (csa_id, person_id, perm_id) values (1, Xxx, 1);
+insert into account (state, gc_id, gc_name, gc_type, gc_parent, csa_id, currency_id) values ('O', 'x279', '', 'ASSET', 'acf998ffe1edbcd44bc30850813650ac', 1, 1);
+select * from account order by id desc limit 1;
+insert into account_person (from_date, person_id, account_id) values (now(), PERSONID, ACCOUNTID);
+
 -- prospetto degli utenti e dei loro conti
 select p.id, p.first_name, p.last_name, c.address, a.gc_name, k.name
  from person p
