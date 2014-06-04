@@ -144,6 +144,28 @@ class GMShell (cmd.Cmd):
                 print('created account', aid, 'for currency', csym)
                 cur.execute('insert into account_person (from_date, person_id, account_id) values (now(), %s, %s)', [ pid, aid ])
 
+    def help_find_person (self): print('')
+    def do_find_person (self, line):
+        p = line.strip()
+        with self.conn as cur:
+            cur.execute('''
+select p.id, p.first_name, p.middle_name, p.last_name, c.kind, c.address from person p
+ join person_contact pc on pc.person_id=p.id
+ join contact_address c on pc.address_id=c.id
+ join account_person ap on ap.person_id=p.id
+ join account
+ where p.first_name like %s or
+  p.middle_name like %s or
+  p.last_name like %s or
+  c.address like %s
+  order by p.id''', [ p, p, p, p ])
+            for r in list(cur):
+                print(r)
+
+    # TODO: creare una persona senza conto, ma agganciata al conto di un altro
+    def help_add_person (self): print('')
+    def do_add_person (self, line):
+        pass
 #    def help_select_csa (self): print('Select CSA. Usage: select_csa <CSAID>')
 #    def do_select_csa (self, line):
 #        with self.conn as cur:
