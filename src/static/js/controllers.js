@@ -35,15 +35,20 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 		})/*.
 		done()*/;
 
-		gdata.totalAmount($scope.csaId).
-		then(function (r) {
+		if ($scope.profile.permissions.indexOf(gassmanApp.P_canCheckAccounts) == -1) {
 			$scope.totalAmountError = null;
-			$scope.totalAmount = r.data;
-		}).
-		then (undefined, function (error) {
 			$scope.totalAmount = null;
-			$scope.totalAmountError = error;
-		});
+		} else {
+			gdata.totalAmount($scope.csaId).
+			then(function (r) {
+				$scope.totalAmountError = null;
+				$scope.totalAmount = r.data;
+			}).
+			then (undefined, function (error) {
+				$scope.totalAmount = null;
+				$scope.totalAmountError = error;
+			});
+		}
 	};
 
 	$scope.$on('AmountsChanged', function () {
