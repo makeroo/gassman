@@ -54,16 +54,16 @@
      Caricamento fallito. Causa: {{autocompletionDataError}}.
    </div>
   </div>
- </div>
- <div class="actions">
-  <div>Data ritiro: <input type="date" ng-model="tdate"/>, note: <input type="text" ng-model="tdesc"/><br/>
+  <div class="actions">
+   <div>Data ritiro: <input type="date" ng-model="tdate"/>, note: <input type="text" ng-model="tdesc"/><br/>
        <span ng-show="!currencyError && totalAmount > 0">Totale accrediti: {{totalAmount | currency : currency[1] }}</span>
        <span ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
        <span ng-show="!currencyError && !totalAmount">Nessun versamento inserito finora.</span>
        </div>
-  <button ng-disabled="!csaId || !deposit.$valid || !totalAmount" ng-click="saveCashExchange()">Registra in cassa</button>
-  <button ng-disabled="confirmDelete" ng-show="transId != 'new'" ng-click="confirmCancelCashExchange()">Elimina la registrazione degli accrediti</button>
-  <button ng-show="confirmDelete" ng-click="cancelCashExchange()">Conferma eliminazione</button>
+   <button ng-disabled="!csaId || !deposit.$valid || !totalAmount" ng-click="saveCashExchange()">Registra in cassa</button>
+   <button ng-disabled="confirmDelete" ng-show="transId != 'new'" ng-click="confirmCancelCashExchange()">Elimina la registrazione degli accrediti</button>
+   <button ng-show="confirmDelete" ng-click="cancelCashExchange()">Conferma eliminazione</button>
+  </div>
  </div>
 </form>
 <div ng-show="tsaveOk || tsaveError" class="deposit-post-save">

@@ -111,18 +111,18 @@
    <div ng-show="autocompletionDataError">
      Caricamento fallito. Causa: {{autocompletionDataError}}.
    </div>
+   <div class="actions">
+    <div>Data consegna: <input type="date" ng-model="tdate"/>, note: <input type="text" ng-model="tdesc"/><br/>
+        <span ng-show="!currencyError && totalAmount > 0 && difference < .01">Totale pagamenti: {{totalAmount | currency : currency[1] }}</span>
+        <span ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
+        <span ng-show="!currencyError && !totalAmount">Nessun pagamento inserito finora.</span>
+        <span ng-show="!currencyError && difference >= .01">Discrepanza fra contanti versati e pagamenti richiesti: {{totalInvoice - totalAmount + totalExpenses | currency: currency[1] }}</span>
+        </div>
+    <button ng-disabled="!csaId || !payment.$valid || !totalAmount || difference >= .01" ng-click="savePayment()">Registra in cassa</button>
+    <button ng-disabled="confirmDelete" ng-show="transId != 'new'" ng-click="confirmCancelPayment()">Elimina la registrazione dei pagamenti</button>
+    <button ng-show="confirmDelete" ng-click="cancelPayment()">Conferma eliminazione</button>
+   </div>
   </div>
- </div>
- <div class="actions">
-  <div>Data consegna: <input type="date" ng-model="tdate"/>, note: <input type="text" ng-model="tdesc"/><br/>
-       <span ng-show="!currencyError && totalAmount > 0 && difference < .01">Totale pagamenti: {{totalAmount | currency : currency[1] }}</span>
-       <span ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
-       <span ng-show="!currencyError && !totalAmount">Nessun pagamento inserito finora.</span>
-       <span ng-show="!currencyError && difference >= .01">Discrepanza fra contanti versati e pagamenti richiesti: {{totalInvoice - totalAmount + totalExpenses | currency: currency[1] }}</span>
-       </div>
-  <button ng-disabled="!csaId || !payment.$valid || !totalAmount || difference >= .01" ng-click="savePayment()">Registra in cassa</button>
-  <button ng-disabled="confirmDelete" ng-show="transId != 'new'" ng-click="confirmCancelPayment()">Elimina la registrazione dei pagamenti</button>
-  <button ng-show="confirmDelete" ng-click="cancelPayment()">Conferma eliminazione</button>
  </div>
 </form>
 <div ng-show="tsaveOk || tsaveError" class="deposit-post-save">
