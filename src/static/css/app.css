@@ -280,8 +280,15 @@ a {
 	top: 0;
 	height: 30px;
 	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
 
 	line-height: 30px;
+}
+
+.account-details .movements .mov-desc:HOVER {
+	overflow: auto;
+	text-overflow: initial;
 }
 
 .account-details .movements .mov-amount {
@@ -464,7 +471,14 @@ a {
 	height: 30px;
 
 	line-height: 30px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.transaction-details .desc:HOVER {
 	overflow: auto;
+	text-overflow: initial;
 }
 
 .transaction-details .account {
@@ -560,6 +574,15 @@ a {
 	height: 30px;
 
 	line-height: 30px;
+
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.transactions-index .movements .mov-tdesc:HOVER {
+	overflow: auto;
+	text-overflow: initial;
 }
 
 .transactions-index .movements .mov-tdesc .otype {
