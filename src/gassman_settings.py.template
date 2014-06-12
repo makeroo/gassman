@@ -25,6 +25,8 @@ SMTP_SERVER=None
 SMTP_PORT=25
 SMTP_SENDER='gassman@gassmanager.org'
 SMTP_RECEIVER=None
+SMTP_NUM_THREADS=2
+SMTP_QUEUE_TIMEOUT=3
 
 LOG={
     'version': 1,
