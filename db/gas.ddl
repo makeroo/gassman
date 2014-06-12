@@ -1,4 +1,4 @@
--- version 6
+-- version 8
 
 SET SESSION storage_engine = "MyISAM";
 SET SESSION time_zone = "+0:00";
@@ -182,6 +182,8 @@ CREATE TABLE person (
   cash_treshold DECIMAL(15,2) NOT NULL DEFAULT 0,
   rss_feed_id CHAR(64),
 
+  account_notifications CHAR(1) NOT NULL DEFAULT 'E', -- Every movement, Dayly, Weekly, Never
+
   FOREIGN KEY (address_id) REFERENCES street_address(id),
   PRIMARY KEY (id)
 );
@@ -333,5 +335,26 @@ CREATE TABLE transaction_log (
 
   FOREIGN KEY (operator_id) REFERENCES person(id),
   FOREIGN KEY (transaction_id) REFERENCES transaction(id),
+  PRIMARY KEY (id)
+);
+
+
+CREATE TABLE producer (
+  id INT NOT NULL AUTO_INCREMENT,
+
+  name VARCHAR(100),
+  description TEXT,
+  -- TODO: blog
+
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE producer_person (
+  id INT NOT NULL AUTO_INCREMENT,
+  producer_id INT NOT NULL,
+  person_id INT NOT NULL,
+
+  FOREIGN KEY (producer_id) REFERENCES producer(id) ON DELETE CASCADE,
+  FOREIGN KEY (person_id) REFERENCES person(id) ON DELETE CASCADE,
   PRIMARY KEY (id)
 );

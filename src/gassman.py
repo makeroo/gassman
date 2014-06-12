@@ -23,7 +23,7 @@ import tornado.escape
 import jsonlib
 import pymysql
 import loglib
-import smtplib
+import asyncsmtp
 
 import gassman_settings as settings
 import gassman_version
@@ -89,7 +89,7 @@ class Person (object):
         return '%s (%s %s)' % (self.id, self.firstName, self.lastName)
 
 class GassmanWebApp (tornado.web.Application):
-    def __init__ (self, sql, **connArgs):
+    def __init__ (self, sql, mailer, connArgs):
         handlers = [
             (r'^/$', IndexHandler),
             (r'^/login.html$', LoginHandler),
@@ -126,6 +126,7 @@ class GassmanWebApp (tornado.web.Application):
         self.sql = sql
         self.sessions = dict()
         self.connect()
+        self.mailer = mailer
         tornado.ioloop.PeriodicCallback(self.checkConn, settings.DB_CHECK_INTERVAL).start()
 
     def connect (self):
@@ -157,22 +158,15 @@ class GassmanWebApp (tornado.web.Application):
                            (etype, evalue, loglib.TracebackFormatter(tb))
                            )
 
-    def notify (self, level, subject, body):
-        if settings.SMTP_SERVER is None:
+    def notify (self, level, subject, body, receivers = None):
+        if self.mailer is None:
             log_gassman.info('SMTP not configured, mail not sent: %s / %s', subject, body)
-            return
-        try:
-            smtp = smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT)
-            smtp.sendmail(settings.SMTP_SENDER, settings.SMTP_RECEIVER,
-                          'Subject: [GASsMan] %s %s\n\n%s' % (level, subject, body))
-            smtp.quit()
-            return True
-        except:
-            etype, evalue, tb = sys.exc_info()
-            log_gassman.error('can\'t send mail: subject=%s, cause=%s/%s', subject, etype, evalue)
-            log_gassman.debug('email body: %s', body)
-            log_gassman.debug('full stacktrace:\n%s', loglib.TracebackFormatter(tb))
-            return False
+        else:
+            self.mailer.send(settings.SMTP_SENDER,
+                             receivers or settings.SMTP_RECEIVER,
+                             '[GASsMan] %s %s' % (level, subject),
+                             body
+                             )
 
     def hasAccounts (self, pid):
         with self.conn as cur:
@@ -582,6 +576,8 @@ class TransactionEditHandler (JsonBaseHandler):
 class TransactionSaveHandler (JsonBaseHandler):
     notifyExceptions = True
     def do (self, cur, csaId):
+        involvedAccounts = set()
+
         csaId = int(csaId)
         u = self.get_logged_user()
         tdef = self.payload
@@ -629,6 +625,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                     tlogDesc = error_codes.E_negative_amount
                     break
                 cur.execute(*self.application.sql.insert_transaction_line(tid, desc, fam * amount, accId))
+                involvedAccounts.add(accId)
             if ttype != self.application.sql.Tt_Error:
                 cur.execute(*self.application.sql.check_transaction_coherency(tid))
                 v = list(cur)
@@ -674,6 +671,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                 accId = l['account'] or expenseAccountId # qui assumo che account id non sia zero!
                 cur.execute(*self.application.sql.insert_transaction_line(tid, desc, amount, accId))
                 lastLineId = cur.lastrowid
+                involvedAccounts.add(accId)
             cur.execute(*self.application.sql.check_transaction_coherency(tid))
             v = list(cur)
             if len(v) != 1:
@@ -713,9 +711,55 @@ class TransactionSaveHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.log_transaction(tid, u.id, tlogType, tlogDesc, datetime.datetime.utcnow()))
         if transId is not None and ttype != self.application.sql.Tt_Error:
             cur.execute(*self.application.sql.update_transaction(transId, tid))
+            self.notifyAccountChange(cur, involvedAccounts)
         if ttype == self.application.sql.Tt_Error:
             raise Exception(tlogDesc)
         return tid
+
+    def notifyAccountChange (self, cur, accountIds):
+        if not accountIds:
+            return
+        # FIXME: soglia specifica di csa
+        # Localizzazione del messaggio
+        LVL_THRES = -40
+        signalledPeople = set()
+        accounts = dict()
+        cur.execute(*sql.account_email_for_notifications(accountIds))
+        for accId, pid, first_name, middle_name, last_name, email in cur.fetchall():
+            if pid in signalledPeople:
+                continue
+            signalledPeople.add(pid)
+            x = accounts.get(accId, None)
+            if x is None:
+                x = dict(people=[])
+                accounts[accId] = x
+            x['people'].append([ first_name, middle_name, last_name, email ])
+        cur.execute(*sql.account_total_for_notifications(accounts.keys()))
+        for accId, total, currSym in cur.fetchall():
+            accounts[accId]['account'] = (total, currSym)
+        for accId, accData in accounts.iteritems():
+            total, currSym = accData['account']
+            people = accData['people']
+            self.application.notify(
+                'INFO' if total < LVL_THRES else 'ATTENZIONE',
+                'Aggiornamento cassa GAS',
+'''ciao,
+sono stati registrati nuovi movimenti sul conto associato a:
+%s
+
+Per esaminare il conto vai su: http://www.gassmanager.org/home.html#/account/%s/details
+
+Se qualcosa non torna, replica a questa mail aggiungendo in copia le altre persone interessate,
+ovvero, nel caso di accredito colui/colei a cui hai dato il denaro, nel caso di un ordine,
+chi ha curato la distribuzione e la raccolta delle ordinazioni.
+
+orz
+''' % [
+       '\n'.join([ ' * %s%s %s' % (first_name or '', middle_name or '', last_name or '')
+                 for first_name, middle_name, last_name, _ in people ])
+       ],
+                [ p[-1] for p in people ]
+                )
 
 class TransactionsEditableHandler (JsonBaseHandler):
     def do (self, cur, csaId, fromIdx, toIdx):
@@ -774,13 +818,24 @@ class RssFeedHandler (tornado.web.RequestHandler):
 
 if __name__ == '__main__':
     io_loop = tornado.ioloop.IOLoop.instance()
+    mailer = asyncsmtp.Mailer(settings.SMTP_SERVER,
+                              settings.SMTP_PORT,
+                              settings.SMTP_NUM_THREADS,
+                              settings.SMTP_QUEUE_TIMEOUT,
+                              io_loop
+                              ) if settings.SMTP_SERVER else None
+    connArgs = dict(
+                    host=settings.DB_HOST,
+                    port=settings.DB_PORT,
+                    user=settings.DB_USER,
+                    passwd=settings.DB_PASSWORD,
+                    db=settings.DB_NAME,
+                    charset='utf8'
+                    )
     application = GassmanWebApp(sql,
-                                host=settings.DB_HOST,
-                                port=settings.DB_PORT,
-                                user=settings.DB_USER,
-                                passwd=settings.DB_PASSWORD,
-                                db=settings.DB_NAME,
-                                charset='utf8')
+                                mailer,
+                                connArgs
+                                )
     application.listen(settings.HTTP_PORT)
     log_gassman.info('GASsMAN web server up and running...')
     io_loop.start()
