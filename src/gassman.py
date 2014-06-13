@@ -20,17 +20,18 @@ import tornado.auth
 import tornado.gen
 import tornado.escape
 
+import gassman_settings as settings
+
+logging.config.dictConfig(settings.LOG)
+
 import jsonlib
 import pymysql
 import loglib
 import asyncsmtp
 
-import gassman_settings as settings
 import gassman_version
 import sql
 import error_codes
-
-logging.config.dictConfig(settings.LOG)
 
 log_gassman = logging.getLogger('gassman.application')
 
@@ -287,6 +288,7 @@ class BaseHandler (tornado.web.RequestHandler):
 class IndexHandler (BaseHandler):
     def get (self):
         p = self.get_logged_user(None, None)
+        log_gassman.debug('index: lu=%s', p)
         if p is None:
             self.redirect("/login.html")
         elif self.application.hasAccounts(p.id):
