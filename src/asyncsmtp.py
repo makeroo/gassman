@@ -8,6 +8,8 @@ import sys
 import logging
 from functools import partial
 import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 import tornado.ioloop
 
@@ -19,6 +21,7 @@ log_email = logging.getLogger('gassman.email')
 class Mailer (object):
     def __init__ (self, smtpServer, smtpPort, numThreads, queueTimeout, ioloop = tornado.ioloop.IOLoop.instance()):
         self.threadpool = ThreadPool(
+            poolname='Mailer',
             thread_global_data=self,
             thread_quit_hook=self.quit_smtp,
             num_threads=numThreads,
@@ -54,15 +57,22 @@ class Mailer (object):
     def _send (self, sender, receivers, subject, body, global_data=None, local_data=None):
         try:
             for i in range(2):
+                log_email.debug('sending: try=%d, to=%s, subj=%s', i, receivers, subject)
                 try:
-                    smtp = local_data.smtp
+                    smtp = local_data.smtp if hasattr(local_data, 'smtp') else None
                     if smtp is None:
                         smtp = global_data.create_smtp()
                         local_data.smtp = smtp
+                    msg = MIMEMultipart("alternative")
+                    msg["Subject"] = subject
+                    part1 = MIMEText(body, "plain", "utf-8")
+                    msg.attach(part1)
+
                     smtp.sendmail(sender,
                                   receivers,
-                                  'Subject: %s\n\n%s' % (subject, body)
+                                  msg.as_string().encode('ascii')
                                   )
+                    log_email.debug('mail sent succesfully')
                     return True
                 except smtplib.SMTPServerDisconnected as e:
                     if i:
