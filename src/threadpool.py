@@ -11,11 +11,14 @@
 
 #import sys
 #import _thread
+import logging
 from threading import Thread, local
 from queue import Queue, Empty
 from functools import partial
 import tornado.ioloop
 #import time
+
+log_threadpool = logging.getLogger('gassman.threadpool')
 
 class ThreadPool (object):
     """Creates a thread pool containing `num_threads' worker threads.
@@ -51,6 +54,7 @@ class ThreadPool (object):
     """
 
     def __init__ (self,
+                  poolname='Threadpool',
                   thread_global_data=None,
                   thread_quit_hook=None,
                   num_threads=10,
@@ -64,7 +68,7 @@ class ThreadPool (object):
         self._running = True
         for i in range(num_threads):
             t = WorkerThread(self, thread_global_data, thread_quit_hook)
-            t.name = 'Worker Thread %s' % i
+            t.name = '%s: Worker Thread %s' % (poolname, i)
             t.daemon = True
             t.start()
             self._threads.append(t)
@@ -91,6 +95,7 @@ class WorkerThread (Thread):
         gdata = self._thread_global_data
         ldata = local()
         try:
+            log_threadpool.info('thread %s up and running', self.name)
             while self._pool._running:
                 try:
                     (func, callback) = queue.get(True, queue_timeout)
@@ -100,5 +105,6 @@ class WorkerThread (Thread):
                 except Empty:
                     pass
         finally:
+            log_threadpool.info('thread %s dying', self.name)
             if self._thread_quit_hook:
                 self._thread_quit_hook(gdata, ldata)
