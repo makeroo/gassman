@@ -66,14 +66,14 @@ LOG={
             'level': 'DEBUG',
             'formatter': 'simpleFormatter',
             'stream': 'ext://sys.stdout',
-            #'filename': /var/log/gassman_server.log',
+            #'filename': '/var/log/tornado/gassman_server.log',
         },
         'accessHandler': {
             'class': 'logging.StreamHandler', #'logging.FileHandler',
             'level': 'DEBUG',
             'formatter': 'simpleFormatter',
             'stream': 'ext://sys.stdout',
-             #'filename': /var/log/gassman_server_access.log',
+            #'filename': '/var/log/tornado/gassman_access.log',
         },
     },
     'formatters': {
