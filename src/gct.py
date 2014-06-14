@@ -1,5 +1,4 @@
-#!/usr/local/bin/python3
-# encoding=utf-8
+#!/usr/bin/env python3
 
 '''
 Created on 01/mar/2014
