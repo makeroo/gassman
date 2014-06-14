@@ -1,5 +1,3 @@
-# encoding=UTF8
-
 '''
 Raccolta di codice per la manipolazione del JSON.
 
@@ -55,7 +53,7 @@ class ExtendedJSONEncoder (json.JSONEncoder):
         try:
             return vars(o)
         except:
-            return super(ExtendedJSONEncoder, self).default()
+            return super(ExtendedJSONEncoder, self).default(o)
 
     def default (self, o):
         return self.encodings.get(type(o), self.defaultObjectEncoding)(o)
