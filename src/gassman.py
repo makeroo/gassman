@@ -1,5 +1,4 @@
-#!/usr/local/bin/python3
-# encoding=utf-8
+#!/usr/bin/env python3
 
 '''
 Created on 01/mar/2014
@@ -122,12 +121,12 @@ class GassmanWebApp (tornado.web.Application):
             login_url = '/login.html',
             )
         super().__init__(handlers, **sett)
+        self.mailer = mailer
         self.connArgs = connArgs
         self.conn = None
         self.sql = sql
         self.sessions = dict()
         self.connect()
-        self.mailer = mailer
         tornado.ioloop.PeriodicCallback(self.checkConn, settings.DB_CHECK_INTERVAL).start()
 
     def connect (self):
@@ -396,7 +395,7 @@ class JsonBaseHandler (BaseHandler):
                                     (etype, evalue, kwargs, loglib.TracebackFormatter(tb))
                                     )
         if hasattr(evalue, 'args'):
-            i = [ str(etype) ] + list(evalue.args)
+            i = [ str(etype) ] + [ str(x) for x in evalue.args ]
         else:
             i = [ str(etype), str(evalue) ]
         # tanto logga tornado
@@ -612,6 +611,8 @@ class TransactionSaveHandler (JsonBaseHandler):
                 cur.execute(*self.application.sql.account_currency(treceiver, csaId, tcurr))
                 if cur.fetchone()[0] == 0:
                     raise Exception(error_codes.E_illegal_receiver)
+                else:
+                    involvedAccounts.add(treceiver)
             cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csaId))
             tid = cur.lastrowid
             if tid == 0:
@@ -713,9 +714,10 @@ class TransactionSaveHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.log_transaction(tid, u.id, tlogType, tlogDesc, datetime.datetime.utcnow()))
         if transId is not None and ttype != self.application.sql.Tt_Error:
             cur.execute(*self.application.sql.update_transaction(transId, tid))
-            self.notifyAccountChange(cur, involvedAccounts)
         if ttype == self.application.sql.Tt_Error:
             raise Exception(tlogDesc)
+        else:
+            self.notifyAccountChange(cur, involvedAccounts)
         return tid
 
     def notifyAccountChange (self, cur, accountIds):
@@ -739,7 +741,7 @@ class TransactionSaveHandler (JsonBaseHandler):
         cur.execute(*sql.account_total_for_notifications(accounts.keys()))
         for accId, total, currSym in cur.fetchall():
             accounts[accId]['account'] = (total, currSym)
-        for accId, accData in accounts.iteritems():
+        for accId, accData in accounts.items():
             total, currSym = accData['account']
             people = accData['people']
             self.application.notify(
@@ -749,6 +751,8 @@ class TransactionSaveHandler (JsonBaseHandler):
 sono stati registrati nuovi movimenti sul conto associato a:
 %s
 
+e il cui saldo è: %s %s
+
 Per esaminare il conto vai su: http://www.gassmanager.org/home.html#/account/%s/details
 
 Se qualcosa non torna, replica a questa mail aggiungendo in copia le altre persone interessate,
@@ -756,10 +760,12 @@ ovvero, nel caso di accredito colui/colei a cui hai dato il denaro, nel caso di 
 chi ha curato la distribuzione e la raccolta delle ordinazioni.
 
 orz
-''' % [
-       '\n'.join([ ' * %s%s %s' % (first_name or '', middle_name or '', last_name or '')
-                 for first_name, middle_name, last_name, _ in people ])
-       ],
+''' % (
+       '\n'.join([ ' * %s %s %s' % (first_name or '', middle_name or '', last_name or '')
+                 for first_name, middle_name, last_name, _ in people ]),
+       total, currSym,
+       accId
+       ),
                 [ p[-1] for p in people ]
                 )
 

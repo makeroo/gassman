@@ -224,11 +224,7 @@ SELECT ap.account_id, p.id, p.first_name, p.middle_name, p.last_name, c.address
        ap.account_id IN (%s) AND
        c.kind=%%s AND
        p.account_notifications=%%s
- ORDER BY ap.account_id, pc.priority''' % (','.join([ '%s' * len(accountIds)])), [
-    accountIds,
-    Ck_Email,
-    An_EveryMovement
-    ]
+ ORDER BY ap.account_id, pc.priority''' % ','.join([ '%s' ] * len(accountIds)), list(accountIds) + [ Ck_Email, An_EveryMovement ]
 
 def account_total_for_notifications (accountIds):
     return '''
@@ -244,10 +240,7 @@ SELECT a.id, sum(l.amount), c.symbol
  a.id IN (%s)
 
  GROUP BY a.id
-''' % (','.join(['%s'] * len(accountIds))), [
-       Tt_Unfinished, Tt_Error,
-       accountIds
-      ]
+''' % (','.join(['%s'] * len(accountIds))), [ Tt_Unfinished, Tt_Error ] + list(accountIds)
 
 def expenses_accounts (csaId):
     return 'SELECT id, gc_name, currency_id FROM account where gc_type =%s AND csa_id=%s AND state=%s', [ At_Expense, csaId, As_Open]
