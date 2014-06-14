@@ -1,3 +1,7 @@
+-- permessi escluso membership
+select g.id, g.perm_id, x.name, p.id, p.first_name, p.last_name from permission_grant g join person p on p.id=g.person_id join permission x on g.perm_id=x.id where g.perm_id != 1 order by person_id, perm_id;
+
+
 -- creare un profilo
 insert into person (first_name, last_name) values ('Xxx', 'Xxx');
 select * from person order by id desc limit 1;
