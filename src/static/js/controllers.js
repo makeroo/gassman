@@ -70,12 +70,9 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 					f.justAdded($scope, gdata);
 			}
 		}
-	}).
-	then (undefined, function (error) {
-		$scope.profileError = error;
-	});
 
-	gdata.selectedCsa().
+		return gdata.selectedCsa();
+	}).
 	then (function (csaId) {
 		$scope.csaId = csaId;
 		return gdata.accountByCsa(csaId);
@@ -83,6 +80,9 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 	then (function (accId) {
 		$scope.accountId = accId;
 		reloadAmounts();
+	}).
+	then (undefined, function (error) {
+		$scope.profileError = error;
 	});
 });
 
