@@ -717,10 +717,10 @@ class TransactionSaveHandler (JsonBaseHandler):
         if ttype == self.application.sql.Tt_Error:
             raise Exception(tlogDesc)
         else:
-            self.notifyAccountChange(cur, involvedAccounts)
+            self.notifyAccountChange(cur, involvedAccounts, tdesc, tdate)
         return tid
 
-    def notifyAccountChange (self, cur, accountIds):
+    def notifyAccountChange (self, cur, accountIds, tdesc, tdate):
         if not accountIds:
             return
         # FIXME: soglia specifica di csa
@@ -756,6 +756,9 @@ sono stati registrati nuovi movimenti sul conto associato a:
 
 e il cui saldo è: %s %s
 
+Descrizione del movimento: %s
+Data: %s
+
 Per esaminare il conto vai su: http://www.gassmanager.org/home.html#/account/%s/details
 
 Se qualcosa non torna, replica a questa mail aggiungendo in copia le altre persone interessate,
@@ -767,6 +770,7 @@ orz
        '\n'.join([ ' * %s %s %s' % (first_name or '', middle_name or '', last_name or '')
                  for first_name, middle_name, last_name, _ in people ]),
        total, currSym,
+       tdesc, shortDate(tdate),
        accId
        ),
                 [ p[-1] for p in people ]
