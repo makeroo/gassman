@@ -745,7 +745,7 @@ class TransactionSaveHandler (JsonBaseHandler):
             total, currSym = accData['account']
             people = accData['people']
             self.application.notify(
-                'INFO' if total < LVL_THRES else 'ATTENZIONE',
+                'ATTENZIONE' if total < LVL_THRES else 'INFO',
                 'Aggiornamento cassa GAS',
 '''ciao,
 sono stati registrati nuovi movimenti sul conto associato a:
