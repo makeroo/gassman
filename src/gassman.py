@@ -738,6 +738,9 @@ class TransactionSaveHandler (JsonBaseHandler):
                 x = dict(people=[])
                 accounts[accId] = x
             x['people'].append([ first_name, middle_name, last_name, email ])
+        if len(accounts) == 0:
+            log_gassman.info('involved accounts has no mail to notify to')
+            return
         cur.execute(*sql.account_total_for_notifications(accounts.keys()))
         for accId, total, currSym in cur.fetchall():
             accounts[accId]['account'] = (total, currSym)
