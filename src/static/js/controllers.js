@@ -966,23 +966,19 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 		$scope.tdesc = t.description;
 		$scope.tdata = t.data;
 
-		if (!t.lines.length) {
-			t.lines.push(newLine());
-		} else {
-			// caricata quindi rimuovo la riga negativa
-			for (var i in t.lines) {
-				var l = t.lines[i];
-				// il filtro currency digerisce anche le stringhe
-				// mentre input="number" no, devo prima convertire in float
-				// i Decimal su db vengono convertiti in json in stringa
-				var x = parseFloat(l.amount);
+		// caricata quindi rimuovo la riga negativa
+		for (var i in t.lines) {
+			var l = t.lines[i];
+			// il filtro currency digerisce anche le stringhe
+			// mentre input="number" no, devo prima convertire in float
+			// i Decimal su db vengono convertiti in json in stringa
+			var x = parseFloat(l.amount);
 
-				//console.log(x, typeof(x));
-				if (x > 0) {
-					t.lines.splice(i, 1);
-				} else {
-					l.amount = - x;
-				}
+			//console.log(x, typeof(x));
+			if (x > 0) {
+				t.lines.splice(i, 1);
+			} else {
+				l.amount = - x;
 			}
 		}
 
