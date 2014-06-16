@@ -630,6 +630,10 @@ input.ng-invalid {
 	line-height: 8pt;
 }
 
+.receiver .error-message {
+	position: static;
+}
+
 .mac-menu {
 	z-index: 1;
 }
