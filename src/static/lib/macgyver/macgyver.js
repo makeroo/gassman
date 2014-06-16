@@ -7540,7 +7540,6 @@ Source support multiple types:
 @param {String}  mac-autocomplete-label The label to display to the users (default "name")
 @param {String}  mac-autocomplete-query The query parameter on GET command (default "q")
 @param {Integer} mac-autocomplete-delay Delay on fetching autocomplete data after keyup (default 800)
-@param {Boolean} mac-autocomplete-mandatory Wheter user can choose only in autocompletion data or not (default true)
 
 @param {Expr} mac-menu-class Classes for mac-menu used by mac-autocomplete. For more info, check [ngClass](http://docs.angularjs.org/api/ng/directive/ngClass)
 */
@@ -7554,12 +7553,11 @@ angular.module("Mac").directive("macAutocomplete", [
       replace: true,
       require: "ngModel",
       link: function($scope, element, attrs, ctrl, transclude) {
-        var $menuScope, appendMenu, autocompleteUrl, clickHandler, currentAutocomplete, delay, disabled, getData, inside, labelKey, mandatory, menuEl, onError, onSelect, onSelectBool, onSuccess, positionMenu, queryData, queryKey, reset, source, timeoutId, updateItem;
+        var $menuScope, appendMenu, autocompleteUrl, clickHandler, currentAutocomplete, delay, disabled, getData, inside, labelKey, menuEl, onError, onSelect, onSelectBool, onSuccess, positionMenu, queryData, queryKey, reset, source, timeoutId, updateItem;
         labelKey = attrs.macAutocompleteLabel || "name";
         queryKey = attrs.macAutocompleteQuery || "q";
         delay = +(attrs.macAutocompleteDelay || 800);
         inside = attrs.macAutocompleteInside != null;
-        mandatory = attrs.macAutocompleteMandatory !== 'false';
         autocompleteUrl = $parse(attrs.macAutocompleteUrl);
         onSelect = $parse(attrs.macAutocompleteOnSelect);
         onSuccess = $parse(attrs.macAutocompleteOnSuccess);
@@ -7801,14 +7799,6 @@ angular.module("Mac").directive("macAutocomplete", [
               });
           }
           return true;
-        });
-        element.bind("blur", function(event) {
-          if (!mandatory) {
-            onSelect($scope, {
-              selected: event.target.value
-            });
-          }
-          return reset(true);
         });
         $scope.$on("$destroy", function() {
           return reset();
@@ -11571,13 +11561,7 @@ angular.module("Mac").provider("popoverViews", function() {
         if (options.offsetY != null) {
           offset.top += options.offsetY;
         }
-        angular.forEach(offset, function(value, key) {
-          if (!isNaN(+value)) {
-            value = "" + value + "px";
-          }
-          return currentPopover.css(key, value);
-        });
-        return currentPopover.addClass("visible " + position);
+        return currentPopover.css(offset).addClass("visible " + position);
       },
       hide: function(selector, callback) {
         var comparator, i, index, popoverObj, removeScope, _i, _ref;
