@@ -1,4 +1,4 @@
-<form novalidate name="deposit" class="deposit" ng-submit="return;">
+<form name="deposit" class="deposit" ng-submit="return;">
  <div class="lines-table">
   <div class="header" ng-hide="autocompletionDataError">
    Inserisci gli accrediti:
@@ -11,7 +11,6 @@
             name="account"
             mac-placeholder="'Chi ha versato'"
             mac-autocomplete-source="autocompletionData"
-            mac-autocomplete-on-select="selectedAccount(l, selected)"
             mac-autocomplete-delay="300"
             ng-model="l.accountName"
             ng-blur="$last && l.account && $parent.checkLine(l)"
@@ -19,13 +18,14 @@
             /></div>
 	 <div class="error-message" ng-show="lineForm.account.$error.accountMatch">Nome non valido</div>
 	 <div class="error-message" ng-show="lineForm.account.$error.accountDefined">Specificare chi ha versato</div>
+	 <div class="error-message" ng-show="lineForm.account.$error.amountDefined">Specificare l'importo</div>
     </div>
     <div class="row-amount">
      <input type="number"
             name="amount"
             placeholder="Quanto"
             ng-model="l.amount"
-            ng-blur="$parent.updateTotalAmount()"
+            ng-blur="$parent.updateTotalAmount() || ($last && l.account && $parent.checkLine(l))"
             gm-amount
             /> <!-- TODO: fare text + smart-float! -->
 	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
@@ -33,12 +33,16 @@
 	 <div class="error-message" ng-show="lineForm.amount.$error.decimals">Troppi decimali</div>
     </div>
     <div class="row-notes">
-     <input type="text" placeholder="Note" ng-model="l.notes" />
+     <input type="text"
+            placeholder="Note"
+            ng-model="l.notes"
+            ng-blur="$last && l.account && $parent.checkLine(l)"
+            />
     </div>
     </ng:form>
    </div>
 
-   <div class="header" ng-hide="autocompletionDataError">
+   <div class="header receiver" ng-hide="autocompletionDataError">
     Chi ha ricevuto il denaro:
     <span><mac-autocomplete
      name="receiver"
@@ -48,6 +52,8 @@
      ng-model="receiver.accountName"
      gm-account2
      /></span>
+	 <span class="error-message" ng-show="deposit.receiver.$error.accountMatch">Nome non valido</span>
+	 <span class="error-message" ng-show="deposit.receiver.$error.accountDefined">Specificare chi ha ritirato</span>
    </div>
 
    <div ng-show="autocompletionDataError">
@@ -60,7 +66,7 @@
        <span ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
        <span ng-show="!currencyError && !totalAmount">Nessun versamento inserito finora.</span>
        </div>
-   <button ng-disabled="!csaId || !deposit.$valid || !totalAmount" ng-click="saveCashExchange()">Registra in cassa</button>
+   <button ng-disabled="!csaId || !deposit.$valid || !totalAmount || !receiver.account" ng-click="saveCashExchange()">Registra in cassa</button>
    <button ng-disabled="confirmDelete" ng-show="transId != 'new'" ng-click="confirmCancelCashExchange()">Elimina la registrazione degli accrediti</button>
    <button ng-show="confirmDelete" ng-click="cancelCashExchange()">Conferma eliminazione</button>
   </div>

@@ -11,7 +11,6 @@
             name="account"
             mac-placeholder="'Chi ha prelevato'"
             mac-autocomplete-source="autocompletionData"
-            mac-autocomplete-on-select="selectedAccount(l, selected)"
             mac-autocomplete-delay="300"
             ng-model="l.accountName"
             ng-blur="$last && l.account && $parent.checkLine(l)"
@@ -19,6 +18,7 @@
             /></div>
 	 <div class="error-message" ng-show="lineForm.account.$error.accountMatch">Nome non valido</div>
 	 <div class="error-message" ng-show="lineForm.account.$error.accountDefined">Specificare chi ha versato</div>
+	 <div class="error-message" ng-show="lineForm.account.$error.amountDefined">Specificare l'importo</div>
     </div>
     <div class="row-amount">
      <input type="number"

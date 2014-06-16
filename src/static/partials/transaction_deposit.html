@@ -11,7 +11,6 @@
             name="account"
             mac-placeholder="'Chi ha versato'"
             mac-autocomplete-source="autocompletionData"
-            mac-autocomplete-on-select="selectedAccount(l, selected)"
             mac-autocomplete-delay="300"
             ng-model="l.accountName"
             ng-blur="$last && l.account && $parent.checkLine(l)"
@@ -19,13 +18,14 @@
             /></div>
 	 <div class="error-message" ng-show="lineForm.account.$error.accountMatch">Nome non valido</div>
 	 <div class="error-message" ng-show="lineForm.account.$error.accountDefined">Specificare chi ha versato</div>
+	 <div class="error-message" ng-show="lineForm.account.$error.amountDefined">Specificare l'importo</div>
     </div>
     <div class="row-amount">
      <input type="number"
             name="amount"
             placeholder="Quanto"
             ng-model="l.amount"
-            ng-blur="$parent.updateTotalAmount()"
+            ng-blur="$parent.updateTotalAmount() || ($last && l.account && $parent.checkLine(l))"
             gm-amount
             /> <!-- TODO: fare text + smart-float! -->
 	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
@@ -33,7 +33,11 @@
 	 <div class="error-message" ng-show="lineForm.amount.$error.decimals">Troppi decimali</div>
     </div>
     <div class="row-notes">
-     <input type="text" placeholder="Note" ng-model="l.notes" />
+     <input type="text"
+            placeholder="Note"
+            ng-model="l.notes"
+            ng-blur="$last && l.account && $parent.checkLine(l)"
+            />
     </div>
     </ng:form>
    </div>

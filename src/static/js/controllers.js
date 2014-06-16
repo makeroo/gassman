@@ -335,7 +335,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 			$scope.tsaveError = error.data;
 		});
 	};
-
+/*
 	$scope.selectedAccount = function (l, o) {
 		l.account = o.acc;
 		l.accountName = o.name;
@@ -347,7 +347,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 //			$scope.currencyError = true;
 		$scope.checkCurrencies();
 	}
-
+*/
 	$scope.checkCurrencies = function () {
 		$scope.currency = null;
 
@@ -432,23 +432,19 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		$scope.tdesc = t.description;
 		$scope.tdata = t.data;
 
-		if (!t.lines.length) {
-			t.lines.push(newLine());
-		} else {
-			// caricata quindi rimuovo la riga negativa
-			for (var i in t.lines) {
-				var l = t.lines[i];
-				// il filtro currency digerisce anche le stringhe
-				// mentre input="number" no, devo prima convertire in float
-				// i Decimal su db vengono convertiti in json in stringa
-				var x = parseFloat(l.amount);
+		// caricata quindi rimuovo la riga negativa
+		for (var i in t.lines) {
+			var l = t.lines[i];
+			// il filtro currency digerisce anche le stringhe
+			// mentre input="number" no, devo prima convertire in float
+			// i Decimal su db vengono convertiti in json in stringa
+			var x = parseFloat(l.amount);
 
-				//console.log(x, typeof(x));
-				if (x < 0) {
-					t.lines.splice(i, 1);
-				} else {
-					l.amount = x;
-				}
+			//console.log(x, typeof(x));
+			if (x < 0) {
+				t.lines.splice(i, 1);
+			} else {
+				l.amount = x;
 			}
 		}
 
@@ -457,6 +453,8 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 			if (!l.accountName)
 				l.accountName = ai[l.account];
 		}
+
+		t.lines.push(newLine());
 
 		$scope.lines = t.lines;
 		$scope.updateTotalAmount();
@@ -603,7 +601,7 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 			$scope.tsaveError = error.data;
 		});
 	};
-
+/*
 	$scope.selectedAccount = function (l, o) {
 		l.account = o.acc;
 		l.accountName = o.name;
@@ -615,7 +613,7 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 //			$scope.currencyError = true;
 		$scope.checkCurrencies();
 	}
-
+*/
 	$scope.checkCurrencies = function () {
 		$scope.currency = null;
 
@@ -869,7 +867,7 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 			$scope.tsaveError = error.data;
 		});
 	};
-
+/*
 	$scope.selectedAccount = function (l, o) {
 		l.account = o.acc;
 		l.accountName = o.name;
@@ -881,7 +879,7 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 //			$scope.currencyError = true;
 		$scope.checkCurrencies();
 	}
-
+*/
 	$scope.checkCurrencies = function () {
 		$scope.currency = null;
 
@@ -1245,7 +1243,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			$scope.tsaveError = error.data;
 		});
 	};
-
+/*
 	$scope.selectedAccount = function (l, o) {
 		l.account = o.acc;
 		l.accountName = o.name;
@@ -1264,7 +1262,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			$scope.checkExp(l, $scope.expenses);
 		return true;
 	}
-
+*/
 	$scope.checkCurrencies = function () {
 		$scope.currency = null;
 

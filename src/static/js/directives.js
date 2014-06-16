@@ -37,12 +37,14 @@ gassmanDirectives.directive('gmAccount', function () {
     	restrict: 'A',
     	require: 'ngModel',
     	link: function (scope, elem, attrs, ctrl) {
+
     		var accountDefined = function (account, amount) {
     			console.log('checking defined:', account, amount, scope.l)
-    			var f = amount == '' || amount == null || (account && amount > 0);
-    			ctrl.$setValidity('accountDefined', f);
 
-    			return f ? account : null;
+    			ctrl.$setValidity('accountDefined', !( !account && amount > 0 ));
+    			ctrl.$setValidity('amountDefined', !( account && !amount ));
+
+    			return account;
     		};
 
     		scope.$watch(function () {
@@ -63,7 +65,8 @@ gassmanDirectives.directive('gmAccount', function () {
     			if (!f)
     				for (var i in acd) {
     					var acl = acd[i];
-    					if (acl.name == scope.l.accountName) {
+    					if (acl.name == value) {
+    						scope.l.account = acl.acc;
     						f = true;
     						break;
     					}
@@ -71,14 +74,20 @@ gassmanDirectives.directive('gmAccount', function () {
 
     			ctrl.$setValidity('accountMatch', f);
 
-    			if (!f || empty)
+    			if (!f || empty) {
+    				console.log('not found, resetting account');
     				scope.l.account = null;
+    			} else {
+    				console.log('found, account defined')
+    				scope.$parent.checkCurrencies();
+    			}
 
+    			console.log('returning value', typeof(value), scope.l);
     			return value;
     		});
 
     		ctrl.$parsers.push(function (value) {
-    			accountDefined(value, scope.l.amount);
+    			return accountDefined(value, scope.l.amount);
     		});
     	}
     };
@@ -90,7 +99,7 @@ gassmanDirectives.directive('gmAccount2', function () {
     	require: 'ngModel',
     	link: function (scope, elem, attrs, ctrl) {
     		ctrl.$parsers.push(function (value) {
-    			console.log('checking match:', value, elem, attrs);
+    			console.log('checking match:', value, scope.receiver);
 
     			//console.log(scope.l, scope.$parent.autocompletionData);
     			var acd = scope.autocompletionData;
@@ -100,26 +109,22 @@ gassmanDirectives.directive('gmAccount2', function () {
     			if (!f)
     				for (var i in acd) {
     					var acl = acd[i];
-    					if (acl.name == scope.receiver.accountName) {
+    					if (acl.name == value) {
     						f = true;
+    						scope.receiver.account = acl.acc;
     						break;
     					}
     				}
 
     			ctrl.$setValidity('accountMatch', f);
+    			ctrl.$setValidity('accountDefined', !empty);
 
     			if (!f || empty)
     				scope.receiver.account = null;
+    			else
+    				scope.checkCurrencies();
 
     			return value;
-    		});
-
-    		ctrl.$parsers.push(function (account) {
-    			console.log('checking defined:', account, scope.receiver)
-    			var f = !!account;
-    			ctrl.$setValidity('accountDefined', f);
-
-    			return f ? account : null;
     		});
     	}
     };
@@ -132,10 +137,11 @@ gassmanDirectives.directive('gmExpense', function () {
     	link: function (scope, elem, attrs, ctrl) {
     		var descDefined = function (desc, amount) {
     			console.log('checking expense:', desc, amount, scope.l)
-    			var f = amount == '' || amount == null || (desc && amount > 0);
-    			ctrl.$setValidity('expenseDefined', f);
 
-    			return f ? desc : null;
+    			ctrl.$setValidity('expenseDefined', !( !desc && amount > 0 ));
+    			ctrl.$setValidity('amountDefined', !( desc && !amount ));
+
+    			return desc;
     		};
 
     		scope.$watch(function () {
@@ -147,7 +153,7 @@ gassmanDirectives.directive('gmExpense', function () {
     		);
 
     		ctrl.$parsers.push(function (value) {
-    			descDefined(value, scope.l.amount);
+    			return descDefined(value, scope.l.amount);
     		});
     	}
     };
