@@ -335,19 +335,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 			$scope.tsaveError = error.data;
 		});
 	};
-/*
-	$scope.selectedAccount = function (l, o) {
-		l.account = o.acc;
-		l.accountName = o.name;
 
-//		var curr = $scope.currencies[o.acc];
-//		if (!$scope.currency)
-//			$scope.currency = curr;
-//		else if ($scope.currency != curr)
-//			$scope.currencyError = true;
-		$scope.checkCurrencies();
-	}
-*/
 	$scope.checkCurrencies = function () {
 		$scope.currency = null;
 
@@ -601,19 +589,7 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 			$scope.tsaveError = error.data;
 		});
 	};
-/*
-	$scope.selectedAccount = function (l, o) {
-		l.account = o.acc;
-		l.accountName = o.name;
 
-//		var curr = $scope.currencies[o.acc];
-//		if (!$scope.currency)
-//			$scope.currency = curr;
-//		else if ($scope.currency != curr)
-//			$scope.currencyError = true;
-		$scope.checkCurrencies();
-	}
-*/
 	$scope.checkCurrencies = function () {
 		$scope.currency = null;
 
@@ -867,19 +843,7 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 			$scope.tsaveError = error.data;
 		});
 	};
-/*
-	$scope.selectedAccount = function (l, o) {
-		l.account = o.acc;
-		l.accountName = o.name;
 
-//		var curr = $scope.currencies[o.acc];
-//		if (!$scope.currency)
-//			$scope.currency = curr;
-//		else if ($scope.currency != curr)
-//			$scope.currencyError = true;
-		$scope.checkCurrencies();
-	}
-*/
 	$scope.checkCurrencies = function () {
 		$scope.currency = null;
 
@@ -1243,26 +1207,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			$scope.tsaveError = error.data;
 		});
 	};
-/*
-	$scope.selectedAccount = function (l, o) {
-		l.account = o.acc;
-		l.accountName = o.name;
 
-//		var curr = $scope.currencies[o.acc];
-//		if (!$scope.currency)
-//			$scope.currency = curr;
-//		else if ($scope.currency != curr)
-//			$scope.currencyError = true;
-		$scope.checkCurrencies();
-	}
-
-	$scope.fillNotes = function (l, o) {
-		l.notes = o;
-		if (l == $scope.expenses[$scope.expenses.length - 1])
-			$scope.checkExp(l, $scope.expenses);
-		return true;
-	}
-*/
 	$scope.checkCurrencies = function () {
 		$scope.currency = null;
 
