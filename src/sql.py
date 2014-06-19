@@ -34,6 +34,8 @@ transactionPermissions = {
     Tt_Withdrawal: P_canEnterWithdrawal,
     }
 
+editableTransactionPermissions = set(transactionPermissions.values())
+
 deletableTransactions = set([
     Tt_Generic,
     Tt_Deposit,
