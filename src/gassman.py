@@ -495,7 +495,7 @@ class AccountsIndexHandler (JsonBaseHandler):
 class AccountsNamesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         u = self.get_logged_user()
-        if not self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId):
+        if not self.application.hasPermissions(cur, sql.transactionPermissions, u.id, csaId):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.account_currencies(csaId))
         accountCurs = list(cur)
@@ -512,7 +512,7 @@ class AccountsNamesHandler (JsonBaseHandler):
 class ExpensesNamesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         u = self.get_logged_user()
-        if not self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId):
+        if not self.application.hasPermissionByCsa(cur, sql.P_canEnterPayments, u.id, csaId):
             raise Exception(error_codes.E_permission_denied)
         r = {}
         cur.execute(*self.application.sql.expenses_accounts(csaId))
@@ -697,7 +697,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                 raise Exception(error_codes.E_trashed_transactions_can_not_have_lines)
             if transId is None:
                 raise Exception(error_codes.E_missing_trashId_of_transaction_to_be_deleted)
-            if ((not self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId) or
+            if ((not self.application.hasPermissions(cur, sql.transactionPermissions, u.id, csaId) or
                 not self.application.isTransactionEditor(cur, transId, u.id)) and
                 not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId)):
                 raise Exception(error_codes.E_permission_denied)
@@ -781,7 +781,7 @@ class TransactionsEditableHandler (JsonBaseHandler):
         u = self.get_logged_user()
         if self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId):
             cur.execute(*self.application.sql.transactions_all(csaId, int(fromIdx), int(toIdx)))
-        elif self.application.hasPermissions(cur, [sql.P_canEnterDeposit, sql.P_canEnterPayments], u.id, csaId):
+        elif self.application.hasPermissions(cur, sql.transactionPermissions, u.id, csaId):
             cur.execute(*self.application.sql.transactions_by_editor(csaId, u, int(fromIdx), int(toIdx)))
         else:
             raise Exception(error_codes.E_permission_denied)
