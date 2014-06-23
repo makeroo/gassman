@@ -197,7 +197,7 @@ gassmanServices.service('accountAutocompletion', function ($http, $q, $localStor
 		for (var i in accountCurrencies) {
 			var o = accountCurrencies[i];
 			// o è un array a.id, c.id, c.symbol
-			resp[o[0]] = { acc:o[0], cur: [ o[1], o[1] ], people: {}, name:'' };
+			resp[o[0]] = { acc:o[0], cur: [ o[1], o[2] ], people: {}, name:'' };
 		}
 		for (var i in accountPeople) {
 			var o = accountPeople[i];

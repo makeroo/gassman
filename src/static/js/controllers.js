@@ -349,7 +349,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 			var curr = $scope.currencies[a];
 
 			if (!$scope.currency) {
-				$scope.currency = curr;
+				$scope.currency = curr.cur;
 			} else if (!angular.equals($scope.currency, curr)) {
 				$scope.currency = null;
 				$scope.currencyError = true;
@@ -392,7 +392,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 
 		$scope.transId = t.transId;
 		$scope.tdesc = t.description;
-		$scope.tdata = t.data;
+		$scope.tdate = new Date(t.date);
 
 		// caricata quindi rimuovo la riga negativa
 		for (var i in t.lines) {
@@ -413,7 +413,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		for (var i in t.lines) {
 			var l = t.lines[i];
 			if (!l.accountName)
-				l.accountName = ai[l.account];
+				l.accountName = $scope.currencies[l.account].name;
 		}
 
 		t.lines.push(newLine());
@@ -435,7 +435,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 	});
 });
 
-gassmanControllers.controller('TransactionCashExchange', function($scope, $routeParams, $location, $timeout, gdata) {
+gassmanControllers.controller('TransactionCashExchange', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
 	$scope.transId = $routeParams['transId'];
 	$scope.lines = [];
 	$scope.tdate = new Date();
@@ -577,7 +577,7 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 			var curr = $scope.currencies[a];
 
 			if (!$scope.currency) {
-				$scope.currency = curr;
+				$scope.currency = curr.cur;
 			} else if (!angular.equals($scope.currency, curr)) {
 				$scope.currency = null;
 				$scope.currencyError = true;
@@ -588,8 +588,6 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 		$scope.currencyError = false;
 	};
 
-	var ai = {};
-
 	gdata.selectedCsa().
 	then (function (csaId) {
 		$scope.csaId = csaId;
@@ -597,34 +595,10 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 		return gdata.accountsNames($scope.csaId);
 	}).then (function (r) {
 		// trasforma data in autocompletionData
-		var accountCurrencies = r.data.accountCurrencies;
-		var accountPeople = r.data.accountPeople;
-		var accountPeopleAddresses = r.data.accountPeopleAddresses;
-		var people = {};
-		for (var i in accountCurrencies) {
-			var o = accountCurrencies[i];
-			// o è un array a.id, c.id, c.symbol
-			//$scope.autocompletionData.push({ name: o[0], acc: o[1] });
-			$scope.currencies[o[0]] = [ o[1], o[2] ];
-			//ai[o[1]] = o[0];
-		}
-		for (var i in accountPeople) {
-			var o = accountPeople[i];
-			// o è un array 0:pid, 1:fname, 2:mname, 3:lname, 4:accId
-			var n = (o[1] || '') + ' ' + (o[2] || '') + ' ' + (o[3] || '');
-			n = n.trim();
-			people[o[0]] = n;
-			$scope.autocompletionData.push({ name: n, acc: o[4], p: o[0] });
-			ai[o[4]] = n; // sovrascrivo, non mi interessa
-		}
-		for (var i in accountPeopleAddresses) {
-			var o = accountPeopleAddresses[i];
-			// o è un array 0:addr 1:pid 2:accId
-			var n = o[0] + ' (' + people[o[1]] + ')';
-			$scope.autocompletionData.push({ name: n, acc: o[2], p: o[1] });
-			if (!ai[o[2]])
-				ai[o[2]] = n; // questa volta non sovrascrivo
-		}
+
+		$scope.currencies = accountAutocompletion.parse(r.data);
+
+		$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
 
 		if ($scope.transId == 'new')
 			return {
@@ -646,7 +620,7 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 
 		$scope.transId = t.transId;
 		$scope.tdesc = t.description;
-		$scope.tdata = t.data;
+		$scope.tdate = new Date(t.date);
 
 		// caricata quindi rimuovo la riga negativa
 		for (var i in t.lines) {
@@ -668,12 +642,13 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 		for (var i in t.lines) {
 			var l = t.lines[i];
 			if (!l.accountName)
-				l.accountName = ai[l.account];
+				l.accountName = $scope.currencies[l.account].name;
 		}
 
 		t.lines.push(newLine());
 
-		$scope.receiver.accountName = ai[$scope.receiver.account];
+		var ra = $scope.currencies[$scope.receiver.account];
+		$scope.receiver.accountName = ra ? ra.name : '';
 
 		$scope.lines = t.lines;
 		$scope.updateTotalAmount();
@@ -692,7 +667,7 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 	});
 });
 
-gassmanControllers.controller('TransactionWithdrawal', function($scope, $routeParams, $location, $timeout, gdata) {
+gassmanControllers.controller('TransactionWithdrawal', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
 	$scope.transId = $routeParams['transId'];
 	$scope.lines = [];
 	$scope.tdate = new Date();
@@ -831,7 +806,7 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 			var curr = $scope.currencies[a];
 
 			if (!$scope.currency) {
-				$scope.currency = curr;
+				$scope.currency = curr.cur;
 			} else if (!angular.equals($scope.currency, curr)) {
 				$scope.currency = null;
 				$scope.currencyError = true;
@@ -842,8 +817,6 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 		$scope.currencyError = false;
 	};
 
-	var ai = {};
-
 	gdata.selectedCsa().
 	then (function (csaId) {
 		$scope.csaId = csaId;
@@ -851,34 +824,10 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 		return gdata.accountsNames($scope.csaId);
 	}).then (function (r) {
 		// trasforma data in autocompletionData
-		var accountCurrencies = r.data.accountCurrencies;
-		var accountPeople = r.data.accountPeople;
-		var accountPeopleAddresses = r.data.accountPeopleAddresses;
-		var people = {};
-		for (var i in accountCurrencies) {
-			var o = accountCurrencies[i];
-			// o è un array a.id, c.id, c.symbol
-			//$scope.autocompletionData.push({ name: o[0], acc: o[1] });
-			$scope.currencies[o[0]] = [ o[1], o[2] ];
-			//ai[o[1]] = o[0];
-		}
-		for (var i in accountPeople) {
-			var o = accountPeople[i];
-			// o è un array 0:pid, 1:fname, 2:mname, 3:lname, 4:accId
-			var n = (o[1] || '') + ' ' + (o[2] || '') + ' ' + (o[3] || '');
-			n = n.trim();
-			people[o[0]] = n;
-			$scope.autocompletionData.push({ name: n, acc: o[4], p: o[0] });
-			ai[o[4]] = n; // sovrascrivo, non mi interessa
-		}
-		for (var i in accountPeopleAddresses) {
-			var o = accountPeopleAddresses[i];
-			// o è un array 0:addr 1:pid 2:accId
-			var n = o[0] + ' (' + people[o[1]] + ')';
-			$scope.autocompletionData.push({ name: n, acc: o[2], p: o[1] });
-			if (!ai[o[2]])
-				ai[o[2]] = n; // questa volta non sovrascrivo
-		}
+
+		$scope.currencies = accountAutocompletion.parse(r.data);
+
+		$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
 
 		if ($scope.transId == 'new')
 			return {
@@ -900,7 +849,7 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 
 		$scope.transId = t.transId;
 		$scope.tdesc = t.description;
-		$scope.tdata = t.data;
+		$scope.tdate = new Date(t.date);
 
 		// caricata quindi rimuovo la riga negativa
 		for (var i in t.lines) {
@@ -921,7 +870,7 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 		for (var i in t.lines) {
 			var l = t.lines[i];
 			if (!l.accountName)
-				l.accountName = ai[l.account];
+				l.accountName = $scope.currencies[l.account].name;
 		}
 
 		t.lines.push(newLine());
@@ -943,7 +892,7 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 	});
 });
 
-gassmanControllers.controller('TransactionPayment', function($scope, $routeParams, $location, $timeout, gdata) {
+gassmanControllers.controller('TransactionPayment', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
 	$scope.transId = $routeParams['transId'];
 	$scope.lines = [];
 	$scope.producers = [];
