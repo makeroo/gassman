@@ -360,7 +360,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		$scope.currencyError = false;
 	};
 
-	var ai = {};
+//	var ai = {};
 
 	gdata.selectedCsa().
 	then (function (csaId) {
@@ -372,31 +372,57 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		var accountCurrencies = r.data.accountCurrencies;
 		var accountPeople = r.data.accountPeople;
 		var accountPeopleAddresses = r.data.accountPeopleAddresses;
-		var people = {};
+
+		$scope.currencies = {};
+
 		for (var i in accountCurrencies) {
 			var o = accountCurrencies[i];
 			// o è un array a.id, c.id, c.symbol
-			//$scope.autocompletionData.push({ name: o[0], acc: o[1] });
-			$scope.currencies[o[0]] = [ o[1], o[2] ];
-			//ai[o[1]] = o[0];
+			$scope.currencies[o[0]] = { acc:o[0], cur: [ o[1], o[1] ], people: {}, name:'' };
 		}
 		for (var i in accountPeople) {
 			var o = accountPeople[i];
 			// o è un array 0:pid, 1:fname, 2:mname, 3:lname, 4:accId
 			var n = (o[1] || '') + ' ' + (o[2] || '') + ' ' + (o[3] || '');
 			n = n.trim();
-			people[o[0]] = n;
-			$scope.autocompletionData.push({ name: n, acc: o[4], p: o[0] });
-			ai[o[4]] = n; // sovrascrivo, non mi interessa
+
+			var aa = $scope.currencies[o[4]];
+			if (aa) {
+				aa.people[o[0]] = { name: n, refs:[] };
+			} else {
+				console.log('accountPeople record without currency info:', o);
+			}
 		}
 		for (var i in accountPeopleAddresses) {
 			var o = accountPeopleAddresses[i];
 			// o è un array 0:addr 1:pid 2:accId
-			var n = o[0] + ' (' + people[o[1]] + ')';
-			$scope.autocompletionData.push({ name: n, acc: o[2], p: o[1] });
-			if (!ai[o[2]])
-				ai[o[2]] = n; // questa volta non sovrascrivo
+			var aa = $scope.currencies[o[2]];
+
+			if (aa) {
+				var pp = aa.people[o[1]];
+				if (pp)
+					pp.refs.push(o[0]);
+				else
+					console.log('address without person:')
+			} else {
+				console.log('accountPeopleAddresses record without currency info:', o);
+			}
 		}
+
+		$scope.autocompletionData = [];
+		angular.forEach($scope.currencies, function (l) {
+			var x = [];
+			angular.forEach(l.people, function (i) {
+				if (i.refs.length)
+					x.push(i.name + ' (' + i.refs.join(', ') + ')');
+				else
+					x.push(i.name);
+			});
+
+			l.name = x.join(', ');
+			//l.label = 'Intestatari: ' + l.name;
+			$scope.autocompletionData.push(l);
+		});
 
 		if ($scope.transId == 'new')
 			return {

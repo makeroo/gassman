@@ -15,7 +15,12 @@
             ng-model="l.accountName"
             ng-blur="$last && l.account && $parent.checkLine(l)"
             gm-account
-            /></div>
+            ><span>
+              {{item.name}}
+              <!--<ul>
+	            <li ng-repeat="p in item['people']">{{p}}</li>
+              </ul>-->
+             </span></mac-autocomplete></div>
 	 <div class="error-message" ng-show="lineForm.account.$error.accountMatch">Nome non valido</div>
 	 <div class="error-message" ng-show="lineForm.account.$error.accountDefined">Specificare chi ha versato</div>
 	 <div class="error-message" ng-show="lineForm.account.$error.amountDefined">Specificare l'importo</div>
