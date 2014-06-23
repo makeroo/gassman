@@ -210,7 +210,7 @@ gassmanControllers.controller('AccountsIndex', function($scope, $filter, $locati
 	$scope.loadMore();
 });
 
-gassmanControllers.controller('TransactionDeposit', function($scope, $routeParams, $location, $timeout, gdata) {
+gassmanControllers.controller('TransactionDeposit', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
 	$scope.transId = $routeParams['transId'];
 	$scope.lines = [];
 	$scope.tdate = new Date();
@@ -360,8 +360,6 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		$scope.currencyError = false;
 	};
 
-//	var ai = {};
-
 	gdata.selectedCsa().
 	then (function (csaId) {
 		$scope.csaId = csaId;
@@ -369,60 +367,10 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 		return gdata.accountsNames($scope.csaId);
 	}).then (function (r) {
 		// trasforma data in autocompletionData
-		var accountCurrencies = r.data.accountCurrencies;
-		var accountPeople = r.data.accountPeople;
-		var accountPeopleAddresses = r.data.accountPeopleAddresses;
 
-		$scope.currencies = {};
+		$scope.currencies = accountAutocompletion.parse(r.data);
 
-		for (var i in accountCurrencies) {
-			var o = accountCurrencies[i];
-			// o è un array a.id, c.id, c.symbol
-			$scope.currencies[o[0]] = { acc:o[0], cur: [ o[1], o[1] ], people: {}, name:'' };
-		}
-		for (var i in accountPeople) {
-			var o = accountPeople[i];
-			// o è un array 0:pid, 1:fname, 2:mname, 3:lname, 4:accId
-			var n = (o[1] || '') + ' ' + (o[2] || '') + ' ' + (o[3] || '');
-			n = n.trim();
-
-			var aa = $scope.currencies[o[4]];
-			if (aa) {
-				aa.people[o[0]] = { name: n, refs:[] };
-			} else {
-				console.log('accountPeople record without currency info:', o);
-			}
-		}
-		for (var i in accountPeopleAddresses) {
-			var o = accountPeopleAddresses[i];
-			// o è un array 0:addr 1:pid 2:accId
-			var aa = $scope.currencies[o[2]];
-
-			if (aa) {
-				var pp = aa.people[o[1]];
-				if (pp)
-					pp.refs.push(o[0]);
-				else
-					console.log('address without person:')
-			} else {
-				console.log('accountPeopleAddresses record without currency info:', o);
-			}
-		}
-
-		$scope.autocompletionData = [];
-		angular.forEach($scope.currencies, function (l) {
-			var x = [];
-			angular.forEach(l.people, function (i) {
-				if (i.refs.length)
-					x.push(i.name + ' (' + i.refs.join(', ') + ')');
-				else
-					x.push(i.name);
-			});
-
-			l.name = x.join(', ');
-			//l.label = 'Intestatari: ' + l.name;
-			$scope.autocompletionData.push(l);
-		});
+		$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
 
 		if ($scope.transId == 'new')
 			return {
