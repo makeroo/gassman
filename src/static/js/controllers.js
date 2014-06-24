@@ -350,7 +350,7 @@ gassmanControllers.controller('TransactionDeposit', function($scope, $routeParam
 
 			if (!$scope.currency) {
 				$scope.currency = curr.cur;
-			} else if (!angular.equals($scope.currency, curr)) {
+			} else if (!angular.equals($scope.currency, curr.cur)) {
 				$scope.currency = null;
 				$scope.currencyError = true;
 				return;
@@ -578,7 +578,7 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 
 			if (!$scope.currency) {
 				$scope.currency = curr.cur;
-			} else if (!angular.equals($scope.currency, curr)) {
+			} else if (!angular.equals($scope.currency, curr.cur)) {
 				$scope.currency = null;
 				$scope.currencyError = true;
 				return;
@@ -807,7 +807,7 @@ gassmanControllers.controller('TransactionWithdrawal', function($scope, $routePa
 
 			if (!$scope.currency) {
 				$scope.currency = curr.cur;
-			} else if (!angular.equals($scope.currency, curr)) {
+			} else if (!angular.equals($scope.currency, curr.cur)) {
 				$scope.currency = null;
 				$scope.currencyError = true;
 				return;
@@ -897,7 +897,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 	$scope.lines = [];
 	$scope.producers = [];
 	$scope.expenses = [];
-	$scope.accounts = {};
+	//$scope.accounts = {};
 	$scope.tdate = new Date();
 	$scope.tdesc = 'Pagamento';
 	$scope.totalAmount = 0.0;
@@ -1072,7 +1072,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			$scope.lines = [];
 			$scope.producers = [];
 			$scope.expenses = [];
-			$scope.accounts = {};
+			//$scope.accounts = {};
 			$scope.tsaveOk = true;
 		}).
 		then (undefined, function (error) {
@@ -1123,7 +1123,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			$scope.lines = [];
 			$scope.producers = [];
 			$scope.expenses = [];
-			$scope.accounts = {};
+			//$scope.accounts = {};
 			$scope.tsaveOk = true;
 		}).
 		then (undefined, function (error) {
@@ -1143,8 +1143,8 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			var curr = $scope.currencies[a];
 
 			if (!$scope.currency) {
-				$scope.currency = curr;
-			} else if (!angular.equals($scope.currency, curr)) {
+				$scope.currency = curr.cur;
+			} else if (!angular.equals($scope.currency, curr.cur)) {
 				throw 'err';
 			}
 		}
@@ -1167,34 +1167,11 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		return gdata.accountsNames($scope.csaId);
 	}).then (function (r) {
 		// trasforma data in autocompletionData
-		var accountCurrencies = r.data.accountCurrencies;
-		var accountPeople = r.data.accountPeople;
-		var accountPeopleAddresses = r.data.accountPeopleAddresses;
-		var people = {};
-		for (var i in accountCurrencies) {
-			var o = accountCurrencies[i];
-			// o è un array a.id, c.id, c.symbol
-			//$scope.autocompletionData.push({ name: o[0], acc: o[1] });
-			$scope.currencies[o[0]] = [ o[1], o[2] ];
-			//$scope.accounts[o[1]] = o[0];
-		}
-		for (var i in accountPeople) {
-			var o = accountPeople[i];
-			// o è un array 0:pid, 1:fname, 2:mname, 3:lname, 4:accId
-			var n = (o[1] || '') + ' ' + (o[2] || '') + ' ' + (o[3] || '');
-			n = n.trim();
-			people[o[0]] = n;
-			$scope.autocompletionData.push({ name: n, acc: o[4], p: o[0] });
-			$scope.accounts[o[4]] = n; // sovrascrivo, non mi interessa
-		}
-		for (var i in accountPeopleAddresses) {
-			var o = accountPeopleAddresses[i];
-			// o è un array 0:addr 1:pid 2:accId
-			var n = o[0] + ' (' + people[o[1]] + ')';
-			$scope.autocompletionData.push({ name: n, acc: o[2], p: o[1] });
-			if (!$scope.accounts[o[2]])
-				$scope.accounts[o[2]] = n; // questa volta non sovrascrivo
-		}
+
+		$scope.currencies = accountAutocompletion.parse(r.data);
+
+		$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
+
 		return gdata.expensesTags($scope.csaId);
 	}).then(function (r) {
 		var expensesAccounts = r.data.accounts;
@@ -1229,7 +1206,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 
 		$scope.transId = t.transId;
 		$scope.tdesc = t.description;
-		$scope.tdata = t.data;
+		$scope.tdate = new Date(t.date);
 
 		var clients = [];
 		var producers = [];
@@ -1241,29 +1218,28 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			// mentre input="number" no, devo prima convertire in float
 			// i Decimal su db vengono convertiti in json in stringa
 			var x = parseFloat(l.amount);
+			var ac = $scope.currencies[l.account];
 
 			//console.log(x, typeof(x));
 			if (x < 0) {
 				clients.push(l);
 				l.amount = -x;
-			} else if (l.account in $scope.accounts){
+			} else if (ac && Object.keys(ac.people).length) {
 				producers.push(l);
 				l.amount = +x;
 			} else {
 				expenses.push(l);
 				l.amount = +x;
+				continue;
 			}
 
 			if (!l.accountName)
-				l.accountName = $scope.accounts[l.account];
+				l.accountName = $scope.currencies[l.account].name;
 		}
 
-//		if (!clients.length)
-			clients.push(newLine());
-//		if (!producers.length)
-			producers.push(newLine());
-//		if (!expenses.length)
-			expenses.push(newLine());
+		clients.push(newLine());
+		producers.push(newLine());
+		expenses.push(newLine());
 
 		$scope.lines = clients;
 		$scope.producers = producers;
