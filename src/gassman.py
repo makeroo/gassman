@@ -118,6 +118,7 @@ class GassmanWebApp (tornado.web.Application):
             template_path = os.path.join(codeHome, 'templates'),
             static_path = os.path.join(codeHome, "static"),
             xsrf_cookies = True,
+            xsrf_cookie_version = 1,
             login_url = '/login.html',
             )
         super().__init__(handlers, **sett)
@@ -227,11 +228,11 @@ class GassmanWebApp (tornado.web.Application):
                     pdata = cur.fetchone()
                     if pdata:
                         s.logged_user = Person(*pdata)
-                        log_gassman.info('created session: token=%s, user=%s', xt, s.logged_user)
+                        log_gassman.info('created session: user=%s, agent=%s, from=%s', s.logged_user, requestHandler.request.headers['User-Agent'], requestHandler.request.connection.address)
                     else:
-                        log_gassman.warning('created session, user not found: token=%s, pid=%s', xt, pid)
+                        log_gassman.warning('created session, user not found: pid=%s, agent=%s, from=%s', pid, requestHandler.request.headers['User-Agent'], requestHandler.request.connection.address)
             else:
-                log_gassman.info('created session: token=%s', xt)
+                log_gassman.info('created session: agent=%s, from=%s', requestHandler.request.headers['User-Agent'], requestHandler.request.connection.address)
         return s
 
     def hasPermissionByAccount (self, cur, perm, personId, accId):
