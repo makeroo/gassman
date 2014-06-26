@@ -228,11 +228,11 @@ class GassmanWebApp (tornado.web.Application):
                     pdata = cur.fetchone()
                     if pdata:
                         s.logged_user = Person(*pdata)
-                        log_gassman.info('created session: user=%s, agent=%s, from=%s', s.logged_user, requestHandler.request.headers['User-Agent'], requestHandler.request.connection.address)
+                        log_gassman.info('created session: user=%s, agent=%s, from=%s', s.logged_user, requestHandler.request.headers['User-Agent'], requestHandler.request.headers.get('X-Forwarded-For', 'NA'))
                     else:
-                        log_gassman.warning('created session, user not found: pid=%s, agent=%s, from=%s', pid, requestHandler.request.headers['User-Agent'], requestHandler.request.connection.address)
+                        log_gassman.warning('created session, user not found: pid=%s, agent=%s, from=%s', pid, requestHandler.request.headers['User-Agent'], requestHandler.request.headers('X-Forwarded-For', 'NA'))
             else:
-                log_gassman.info('created session: agent=%s, from=%s', requestHandler.request.headers['User-Agent'], requestHandler.request.connection.address)
+                log_gassman.info('created session: agent=%s, from=%s', requestHandler.request.headers['User-Agent'], requestHandler.request.headers('X-Forwarded-For', 'NA'))
         return s
 
     def hasPermissionByAccount (self, cur, perm, personId, accId):
@@ -564,7 +564,7 @@ class TransactionEditHandler (JsonBaseHandler):
         # è D, ho P_canEnterDeposit e l'ho creata io
         # è P, ho P_canEnterPayments e l'ho creata io
         # oppure P_canManageTransactions
-        if (not not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId) and
+        if (not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId) and
             not (d[2] in self.application.sql.editableTransactions and
                  self.application.hasPermissionByCsa(cur, sql.transactionPermissions[d[2]], u.id, csaId) and
                  self.application.isTransactionEditor(cur, transId, u.id)
@@ -591,6 +591,8 @@ class TransactionSaveHandler (JsonBaseHandler):
         tdesc = tdef['description']
         tlogType = None
         tlogDesc = error_codes.E_ok
+        if tdesc is None:
+            tdesc = datetime.datetime.utcnow()
         if transId is None:
             oldCc = None
         else:
