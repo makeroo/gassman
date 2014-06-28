@@ -230,9 +230,9 @@ class GassmanWebApp (tornado.web.Application):
                         s.logged_user = Person(*pdata)
                         log_gassman.info('created session: user=%s, agent=%s, from=%s', s.logged_user, requestHandler.request.headers['User-Agent'], requestHandler.request.headers.get('X-Forwarded-For', 'NA'))
                     else:
-                        log_gassman.warning('created session, user not found: pid=%s, agent=%s, from=%s', pid, requestHandler.request.headers['User-Agent'], requestHandler.request.headers('X-Forwarded-For', 'NA'))
+                        log_gassman.warning('created session, user not found: pid=%s, agent=%s, from=%s', pid, requestHandler.request.headers['User-Agent'], requestHandler.request.headers.get('X-Forwarded-For', 'NA'))
             else:
-                log_gassman.info('created session: agent=%s, from=%s', requestHandler.request.headers['User-Agent'], requestHandler.request.headers('X-Forwarded-For', 'NA'))
+                log_gassman.info('created session: agent=%s, from=%s', requestHandler.request.headers['User-Agent'], requestHandler.request.headers.get('X-Forwarded-For', 'NA'))
         return s
 
     def hasPermissionByAccount (self, cur, perm, personId, accId):
