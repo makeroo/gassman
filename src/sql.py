@@ -86,8 +86,16 @@ def account_amount (accountDbId):
     return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a on l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s', [ Tt_Unfinished, Tt_Error, accountDbId ]
     #return 'SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s', [ accountDbId ]
 
-def accounts_index (csaId, fromLine, toLine):
-    return '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount), c.symbol, MAX(t.transaction_date)
+#accounts_index_order_by_name = 0
+#accounts_index_order_by_total_amount = 1
+#accounts_index_order_by_activity = 2
+accounts_index_order_by = [ 'p.first_name, p.last_name',
+                           'ta',
+                           'td desc',
+                           ]
+
+def accounts_index (csaId, q, o, fromLine, toLine):
+    return '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount) AS ta, c.symbol, MAX(t.transaction_date) AS td
  FROM person p
  JOIN permission_grant g ON g.person_id=p.id
  LEFT JOIN account_person ap ON ap.person_id=p.id
@@ -101,14 +109,16 @@ def accounts_index (csaId, fromLine, toLine):
  g.perm_id=%s AND
  ap.to_date IS NULL AND
  t.modified_by_id IS NULL AND
- (t.cc_type IS NULL OR t.cc_type NOT IN (%s, %s))
+ (t.cc_type IS NULL OR t.cc_type NOT IN (%s, %s)) AND
+ (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s)
 
  GROUP BY p.id, a.id
- ORDER BY p.first_name, p.last_name
+ ORDER BY ''' + o + '''
  LIMIT %s OFFSET %s
 ''', [ csaId,
        P_membership,
        Tt_Unfinished, Tt_Error,
+       q, q, q,
        toLine - fromLine + 1,
        fromLine
        ]

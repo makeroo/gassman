@@ -140,8 +140,8 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $
 		return $http.post('/csa/' + csaId + '/total_amount?_xsrf=' + $cookies._xsrf);
 	}
 
-	this.accountsIndex = function (csaId, start, blockSize) {
-		return $http.post('/accounts/' + csaId + '/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf);
+	this.accountsIndex = function (csaId, query, order, start, blockSize) {
+		return $http.post('/accounts/' + csaId + '/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf, { q: query, o: order });
 	}
 
 	this.accountsNames = function (csaId) {

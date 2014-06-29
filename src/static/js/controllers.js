@@ -182,23 +182,45 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 gassmanControllers.controller('AccountsIndex', function($scope, $filter, $location, gdata) {
 	$scope.accounts = [];
 	$scope.accountsError = null;
+	$scope.queryFilter = '';
+	$scope.queryOrder = 0;
 
 	var start = 0;
 	var blockSize = 25;
-	var concluded = false;
+	$scope.concluded = false;
+
+	var lastQuery = '';
+	var lastQueryOrder = 0;
+
+	$scope.search = function () {
+		if ($scope.queryFilter == lastQuery && $scope.queryOrder == lastQueryOrder)
+			return;
+		lastQuery = $scope.queryFilter;
+		lastQueryOrder = $scope.queryOrder;
+
+		reset();
+		$scope.loadMore();
+	};
+
+	var reset = function () {
+		$scope.accounts = [];
+		$scope.accountsError = null;
+		start = 0;
+		$scope.concluded = false;
+	};
 
 	$scope.loadMore = function () {
-		if (concluded) return;
+		if ($scope.concluded) return;
 
 		gdata.selectedCsa().
-		then (function (csaId) { return gdata.accountsIndex(csaId, start, blockSize); }).
+		then (function (csaId) { return gdata.accountsIndex(csaId, lastQuery, lastQueryOrder, start, blockSize); }).
 		then(function (r) {
-			concluded = r.data.length < blockSize;
+			$scope.concluded = r.data.length < blockSize;
 			start += r.data.length;
 			$scope.accounts = $scope.accounts.concat(r.data);
 		}).
 		then (undefined, function (error) {
-			concluded = true;
+			$scope.concluded = true;
 			$scope.accountsError = error.data;
 		});
 	};
