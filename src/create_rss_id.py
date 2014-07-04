@@ -22,7 +22,7 @@ def rss_feed_id (pid):
     return hashlib.sha256((settings.COOKIE_SECRET + str(pid)).encode('utf-8')).hexdigest()
 
 with conn as cur:
-    cur.execute('select id from person')
+    cur.execute('select id from person where rss_feed_id is null')
     ids = [ l[0] for l in cur ]
     for pid in ids:
         cur.execute('update person set rss_feed_id=%s where id=%s',
