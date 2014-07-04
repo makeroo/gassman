@@ -18,6 +18,8 @@ import sql
 
 last_error = None
 
+from gassman import rss_feed_id
+
 def catchall (func):
     def _func (*args):
         global last_error
@@ -57,7 +59,7 @@ class GMShell (cmd.Cmd):
     def help_help (self):
         print('Type help <cmd> to read <cmd> documentation.')
 
-    def help_EOF (self): print('Just type Ctrl-D to quit panels manager.')
+    def help_EOF (self): print('Just type Ctrl-D to quit.')
     def do_EOF (self, line):
         return True
 
@@ -131,6 +133,11 @@ class GMShell (cmd.Cmd):
         with self.conn as cur:
             cur.execute(q, args)
             pid = cur.lastrowid
+            cur.execute('update person set rss_feed_id=%s where id=%s',
+                        [
+                         rss_feed_id(pid),
+                         pid
+                         ])
             print('created person', pid)
             cur.execute('insert into permission_grant (csa_id, person_id, perm_id) values (%s, %s, %s)', [ self.selectedCsa, pid, sql.P_membership ])
             cur.execute('select id, symbol from currency')
@@ -142,21 +149,70 @@ class GMShell (cmd.Cmd):
                 print('created account', aid, 'for currency', csym)
                 cur.execute('insert into account_person (from_date, person_id, account_id) values (now(), %s, %s)', [ pid, aid ])
 
-    def help_find_person (self): print('')
+    def help_find_person (self): print('Look for people by name, contacts, etc. Usage: find_person <LIKETEXT>')
     def do_find_person (self, line):
         p = line.strip()
         with self.conn as cur:
             cur.execute('''
-select p.id, p.first_name, p.middle_name, p.last_name, c.kind, c.address from person p
- join person_contact pc on pc.person_id=p.id
- join contact_address c on pc.address_id=c.id
- join account_person ap on ap.person_id=p.id
- join account
+select distinct p.id, p.first_name, p.middle_name, p.last_name, c.kind, c.address from person p
+ left join person_contact pc on pc.person_id=p.id
+ left join contact_address c on pc.address_id=c.id
+ left join account_person ap on ap.person_id=p.id
+ left join account a on ap.account_id=a.id
  where p.first_name like %s or
   p.middle_name like %s or
   p.last_name like %s or
-  c.address like %s
-  order by p.id''', [ p, p, p, p ])
+  c.address like %s or
+  a.gc_name like %s
+  order by p.id''', [ p, p, p, p, p ])
+            for r in list(cur):
+                print(r)
+
+    def help_show_person (self): print('Show full profile info. Usage: show_person <PID>')
+    def do_show_person (self, line):
+        pid = line.strip()
+        with self.conn as cur:
+            cur.execute('select * from person where id=%s', [ pid ])
+            p = cur.fetchone()
+            if p is None:
+                print('not found')
+                return
+            for f, v in zip(cur.description, p):
+                print('%s: %s' % (f[0], v))
+            print()
+            cur.execute('select c.* from person_contact pc join contact_address c on pc.address_id=c.id where pc.person_id=%s', [ pid ])
+            for r in list(cur):
+                print(', '.join([ '%s:%s' % (f[0], v) for f, v in zip(cur.description, r) ]))
+            print()
+            cur.execute('select ap.*, a.* from account_person ap join account a on ap.account_id=a.id where ap.person_id=%s', [ pid ])
+            for r in list(cur):
+                print(', '.join([ '%s:%s' % (f[0], v) for f, v in zip(cur.description, r) ]))
+            print()
+            cur.execute('select g.csa_id, p.name as perm from permission_grant g join permission p on g.perm_id=g.id where g.person_id=%s', [ pid ])
+            for r in list(cur):
+                print(' '.join([ '%s: %s' % (f[0], v) for f, v in zip(cur.description, r) ]))
+            print()
+
+    def help_add_contact (self): print('Add contact to existing person. Usage: <PID> <ADDRESS> <KIND> <TYPE>')
+    def do_add_contact(self, line):
+        pid, address, kind, ctype = line.split()
+        kk = dict([ (v, k[3:]) for k, v in vars(sql).items() if k.startswith('Ck_')])
+        if kind not in kk:
+            print('illegal kind, use one of:', kk)
+            return
+        with self.conn as cur:
+            cur.execute('insert into contact_address (address,kind,contact_type) values (%s, %s, %s)', [ address, kind, ctype ])
+            aid = cur.lastrowid
+            cur.execute('insert into person_contact (person_id, address_id, priority) select p.id, %s, 0 from person p where p.id=%s', [ aid, pid ])
+
+    def help_find_account (self): print('Look for account by old GnuCash account name. Usage: find_account <LIKETEXT>')
+    def do_find_account (self, line):
+        p = line.strip()
+        with self.conn as cur:
+            cur.execute('''
+select a.id, a.gc_name from account a
+ where a.gc_name like %s
+ order by a.id''', [ p ])
             for r in list(cur):
                 print(r)
 
