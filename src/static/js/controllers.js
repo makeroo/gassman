@@ -184,6 +184,7 @@ gassmanControllers.controller('AccountsIndex', function($scope, $filter, $locati
 	$scope.accountsError = null;
 	$scope.queryFilter = '';
 	$scope.queryOrder = 0;
+	$scope.profile = null;
 
 	var start = 0;
 	var blockSize = 25;
@@ -209,15 +210,33 @@ gassmanControllers.controller('AccountsIndex', function($scope, $filter, $locati
 		$scope.concluded = false;
 	};
 
+	var currCsa = null;
+
 	$scope.loadMore = function () {
 		if ($scope.concluded) return;
 
-		gdata.selectedCsa().
-		then (function (csaId) { return gdata.accountsIndex(csaId, lastQuery, lastQueryOrder, start, blockSize); }).
+		gdata.accountsIndex(currCsa, lastQuery, lastQueryOrder, start, blockSize).
 		then(function (r) {
 			$scope.concluded = r.data.length < blockSize;
 			start += r.data.length;
 			$scope.accounts = $scope.accounts.concat(r.data);
+
+			angular.forEach(r.data, function (e) {
+				e.accountData = !!e[4];
+			});
+
+			if ($scope.profile.permissions.indexOf(gassmanApp.P_canViewContacts) == -1)
+				return;
+
+			angular.forEach(r.data, function (e) {
+				if (e.profile)
+					return;
+				var pid = e[0];
+				gdata.profile(currCsa, pid).
+				then(function (p) {
+					e.profile = p;
+				});
+			});
 		}).
 		then (undefined, function (error) {
 			$scope.concluded = true;
@@ -229,7 +248,15 @@ gassmanControllers.controller('AccountsIndex', function($scope, $filter, $locati
 		$location.path('/account/' + accountId + '/details');
 	};
 
-	$scope.loadMore();
+	gdata.selectedCsa().
+	then (function (csaId) {
+		currCsa = csaId;
+		return gdata.profileInfo();
+	}).
+	then (function (pData) {
+		$scope.profile = pData;
+		$scope.loadMore();
+	});
 });
 
 gassmanControllers.controller('TransactionDeposit', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
@@ -1336,3 +1363,57 @@ gassmanControllers.controller('ProjectController', function($scope, gdata) {
 		$scope.version = r.data[0];
 	}); // non gestisco l'errore
 });
+/*
+gassmanControllers.controller('ContactsController', function($scope, $filter, $location, gdata) {
+	$scope.people = [];
+	$scope.peopleError = null;
+	$scope.queryFilter = '';
+	$scope.queryOrder = 0;
+
+	var start = 0;
+	var blockSize = 25;
+	$scope.concluded = false;
+
+	var lastQuery = '';
+	var lastQueryOrder = 0;
+
+	$scope.search = function () {
+		if ($scope.queryFilter == lastQuery && $scope.queryOrder == lastQueryOrder)
+			return;
+		lastQuery = $scope.queryFilter;
+		lastQueryOrder = $scope.queryOrder;
+
+		reset();
+		$scope.loadMore();
+	};
+
+	var reset = function () {
+		$scope.people = [];
+		$scope.peopleError = null;
+		start = 0;
+		$scope.concluded = false;
+	};
+
+	$scope.loadMore = function () {
+		if ($scope.concluded) return;
+
+		gdata.selectedCsa().
+		then (function (csaId) { return gdata.peopleIndex(csaId, lastQuery, lastQueryOrder, start, blockSize); }).
+		then(function (r) {
+			$scope.concluded = r.data.length < blockSize;
+			start += r.data.length;
+			$scope.people = $scope.people.concat(r.data);
+		}).
+		then (undefined, function (error) {
+			$scope.concluded = true;
+			$scope.peopleError = error.data;
+		});
+	};
+
+	$scope.showProfile = function (personId) {
+		$location.path('/person/' + personId + '/details');
+	};
+
+	$scope.loadMore();
+});
+*/

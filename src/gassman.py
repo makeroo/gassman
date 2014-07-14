@@ -111,6 +111,8 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
             (r'^/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/rss/(.+)$', RssFeedHandler),
+#            (r'^/people/(\d+)/index/(\d+)/(\d+)$', PeopleIndexHandler),
+            (r'^/people/(\d+)/profiles$', PeopleProfilesHandler),
             ]
         codeHome = os.path.dirname(__file__)
         sett = dict(
@@ -490,9 +492,12 @@ class AccountsIndexHandler (JsonBaseHandler):
         q = '%%%s%%' % self.payload['q']
         o = self.application.sql.accounts_index_order_by[int(self.payload['o'])]
         u = self.get_logged_user()
-        if not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
+        if self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
+            cur.execute(*self.application.sql.accounts_index(csaId, q, o, int(fromIdx), int(toIdx)))
+        elif self.application.hasPermissionByCsa(cur, sql.P_canViewContacts, u.id, csaId):
+            cur.execute(*self.application.sql.people_index(csaId, q, o, int(fromIdx), int(toIdx)))
+        else:
             raise Exception(error_codes.E_permission_denied)
-        cur.execute(*self.application.sql.accounts_index(csaId, q, o, int(fromIdx), int(toIdx)))
         return list(cur)
 
 class AccountsNamesHandler (JsonBaseHandler):
@@ -835,6 +840,48 @@ class RssFeedHandler (tornado.web.RequestHandler):
                         currency=currency,
                         )
 
+#class PeopleIndexHandler (JsonBaseHandler):
+#    def do (self, cur, csaId, fromIdx, toIdx):
+#        q = '%%%s%%' % self.payload['q']
+#        o = self.application.sql.accounts_index_order_by[int(self.payload['o'])]
+#        u = self.get_logged_user()
+#        if not self.application.hasPermissionByCsa(cur, sql.P_canViewContacts, u.id, csaId):
+#            raise Exception(error_codes.E_permission_denied)
+#        cur.execute(*self.application.sql.people_index(csaId, q, o, int(fromIdx), int(toIdx)))
+#        return list(cur)
+
+class PeopleProfilesHandler (JsonBaseHandler):
+    def do (self, cur, csaId):
+        pids = self.payload['pids']
+        u = self.get_logged_user()
+        if not self.application.hasPermissionByCsa(cur, sql.P_canViewContacts, u.id, csaId):
+            raise Exception(error_codes.E_permission_denied)
+        accs, perms, args = self.application.sql.people_profiles2(csaId, pids)
+        r = {}
+        def record (pid):
+            p = r.get(pid, None)
+            if p is None:
+                p = { 'accounts':[], 'profile':None, 'permissions':[], 'contacts':[] }
+                r[pid] = p
+            return p
+        cur.execute(accs, args)
+        for acc in self.application.sql.iter_objects(cur):
+            p = record(acc['person_id'])
+            p['accounts'].append(acc)
+        cur.execute(perms, args)
+        for perm in self.application.sql.iter_objects(cur):
+            p = record(perm['person_id'])
+            p['permissions'].append(perm['perm_id'])
+        profiles, contacts, args = self.application.sql.people_profiles1(r.keys())
+        cur.execute(profiles, args)
+        for prof in self.application.sql.iter_objects(cur):
+            p = record(prof['id'])
+            p['profile'] = prof
+        cur.execute(contacts, args)
+        for addr in self.application.sql.iter_objects(cur):
+            p = record(addr['person_id'])
+            p['contacts'].append(addr)
+        return r
 
 if __name__ == '__main__':
     io_loop = tornado.ioloop.IOLoop.instance()

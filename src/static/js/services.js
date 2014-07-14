@@ -20,8 +20,10 @@ gassmanServices.config(function ($httpProvider) {
 });
 */
 
-gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $rootScope) {
+gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $rootScope, $timeout) {
+	var gdata = this;
 	var profileInfo = null;
+	var peopleProfiles = {};
 
 	this.E_class = "<class 'Exception'>";
 	this.E_already_modified = 'already modified';
@@ -50,7 +52,7 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $
 				profileInfo = data;
 				d.resolve(profileInfo);
 			}).
-			error(function () {
+			error(function (data) {
 				d.reject(data);
 			});
 		}
@@ -183,6 +185,94 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $
 
 	this.transactionsLog = function (csaId, start, blockSize) {
 		return $http.post('/transactions/' + csaId + '/editable/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf);
+	}
+
+	this.peopleIndex = function (csaId, query, order, start, blockSize) {
+		return $http.post('/people/' + csaId + '/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf, { q: query, o: order });
+	}
+
+	this.peopleProfiles = function (csaId, pids) {
+		return $http.post('/people/' + csaId + '/profiles?_xsrf=' + $cookies._xsrf, { pids: pids });
+	}
+
+	var PROFILE_REQUEST_DELAY = .300; // secondi
+	var profilesToRequest = {};
+	var profilesRequestTimeout = null;
+
+	var keysOf = function (o) {
+		if (o === undefined || o === null || angular.isArray(o))
+			return o;
+		if (!angular.isObject(o))
+			return [];
+		var r = [];
+		for (var p in o)
+			if (o.hasOwnProperty(p))
+				r.push(p);
+		return r;
+	}
+
+	var instrumentProfile = function (p) {
+		angular.forEach(p.contacts, function (c) {
+			if (c.kind == 'E') {
+				if (!p.mainEmail)
+					p.mainEmail = c.address;
+			} else if (c.kind == 'T') {
+				if (!p.mainTelephone)
+					p.mainTelephone = c.address;
+			}
+		});
+	};
+
+	this.profile = function (csaId, pid) {
+		var d = $q.defer();
+
+		if (pid in peopleProfiles) {
+			d.resolve(peopleProfiles[pid])
+		} else {
+			var defers = profilesToRequest[pid];
+
+			if (!defers) {
+				defers = [];
+				profilesToRequest[pid] = defers;
+			}
+
+			defers.push(d);
+
+			if (profilesRequestTimeout === null) {
+				profilesRequestTimeout = $timeout(function () {
+					profilesRequestTimeout = null;
+
+					var ptr = profilesToRequest;
+
+					profilesToRequest = {};
+
+					// ptr.keys() mi lancia un'eccezione che non ho capito
+					var pids = keysOf(ptr);
+
+					gdata.peopleProfiles(csaId, pids).
+					then(function (r) {
+						angular.forEach(r.data, function (e) {
+							var pid = e.profile.id;
+
+							instrumentProfile(e);
+
+							peopleProfiles[pid] = e;
+
+							var defers = ptr[pid];
+
+							angular.forEach(defers, function (d) {
+								d.resolve(e);
+							});
+						});
+					}).
+					then(undefined, function (error) {
+						d.reject(error.data);
+					});
+				}, PROFILE_REQUEST_DELAY);
+			}
+		}
+
+		return d.promise;
 	}
 });
 

@@ -12,6 +12,8 @@ P_canEnterPayments = 5
 P_canManageTransactions = 6
 P_canEnterCashExchange = 7
 P_canEnterWithdrawal = 8
+P_canViewContacts = 9
+P_canEditContacts = 10
 
 Tt_Generic = 'g'
 Tt_Deposit = 'd'
@@ -26,6 +28,13 @@ An_EveryMovement = 'E'
 An_Dayly = 'D'
 An_Weekly = 'W'
 An_Never = 'N'
+
+Ck_Telephone = 'T'
+Ck_Mobile = 'M'
+Ck_Email = 'E'
+Ck_Fax = 'F'
+Ck_Id = 'I'
+Ck_Nickname = 'N'
 
 transactionPermissions = {
     Tt_Deposit: P_canEnterDeposit,
@@ -348,5 +357,66 @@ def transactions_by_editor (csaId, operator, fromLine, toLine):
             fromLine
             ]
 
+def people_index (csaId, q, o, fromLine, toLine):
+    return '''
+SELECT p.id, p.first_name, p.middle_name, p.last_name
+ FROM person p
+ JOIN permission_grant g ON p.id=g.person_id
+
+ WHERE g.csa_id=%s AND g.perm_id=%s AND
+ (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s)
+ ORDER BY ''' + o + '''
+ LIMIT %s OFFSET %s
+ ''', [
+       csaId,
+       P_membership,
+       q, q, q,
+       toLine - fromLine + 1,
+       fromLine
+       ]
+#def people_index (csaId, q, o, fromLine, toLine):
+#    return '''
+#SELECT p.id, p.first_name, p.middle_name, p.last_name, p.rss_feed_id, p.account_notifications,  a.id, a.first_line, a.second_line, a.zip_code, a.description, c.name, s.name, s.iso3
+# FROM person p
+# JOIN permission_grant g ON p.id=g.person_id
+# LEFT JOIN street_address a ON p.address_id=a.id
+# LEFT JOIN city c ON a.city_id=c.id
+# LEFT JOIN state s ON c.state_id=s.id
+#
+# WHERE g.csa_id=%s AND g.perm_id=%s AND
+# (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s)
+# ORDER BY ''' + o + '''
+# LIMIT %s OFFSET %s
+# ''', [
+#       csaId,
+#       P_membership,
+#       q, q, q,
+#       toLine - fromLine + 1,
+#       fromLine
+#       ]
+
+def people_profiles2 (csaId, pids):
+    pp = ', '.join([ '%s' ] * len(pids))
+    return (
+            'SELECT ap.from_date, ap.to_date, ap.person_id, a.* FROM account_person ap JOIN account a ON ap.account_id=a.id WHERE ap.person_id in (%s) AND a.csa_id=%%s' % pp,
+            'SELECT csa_id, person_id, perm_id FROM permission_grant WHERE person_id IN (%s) AND csa_id=%%s' % pp,
+            pids + [ csaId ],
+            )
+
+def people_profiles1 (pids):
+    pp = ', '.join([ '%s' ] * len(pids))
+    return (
+            'SELECT * FROM person WHERE id IN (%s)' % pp,
+            'SELECT pc.person_id, pc.priority, a.* FROM person_contact pc JOIN contact_address a ON a.id=pc.address_id WHERE pc.person_id IN (%s)' % pp,
+            list(pids),
+            )
+
 def checkConn ():
     return 'SELECT 1'
+
+def column_names (cur):
+    return [ f[0] for f in cur.description ]
+
+def iter_objects (cur):
+    cn = column_names(cur)
+    return [ dict(zip(cn, x)) for x in list(cur) ]

@@ -16,10 +16,15 @@ gassmanApp.P_canEnterPayments = 5;
 gassmanApp.P_canManageTransactions = 6;
 gassmanApp.P_canEnterCashExchange = 7;
 gassmanApp.P_canEnterWithdrawal = 8;
+gassmanApp.P_canViewContacts = 9;
+gassmanApp.P_canEditContacts = 10;
 
 gassmanApp.functions = [
 	{ p:gassmanApp.P_membership, f:'#/account/detail', l:'Il tuo conto' },
-	{ p:gassmanApp.P_canCheckAccounts, f:'#/accounts/index', l:'Tutti i conti' },
+	{ e:function (pp) {
+		return pp.indexOf(gassmanApp.P_canCheckAccounts) != -1 ||
+		       pp.indexOf(gassmanApp.P_canViewContacts) != -1;
+		}, f:'#/accounts/index', l:'Membri del G.A.S.' },
 	//{ v:P_canAssignAccounts, f:null },
 	{ p:gassmanApp.P_canEnterCashExchange, f:'#/transaction/new/x', l:'Scambio contante' },
 	{ p:gassmanApp.P_canEnterPayments, f:'#/transaction/new/p', l:'Registra pagamenti' },
@@ -30,8 +35,10 @@ gassmanApp.functions = [
 		       pp.indexOf(gassmanApp.P_canEnterDeposit) != -1 ||
 		       pp.indexOf(gassmanApp.P_canEnterCashExchange) != -1 ||
 		       pp.indexOf(gassmanApp.P_canEnterWithdrawal) != -1 ||
-		       pp.indexOf(gassmanApp.P_canManageTransactions) != -1
+		       pp.indexOf(gassmanApp.P_canManageTransactions) != -1;
 	  }, f:'#/transactions/index', l:' Movimenti inseriti' }
+	//,
+	//{ p:gassmanApp.P_canViewContacts, f:'#/contacts/index', l:'Rubrica' }
 	];
 
 /*
@@ -98,6 +105,10 @@ gassmanApp.config([ '$routeProvider',
 				templateUrl: 'static/partials/project.html',
 				controller: 'ProjectController'
 			}).
+			//when('/contacts/index', {
+			//	templateUrl: 'static/partials/contacts_index.html',
+			//	controller: 'ContactsController'
+			//}).
 			otherwise({
 				redirectTo: '/account/self/details'
 			})

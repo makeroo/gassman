@@ -6,3 +6,5 @@ INSERT INTO permission (id, name, visibility) VALUES (5, 'canEnterPayments', 200
 INSERT INTO permission (id, name, visibility) VALUES (6, 'canManageTransactions', 5000);
 INSERT INTO permission (id, name, visibility) VALUES (7, 'canEnterCashExchange', 1000);
 INSERT INTO permission (id, name, visibility) VALUES (8, 'canEnterWithdrawal', 2000);
+INSERT INTO permission (id, name, visibility) VALUES (9, 'canViewContacts', 900);
+INSERT INTO permission (id, name, visibility) VALUES (10, 'canEditContacts', 2100);

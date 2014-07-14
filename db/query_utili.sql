@@ -30,12 +30,11 @@ select * from account where id not in
 -- expenses
 select * from account where gc_type ='EXPENSE';
 
--- persone non ancora registrate
-select * from account
- where gc_parent = 'acf998ffe1edbcd44bc30850813650ac'
-   and gc_id not in ('4d5b627c2ec72d94d95e95543aa5cd1f', '5ba64cec222104efb491ceafd6dd1812')
-   and id not in (select distinct account_id from account_person)
- order by gc_name;
+-- persone che non hanno ancora acceduto
+select *
+ from person p
+ where p.id not in (select pc.person_id from contact_address c join person_contact pc on c.id=pc.address_id where c.kind='I')
+ ;
 
 
 -- conti e loro amount
