@@ -95,9 +95,6 @@ def account_amount (accountDbId):
     return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a on l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s', [ Tt_Unfinished, Tt_Error, accountDbId ]
     #return 'SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s', [ accountDbId ]
 
-#accounts_index_order_by_name = 0
-#accounts_index_order_by_total_amount = 1
-#accounts_index_order_by_activity = 2
 accounts_index_order_by = [ 'p.first_name, p.last_name',
                            'ta',
                            'td desc',
@@ -340,19 +337,43 @@ def transaction_type (transId):
 def update_transaction (oldTid, newTid):
     return 'UPDATE transaction SET modified_by_id = %s WHERE id = %s', [ newTid, oldTid ]
 
-def transactions_all (csaId, fromLine, toLine):
-    return 'SELECT l.id, l.log_date, l.op_type, t.id, t.description, t.transaction_date, t.modified_by_id, t.cc_type, p.id, p.first_name, p.middle_name, p.last_name FROM transaction_log l JOIN transaction t ON t.id=l.transaction_id JOIN person p ON l.operator_id= p.id WHERE t.csa_id=%s AND l.op_type IN (%s, %s, %s) ORDER BY l.log_date DESC LIMIT %s OFFSET %s', [
+transactions_editable_order_by = [ 'l.log_date DESC',
+                           't.transaction_date DESC',
+                           'p.first_name,p.last_name',
+                           't.description'
+                           ]
+
+def transactions_all (csaId, q, o, fromLine, toLine):
+    return '''SELECT l.id, l.log_date, l.op_type, t.id, t.description, t.transaction_date, t.modified_by_id, t.cc_type, p.id, p.first_name, p.middle_name, p.last_name
+     FROM transaction_log l
+     JOIN transaction t ON t.id=l.transaction_id
+     JOIN person p ON l.operator_id= p.id
+
+     WHERE t.csa_id=%s AND l.op_type IN (%s, %s, %s) AND
+      (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s OR t.description LIKE %s)
+
+     ORDER BY ''' + o + ''' LIMIT %s OFFSET %s''', [
             csaId,
             'A', 'M', 'D',
+            q, q, q, q,
             toLine - fromLine + 1,
             fromLine
             ]
 
-def transactions_by_editor (csaId, operator, fromLine, toLine):
-    return 'SELECT l.id, l.log_date, l.op_type, t.id, t.description, t.transaction_date, t.modified_by_id, t.cc_type, p.id, p.first_name, p.middle_name, p.last_name FROM transaction_log l JOIN transaction t ON t.id=l.transaction_id JOIN person p ON l.operator_id= p.id WHERE t.csa_id=%s AND l.operator_id=%s AND l.op_type IN (%s, %s, %s) ORDER BY l.log_date DESC LIMIT %s OFFSET %s', [
+def transactions_by_editor (csaId, operator, q, o, fromLine, toLine):
+    return '''SELECT l.id, l.log_date, l.op_type, t.id, t.description, t.transaction_date, t.modified_by_id, t.cc_type, p.id, p.first_name, p.middle_name, p.last_name
+     FROM transaction_log l
+     JOIN transaction t ON t.id=l.transaction_id
+     JOIN person p ON l.operator_id= p.id
+
+     WHERE t.csa_id=%s AND l.operator_id=%s AND l.op_type IN (%s, %s, %s) AND
+      (t.description LIKE %s)
+
+     ORDER BY ''' + o + ''' LIMIT %s OFFSET %s''', [
             csaId,
             operator.id,
             'A', 'M', 'D',
+            q,
             toLine - fromLine + 1,
             fromLine
             ]

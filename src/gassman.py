@@ -788,11 +788,13 @@ orz
 
 class TransactionsEditableHandler (JsonBaseHandler):
     def do (self, cur, csaId, fromIdx, toIdx):
+        q = '%%%s%%' % self.payload['q']
+        o = self.application.sql.transactions_editable_order_by[int(self.payload['o'])]
         u = self.get_logged_user()
         if self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId):
-            cur.execute(*self.application.sql.transactions_all(csaId, int(fromIdx), int(toIdx)))
+            cur.execute(*self.application.sql.transactions_all(csaId, q, o, int(fromIdx), int(toIdx)))
         elif self.application.hasPermissions(cur, sql.editableTransactionPermissions, u.id, csaId):
-            cur.execute(*self.application.sql.transactions_by_editor(csaId, u, int(fromIdx), int(toIdx)))
+            cur.execute(*self.application.sql.transactions_by_editor(csaId, u, q, o, int(fromIdx), int(toIdx)))
         else:
             raise Exception(error_codes.E_permission_denied)
         return list(cur)

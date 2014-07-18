@@ -183,8 +183,8 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $
 		return p;
 	}
 
-	this.transactionsLog = function (csaId, start, blockSize) {
-		return $http.post('/transactions/' + csaId + '/editable/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf);
+	this.transactionsLog = function (csaId, query, order, start, blockSize) {
+		return $http.post('/transactions/' + csaId + '/editable/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf, { q: query, o: order });
 	}
 
 	this.peopleIndex = function (csaId, query, order, start, blockSize) {
