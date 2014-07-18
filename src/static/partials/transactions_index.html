@@ -1,24 +1,20 @@
-<div class="transactions-index">
-
-  <div class="movements">
-    <div class="header centered">
+<div class="transactions-index accounts-index">
+    <div class="theader centered">
       Attività sul sito: movimenti inseriti
+      <input type="text" placeholder="Cerca per descrizione o operatore" ng-model="queryFilter" ng-keypress="$event.keyCode == 13 && search()"/>
+      Ordina per <select ng-model="queryOrder" ng-change="search()"><option value="0">data operazione</option><option value="1">data movimento</option><option value="2">operatore</option><option value="3">descrizione</option></select>
     </div>
-    <div class="header">
-      <div class="mov-odate">Data operaz.</div>
-      <div class="mov-tdesc">Descrizione movimento</div>
-      <div class="mov-tdate">Data movim.</div>
-      <div class="mov-oper">Operatore</div>
-    </div>
+  <div class="table">
     <div class="body" when-scrolled="loadMore()">
-      <div ng-repeat="tl in transactions" ng-class="tl[6] ? 'mov-row mod' : 'mov-row'" ng-click="showTransaction(tl)">
+      <div class="first-row"></div>
+      <div ng-repeat="tl in transactions" ng-class="tl[6] ? 'acc-row mod' : 'acc-row'" ng-click="showTransaction(tl)">
       <!-- 0:l.id, 1:l.log_date, 2:l.op_type, 3:t.id, 4:t.description, 5:t.transaction_date, 6:t.modified_by_id, 7:t.cc_type, 8:p.id, 9:p.first_name, 10:p.middle_name, 11:p.last_name -->
         <div class="mov-odate">{{ tl[1] | date:"shortDate" }}</div>
         <div class="mov-tdesc"><span class="tdesc">{{ tl[4] }}</span><span class="otype">{{ tl[2] == 'A' ? 'aggiunta' : tl[2] == 'M' ? 'modifica' : tl[2] == 'D' ? 'cancellazione' : tl[2] }}</span></div>
         <div class="mov-tdate">{{ tl[5] | date:"shortDate" }}</div>
         <div class="mov-oper">{{ (tl[9] || '') + ' ' + (tl[10] || '') + ' ' + (tl[11] || '') }}</div>
       </div>
-      <div ng-show="transactions == null">
+      <div ng-show="transactions == null && !transactionsError">
        <div class="message">Sto caricando i dati, un attimo di pazienza.</div>
       </div>
       <div ng-show="transactionsError">
@@ -26,6 +22,14 @@
         <p>Qualcosa è andato storto: {{ serverError }}</p>
        </div>
       </div>
+      <div ng-show="!transactionsError && !concluded" ng-click="loadMore()">Carica altri conti</div>
+      <div ng-show="!transactionsError && concluded">Nessun conto ulteriore</div>
+    </div>
+    <div class="header">
+      <div class="mov-odate">Data operaz.</div>
+      <div class="mov-tdesc">Descrizione movimento</div>
+      <div class="mov-tdate">Data movim.</div>
+      <div class="mov-oper">Operatore</div>
     </div>
   </div>
 

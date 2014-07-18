@@ -1,15 +1,11 @@
 <div class="accounts-index">
 
  <div class="table">
-  <div class="header centered">
-   Tutti i conti
-   <input type="text" placeholder="Cerca per nome" ng-model="queryFilter" ng-keypress="$event.keyCode == 13 && search()"/>
-   Ordina per <select ng-model="queryOrder" ng-change="search()"><option value="0">nome</option><option value="1">saldo</option><option value="2">attività</option></select>
-  </div>
   <div when-scrolled="loadMore()" class="body">
    <div ng-show="!accounts.length && !accountsError">
     Sto caricando i dati...
    </div>
+   <div class="first-row"></div>
    <div ng-repeat="a in accounts" class="acc-row" ng-click="showAccount(a[4])">
     <div style="opacity: {{ a[7] | alphaTimeDiff }}">
      <div class="acc-name">
@@ -29,6 +25,11 @@
    </div>
    <div ng-show="!accountsError && !concluded" ng-click="loadMore()">Carica altri conti</div>
    <div ng-show="!accountsError && concluded">Nessun conto ulteriore</div>
+  </div>
+  <div class="header centered">
+   Membri del G.A.S.
+   <input type="text" placeholder="Cerca per nome" ng-model="queryFilter" ng-keypress="$event.keyCode == 13 && search()"/>
+   Ordina per <select ng-model="queryOrder" ng-change="search()"><option value="0">nome</option><option value="1">saldo</option><option value="2">attività</option></select>
   </div>
  </div>
 

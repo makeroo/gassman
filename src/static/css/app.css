@@ -144,7 +144,7 @@ a {
 .accounts-index {
 	position: absolute;
 	left: 0;
-	right: 50%;
+	right: 0;
 	top: 0;
 	bottom: 0;
 
@@ -156,22 +156,34 @@ a {
 .accounts-index .table {
 	overflow: hidden;
 	flex-grow: 1;
-	display: flex;
-	flex-direction: column;
-	align-items: stretch;
+	background-color: beige;
+	position: relative;
 }
 
 .accounts-index .table .header {
 	height: 40px;
 	line-height: 30px;
 	font-weight: bold;
-	flex: none;
+	background-image: url('/static/img/table_header.png');
+	position: absolute;
+	left: 0;
+	right: 0;
+}
+
+.accounts-index .table .body .first-row {
+	height: 40px;
 }
 
 .accounts-index .table .body {
 /*	width:500px;*/
 	overflow: auto;
-	flex-grow: 1;
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	width: 100%;
+	height: 100%;
 }
 
 .accounts-index .body .acc-row {
@@ -506,59 +518,21 @@ a {
 	line-height: 30px;
 }
 
-.transactions-index {
-	position: absolute;
-	left: 0;
-	right: 50%;
-	top: 0;
-	bottom: 0;
-
-	display: flex;
-	flex-direction: column;
-	align-items: stretch;
-}
-
-.transactions-index .movements {
-	overflow: hidden;
-	flex-grow: 1;
-	display: flex;
-	flex-direction: column;
-	align-items: stretch;
-}
-
-.transactions-index .movements .header {
-	position: relative;
-	height: 30px;
-	font-weight: bold;
-	flex: none;
+.transactions-index .theader {
 	line-height: 30px;
-	overflow: hidden;
+	font-weight: bold;
+	background-color: #aaddaa;
 }
 
-.transactions-index .movements .body {
-/*	width:500px;*/
-	overflow: auto;
-	flex-grow: 1;
-}
-
-.transactions-index .movements .mov-row {
-	position: relative;
-	height: 30px;
-}
-
-.transactions-index .movements .mov-row.mod {
+.transactions-index .acc-row.mod {
 	color: gray;
 }
 
-.transactions-index .movements .mov-row:hover {
-	background-color: #eef;
-}
-
-.transactions-index .movements .header .mov-odate {
+.transactions-index .header .mov-odate {
 	line-height: 15px;
 }
 
-.transactions-index .movements .mov-odate {
+.transactions-index .mov-odate {
 	position: absolute;
 	left: 0;
 	top: 0;
@@ -568,7 +542,7 @@ a {
 	line-height: 30px;
 }
 
-.transactions-index .movements .mov-tdesc {
+.transactions-index .mov-tdesc {
 	position: absolute;
 	left: 70px;
 	right: 220px;
@@ -582,12 +556,12 @@ a {
 	text-overflow: ellipsis;
 }
 
-.transactions-index .movements .mov-tdesc:HOVER {
+.transactions-index .mov-tdesc:HOVER {
 	overflow: auto;
 	text-overflow: initial;
 }
 
-.transactions-index .movements .mov-tdesc .otype {
+.transactions-index .mov-tdesc .otype {
 	font-size: 8px;
 	position: absolute;
 	bottom: 0;
@@ -595,11 +569,11 @@ a {
 	line-height: 8px;
 }
 
-.transactions-index .movements .header .mov-tdate {
+.transactions-index .header .mov-tdate {
 	line-height: 15px;
 }
 
-.transactions-index .movements .mov-tdate {
+.transactions-index .mov-tdate {
 	position: absolute;
 	right: 152px;
 	top: 0;
@@ -609,7 +583,7 @@ a {
 	line-height: 30px;
 }
 
-.transactions-index .movements .mov-oper {
+.transactions-index .mov-oper {
 	position: absolute;
 	right: 0;
 	top: 0;
