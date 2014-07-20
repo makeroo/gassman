@@ -22,8 +22,7 @@
               </ul>-->
              </span></mac-autocomplete></div>
 	 <div class="error-message" ng-show="lineForm.account.$error.accountMatch">Nome non valido</div>
-	 <div class="error-message" ng-show="lineForm.account.$error.accountDefined">Specificare chi ha versato</div>
-	 <div class="error-message" ng-show="lineForm.account.$error.amountDefined">Specificare l'importo</div>
+	 <div class="error-message" ng-show="lineForm.account.$error.amountWithoutAccount">Specificare chi ha versato</div>
     </div>
     <div class="row-amount">
      <input type="number"
@@ -36,6 +35,7 @@
 	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.decimals">Troppi decimali</div>
+	 <div class="error-message" ng-show="lineForm.amount.$error.accountWithoutAmount">Specificare l'importo</div>
     </div>
     <div class="row-notes">
      <input type="text"

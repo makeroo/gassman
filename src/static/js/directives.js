@@ -5,6 +5,22 @@ gassmanDirectives.directive('gmAmount', function () {
     	restrict: 'A',
     	require: 'ngModel',
     	link: function (scope, elem, attrs, ctrl) {
+    		var accountDefined = function (account, amount) {
+    			console.log('amount: checking defined:', account, amount, scope.l)
+
+    			ctrl.$setValidity('accountWithoutAmount', !( account && !amount ));
+
+    			return amount;
+    		};
+
+    		scope.$watch(function () {
+    			return scope.l.account;
+    		},
+    		function (value) {
+    			accountDefined(value, scope.l.amount);
+    		}
+    		);
+
     		ctrl.$parsers.push(function (value) {
     			if (ctrl.$error.number || value === null) {
     				// se non è un numero resetto gli altri controlli
@@ -18,7 +34,7 @@ gassmanDirectives.directive('gmAmount', function () {
 
 				if (!f)
 					// non faccio controlli multipli
-					return null;
+					return value;
 
 				var dd = Math.pow(10, 2); // TODO: fare che 2 dipende dalla currency
 				var x = value * dd;
@@ -26,7 +42,11 @@ gassmanDirectives.directive('gmAmount', function () {
 
 				ctrl.$setValidity('decimals', f);
 
-				return f ? value : null;
+				return value;
+    		});
+
+    		ctrl.$parsers.push(function (value) {
+    			return accountDefined(scope.l.account, value);
     		});
     	}
     };
@@ -37,12 +57,10 @@ gassmanDirectives.directive('gmAccount', function () {
     	restrict: 'A',
     	require: 'ngModel',
     	link: function (scope, elem, attrs, ctrl) {
-
     		var accountDefined = function (account, amount) {
     			console.log('checking defined:', account, amount, scope.l)
 
-    			ctrl.$setValidity('accountDefined', !( !account && amount > 0 ));
-    			ctrl.$setValidity('amountDefined', !( account && !amount ));
+    			ctrl.$setValidity('amountWithoutAccount', !( !account && amount > 0 ));
 
     			return account;
     		};
@@ -138,8 +156,8 @@ gassmanDirectives.directive('gmExpense', function () {
     		var descDefined = function (desc, amount) {
     			console.log('checking expense:', desc, amount, scope.l)
 
-    			ctrl.$setValidity('expenseDefined', !( !desc && amount > 0 ));
-    			ctrl.$setValidity('amountDefined', !( desc && !amount ));
+    			ctrl.$setValidity('amountWithoutNotes', !( !desc && amount > 0 ));
+//    			ctrl.$setValidity('amountDefined', !( desc && !amount ));
 
     			return desc;
     		};
@@ -154,6 +172,58 @@ gassmanDirectives.directive('gmExpense', function () {
 
     		ctrl.$parsers.push(function (value) {
     			return descDefined(value, scope.l.amount);
+    		});
+    	}
+    };
+});
+gassmanDirectives.directive('gmAmount2', function () {
+    return {
+    	restrict: 'A',
+    	require: 'ngModel',
+    	link: function (scope, elem, attrs, ctrl) {
+    		var descDefined = function (desc, amount) {
+    			console.log('checking expense:', desc, amount, scope.l)
+
+//    			ctrl.$setValidity('amountWithoutNotes', !( !desc && amount > 0 ));
+    			ctrl.$setValidity('notesWithoutAmount', !( desc && !amount ));
+
+    			return amount;
+    		};
+
+    		scope.$watch(function () {
+    			return scope.l.notes;
+    		},
+    		function (value) {
+    			descDefined(value, scope.l.amount);
+    		}
+    		);
+
+    		ctrl.$parsers.push(function (value) {
+    			if (ctrl.$error.number || value === null) {
+    				// se non è un numero resetto gli altri controlli
+    				ctrl.$setValidity('positive', true);
+    				ctrl.$setValidity('decimals', true);
+    				return value;
+    			}
+
+    			var f = value > 0;
+				ctrl.$setValidity('positive', f);
+
+				if (!f)
+					// non faccio controlli multipli
+					return value;
+
+				var dd = Math.pow(10, 2); // TODO: fare che 2 dipende dalla currency
+				var x = value * dd;
+				f = x - Math.floor(x + .5) < .05;
+
+				ctrl.$setValidity('decimals', f);
+
+				return value;
+    		});
+
+    		ctrl.$parsers.push(function (value) {
+    			return descDefined(scope.l.notes, value);
     		});
     	}
     };
