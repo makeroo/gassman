@@ -281,6 +281,7 @@ gassmanServices.service('accountAutocompletion', function ($http, $q, $localStor
 		var accountCurrencies = accountNamesData.accountCurrencies;
 		var accountPeople = accountNamesData.accountPeople;
 		var accountPeopleAddresses = accountNamesData.accountPeopleAddresses;
+		var kitty = accountNamesData.kitty;
 
 		var resp = {};
 
@@ -315,6 +316,17 @@ gassmanServices.service('accountAutocompletion', function ($http, $q, $localStor
 					console.log('address without person:')
 			} else {
 				console.log('accountPeopleAddresses record without currency info:', o);
+			}
+		}
+		for (var i in kitty) {
+			var k = kitty[i];
+
+			var aa = resp[k];
+
+			if (aa) {
+				aa.people['kitty'] = { name:'CASSA COMUNE', refs:[] };
+			} else {
+				console.log('kitty account without currency info:', k);
 			}
 		}
 

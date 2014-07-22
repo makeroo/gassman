@@ -511,10 +511,13 @@ class AccountsNamesHandler (JsonBaseHandler):
         accountPeople = list(cur)
         cur.execute(*self.application.sql.account_people_addresses(csaId))
         accountPeopleAddresses = list(cur)
+        cur.execute(*self.application.sql.account_kitty(csaId))
+        kitty = [ x[0] for x in cur ]
         return dict(
             accountCurrencies = accountCurs,
             accountPeople = accountPeople,
-            accountPeopleAddresses = accountPeopleAddresses
+            accountPeopleAddresses = accountPeopleAddresses,
+            kitty = kitty,
             )
 
 class ExpensesNamesHandler (JsonBaseHandler):

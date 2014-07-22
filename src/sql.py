@@ -216,12 +216,11 @@ def account_currency (accId, csaId, requiredCurr):
 
 #def account_names (csaId):
 #    '''Tutti i nomi di conti di una comunità escluso gli Scomparsi.
-#    FIXME: prima o poi scompariranno le colonne gc!
+#    FIXMe: prima o poi scompariranno le colonne gc!
 #    '''
 #    return 'SELECT a.gc_name, a.id, c.id, c.symbol FROM account a JOIN currency c ON a.currency_id=c.id WHERE a.csa_id = %s AND a.gc_parent = %s AND a.gc_id <> %s', [ csaId, 'acf998ffe1edbcd44bc30850813650ac', '5ba64cec222104efb491ceafd6dd1812' ]
 def account_currencies (csaId):
-    '''Tutti i nomi di conti di una comunità escluso gli Scomparsi.
-    FIXME: prima o poi scompariranno le colonne gc!
+    '''Tutti i conti di un csa.
     '''
     return 'SELECT a.id, c.id, c.symbol FROM account a JOIN currency c ON a.currency_id=c.id WHERE a.csa_id = %s', [ csaId ]
 
@@ -230,6 +229,9 @@ def account_people (csaId):
 
 def account_people_addresses (csaId):
     return 'SELECT c.address, p.id, a.id FROM person p JOIN account_person ap ON ap.person_id=p.id JOIN account a ON ap.account_id=a.id JOIN person_contact pc ON p.id=pc.person_id JOIN contact_address c ON pc.address_id=c.id WHERE a.csa_id=%s AND c.kind IN (%s, %s) AND ap.to_date IS NULL', [ csaId, Ck_Email, Ck_Nickname ]
+
+def account_kitty (csaId):
+    return 'SELECT a.id FROM account_csa ac JOIN account a ON ac.account_id=a.id WHERE ac.csa_id=%s AND a.gc_type=%s', [ csaId, At_Asset ]
 
 def account_email_for_notifications (accountIds):
     return '''
