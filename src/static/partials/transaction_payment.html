@@ -1,8 +1,13 @@
 <form novalidate name="payment" class="deposit" ng-submit="return;">
  <div class="lines-table">
   <div class="body">
+   <div class="actions">
+    <div><label for="tdate">Data consegna:</label><input type="date" id="tdate" ng-model="tdate"/></div>
+    <div><label for="tdesc">Descrizione e note:</label><textarea ng-model="tdesc"></textarea></div>
+   </div>
+
    <div class="header" ng-hide="autocompletionDataError">
-    Inserisci i pagamenti:
+    Chi ha ritirato i prodotti:
    </div>
    <div ng-repeat="l in lines" class="row">
     <ng:form name="lineForm">
@@ -42,7 +47,7 @@
     </ng:form>
    </div>
    <div class="header" ng-hide="autocompletionDataError">
-    Inserisci i fornitori:
+    Fornitori:
    </div>
    <div ng-repeat="l in producers" class="row">
     <ng:form name="lineForm">
@@ -119,11 +124,11 @@
      Caricamento fallito. Causa: {{autocompletionDataError}}.
    </div>
    <div class="actions">
-    <div>Data consegna: <input type="date" ng-model="tdate"/>, note: <input type="text" ng-model="tdesc"/><br/>
+    <div>
         <span ng-show="!currencyError && totalAmount > 0 && difference < .01">Totale pagamenti: {{totalAmount | currency : currency[1] }}</span>
-        <span ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
-        <span ng-show="!currencyError && !totalAmount">Nessun pagamento inserito finora.</span>
-        <span ng-show="!currencyError && difference >= .01">Discrepanza fra contanti versati e pagamenti richiesti: {{totalInvoice - totalAmount + totalExpenses | currency: currency[1] }}</span>
+        <span class="error-message" ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
+        <span class="error-message" ng-show="!currencyError && !totalAmount">Nessun dato inserito finora.</span>
+        <span class="error-message" ng-show="!currencyError && difference >= .01">Discrepanza fra contanti versati e pagamenti richiesti: {{totalInvoice - totalAmount + totalExpenses | currency: currency[1] }}</span>
         </div>
     <button ng-disabled="!csaId || !payment.$valid || !totalAmount || difference >= .01" ng-click="savePayment()">Registra in cassa</button>
     <button ng-disabled="confirmDelete" ng-show="transId != 'new'" ng-click="confirmCancelPayment()">Elimina la registrazione dei pagamenti</button>

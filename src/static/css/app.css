@@ -332,7 +332,7 @@ a {
 .deposit {
 	position: absolute;
 	left: 0;
-	right: 50%;
+	right: 0;
 	top: 0;
 	bottom: 0;
 
@@ -352,6 +352,8 @@ a {
 	position: relative;
 	height: 30px;
 	line-height: 30px;
+	font-weight: bold;
+	font-size: smaller;
 }
 
 .deposit .lines-table .row {
@@ -395,10 +397,16 @@ a {
 	margin-top: 10px;
 }
 
+.deposit .actions label {
+	font-weight: bold;
+	font-size: smaller;
+	float: left;
+	width: 15%;
+}
+
 .deposit-post-save {
 	position: absolute;
 	left: 0;
-	right: 50%;
 	top: 0;
 	bottom: 0;
 	background-color: rgba(255,255,255,.7);
@@ -598,11 +606,14 @@ input.ng-invalid {
 }
 
 .error-message {
+	color: #966;
+	font-style: italic;
+}
+
+.row .error-message {
 	position: relative;
 	font-size: 7pt;
 	top: 2.2em;
-	color: #966;
-	font-style: italic;
 	line-height: 8pt;
 }
 
