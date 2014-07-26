@@ -617,6 +617,11 @@ input.ng-invalid {
 	line-height: 8pt;
 }
 
+.receiver input {
+	border: 0;
+	border-bottom: 1px solid gray;
+}
+
 .receiver .error-message {
 	position: static;
 }
