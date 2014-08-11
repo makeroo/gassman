@@ -61,6 +61,10 @@ gassmanApp.filter('noFractionCurrency',
 gassmanApp.config([ '$routeProvider',
 	function ($routeProvider) {
 		$routeProvider.
+		when('/person/:personId/details', {
+			templateUrl: 'static/partials/person-details.html',
+			controller: 'PersonDetails'
+		}).
 			when('/account/self/details', {
 				templateUrl: 'static/partials/account-details.html',
 				controller: 'AccountDetails'

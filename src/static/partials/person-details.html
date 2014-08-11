@@ -1,0 +1,43 @@
+<div class="person-details">
+
+ <form name="personProfile">
+  <div>
+   <label>Nome<input type="text" ng-model="personProfile.profile.first_name" placeholder="Nome" ng-readonly="readOnly"/>
+              <input type="text" ng-model="personProfile.profile.middle_name" placeholder="Secondo nome" ng-readonly="readOnly"/>
+              <input type="text" ng-model="personProfile.profile.last_name" placeholder="Cognome" ng-readonly="readOnly"/>
+   </label>
+  </div>
+  <div>Contatti:</div>
+  <div ng-repeat="c in personProfile.contacts | filter: visibleAddress">
+   <form name="email">
+    <select ng-model="c.kind" ng-disabled="readOnly">
+     <option value="T">Telefono fisso</option>
+     <option value="M">Cellulare</option>
+     <option value="E">Email</option>
+     <option value="F">Fax</option>
+     <option value="N">Nickname</option>
+    </select>
+    <input type="email" ng-model="c.address" ng-readonly="readOnly"/>
+   </form>
+  </div>
+  <div>Notifiche per movimenti di cassa:
+       <select ng-model="personProfile.profile.account_notifications" ng-disabled="readOnly">
+        <option value="D">riassunto giornaliero</option>
+        <option value="W">riassunto settimanale</option>
+        <option value="N">mai</option>
+        <option value="E">ad ogni transazione</option>
+       </select>
+  </div>
+  <div ng-show="personProfile.accounts.length > 0">Conti:</div>
+  <div ng-repeat="a in personProfile.accounts | filter: visibleAccount | orderBy : a.to_date">
+   Periodo {{a.from_date | date }} &rarr; <span ng-hide="a.to_date">oggi</span><span ng-show="a.to_date">{{ a.to_date | date }}</span>: saldo XXX <button ng-click="showAccount(a.id)" ng-disabled="!readOnly">dettagli</button>
+  </div>
+  <div>
+   <button ng-show="profile.permissions.indexOf(gassmanApp.P_canEditContacts) !== -1" ng-click="modify()" ng-disabled="!readOnly">Modifica</button>
+   <button ng-show="!readOnly" ng-disabled="personProfile.$invalid || isUnchanged()" ng-click="save()">Salva le modifiche</button>
+   <button ng-show="!readOnly" ng-click="cancel()">Annulla</button>
+  </div>
+
+ </form>
+
+</div>

@@ -14,6 +14,7 @@ P_canEnterCashExchange = 7
 P_canEnterWithdrawal = 8
 P_canViewContacts = 9
 P_canEditContacts = 10
+P_canGrantPermissions = 11
 
 Tt_Generic = 'g'
 Tt_Deposit = 'd'
@@ -35,6 +36,14 @@ Ck_Email = 'E'
 Ck_Fax = 'F'
 Ck_Id = 'I'
 Ck_Nickname = 'N'
+
+Ckk = set([Ck_Telephone,
+           Ck_Mobile,
+           Ck_Email,
+           Ck_Fax,
+           Ck_Id,
+           Ck_Nickname,
+           ])
 
 transactionPermissions = {
     Tt_Deposit: P_canEnterDeposit,
@@ -433,6 +442,51 @@ def people_profiles1 (pids):
             'SELECT pc.person_id, pc.priority, a.* FROM person_contact pc JOIN contact_address a ON a.id=pc.address_id WHERE pc.person_id IN (%s)' % pp,
             list(pids),
             )
+
+def updateProfile (p):
+    return 'UPDATE person SET first_name = %s, middle_name = %s, last_name = %s, account_notifications = %s, cash_treshold = %s WHERE id = %s', [
+        p['first_name'],
+        p['middle_name'],
+        p['last_name'],
+        p['account_notifications'],
+        p['cash_treshold'],
+        p['id'],
+        ]
+
+def removePersonContacts (pid):
+    # cfr. http://stackoverflow.com/a/4429409
+    return (
+'''DELETE person_contact p FROM person_contact p,
+          (SELECT pc.id
+           FROM person_contact pc
+           JOIN contact_address a ON pc.address_id = a.id
+           WHERE pc.person_id = %s AND a.kind != %s) t
+    WHERE p.person_id = t.id''', [ pid, Ck_Id ]
+            )
+
+def saveAddress (addr, kind, ctype):
+    return '''INSERT INTO contact_address (address, kind, contact_type) VALUES (%s, %s, %s)''', [ addr, kind, ctype ]
+
+def linkAddress (pid, aid, pri):
+    return '''INSERT INTO person_contact (person_id, address_id, priority) VALUES (%s, %s, %s)''', [ pid, aid, pri ]
+
+#def fetchContacts (pid):
+#    return 'SELECT pc.id, pc.priority, a.id, a.kind, a.address, a.contact_type FROM person_contact pc JOIN contact_address a ON pc.address_id=a.id WHERE pc.person_id=%s ORDER BY pc.priority', [ pid ]
+
+def revokePermissions (pid, csaId, level):
+    return (
+'''DELETE permission_grant g FROM permission_grant g,
+          (SELECT g.id
+           FROM permission_grant g
+           JOIN permission p ON g.perm_id=p.id
+           WHERE g.person_id=%s AND g.csa_id=%s AND p.visibility < %s) t
+    WHERE g.id = t.id''', [ pid, csaId, level ])
+
+def grantPermission (pid, perm, csaId):
+    return '''INSERT INTO permission_grant (person_id, perm_id, csa_id) VALUES (%s, %s, %s)''', [ pid, perm, csaId ]
+
+def permissionLevel (pid, csaId):
+    return '''SELECT MAX(p.visibility) FROM permission p JOIN permission_grant g ON p.id=g.perm_id WHERE g.person_id=%s AND g.csa_id=%s''', [ pid, csaId ]
 
 def checkConn ():
     return 'SELECT 1'

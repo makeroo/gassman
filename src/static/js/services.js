@@ -273,7 +273,11 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $
 		}
 
 		return d.promise;
-	}
+	};
+
+	this.saveProfile = function (csaId, p) {
+		return $http.post('/person/' + csaId + '/save?_xsrf=' + $cookies._xsrf, p);
+	};
 });
 
 gassmanServices.service('accountAutocompletion', function ($http, $q, $localStorage, $cookies, $rootScope) {

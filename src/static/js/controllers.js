@@ -185,6 +185,7 @@ gassmanControllers.controller('AccountsIndex', function($scope, $filter, $locati
 	$scope.queryFilter = '';
 	$scope.queryOrder = 0;
 	$scope.profile = null;
+	$scope.profileError = null;
 
 	var start = 0;
 	var blockSize = 25;
@@ -244,8 +245,12 @@ gassmanControllers.controller('AccountsIndex', function($scope, $filter, $locati
 		});
 	};
 
-	$scope.showAccount = function (accountId) {
-		$location.path('/account/' + accountId + '/details');
+	$scope.showAccount = function (accountId, personId) {
+		if ($scope.profile.permissions.indexOf(gassmanApp.P_canViewContacts) == -1) {
+			$location.path('/account/' + accountId + '/details');
+		} else {
+			$location.path('/person/' + personId + '/details');
+		}
 	};
 
 	gdata.selectedCsa().
@@ -256,6 +261,9 @@ gassmanControllers.controller('AccountsIndex', function($scope, $filter, $locati
 	then (function (pData) {
 		$scope.profile = pData;
 		$scope.loadMore();
+	}).
+	then (undefined, function (error) {
+		$scope.profileError = error.data;
 	});
 });
 
@@ -1385,6 +1393,72 @@ gassmanControllers.controller('ProjectController', function($scope, gdata) {
 		$scope.version = r.data[0];
 	}); // non gestisco l'errore
 });
+
+gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeParams, $location, gdata) {
+	$scope.csaId = null;
+	$scope.personProfile = null;
+	$scope.personProfileError = null;
+	$scope.readOnly = true;
+	$scope.editable = false;
+	$scope.saveError = null;
+
+	var master = null;
+	var personId = $routeParams['personId'];
+
+	$scope.visibleAddress = function (c) {
+		return c.kind !== 'I';
+	};
+
+	$scope.visibleAccount = function (a) {
+		return a.csa_id == $scope.csaId;
+	};
+
+	$scope.modify = function () {
+		if ($scope.readOnly) {
+			master = angular.copy($scope.personProfile);
+			$scope.readOnly = false;
+			$scope.saveError = null;
+		}
+	};
+
+	$scope.isUnchanged = function () {
+		return angular.equals($scope.personProfile, master);
+	};
+
+	$scope.save = function () {
+		gdata.saveProfile($scope.csaId, $scope.personProfile).
+		then (function (r) {
+			$scope.readOnly = true;
+		}).
+		then (function (undefined, error) {
+			$scope.saveError = error.data;
+		});
+	};
+
+	$scope.cancel = function () {
+		if (!$scope.readOnly) {
+			$scope.readOnly = false;
+			$scope.personProfile = master;
+		}
+	};
+
+	$scope.showAccount = function (accountId) {
+		$location.path('/account/' + accountId + '/details');
+	};
+
+	gdata.selectedCsa().
+	then (function (csaId) {
+		$scope.csaId = csaId;
+		return gdata.profile(csaId, personId);
+	}).
+	then (function (prof) {
+		$scope.personProfile = prof;
+	}).
+	then (undefined, function (error) {
+		$scope.personProfileError = error.data;
+	});
+});
+
 /*
 gassmanControllers.controller('ContactsController', function($scope, $filter, $location, gdata) {
 	$scope.people = [];

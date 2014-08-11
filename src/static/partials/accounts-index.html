@@ -6,7 +6,7 @@
     Sto caricando i dati...
    </div>
    <div class="first-row"></div>
-   <div ng-repeat="a in accounts" class="acc-row" ng-click="showAccount(a[4])">
+   <div ng-repeat="a in accounts" class="acc-row" ng-click="showAccount(a[4], a[0])">
     <div style="opacity: {{ a[7] | alphaTimeDiff }}">
      <div class="acc-name">
       <div>{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>

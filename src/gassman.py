@@ -113,6 +113,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/rss/(.+)$', RssFeedHandler),
 #            (r'^/people/(\d+)/index/(\d+)/(\d+)$', PeopleIndexHandler),
             (r'^/people/(\d+)/profiles$', PeopleProfilesHandler),
+            (r'^/person/(\d+)/save$', PersonSaveHandler),
             ]
         codeHome = os.path.dirname(__file__)
         sett = dict(
@@ -869,10 +870,11 @@ class PeopleProfilesHandler (JsonBaseHandler):
                 p = { 'accounts':[], 'profile':None, 'permissions':[], 'contacts':[] }
                 r[pid] = p
             return p
-        cur.execute(accs, args)
-        for acc in self.application.sql.iter_objects(cur):
-            p = record(acc['person_id'])
-            p['accounts'].append(acc)
+        if self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
+            cur.execute(accs, args)
+            for acc in self.application.sql.iter_objects(cur):
+                p = record(acc['person_id'])
+                p['accounts'].append(acc)
         cur.execute(perms, args)
         for perm in self.application.sql.iter_objects(cur):
             p = record(perm['person_id'])
@@ -886,7 +888,49 @@ class PeopleProfilesHandler (JsonBaseHandler):
         for addr in self.application.sql.iter_objects(cur):
             p = record(addr['person_id'])
             p['contacts'].append(addr)
+        # TODO: indirizzi
         return r
+
+class PersonSaveHandler (JsonBaseHandler):
+    def do (self, cur, csaId):
+        u = self.get_logged_user()
+        p = self.payload
+        log_gassman.debug('saving: %s', p)
+        profile = p['profile']
+        pid = profile['id']
+        if not self.application.hasPermissionByCsa(cur, sql.P_canEditContacts, u.id, csaId) or \
+           not self.application.hasPermissionByCsa(cur, sql.P_membership, pid, csaId):
+            raise Exception(error_codes.E_permission_denied)
+        # salva profilo
+        cur.execute(*self.application.sql.updateProfile(profile))
+        # salva contatti
+        contacts = p['contacts']
+        cur.execute(*self.application.sql.removePersonContacts(pid))
+        #    cur.execute(*self.application.sql.fetchContacts(pid))
+        #    ocontacts = cur.fetchall()
+        for c, i in zip(contacts, range(len(contacts))):
+            naddress = c['address']
+            nkind = c['kind']
+            ncontact_type = c['contact_type']
+            if nkind == self.application.sql.Ck_Id:
+                continue
+            if nkind not in self.application.sql.Ckk:
+                continue
+            #naid = c['id']
+            #npriority = ncontact['priority']
+            cur.execute(*self.application.sql.saveAddress(naddress, nkind, ncontact_type))
+            aid = cur.lastrowid
+            cur.execute(*self.application.sql.linkAddress(pid, aid, i))
+        # salva permessi
+        if self.application.hasPermissionByCsa(cur, sql.P_canGrantPermissions, u.id, csaId):
+            cur.execute(*self.application.sql.permissionLevel(pid, csaId))
+            ulevel = cur.fetchone()[0]
+            permissions = p['permissions']
+            cur.execute(*self.application.sql.revokePermissions(pid, csaId, ulevel))
+            for p in permissions:
+                if p < ulevel:
+                    cur.execute(*self.application.sql.grantPermission(pid, p, csaId))
+        # TODO: salva indirizzi
 
 if __name__ == '__main__':
     io_loop = tornado.ioloop.IOLoop.instance()
