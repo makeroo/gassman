@@ -1404,9 +1404,22 @@ gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeP
 
 	var master = null;
 	var personId = $routeParams['personId'];
-
+/*
 	$scope.visibleAddress = function (c) {
 		return c.kind !== 'I';
+	};
+*/
+	$scope.addressKind = function (k) {
+		return function (c) {
+			return c.kind == k;
+		}
+	};
+	$scope.hasAddressOfKind = function (k) {
+		for (var i in $scope.personProfile.contacts) {
+			if ($scope.personProfile.contacts[i].kind == k)
+				return true;
+		}
+		return false;
 	};
 
 	$scope.visibleAccount = function (a) {
@@ -1437,9 +1450,20 @@ gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeP
 
 	$scope.cancel = function () {
 		if (!$scope.readOnly) {
-			$scope.readOnly = false;
+			$scope.readOnly = true;
 			$scope.personProfile = master;
 		}
+	};
+
+	$scope.addContact = function (k) {
+		$scope.personProfile.contacts.push({
+			address: '',
+			kind: k,
+			contact_type: '',
+			id: -1,
+			priority: 0,
+			person_id: $scope.personProfile.profile.id
+		});
 	};
 
 	$scope.showAccount = function (accountId) {

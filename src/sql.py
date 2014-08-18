@@ -461,7 +461,7 @@ def removePersonContacts (pid):
            FROM person_contact pc
            JOIN contact_address a ON pc.address_id = a.id
            WHERE pc.person_id = %s AND a.kind != %s) t
-    WHERE p.person_id = t.id''', [ pid, Ck_Id ]
+    WHERE p.id = t.id''', [ pid, Ck_Id ]
             )
 
 def saveAddress (addr, kind, ctype):
