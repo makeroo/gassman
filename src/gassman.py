@@ -912,6 +912,8 @@ class PersonSaveHandler (JsonBaseHandler):
             naddress = c['address']
             nkind = c['kind']
             ncontact_type = c['contact_type']
+            if not naddress:
+                continue
             if nkind == self.application.sql.Ck_Id:
                 continue
             if nkind not in self.application.sql.Ckk:
