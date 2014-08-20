@@ -1,73 +1,106 @@
 <div class="person-details">
 
  <form name="personProfile">
-  <div>
+  <div class="account-name">
    <label>Nome<input type="text" ng-model="personProfile.profile.first_name" placeholder="Nome" ng-readonly="readOnly"/>
-              <input type="text" ng-model="personProfile.profile.middle_name" placeholder="Secondo nome" ng-readonly="readOnly"/>
+              <!-- <input type="text" ng-model="personProfile.profile.middle_name" placeholder="Secondo nome" ng-readonly="readOnly"/> -->
               <input type="text" ng-model="personProfile.profile.last_name" placeholder="Cognome" ng-readonly="readOnly"/>
    </label>
   </div>
-  <div>Contatti:</div>
+
+  <div class="section contacts">
+  <div class="header">Contatti</div>
   <!-- cfr. http://stackoverflow.com/a/18593018 ma non va -->
 
-  <div>Email:</div>
-  <div ng-repeat="c in personProfile.contacts | filter: addressKind('E')">
-   <form name="email">
-    <input type="email" ng-model="c.address" ng-readonly="readOnly"/>
-   </form>
+  <div class="subsection email">
+   <div class="header">Email</div>
+   <div class="table">
+    <div class="row" ng-repeat="c in personProfile.contacts | filter: addressKind('E')">
+     <form name="email">
+      <input type="email" ng-model="c.address" ng-readonly="readOnly"/>
+     </form>
+    </div>
+   </div>
+   <div class="row none" ng-show="readOnly && !hasAddressOfKind('E')">Nessuna email</div>
+   <div class="row add" ng-hide="readOnly"><button ng-click="addContact('E')">Aggiungi email</button></div>
   </div>
-  <div ng-show="readOnly && !hasAddressOfKind('E')">Nessuna email</div>
-  <div ng-hide="readOnly"><button ng-click="addContact('E')">Aggiungi email</button></div>
 
-  <div>Cellulare:</div>
-  <div ng-repeat="c in personProfile.contacts | filter: addressKind('M')">
-   <form name="email">
-    <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
-   </form>
+  <div class="subsection mobile">
+   <div class="header">Cellulare</div>
+   <div class="table">
+    <div class="row" ng-repeat="c in personProfile.contacts | filter: addressKind('M')">
+     <form name="email">
+      <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
+     </form>
+    </div>
+   </div>
+   <div class="row none" ng-show="readOnly && !hasAddressOfKind('M')">Nessun numero</div>
+   <div class="row add" ng-hide="readOnly"><button ng-click="addContact('M')">Aggiungi numero cellulare</button></div>
   </div>
-  <div ng-show="readOnly && !hasAddressOfKind('M')">Nessun numero</div>
-  <div ng-hide="readOnly"><button ng-click="addContact('M')">Aggiungi numero cellulare</button></div>
 
-  <div>Telefono fisso:</div>
-  <div ng-repeat="c in personProfile.contacts | filter: addressKind('T')">
-   <form name="email">
-    <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
-   </form>
+  <div class="subsection phone">
+   <div class="header">Telefono fisso</div>
+   <div class="table">
+    <div class="row" ng-repeat="c in personProfile.contacts | filter: addressKind('T')">
+     <form name="email">
+      <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
+     </form>
+    </div>
+   </div>
+   <div class="row none" ng-show="readOnly && !hasAddressOfKind('T')">Nessun numero</div>
+   <div class="row add" ng-hide="readOnly"><button ng-click="addContact('T')">Aggiungi numero fisso</button></div>
   </div>
-  <div ng-show="readOnly && !hasAddressOfKind('T')">Nessun numero</div>
-  <div ng-hide="readOnly"><button ng-click="addContact('T')">Aggiungi numero fisso</button></div>
 
-  <div>Fax:</div>
-  <div ng-repeat="c in personProfile.contacts | filter: addressKind('F')">
-   <form name="email">
-    <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
-   </form>
+  <div class="subsection fax">
+   <div class="header">Fax</div>
+   <div class="table">
+    <div class="row" ng-repeat="c in personProfile.contacts | filter: addressKind('F')">
+     <form name="email">
+      <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
+     </form>
+    </div>
+   </div>
+   <div class="row none" ng-show="readOnly && !hasAddressOfKind('F')">Nessun fax</div>
+   <div class="row add" ng-hide="readOnly"><button ng-click="addContact('F')">Aggiungi fax</button></div>
   </div>
-  <div ng-show="readOnly && !hasAddressOfKind('F')">Nessun fax</div>
-  <div ng-hide="readOnly"><button ng-click="addContact('F')">Aggiungi fax</button></div>
 
-  <div>Soprannomi / nickname / login su altre piattaforme:</div>
-  <div ng-repeat="c in personProfile.contacts | filter: addressKind('N')">
-   <form name="email">
-    <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
-   </form>
+  <div class="subsection nick">
+   <div class="header">Soprannomi / nickname / login su altre piattaforme o forum</div>
+   <div class="table">
+    <div class="row" ng-repeat="c in personProfile.contacts | filter: addressKind('N')">
+     <form name="email">
+      <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
+     </form>
+    </div>
+   </div>
+   <div class="row none" ng-show="readOnly && !hasAddressOfKind('N')">Nessuno</div>
+   <div class="row add" ng-hide="readOnly"><button ng-click="addContact('N')">Aggiungi nome alternativo</button></div>
   </div>
-  <div ng-show="readOnly && !hasAddressOfKind('N')">Nessuno</div>
-  <div ng-hide="readOnly"><button ng-click="addContact('N')">Aggiungi nome alternativo</button></div>
 
-  <div>Notifiche per movimenti di cassa:
+  </div>
+
+  <div class="section parameters">
+   <div class="header">&nbsp;</div>
+   <div class="subsection notifications">
+    <div class="row">Notifiche per movimenti di cassa
        <select ng-model="personProfile.profile.account_notifications" ng-disabled="readOnly">
         <option value="D">riassunto giornaliero</option>
         <option value="W">riassunto settimanale</option>
         <option value="N">mai</option>
         <option value="E">ad ogni transazione</option>
        </select>
+    </div>
+   </div>
   </div>
-  <div ng-show="personProfile.accounts.length > 0">Conti:</div>
-  <div ng-repeat="a in personProfile.accounts | filter: visibleAccount | orderBy : a.to_date">
-   Periodo {{a.from_date | date }} &rarr; <span ng-hide="a.to_date">oggi</span><span ng-show="a.to_date">{{ a.to_date | date }}</span>: <span ng-show="a.amount">saldo {{ a.amount | currency : a.csym }}</span> <button ng-click="showAccount(a.id)" ng-disabled="!readOnly">dettagli</button>
+
+  <div class="section accounts">
+   <div class="header" ng-show="personProfile.accounts.length > 0">Conti</div>
+   <div class="row" ng-repeat="a in personProfile.accounts | filter: visibleAccount | orderBy : a.to_date">
+    Periodo {{a.from_date | date }} &rarr; <span ng-hide="a.to_date">oggi</span><span ng-show="a.to_date">{{ a.to_date | date }}</span>: <span ng-show="a.amount">saldo {{ a.amount | currency : a.csym }}</span> <button ng-click="showAccount(a.id)" ng-disabled="!readOnly">dettagli</button>
+   </div>
   </div>
-  <div>
+
+  <div class="actions">
    <button ng-show="profile.permissions.indexOf(gassmanApp.P_canEditContacts) !== -1" ng-click="modify()" ng-disabled="!readOnly">Modifica</button>
    <button ng-show="!readOnly" ng-disabled="personProfile.$invalid || isUnchanged()" ng-click="save()">Salva le modifiche</button>
    <button ng-show="!readOnly" ng-click="cancel()">Annulla</button>

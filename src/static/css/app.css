@@ -626,6 +626,61 @@ input.ng-invalid {
 	position: static;
 }
 
+.person-details {
+	overflow: auto;
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+}
+
+.person-details input {
+	border: 0;
+	border-bottom: 1px solid gray;
+	margin-left: 10px;
+	width: 200px;
+	height: 20px;
+}
+
+.person-details .account-name {
+	margin-top: 10px;
+}
+
+.person-details .account-name label {
+	font-size: 15pt;
+	color: gray;
+}
+
+.person-details .account-name input {
+	font-size: 14pt;
+}
+
+.person-details .section .header {
+	font-size: 15pt;
+	font-weight: bold;
+	margin-top: 5pt;
+}
+
+.person-details .subsection {
+	display: flex;
+}
+
+.person-details .subsection .header {
+	font-size: 10pt;
+	font-weight: normal;
+	color: gray;
+}
+
+.person-details .row {
+	
+}
+
+.person-details .row.none {
+	font-style: italic;
+	color: gray;
+}
+
 .mac-menu {
 	z-index: 1;
 }
