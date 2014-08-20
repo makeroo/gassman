@@ -1,4 +1,4 @@
--- version 8
+-- version 9
 
 SET SESSION storage_engine = "MyISAM";
 SET SESSION time_zone = "+0:00";
@@ -44,6 +44,9 @@ CREATE TABLE city (
   -- Eg. Pisa è 56100, San Piero, frazione di Pisa è 56125.
   -- Non mi interessa normalizzare gli zip code o validarli.
   zip_code VARCHAR(10),
+  -- questa è la provincia
+  state varchar(10),
+  -- e questa è la nazione
   state_id INT NOT NULL,
 
   FOREIGN KEY (state_id) REFERENCES state(id),
