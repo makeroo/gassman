@@ -8,6 +8,19 @@
    </label>
   </div>
 
+  <div class="subsection nick">
+   <div class="header">Soprannomi / nickname / login su altre piattaforme o forum</div>
+   <div class="table">
+    <div class="row" ng-repeat="c in personProfile.contacts | filter: addressKind('N')">
+     <form name="email">
+      <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
+     </form>
+    </div>
+   </div>
+   <div class="row none" ng-show="readOnly && !hasAddressOfKind('N')">Nessuno</div>
+   <div class="row add" ng-hide="readOnly"><button ng-click="addContact('N')">Aggiungi nome alternativo</button></div>
+  </div>
+
   <div class="section contacts">
   <div class="header">Contatti</div>
   <!-- cfr. http://stackoverflow.com/a/18593018 ma non va -->
@@ -64,23 +77,10 @@
    <div class="row add" ng-hide="readOnly"><button ng-click="addContact('F')">Aggiungi fax</button></div>
   </div>
 
-  <div class="subsection nick">
-   <div class="header">Soprannomi / nickname / login su altre piattaforme o forum</div>
-   <div class="table">
-    <div class="row" ng-repeat="c in personProfile.contacts | filter: addressKind('N')">
-     <form name="email">
-      <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
-     </form>
-    </div>
-   </div>
-   <div class="row none" ng-show="readOnly && !hasAddressOfKind('N')">Nessuno</div>
-   <div class="row add" ng-hide="readOnly"><button ng-click="addContact('N')">Aggiungi nome alternativo</button></div>
-  </div>
-
   </div>
 
   <div class="section parameters">
-   <div class="header">&nbsp;</div>
+   <div class="header">Impostazioni</div>
    <div class="subsection notifications">
     <div class="row">Notifiche per movimenti di cassa
        <select ng-model="personProfile.profile.account_notifications" ng-disabled="readOnly">

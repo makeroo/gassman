@@ -637,18 +637,19 @@ input.ng-invalid {
 
 .person-details input {
 	border: 0;
-	border-bottom: 1px solid gray;
+	border-bottom: 1px solid lightgray;
 	margin-left: 10px;
-	width: 200px;
+	width: 300px;
 	height: 20px;
+	font-size: 11pt;
 }
 
 .person-details .account-name {
-	margin-top: 10px;
+	margin: 10px 0;
 }
 
 .person-details .account-name label {
-	font-size: 15pt;
+	font-size: 10pt;
 	color: gray;
 }
 
@@ -659,7 +660,7 @@ input.ng-invalid {
 .person-details .section .header {
 	font-size: 15pt;
 	font-weight: bold;
-	margin-top: 5pt;
+	margin-top: 10px;
 }
 
 .person-details .subsection {
@@ -670,10 +671,11 @@ input.ng-invalid {
 	font-size: 10pt;
 	font-weight: normal;
 	color: gray;
+	width: 120px;
 }
 
 .person-details .row {
-	
+	margin: 4px 0;
 }
 
 .person-details .row.none {
