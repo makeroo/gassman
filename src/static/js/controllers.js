@@ -1439,11 +1439,19 @@ gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeP
 	};
 
 	$scope.save = function () {
+		var f = $filter('filter');
+		var cc = f($scope.personProfile.contacts, function (c) {
+			return !!c.address;
+		})
+
+		$scope.personProfile.contacts = cc;
+
 		gdata.saveProfile($scope.csaId, $scope.personProfile).
 		then (function (r) {
 			$scope.readOnly = true;
 		}).
-		then (function (undefined, error) {
+		then (undefined, function (error) {
+			console.log('save error', error);
 			$scope.saveError = error.data;
 		});
 	};
