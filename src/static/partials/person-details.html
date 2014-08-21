@@ -106,6 +106,8 @@
    <button ng-show="!readOnly" ng-click="cancel()">Annulla</button>
   </div>
 
+  <div class="errorMessage" nh-show="!readOnly && saveError">{{saveError}}</div>
+
  </form>
 
 </div>
