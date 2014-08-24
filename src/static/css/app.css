@@ -683,6 +683,10 @@ input.ng-invalid {
 	color: gray;
 }
 
+.person-details .error-message {
+	position: static;
+}
+
 .mac-menu {
 	z-index: 1;
 }

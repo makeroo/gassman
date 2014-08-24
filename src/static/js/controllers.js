@@ -1415,6 +1415,8 @@ gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeP
 		}
 	};
 	$scope.hasAddressOfKind = function (k) {
+		if (!$scope.personProfile)
+			return false;
 		for (var i in $scope.personProfile.contacts) {
 			if ($scope.personProfile.contacts[i].kind == k)
 				return true;

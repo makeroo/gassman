@@ -114,6 +114,7 @@ class GassmanWebApp (tornado.web.Application):
 #            (r'^/people/(\d+)/index/(\d+)/(\d+)$', PeopleIndexHandler),
             (r'^/people/(\d+)/profiles$', PeopleProfilesHandler),
             (r'^/person/(\d+)/save$', PersonSaveHandler),
+            (r'^/person/(\d+)/check_email', PersonCheckEmailHandler),
             ]
         codeHome = os.path.dirname(__file__)
         sett = dict(
@@ -934,6 +935,20 @@ class PersonSaveHandler (JsonBaseHandler):
                 if p < ulevel:
                     cur.execute(*self.application.sql.grantPermission(pid, p, csaId))
         # TODO: salva indirizzi
+
+class PersonCheckEmailHandler (JsonBaseHandler):
+    def do (self, cur, csaId):
+        u = self.get_logged_user()
+        p = self.payload
+        log_gassman.debug('saving: %s', p)
+        pid = p['id']
+        email = p['email']
+        if not self.application.hasPermissionByCsa(cur, sql.P_canEditContacts, u.id, csaId) or \
+           not self.application.hasPermissionByCsa(cur, sql.P_membership, pid, csaId):
+            raise Exception(error_codes.E_permission_denied)
+        # verifica unicità
+        cur.execute(*self.application.sql.isUniqueEmail(pid, email))
+        return cur.fetchone()[0]
 
 if __name__ == '__main__':
     io_loop = tornado.ioloop.IOLoop.instance()

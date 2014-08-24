@@ -30,7 +30,14 @@
    <div class="table">
     <div class="row" ng-repeat="c in personProfile.contacts | filter: addressKind('E')">
      <ng:form name="email">
-      <input type="email" ng-model="c.address" ng-readonly="readOnly"/>
+      <input type="email"
+             name="address"
+             ng-model="c.address"
+             ng-readonly="readOnly"
+             gm-unique
+             />
+	  <div class="error-message" ng-show="email.address.$error.email">Formato non valido</div>
+	  <div class="error-message" ng-show="email.address.$error.unique">Indirizzo già in uso</div>
      </ng:form>
     </div>
    </div>

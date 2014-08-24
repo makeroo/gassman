@@ -493,6 +493,9 @@ def grantPermission (pid, perm, csaId):
 def permissionLevel (pid, csaId):
     return '''SELECT MAX(p.visibility) FROM permission p JOIN permission_grant g ON p.id=g.perm_id WHERE g.person_id=%s AND g.csa_id=%s''', [ pid, csaId ]
 
+def isUniqueEmail (pid, email):
+    return '''SELECT COUNT(a.id) FROM contact_address a JOIN person_contact pc ON pc.address_id=a.id WHERE pc.person_id != %s AND a.address = %s AND a.kind = %s''', [ pid, email, Ck_Email ]
+
 def checkConn ():
     return 'SELECT 1'
 

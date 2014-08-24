@@ -278,6 +278,13 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $
 	this.saveProfile = function (csaId, p) {
 		return $http.post('/person/' + csaId + '/save?_xsrf=' + $cookies._xsrf, p);
 	};
+
+	this.uniqueEmail = function (csaId, pid, email) {
+		return $http.post('/person/' + csaId + '/check_email?_xsrf=' + $cookies._xsrf, {
+			'id': pid,
+			'email': email
+		});
+	};
 });
 
 gassmanServices.service('accountAutocompletion', function ($http, $q, $localStorage, $cookies, $rootScope) {

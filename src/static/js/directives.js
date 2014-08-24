@@ -1,4 +1,38 @@
-var gassmanDirectives = angular.module('gassmanDirectives', []);
+var gassmanDirectives = angular.module('gassmanDirectives', [
+    'gassmanServices'
+    ]);
+
+gassmanDirectives.directive('gmUnique', function (gdata) {
+	return {
+		restrict: 'A',
+		require: 'ngModel',
+		link: function (scope, elem, attrs, ctrl) {
+			ctrl.$parsers.push(function (value) {
+//				scope.$parent.validEmail(value).
+				var csaId = scope.$parent.csaId;
+				var pid = scope.$parent.personProfile.profile.id;
+
+				if (ctrl.$error.email) {
+					ctrl.$setValidity('unique', true);
+					return value;
+				}
+
+				gdata.uniqueEmail(csaId, pid, value).
+				then (function (r) {
+					var res = r.data == 0;
+
+					ctrl.$setValidity('unique', res);
+				}).
+				then (undefined, function (error) {
+					console.log('server error, email not checked', error);
+
+					ctrl.$setValidity('unique', false);
+				});
+				return value;
+			});
+		}
+	};
+});
 
 gassmanDirectives.directive('gmAmount', function () {
     return {
