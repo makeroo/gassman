@@ -1,6 +1,6 @@
 <div class="person-details">
 
- <form name="personProfile">
+ <form name="personProfileForm">
   <div class="account-name">
    <label>Nome<input type="text" ng-model="personProfile.profile.first_name" placeholder="Nome" ng-readonly="readOnly"/>
               <!-- <input type="text" ng-model="personProfile.profile.middle_name" placeholder="Secondo nome" ng-readonly="readOnly"/> -->
@@ -12,9 +12,9 @@
    <div class="header">Soprannomi / nickname / login su altre piattaforme o forum</div>
    <div class="table">
     <div class="row" ng-repeat="c in personProfile.contacts | filter: addressKind('N')">
-     <form name="email">
+     <ng:form name="nick">
       <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
-     </form>
+     </ng:form>
     </div>
    </div>
    <div class="row none" ng-show="readOnly && !hasAddressOfKind('N')">Nessuno</div>
@@ -29,9 +29,9 @@
    <div class="header">Email</div>
    <div class="table">
     <div class="row" ng-repeat="c in personProfile.contacts | filter: addressKind('E')">
-     <form name="email">
+     <ng:form name="email">
       <input type="email" ng-model="c.address" ng-readonly="readOnly"/>
-     </form>
+     </ng:form>
     </div>
    </div>
    <div class="row none" ng-show="readOnly && !hasAddressOfKind('E')">Nessuna email</div>
@@ -42,9 +42,9 @@
    <div class="header">Cellulare</div>
    <div class="table">
     <div class="row" ng-repeat="c in personProfile.contacts | filter: addressKind('M')">
-     <form name="email">
+     <ng:form name="mobile">
       <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
-     </form>
+     </ng:form>
     </div>
    </div>
    <div class="row none" ng-show="readOnly && !hasAddressOfKind('M')">Nessun numero</div>
@@ -55,9 +55,9 @@
    <div class="header">Telefono fisso</div>
    <div class="table">
     <div class="row" ng-repeat="c in personProfile.contacts | filter: addressKind('T')">
-     <form name="email">
+     <ng:form name="phone">
       <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
-     </form>
+     </ng:form>
     </div>
    </div>
    <div class="row none" ng-show="readOnly && !hasAddressOfKind('T')">Nessun numero</div>
@@ -68,9 +68,9 @@
    <div class="header">Fax</div>
    <div class="table">
     <div class="row" ng-repeat="c in personProfile.contacts | filter: addressKind('F')">
-     <form name="email">
+     <ng:form name="fax">
       <input type="text" ng-model="c.address" ng-readonly="readOnly"/>
-     </form>
+     </ng:form>
     </div>
    </div>
    <div class="row none" ng-show="readOnly && !hasAddressOfKind('F')">Nessun fax</div>
@@ -102,7 +102,7 @@
 
   <div class="actions">
    <button ng-show="profile.permissions.indexOf(gassmanApp.P_canEditContacts) !== -1" ng-click="modify()" ng-disabled="!readOnly">Modifica</button>
-   <button ng-show="!readOnly" ng-disabled="personProfile.$invalid || isUnchanged()" ng-click="save()">Salva le modifiche</button>
+   <button ng-show="!readOnly" ng-disabled="personProfileForm.$invalid || isUnchanged()" ng-click="save()">Salva le modifiche</button>
    <button ng-show="!readOnly" ng-click="cancel()">Annulla</button>
   </div>
 
