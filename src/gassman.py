@@ -908,8 +908,9 @@ class PersonSaveHandler (JsonBaseHandler):
         contacts = p['contacts']
         cur.execute(*self.application.sql.fetchContacts(pid))
         ocontacts = [ x[0] for x in cur.fetchall() ]
-        cur.execute(*self.application.sql.removeContactAddresses(ocontacts))
-        cur.execute(*self.application.sql.removePersonContacts(ocontacts))
+        if ocontacts:
+            cur.execute(*self.application.sql.removeContactAddresses(ocontacts))
+            cur.execute(*self.application.sql.removePersonContacts(ocontacts))
         for c, i in zip(contacts, range(len(contacts))):
             naddress = c['address']
             nkind = c['kind']
