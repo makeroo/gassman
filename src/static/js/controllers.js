@@ -1394,7 +1394,7 @@ gassmanControllers.controller('ProjectController', function($scope, gdata) {
 	}); // non gestisco l'errore
 });
 
-gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeParams, $location, gdata) {
+gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeParams, $location, gdata, $q) {
 	$scope.csaId = null;
 	$scope.personProfile = null;
 	$scope.personProfileError = null;
@@ -1487,6 +1487,23 @@ gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeP
 	}).
 	then (function (prof) {
 		$scope.personProfile = prof;
+
+		var amounts = [];
+		angular.forEach($scope.personProfile.accounts, function (a) {
+			amounts.push(gdata.accountAmount(a.id));
+		});
+
+		return $q.all(amounts);
+	}).
+	then (function (amounts) {
+		var l = amounts.length;
+
+		for (var c = 0; c < l; ++c) {
+			var acc = $scope.personProfile.accounts[c];
+			var am = amounts[c];
+			acc.amount = am[0];
+			acc.csym = am[1];
+		}
 	}).
 	then (undefined, function (error) {
 		$scope.personProfileError = error.data;
