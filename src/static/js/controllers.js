@@ -1501,8 +1501,8 @@ gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeP
 		for (var c = 0; c < l; ++c) {
 			var acc = $scope.personProfile.accounts[c];
 			var am = amounts[c];
-			acc.amount = am[0];
-			acc.csym = am[1];
+			acc.amount = am.data[0];
+			acc.csym = am.data[1];
 		}
 	}).
 	then (undefined, function (error) {
