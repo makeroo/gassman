@@ -523,6 +523,11 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 		$scope.lines.push(newLine());
 	};
 
+	$scope.focusAmount = function () {
+		var e = angular.element('#amount' + this.$index)[0];
+		e.focus();
+	};
+
 	$scope.updateTotalAmount = function () {
 		var t = 0.0;
 		for (var i in $scope.lines) {
@@ -999,6 +1004,11 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			amount: '',
 			notes: ''
 		};
+	};
+
+	$scope.focusAmount = function (type) {
+		var e = angular.element('#' + type + this.$index)[0];
+		e.focus();
 	};
 
 	$scope.checkLine = function (e, ll) {

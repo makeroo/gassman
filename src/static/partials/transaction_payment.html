@@ -17,6 +17,7 @@
             mac-placeholder="'Chi ha ordinato'"
             mac-autocomplete-source="autocompletionData"
             mac-autocomplete-delay="300"
+            mac-autocomplete-on-select="focusAmount('amountc')"
             ng-model="l.accountName"
             ng-blur="$last && l.account && $parent.checkLine(l, lines)"
             gm-account
@@ -31,6 +32,7 @@
             ng-model="l.amount"
             ng-blur="$parent.updateTotalAmount() || ($last && l.account && $parent.checkLine(l, lines))"
             gm-amount
+            id="amountc{{$index}}"
             /> <!-- TODO: fare text + smart-float! -->
 	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>
@@ -57,6 +59,7 @@
             mac-placeholder="'Fornitore'"
             mac-autocomplete-source="autocompletionData"
             mac-autocomplete-delay="300"
+            mac-autocomplete-on-select="focusAmount('amountp')"
             ng-model="l.accountName"
             ng-blur="$last && l.account && $parent.checkLine(l, producers)"
             gm-account
@@ -71,6 +74,7 @@
             ng-model="l.amount"
             ng-blur="$parent.updateTotalInvoice(lineForm) || ($last && l.account && $parent.checkLine(l, producers))"
             gm-amount
+            id="amountp{{$index}}"
             /> <!-- TODO: fare text + smart-float! -->
 	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>
@@ -98,6 +102,7 @@
             mac-placeholder="'Descrizione della spesa'"
             mac-autocomplete-source="autocompletionExpenses"
             mac-autocomplete-delay="300"
+            mac-autocomplete-on-select="focusAmount('amounte')"
             ng-model="l.notes"
             ng-blur="$last && $parent.checkExp(l, expenses)"
             gm-expense
@@ -111,6 +116,7 @@
             ng-model="l.amount"
             ng-blur="$parent.updateTotalExpenses(lineForm) || ($last && $parent.checkExp(l, expenses))"
             gm-amount2
+            id="amounte{{$index}}"
             /> <!-- TODO: fare text + smart-float! -->
 	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>

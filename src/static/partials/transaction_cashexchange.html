@@ -16,6 +16,7 @@
             mac-placeholder="'Chi ha versato'"
             mac-autocomplete-source="autocompletionData"
             mac-autocomplete-delay="300"
+            mac-autocomplete-on-select="focusAmount()"
             ng-model="l.accountName"
             ng-blur="$last && l.account && $parent.checkLine(l)"
             gm-account
@@ -30,6 +31,7 @@
             ng-model="l.amount"
             ng-blur="$parent.updateTotalAmount() || ($last && l.account && $parent.checkLine(l))"
             gm-amount
+            id="amount{{$index}}"
             /> <!-- TODO: fare text + smart-float! -->
 	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>
