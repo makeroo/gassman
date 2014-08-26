@@ -694,3 +694,7 @@ input.ng-invalid {
 .centered {
 	text-align: center;
 }
+
+.right-aligned {
+	text-align: right;
+}

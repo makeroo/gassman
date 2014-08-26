@@ -93,6 +93,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 	$scope.transactionError = null;
 	$scope.accountOwner = null;
 	$scope.accountOwnerError = null;
+	$scope.amount = null;
 //	$scope.selectedMovement = null;
 
 	$scope.toggleErrorMessage = function () {
@@ -119,8 +120,16 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 	then (function (csaId) { $scope.csaId = csaId; return accId || gdata.accountByCsa(csaId); }).
 	then (function (accId) {
 		showOwner(accId);
-		$scope.loadMore(); }).
-	then (undefined, function (error) { $scope.accountOwnerError = error.data; });
+		$scope.loadMore();
+
+		return gdata.accountAmount(accId);
+	}).
+	then (function (r) {
+		$scope.amount = r.data;
+	}).
+	then (undefined, function (error) {
+		$scope.accountOwnerError = error.data;
+	});
 
 	$scope.transactionAccount = function (accId) {
 		try {
