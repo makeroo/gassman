@@ -2,7 +2,7 @@
 
   <div class="movements">
     <div ng-show="accountOwner == accountOwnerError">Sto caricando...</div>
-    <div class="header centered" ng-show="accountOwner">Conto di <span ng-repeat="o in accountOwner">{{ o[0] }} {{ o[1] }} {{ o[2] }}{{$last ? '' : ', '}}</span></div>
+    <div class="header centered" ng-show="accountOwner">Conto di <span ng-repeat="o in accountOwner">{{$last ? ' e ' : $first ? '' : ', '}}<a href="#/person/{{o[3]}}/details">{{ o[0] }} {{ o[1] }} {{ o[2] }}</a></span></div>
     <div class="header right-aligned" ng-show="accountOwner && amount">Saldo: {{amount[0] | currency : amount[1] }}</div>
     <div class="header-error" ng-show="accountOwnerError">Informazioni sul titolare del conto non disponibili: {{ accountOwnerError }}.</div>
     <div class="header">

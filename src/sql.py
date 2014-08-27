@@ -90,7 +90,7 @@ At_Expense = 'EXPENSE' # spese
 At_Income = 'INCOME' # versamenti
 
 def account_owners (accountId):
-    return 'SELECT p.first_name, p.middle_name, p.last_name FROM person p JOIN account_person ap ON ap.person_id=p.id WHERE ap.account_id=%s AND ap.to_date IS NULL', [ accountId ]
+    return 'SELECT p.first_name, p.middle_name, p.last_name, p.id FROM person p JOIN account_person ap ON ap.person_id=p.id WHERE ap.account_id=%s AND ap.to_date IS NULL', [ accountId ]
 
 def account_movements (accountDbId, fromLine, toLine):
     return 'SELECT t.description, t.transaction_date, l.description, l.amount, t.id, c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN currency c ON c.id=t.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s ORDER BY t.transaction_date DESC LIMIT %s OFFSET %s', [
