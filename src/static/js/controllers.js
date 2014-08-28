@@ -3,7 +3,8 @@
 var gassmanControllers = angular.module('gassmanControllers', [
     'gassmanServices',
     'gassmanDirectives',
-    'Mac'
+    'Mac',
+	'ngStorage',
     ]);
 
 gassmanControllers.controller('MenuController', function($scope, $filter, gdata) {
@@ -188,10 +189,10 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 	};
 });
 
-gassmanControllers.controller('AccountsIndex', function($scope, $filter, $location, gdata) {
+gassmanControllers.controller('AccountsIndex', function($scope, $filter, $location, $localStorage, gdata) {
 	$scope.accounts = [];
 	$scope.accountsError = null;
-	$scope.queryFilter = '';
+	$scope.queryFilter = $localStorage.accountIndex_queryFilter || '';
 	$scope.queryOrder = 0;
 	$scope.profile = null;
 	$scope.profileError = null;
@@ -200,7 +201,7 @@ gassmanControllers.controller('AccountsIndex', function($scope, $filter, $locati
 	var blockSize = 25;
 	$scope.concluded = false;
 
-	var lastQuery = '';
+	var lastQuery = $scope.queryFilter;
 	var lastQueryOrder = 0;
 
 	$scope.search = function () {
@@ -208,6 +209,7 @@ gassmanControllers.controller('AccountsIndex', function($scope, $filter, $locati
 			return;
 		lastQuery = $scope.queryFilter;
 		lastQueryOrder = $scope.queryOrder;
+		$localStorage.accountIndex_queryFilter = $scope.queryFilter;
 
 		reset();
 		$scope.loadMore();
