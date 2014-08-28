@@ -20,12 +20,13 @@ gassmanApp.P_canViewContacts = 9;
 gassmanApp.P_canEditContacts = 10;
 
 gassmanApp.functions = [
-	{ p:gassmanApp.P_membership, f:'#/account/detail', l:'Il tuo conto' },
+	//{ p:gassmanApp.P_membership, f:'#/account/detail', l:'Il tuo conto' },
 	{ e:function (pp) {
 		return pp.indexOf(gassmanApp.P_canCheckAccounts) != -1 ||
 		       pp.indexOf(gassmanApp.P_canViewContacts) != -1;
 		}, f:'#/accounts/index', l:'Membri del G.A.S.' },
 	//{ v:P_canAssignAccounts, f:null },
+	{ e: function () { return true; }, l:'Movimentazione contante', 'class': "grouptitle" },
 	{ p:gassmanApp.P_canEnterCashExchange, f:'#/transaction/new/x', l:'Scambio contante' },
 	{ p:gassmanApp.P_canEnterPayments, f:'#/transaction/new/p', l:'Registra pagamenti' },
 	{ p:gassmanApp.P_canEnterDeposit, f:'#/transaction/new/d', l:'Registra accrediti' },

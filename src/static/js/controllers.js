@@ -66,8 +66,8 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 				('e' in f && f.e(pData.permissions))) {
 				$scope.functions.push(f);
 
-				if ('justAdded' in f)
-					f.justAdded($scope, gdata);
+				//if ('justAdded' in f)
+				//	f.justAdded($scope, gdata);
 			}
 		}
 

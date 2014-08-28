@@ -141,6 +141,16 @@ a {
 	margin: 0px;
 }
 
+.functions {
+	font-variant: small-caps;
+	text-transform: lowercase;
+}
+
+.functions .grouptitle {
+	margin-top: 5px;
+	color: gray;
+}
+
 .accounts-index {
 	position: absolute;
 	left: 0;
