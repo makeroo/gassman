@@ -238,7 +238,7 @@ a {
 .account-details {
 	position: absolute;
 	left: 0;
-	right: 50%;
+	right: 0;
 	top: 0;
 	bottom: 0;
 
@@ -247,24 +247,33 @@ a {
 	align-items: stretch;
 }
 
-.account-details .movements {
-	overflow: hidden;
-	flex-grow: 1;
-	display: flex;
-	flex-direction: column;
-	align-items: stretch;
+.account-details .page-header {
+	background-color: #ada;
+	font-weight: bold;
 }
 
-.account-details .movements .header {
+.account-details .table {
+	overflow: hidden;
+	flex-grow: 1;
+	background-color: beige;
 	position: relative;
+}
+
+.account-details .table .header {
 	height: 30px;
 	font-weight: bold;
-	flex: none;
-	line-height: 30px;
+	background-image: url('/static/img/table_header.png');
+	position: absolute;
+	left: 0;
+	right: 0;
 	overflow: hidden;
 }
 
-.account-details .movements .header-error {
+.account-details .table .body .first-row {
+	height: 30px;
+}
+
+.account-details .table .header-error {
 	position: relative;
 	height: 30px;
 	flex: none;
@@ -272,22 +281,28 @@ a {
 	overflow: hidden;
 }
 
-.account-details .movements .body {
+.account-details .table .body {
 /*	width:500px;*/
 	overflow: auto;
-	flex-grow: 1;
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	width: 100%;
+	height: 100%;
 }
 
-.account-details .movements .mov-row {
+.account-details .table .mov-row {
 	position: relative;
 	height: 30px;
 }
 
-.account-details .movements .mov-row:hover {
+.account-details .table .mov-row:hover {
 	background-color: #eef;
 }
 
-.account-details .movements .mov-data {
+.account-details .table .mov-data {
 	position: absolute;
 	left: 0;
 	top: 0;
@@ -297,7 +312,7 @@ a {
 	line-height: 30px;
 }
 
-.account-details .movements .mov-desc {
+.account-details .table .mov-desc {
 	position: absolute;
 	left: 102px;
 	right: 102px;
@@ -310,12 +325,12 @@ a {
 	line-height: 30px;
 }
 
-.account-details .movements .mov-desc:HOVER {
+.account-details .table .mov-desc:HOVER {
 	overflow: auto;
 	text-overflow: initial;
 }
 
-.account-details .movements .mov-amount {
+.account-details .table .mov-amount {
 	position: absolute;
 	right: 0;
 	top: 0;
@@ -435,105 +450,6 @@ a {
 
 .deposit-post-save .msg ul {
 	padding-left: 20px;
-}
-
-.transaction-details {
-	position: absolute;
-	left: 50%;
-	right: 0;
-	top: 0;
-	bottom: 0;
-
-	margin-left: 20px;
-	overflow: hidden;
-}
-
-.transaction-details .title {
-	position: relative;
-	height: 40px;
-	font-weight: bold;
-	text-align: center;
-	line-height: 30px;
-}
-
-.transaction-details .theader {
-	position: absolute;
-	left: 0;
-	right: 0;
-	top: 0;
-	height: 110px;
-}
-
-.transaction-details .lines {
-	position: absolute;
-	top: 110px;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	overflow: auto;
-}
-
-.transaction-details .header {
-	position: absolute;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	height: 40px;
-	font-weight: bold;
-}
-
-.transaction-details .body {
-	overflow: auto;
-}
-
-.transaction-details .row {
-	position: relative;
-	height: 30px;
-}
-
-.transaction-details .row:hover {
-	background-color: #eef;
-}
-
-.transaction-details .desc {
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 100px;
-	height: 30px;
-
-	line-height: 30px;
-	overflow: hidden;
-	white-space: nowrap;
-	text-overflow: ellipsis;
-}
-
-.transaction-details .desc:HOVER {
-	overflow: auto;
-	text-overflow: initial;
-}
-
-.transaction-details .account {
-	position: absolute;
-	left: 102px;
-	right: 102px;
-	top: 0;
-	height: 30px;
-	overflow: hidden;
-
-	line-height: 30px;
-}
-
-.transaction-details .amount {
-	position: absolute;
-	right: 0;
-	top: 0;
-	width: 100px;
-	height: 30px;
-
-	text-align: right;
-
-	line-height: 30px;
 }
 
 .transactions-index .theader {
