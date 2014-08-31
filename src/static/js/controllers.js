@@ -87,11 +87,9 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 	});
 });
 
-gassmanControllers.controller('AccountDetails', function($scope, $filter, $routeParams, gdata) {
+gassmanControllers.controller('AccountDetails', function($scope, $filter, $routeParams, $location, gdata) {
 	$scope.movements = [];
 	$scope.movementsError = null;
-	$scope.transaction = null;
-	$scope.transactionError = null;
 	$scope.accountOwner = null;
 	$scope.accountOwnerError = null;
 	$scope.amount = null;
@@ -132,40 +130,8 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 		$scope.accountOwnerError = error.data;
 	});
 
-	$scope.transactionAccount = function (accId) {
-		try {
-			var p = $scope.transaction.people[accId];
-			if (p)
-				// p: [id, fist, middle, last, accId]
-				return p[1] + (p[2] ? ' ' + p[2] : '') + ' ' + p[3];
-			var n = $scope.transaction.accounts[accId];
-			return n ? n[0] : 'N/D';
-		} catch (e) {
-			return 'N/D';
-		}
-	};
-
-	$scope.transactionCurrency = function (accId) {
-		try {
-			var n = $scope.transaction.accounts[accId];
-			return n ? n[1] : '';
-		} catch (e) {
-			return '';
-		}
-	};
-
 	$scope.showTransaction = function (mov) {
-		$scope.transaction = null;
-		$scope.transactionError = null;
-//		$scope.selectedMovement = mov[4];
-		gdata.transactionDetail($scope.csaId, mov[4]).
-		then (function (r) {
-			r.data.mov = mov;
-			$scope.transaction = r.data;
-		}).
-		then (undefined, function (error) {
-			$scope.transactionError = error.data;
-		});
+		$location.path('/transaction/' + mov[4] + '/' + mov[6]);
 	};
 
 	$scope.loadMore = function () {
