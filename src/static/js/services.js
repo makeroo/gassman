@@ -165,11 +165,11 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $
 	this.accountMovements = function (accId, start, blockSize) {
 		return $http.post('/account/' + accId + '/movements/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf); // null, { xsrfCookieName:'_xsrf' })
 	}
-
+/*
 	this.transactionDetail = function (csaId, tid) {
 		return $http.post('/transaction/' + csaId + '/' + tid + '/detail?_xsrf=' + $cookies._xsrf);
 	}
-
+*/
 	this.transactionForEdit = function (csaId, tid) {
 		return $http.post('/transaction/' + csaId + '/' + tid + '/edit?_xsrf=' + $cookies._xsrf);
 	}
