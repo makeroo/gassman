@@ -94,6 +94,14 @@ gassmanApp.config([ '$routeProvider',
 				templateUrl: 'static/partials/transaction_withdrawal.html',
 				controller: 'TransactionWithdrawal'
 			}).
+			when('/transaction/:transId/g', {
+				templateUrl: 'static/partials/transaction_generic.html',
+				controller: 'TransactionGeneric'
+			}).
+			when('/transaction/:transId/t', {
+				templateUrl: 'static/partials/transaction_trashed.html',
+				controller: 'TransactionTrashed'
+			}).
 			when('/transactions/index', {
 				templateUrl: 'static/partials/transactions_index.html',
 				controller: 'TransactionsIndex'
