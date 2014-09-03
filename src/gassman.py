@@ -105,7 +105,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/accounts/(\d+)/index/(\d+)/(\d+)$', AccountsIndexHandler),
             (r'^/accounts/(\d+)/names$', AccountsNamesHandler),
             (r'^/expenses/(\d+)/tags$', ExpensesNamesHandler),
-            (r'^/transaction/(\d+)/(\d+)/detail$', TransactionDetailHandler),
+            #(r'^/transaction/(\d+)/(\d+)/detail$', TransactionDetailHandler),
             (r'^/transaction/(\d+)/(\d+)/edit$', TransactionEditHandler),
             (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
             (r'^/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
@@ -246,6 +246,8 @@ class GassmanWebApp (tornado.web.Application):
         return r
 
     def hasPermissionByCsa (self, cur, perm, personId, csaId):
+        if perm is None:
+            return False
         cur.execute(*self.sql.has_permission_by_csa(perm, personId, csaId))
         r = int(cur.fetchone()[0]) > 0
         log_gassman.debug('has permission: user=%s, perm=%s, r=%s', personId, perm, r)
@@ -265,6 +267,16 @@ class GassmanWebApp (tornado.web.Application):
         '''
         while transId is not None:
             cur.execute(*self.sql.log_transaction_check_operator(personId, transId))
+            if cur.fetchone()[0] > 0:
+                return True
+            cur.execute(*self.sql.transaction_previuos(transId))
+            l = cur.fetchone()
+            transId = l[0] if l is not None else None
+        return False
+
+    def isInvolvedInTransaction (self, cur, transId, personId):
+        while transId is not None:
+            cur.execute(*self.sql.transaction_is_involved(transId, personId))
             if cur.fetchone()[0] > 0:
                 return True
             cur.execute(*self.sql.transaction_previuos(transId))
@@ -536,35 +548,35 @@ class ExpensesNamesHandler (JsonBaseHandler):
         r['tags'] += [ x[0] for x in cur]
         return r
 
-class TransactionDetailHandler (JsonBaseHandler):
-    def do (self, cur, csaId, tid):
-        # restituisco:
-        # lines: [ id, desc, amount, accId ]
-        # people: [ id, first, middle, last, accId ]
-        # accounts: [ id, gc_name, currency ]
-        u = self.get_logged_user()
-        cur.execute(*self.application.sql.transaction_lines(tid))
-        lines = list(cur)
-        cur.execute(*self.application.sql.transaction_people(tid))
-        people = dict([ (c[4], c) for c in cur])
-        if not u.id in [c[0] for c in people.values()] and \
-            not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
-            raise Exception(error_codes.E_permission_denied)
-        cur.execute(*self.application.sql.transaction_account_gc_names(tid))
-        accs = dict([( c[0], (c[1], c[2])) for c in cur])
-        return dict(
-                    lines = lines,
-                    people = people,
-                    accounts = accs,
-                    )
+#class TransactionDetailHandler (JsonBaseHandler):
+#    def do (self, cur, csaId, tid):
+#        # restituisco:
+#        # lines: [ id, desc, amount, accId ]
+#        # people: [ id, first, middle, last, accId ]
+#        # accounts: [ id, gc_name, currency ]
+#        u = self.get_logged_user()
+#        cur.execute(*self.application.sql.transaction_lines(tid))
+#        lines = list(cur)
+#        cur.execute(*self.application.sql.transaction_people(tid))
+#        people = dict([ (c[4], c) for c in cur])
+#        if not u.id in [c[0] for c in people.values()] and \
+#            not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
+#            raise Exception(error_codes.E_permission_denied)
+#        cur.execute(*self.application.sql.transaction_account_gc_names(tid))
+#        accs = dict([( c[0], (c[1], c[2])) for c in cur])
+#        return dict(
+#                    lines = lines,
+#                    people = people,
+#                    accounts = accs,
+#                    )
 
 class TransactionEditHandler (JsonBaseHandler):
     def do (self, cur, csaId, transId):
         u = self.get_logged_user()
         cur.execute(*self.application.sql.transaction_edit(transId))
         d = cur.fetchone()
-        if d[5] is not None:
-            raise Exception(error_codes.E_already_modified, d[5])
+        #if d[5] is not None:
+        #    raise Exception(error_codes.E_already_modified, d[5])
         r = dict(
             transId = transId,
             description = d[0],
@@ -578,9 +590,10 @@ class TransactionEditHandler (JsonBaseHandler):
         # oppure P_canManageTransactions
         if (not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId) and
             not (d[2] in self.application.sql.editableTransactions and
-                 self.application.hasPermissionByCsa(cur, sql.transactionPermissions[d[2]], u.id, csaId) and
+                 self.application.hasPermissionByCsa(cur, sql.transactionPermissions.get(d[2]), u.id, csaId) and
                  self.application.isTransactionEditor(cur, transId, u.id)
-                 )
+                 ) and
+            not self.application.isInvolvedInTransaction(cur, transId, u.id)
             ):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.transaction_lines(transId))
