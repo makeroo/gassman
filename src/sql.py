@@ -50,6 +50,7 @@ transactionPermissions = {
     Tt_Payment: P_canEnterPayments,
     Tt_CashExchange: P_canEnterCashExchange,
     Tt_Withdrawal: P_canEnterWithdrawal,
+#    Tt_Generic: P_canCheckAccounts
     }
 
 editableTransactionPermissions = set(transactionPermissions.values())
@@ -62,10 +63,13 @@ deletableTransactions = set([
     Tt_Withdrawal,
     ])
 editableTransactions = set([
+    Tt_Generic,
     Tt_Deposit,
     Tt_Payment,
     Tt_CashExchange,
     Tt_Withdrawal,
+    Tt_Trashed,
+#    Tt_Unfinished,
     ])
 
 Ck_Telephone = 'T'
@@ -210,8 +214,8 @@ def transaction_people (tid):
     # qui non verifico che acount_person sia del csa giusto perché è implicito nella transazione
     return 'SELECT DISTINCT p.id, p.first_name, p.middle_name, p.last_name, l.account_id FROM transaction_line l JOIN account_person ap ON ap.account_id=l.account_id JOIN person p ON ap.person_id=p.id WHERE transaction_id=%s AND ap.to_date IS NULL', [ tid ]
 
-def transaction_account_gc_names (tid):
-    return 'SELECT DISTINCT a.id, a.gc_name, c.symbol FROM transaction_line l JOIN account a ON a.id=l.account_id JOIN currency c ON c.id=a.currency_id WHERE transaction_id=%s', [ tid ]
+#def transaction_account_gc_names (tid):
+#    return 'SELECT DISTINCT a.id, a.gc_name, c.symbol FROM transaction_line l JOIN account a ON a.id=l.account_id JOIN currency c ON c.id=a.currency_id WHERE transaction_id=%s', [ tid ]
 
 def rss_feed (rssId):
     return 'SELECT t.description, t.transaction_date, l.amount, l.id, c.symbol FROM transaction_line l JOIN transaction t ON t.id=l.transaction_id JOIN account_person ap ON ap.account_id=l.account_id JOIN account a ON l.account_id=a.id JOIN person p ON p.id=ap.person_id JOIN currency c ON c.id=a.currency_id WHERE p.rss_feed_id=%s AND ap.to_date IS NULL AND t.cc_type NOT IN (%s, %s) ORDER BY t.transaction_date DESC LIMIT 8', [ rssId, Tt_Unfinished, Tt_Error ]
@@ -346,6 +350,9 @@ def log_transaction (tid, opId, logType, logDesc, tDate):
 
 def log_transaction_check_operator (personId, transId):
     return 'SELECT COUNT(*) FROM transaction_log WHERE transaction_id=%s AND operator_id=%s', [ transId, personId ]
+
+def transaction_is_involved (transId, personId):
+    return 'SELECT COUNT(*) FROM transaction_line l JOIN account a ON l.account_id=a.id JOIN account_person ap ON a.id=ap.account_id WHERE l.transaction_id=%s AND ap.person_id=%s', [ transId, personId ]
 
 def transaction_previuos (transId):
     return 'SELECT id FROM transaction WHERE modified_by_id = %s', [ transId ]
