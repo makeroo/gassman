@@ -427,6 +427,17 @@ a {
 	font-size: smaller;
 	float: left;
 	width: 15%;
+	line-height: 30px;
+}
+
+.deposit .field, .deposit input {
+	font-family: 'Lucida Grande', sans-serif;
+	font-size: 11px;
+}
+
+.deposit .field {
+	border-bottom: 1px solid gray;
+	line-height: 30px;
 }
 
 .deposit-post-save {

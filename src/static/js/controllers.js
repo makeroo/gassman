@@ -1330,6 +1330,42 @@ gassmanControllers.controller('TransactionGeneric', function($scope, $routeParam
 	$scope.tsaveOk = null;
 	$scope.tsaveError = null;
 
+	$scope.updateTotalAmount = function () {
+		var t = 0.0;
+		for (var i in $scope.lines) {
+			var l = $scope.lines[i];
+			var a = parseFloat(l.amount);
+			if (!isNaN(a))
+				t += a;
+		}
+
+		$scope.totalAmount = t;
+	}
+
+	$scope.updateTotalInvoice = function (f) {
+		var t = 0.0;
+		for (var i in $scope.producers) {
+			var l = $scope.producers[i];
+			var a = parseFloat(l.amount);
+			if (!isNaN(a))
+				t += a;
+		}
+
+		$scope.totalInvoice = t;
+	}
+
+	$scope.updateTotalExpenses = function (f) {
+		var t = 0.0;
+		for (var i in $scope.expenses) {
+			var l = $scope.expenses[i];
+			var a = parseFloat(l.amount);
+			if (!isNaN(a))
+				t += a;
+		}
+
+		$scope.totalExpenses = t;
+	}
+
 	gdata.selectedCsa().
 	then (function (csaId) {
 		$scope.csaId = csaId;
@@ -1400,12 +1436,10 @@ gassmanControllers.controller('TransactionGeneric', function($scope, $routeParam
 		$scope.producers = producers;
 		$scope.expenses = expenses;
 
-		autoCompileTotalInvoice = t.transId != 'new' ? 0 : 2;
-/*
 		$scope.updateTotalAmount();
 		$scope.updateTotalInvoice();
 		$scope.updateTotalExpenses()
-		$scope.checkCurrencies();
+/*		$scope.checkCurrencies();
 */
 		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
 		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
