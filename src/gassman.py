@@ -582,7 +582,9 @@ class TransactionEditHandler (JsonBaseHandler):
             description = d[0],
             date = d[1],
             cc_type = d[2],
-            currency = [ d[3], d[4] ]
+            currency = [ d[3], d[4] ],
+            modified_by = d[5],
+            modifies = d[6],
             )
         # regole per editare:
         # è D, ho P_canEnterDeposit e l'ho creata io

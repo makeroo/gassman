@@ -343,7 +343,12 @@ def finalize_transaction (tid, ttype):
     return 'UPDATE transaction SET cc_type=%s WHERE id=%s', [ ttype, tid ]
 
 def transaction_edit (tid):
-    return 'SELECT t.description, t.transaction_date, t.cc_type, c.id, c.symbol, t.modified_by_id FROM transaction t JOIN currency c ON c.id=t.currency_id WHERE t.id=%s', [ tid ];
+    return '''
+SELECT t.description, t.transaction_date, t.cc_type, c.id, c.symbol, t.modified_by_id, t2.id
+ FROM transaction t
+ LEFT JOIN transaction t2 on t.id=t2.modified_by_id
+ JOIN currency c ON c.id=t.currency_id
+ WHERE t.id=%s''', [ tid ]
 
 def log_transaction (tid, opId, logType, logDesc, tDate):
     return 'INSERT INTO transaction_log (log_date, operator_id, op_type, transaction_id, notes) VALUES (%s, %s, %s, %s, %s)', [ tDate, opId, logType, tid, logDesc ] 
