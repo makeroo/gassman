@@ -1376,7 +1376,7 @@ gassmanControllers.controller('TransactionGeneric', function($scope, $routeParam
 
 		$scope.currencies = accountAutocompletion.parse(r.data);
 
-		$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
+		//$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
 
 		return gdata.expensesTags($scope.csaId);
 	}).then(function (r) {
@@ -1428,8 +1428,8 @@ gassmanControllers.controller('TransactionGeneric', function($scope, $routeParam
 				continue;
 			}
 
-			if (!l.accountName)
-				l.accountName = $scope.currencies[l.account].name;
+			if (!l.accountNames)
+				l.accountName = $scope.currencies[l.account].people;
 		}
 
 		$scope.lines = clients;

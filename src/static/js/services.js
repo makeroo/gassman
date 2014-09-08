@@ -288,6 +288,9 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $
 });
 
 gassmanServices.service('accountAutocompletion', function ($http, $q, $localStorage, $cookies, $rootScope) {
+	/* Restituisce una mappa: accountId -> { acc:accountId, cur:[ id, sym ], people:{}, name:'' }
+	 * E people è a sua volta una mappa: personId -> { pid:PID, name:'', refs:[ '' ] }
+	 */
 	this.parse = function (accountNamesData) {
 		var accountCurrencies = accountNamesData.accountCurrencies;
 		var accountPeople = accountNamesData.accountPeople;
@@ -309,7 +312,7 @@ gassmanServices.service('accountAutocompletion', function ($http, $q, $localStor
 
 			var aa = resp[o[4]];
 			if (aa) {
-				aa.people[o[0]] = { name: n, refs:[] };
+				aa.people[o[0]] = { pid:o[0], name: n, refs:[] };
 			} else {
 				console.log('accountPeople record without currency info:', o);
 			}

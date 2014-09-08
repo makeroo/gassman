@@ -1,0 +1,44 @@
+<div class="deposit">
+ <div class="lines-table">
+  <div class="body">
+   <div class="actions">
+    <div><label for="tdate">Data consegna:</label><span class="field">{{tdate | date}}</span></div>
+    <div><label for="tdesc">Descrizione e note:</label><span class="field">{{tdesc}}</span></div>
+   </div>
+
+   <div class="header" ng-hide="autocompletionDataError || !lines.length">
+    Chi ha ricevuto denaro:
+   </div>
+   <div ng-repeat="l in lines" class="row">
+    <div class="row-who field"><span ng-repeat="p in l.accountName"><a href="{{ p.pid ? '#/person/' + p.pid + '/details' : '#/account/' + l.account + '/details'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
+    <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
+    <div class="row-notes field" ng-show="l.notes">{{l.notes}}</div>
+   </div>
+   <div class="header" ng-hide="autocompletionDataError || !producers.length">
+    Chi ha dato denaro:
+   </div>
+   <div ng-repeat="l in producers" class="row">
+    <div class="row-who field"><span ng-repeat="p in l.accountName"><a href="#/person/{{p.pid}}/details">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
+    <div class="row-amount field">{{ l.amount | currency : currency[1] }}</div>
+    <div class="row-notes field" ng-show="l.notes">{{ l.notes }}</div>
+   </div>
+
+   <div class="header" ng-hide="autocompletionDataError || !expenses.length">
+    Altre spese:
+   </div>
+   <div ng-repeat="l in expenses" class="row">
+    <div class="row-who field">{{l.notes}}</div>
+    <div class="row-amount field">{{l.amount | currency: currency[1]}}</div>
+   </div>
+
+   <div ng-show="autocompletionDataError">
+     Caricamento fallito. Causa: {{autocompletionDataError}}.
+   </div>
+   <div class="actions">
+    <div>
+        <span>Totale pagamenti: {{totalAmount | currency : currency[1] }}</span>
+        </div>
+   </div>
+  </div>
+ </div>
+</div>
