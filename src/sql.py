@@ -96,6 +96,9 @@ At_Income = 'INCOME' # versamenti
 def account_owners (accountId):
     return 'SELECT p.first_name, p.middle_name, p.last_name, p.id FROM person p JOIN account_person ap ON ap.person_id=p.id WHERE ap.account_id=%s AND ap.to_date IS NULL', [ accountId ]
 
+def account_description (accountId):
+    return 'SELECT a.gc_name, c.name, c.id FROM account a JOIN csa c ON a.csa_id=c.id WHERE a.id=%s', [ accountId ]
+
 def account_movements (accountDbId, fromLine, toLine):
     return (
 '''SELECT t.description, t.transaction_date, l.description, l.amount, t.id, c.symbol, t.cc_type

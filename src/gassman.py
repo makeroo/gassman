@@ -450,7 +450,12 @@ class AccountOwnerHandler (JsonBaseHandler):
         if not self.application.hasAccount(cur, u.id, accId) and not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.account_owners(accId))
-        return list(cur)
+        oo = list(cur)
+        if oo:
+            return dict(people=oo)
+        # se il conto non è di una persona, sarà del csa
+        cur.execute(*self.application.sql.account_description(accId))
+        return dict(desc=cur.fetchone())
 
 class AccountMovementsHandler (JsonBaseHandler):
     def do (self, cur, accId, fromIdx, toIdx):

@@ -91,6 +91,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 	$scope.movements = [];
 	$scope.movementsError = null;
 	$scope.accountOwner = null;
+	$scope.accountDesc = null;
 	$scope.accountOwnerError = null;
 	$scope.amount = null;
 //	$scope.selectedMovement = null;
@@ -108,7 +109,10 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 		$scope.accId = accId;
 		gdata.accountOwner(accId).
 		then (function (r) {
-			$scope.accountOwner = r.data;
+			if (r.data.people)
+				$scope.accountOwner = r.data.people;
+			else
+				$scope.accountDesc = r.data.desc;
 		}).
 		then (undefined, function (error) {
 			$scope.accountOwnerError = error.data;
