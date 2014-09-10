@@ -488,6 +488,83 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 	$scope.csaId = null;
 	$scope.tsaveOk = null;
 	$scope.tsaveError = null;
+	$scope.readonly = true;
+	$scope.canEdit = false;
+
+	var setupTransaction = function (tdata) {
+		var t = tdata.data;
+
+		if (t.cc_type != 'x')
+			throw "illegal type";
+
+		$scope.readonly = t.transId != 'new';
+		$scope.transId = t.transId;
+		$scope.tdesc = t.description;
+		$scope.tdate = new Date(t.date);
+		$scope.modified_by = t.modified_by;
+		$scope.modifies = t.modifies;
+		$scope.log_date = t.log_date;
+		$scope.operator = t.operator;
+
+		// caricata quindi rimuovo la riga negativa
+		for (var i in t.lines) {
+			var l = t.lines[i];
+			// il filtro currency digerisce anche le stringhe
+			// mentre input="number" no, devo prima convertire in float
+			// i Decimal su db vengono convertiti in json in stringa
+			var x = parseFloat(l.amount);
+
+			//console.log(x, typeof(x));
+			if (x < 0) {
+				t.lines.splice(i, 1);
+				$scope.receiver.account = l.account;
+			} else {
+				l.amount = parseFloat(l.amount);
+			}
+		}
+
+		for (var i in t.lines) {
+			var l = t.lines[i];
+			if (!l.accountName)
+				l.accountName = $scope.currencies[l.account].name;
+			if (!l.accountNames)
+				l.accountNames = $scope.currencies[l.account].people;
+		}
+
+		t.lines.push(newLine());
+
+		var ra = $scope.currencies[$scope.receiver.account];
+		$scope.receiver.accountName = ra ? ra.name : '';
+		$scope.receiver.accountNames = ra ? ra.people : [];
+
+		$scope.lines = t.lines;
+		$scope.updateTotalAmount();
+		$scope.checkCurrencies();
+		$scope.autocompletionDataError = null;
+
+		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
+		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
+		// comunque inutilizzabile
+	};
+
+	$scope.filledLine = function (line) {
+		return line.account != null;
+	};
+
+	$scope.modifyTransaction = function () {
+		$scope.readonly = false;
+	};
+	$scope.cancel = function () {
+		gdata.transactionForEdit($scope.csaId, $scope.transId).
+		then(setupTransaction).
+		then(undefined, function (error) {
+			$scope.autocompletionDataError = error.data;
+		});
+	};
+
+	$scope.showTransaction = function (tid) {
+		$location.path('/transaction/' + tid + '/x');
+	};
 
 	var newLine = function () {
 		return {
@@ -631,8 +708,12 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 		$scope.currencyError = false;
 	};
 
-	gdata.selectedCsa().
-	then (function (csaId) {
+	gdata.profileInfo().
+	then (function (profile) {
+		$scope.canEdit = (profile.permissions.indexOf(gassmanApp.P_canEnterCashExchange) != -1);
+
+		return gdata.selectedCsa();
+	}).then (function (csaId) {
 		$scope.csaId = csaId;
 
 		return gdata.accountsNames($scope.csaId);
@@ -651,56 +732,13 @@ gassmanControllers.controller('TransactionCashExchange', function($scope, $route
 				date: new Date(),
 				cc_type: 'x',
 				currency: null,
-				lines: []
+				lines: [],
+				modified_by: null,
+				modifies: null
 			} };
 		else
 			return gdata.transactionForEdit($scope.csaId, $scope.transId);
-	}).then(function (tdata) {
-		var t = tdata.data;
-
-		if (t.cc_type != 'x')
-			throw "illegal type";
-
-		$scope.transId = t.transId;
-		$scope.tdesc = t.description;
-		$scope.tdate = new Date(t.date);
-
-		// caricata quindi rimuovo la riga negativa
-		for (var i in t.lines) {
-			var l = t.lines[i];
-			// il filtro currency digerisce anche le stringhe
-			// mentre input="number" no, devo prima convertire in float
-			// i Decimal su db vengono convertiti in json in stringa
-			var x = parseFloat(l.amount);
-
-			//console.log(x, typeof(x));
-			if (x < 0) {
-				t.lines.splice(i, 1);
-				$scope.receiver.account = l.account;
-			} else {
-				l.amount = parseFloat(l.amount);
-			}
-		}
-
-		for (var i in t.lines) {
-			var l = t.lines[i];
-			if (!l.accountName)
-				l.accountName = $scope.currencies[l.account].name;
-		}
-
-		t.lines.push(newLine());
-
-		var ra = $scope.currencies[$scope.receiver.account];
-		$scope.receiver.accountName = ra ? ra.name : '';
-
-		$scope.lines = t.lines;
-		$scope.updateTotalAmount();
-		$scope.checkCurrencies();
-
-		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
-		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
-		// comunque inutilizzabile
-	}).
+	}).then(setupTransaction).
 	then (undefined, function (error) {
 //		if (gdata.isError(error.data, gdata.E_already_modified)) {
 //			$location.path('/transaction/' + error.data[2] + '/x');
