@@ -347,9 +347,11 @@ def finalize_transaction (tid, ttype):
 
 def transaction_edit (tid):
     return '''
-SELECT t.description, t.transaction_date, t.cc_type, c.id, c.symbol, t.modified_by_id, t2.id
+SELECT t.description, t.transaction_date as date, t.cc_type, c.id as "currency[__cid", c.symbol as "currency[__csym", t.modified_by_id as modified_by, t2.id as "modifies", l.log_date, l.op_type, p.id as operator__pid, p.first_name as operator__first_name, p.middle_name as operator__middle_name, p.last_name as operator__last_name
  FROM transaction t
- LEFT JOIN transaction t2 on t.id=t2.modified_by_id
+ JOIN transaction_log l ON l.transaction_id=t.id
+ JOIN person p ON l.operator_id = p.id
+ LEFT JOIN transaction t2 ON t.id=t2.modified_by_id
  JOIN currency c ON c.id=t.currency_id
  WHERE t.id=%s''', [ tid ]
 
@@ -528,3 +530,34 @@ def column_names (cur):
 def iter_objects (cur):
     cn = column_names(cur)
     return [ dict(zip(cn, x)) for x in list(cur) ]
+
+def fetch_object (cur):
+    return dict(zip(column_names(cur), cur.fetchone()))
+
+def fetch_struct (cur):
+    def seqmode (c, k, v):
+        c.append(v)
+        return v
+    def mapmode (c, k, v):
+        return c.setdefault(k, v)
+    seqmode.value = lambda: []
+    mapmode.value = lambda: {}
+    r = {}
+    for k, v in zip(column_names(cur), cur.fetchone()):
+        pp = k.split('__')
+        if len(pp) > 1:
+            t = r
+            mode = mapmode
+            nextmode = None
+            for p in pp[:-1]:
+                if p.endswith('['):
+                    p = p[:-1]
+                    nextmode = seqmode
+                else:
+                    nextmode = mapmode
+                t = mode(t, p, nextmode.value())
+                mode = nextmode
+            mode(t, pp[-1], v)
+        else:
+            r[k] = v
+    return r

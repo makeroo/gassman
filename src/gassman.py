@@ -579,25 +579,18 @@ class TransactionEditHandler (JsonBaseHandler):
     def do (self, cur, csaId, transId):
         u = self.get_logged_user()
         cur.execute(*self.application.sql.transaction_edit(transId))
-        d = cur.fetchone()
-        #if d[5] is not None:
-        #    raise Exception(error_codes.E_already_modified, d[5])
-        r = dict(
-            transId = transId,
-            description = d[0],
-            date = d[1],
-            cc_type = d[2],
-            currency = [ d[3], d[4] ],
-            modified_by = d[5],
-            modifies = d[6],
-            )
+
+        r = sql.fetch_struct(cur)
+        r['transId'] = transId
+
+        ccType = r['cc_type']
         # regole per editare:
         # è D, ho P_canEnterDeposit e l'ho creata io
         # è P, ho P_canEnterPayments e l'ho creata io
         # oppure P_canManageTransactions
         if (not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId) and
-            not (d[2] in self.application.sql.editableTransactions and
-                 self.application.hasPermissionByCsa(cur, sql.transactionPermissions.get(d[2]), u.id, csaId) and
+            not (ccType in self.application.sql.editableTransactions and
+                 self.application.hasPermissionByCsa(cur, sql.transactionPermissions.get(ccType), u.id, csaId) and
                  self.application.isTransactionEditor(cur, transId, u.id)
                  ) and
             not self.application.isInvolvedInTransaction(cur, transId, u.id)
