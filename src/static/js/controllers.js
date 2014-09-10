@@ -995,8 +995,95 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 	$scope.csaId = null;
 	$scope.tsaveOk = null;
 	$scope.tsaveError = null;
+	$scope.readonly = true;
+	$scope.canEdit = false;
 
 	var autoCompileTotalInvoice = 2;
+
+	var setupTransaction = function (tdata) {
+		var t = tdata.data;
+
+		if (t.cc_type != 'p')
+			throw "illegal type";
+
+		$scope.readonly = t.transId != 'new';
+		$scope.transId = t.transId;
+		$scope.tdesc = t.description;
+		$scope.tdate = new Date(t.date);
+		$scope.modified_by = t.modified_by;
+		$scope.modifies = t.modifies;
+		$scope.log_date = t.log_date;
+		$scope.operator = t.operator;
+
+		var clients = [];
+		var producers = [];
+		var expenses = [];
+
+		for (var i in t.lines) {
+			var l = t.lines[i];
+			// il filtro currency digerisce anche le stringhe
+			// mentre input="number" no, devo prima convertire in float
+			// i Decimal su db vengono convertiti in json in stringa
+			var x = parseFloat(l.amount);
+			var ac = $scope.currencies[l.account];
+
+			//console.log(x, typeof(x));
+			if (x < 0) {
+				clients.push(l);
+				l.amount = -x;
+			} else if (ac && Object.keys(ac.people).length) {
+				producers.push(l);
+				l.amount = +x;
+			} else {
+				expenses.push(l);
+				l.amount = +x;
+				continue;
+			}
+
+			if (!l.accountName)
+				l.accountName = $scope.currencies[l.account].name;
+			if (!l.accountNames)
+				l.accountNames = $scope.currencies[l.account].people;
+		}
+
+		clients.push(newLine());
+		producers.push(newLine());
+		expenses.push(newLine());
+
+		$scope.lines = clients;
+		$scope.producers = producers;
+		$scope.expenses = expenses;
+
+		autoCompileTotalInvoice = t.transId != 'new' ? 0 : 2;
+
+		$scope.updateTotalAmount();
+		$scope.updateTotalInvoice();
+		$scope.updateTotalExpenses()
+		$scope.checkCurrencies();
+
+		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
+		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
+		// comunque inutilizzabile
+	};
+
+	$scope.filledLine = function (line) {
+		return line.account != null;
+	};
+
+	$scope.modifyTransaction = function () {
+		$scope.readonly = false;
+	};
+	$scope.cancel = function () {
+		gdata.transactionForEdit($scope.csaId, $scope.transId).
+		then(setupTransaction).
+		then(undefined, function (error) {
+			$scope.autocompletionDataError = error.data;
+		});
+	};
+
+	$scope.showTransaction = function (tid) {
+		$location.path('/transaction/' + tid + '/x');
+	};
 
 	var autoCompilingTotalInvoice = function () {
 		if (
@@ -1246,8 +1333,12 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		}
 	};
 
-	gdata.selectedCsa().
-	then (function (csaId) {
+	gdata.profileInfo().
+	then (function (profile) {
+		$scope.canEdit = (profile.permissions.indexOf(gassmanApp.P_canEnterPayments) != -1);
+
+		return gdata.selectedCsa();
+	}).then (function (csaId) {
 		$scope.csaId = csaId;
 
 		return gdata.accountsNames($scope.csaId);
@@ -1284,64 +1375,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			} };
 		else
 			return gdata.transactionForEdit($scope.csaId, $scope.transId);
-	}).then(function (tdata) {
-		var t = tdata.data;
-
-		if (t.cc_type != 'p')
-			throw "illegal type";
-
-		$scope.transId = t.transId;
-		$scope.tdesc = t.description;
-		$scope.tdate = new Date(t.date);
-
-		var clients = [];
-		var producers = [];
-		var expenses = [];
-
-		for (var i in t.lines) {
-			var l = t.lines[i];
-			// il filtro currency digerisce anche le stringhe
-			// mentre input="number" no, devo prima convertire in float
-			// i Decimal su db vengono convertiti in json in stringa
-			var x = parseFloat(l.amount);
-			var ac = $scope.currencies[l.account];
-
-			//console.log(x, typeof(x));
-			if (x < 0) {
-				clients.push(l);
-				l.amount = -x;
-			} else if (ac && Object.keys(ac.people).length) {
-				producers.push(l);
-				l.amount = +x;
-			} else {
-				expenses.push(l);
-				l.amount = +x;
-				continue;
-			}
-
-			if (!l.accountName)
-				l.accountName = $scope.currencies[l.account].name;
-		}
-
-		clients.push(newLine());
-		producers.push(newLine());
-		expenses.push(newLine());
-
-		$scope.lines = clients;
-		$scope.producers = producers;
-		$scope.expenses = expenses;
-
-		autoCompileTotalInvoice = t.transId != 'new' ? 0 : 2;
-
-		$scope.updateTotalAmount();
-		$scope.updateTotalInvoice();
-		$scope.updateTotalExpenses()
-		$scope.checkCurrencies();
-
-		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
-		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
-		// comunque inutilizzabile
-	}).
+	}).then(setupTransaction).
 	then (undefined, function (error) {
 //		if (gdata.isError(error.data, gdata.E_already_modified)) {
 //			$location.path('/transaction/' + error.data[2] + '/p');
