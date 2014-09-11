@@ -1528,20 +1528,6 @@ gassmanControllers.controller('TransactionGeneric', function($scope, $routeParam
 
 		//$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
 
-		return gdata.expensesTags($scope.csaId);
-	}).then(function (r) {
-		var expensesAccounts = r.data.accounts;
-		var expensesTags = r.data.tags;
-
-		angular.forEach(expensesAccounts, function (account) {
-			// 0:id, 1:gc_name, 3:currency_id
-			$scope.autocompletionExpenses.push(account[1]);
-		});
-
-		angular.forEach(expensesTags, function (tag) {
-			$scope.autocompletionExpenses.push(tag);
-		});
-
 		return gdata.transactionForEdit($scope.csaId, $scope.transId);
 	}).then(function (tdata) {
 		var t = tdata.data;
@@ -1610,7 +1596,6 @@ gassmanControllers.controller('TransactionGeneric', function($scope, $routeParam
 	});
 });
 
-// XXX:
 gassmanControllers.controller('TransactionTrashed', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
 	$scope.transId = $routeParams['transId'];
 	$scope.lines = [];
@@ -1618,12 +1603,10 @@ gassmanControllers.controller('TransactionTrashed', function($scope, $routeParam
 	$scope.expenses = [];
 	//$scope.accounts = {};
 	$scope.tdate = new Date();
-	$scope.tdesc = 'Pagamento';
+	$scope.tdesc = 'Cancellazione';
 	$scope.totalAmount = 0.0;
 	$scope.totalInvoice = 0.0;
 	$scope.totalExpenses = 0.0;
-	$scope.difference = 0.0;
-	$scope.confirmDelete = false;
 	$scope.currency = null;
 	$scope.currencyError = false;
 	$scope.currencies = {};
@@ -1634,48 +1617,8 @@ gassmanControllers.controller('TransactionTrashed', function($scope, $routeParam
 	$scope.tsaveOk = null;
 	$scope.tsaveError = null;
 
-	var autoCompileTotalInvoice = 2;
-
-	var autoCompilingTotalInvoice = function () {
-		if (
-			$scope.producers.length < 3 &&
-			($scope.producers.length == 1 || (!$scope.producers[1].accountName && !$scope.producers[1].amount)) &&
-			$scope.producers[0].amount == $scope.totalInvoice &&
-			$scope.expenses.length == 1 &&
-			!$scope.expenses[0].desc && !$scope.expenses[0].amount
-			)
-			return 2;
-		if (
-			$scope.expenses.length < 3 &&
-			($scope.expenses.length == 1 || (!$scope.expenses[1].desc && !$scope.expenses[1].amount)) &&
-			$scope.expenses[0].amount == $scope.totalAmount - $scope.totalInvoice
-			)
-			return 1;
-		return 0;
-	};
-
-	var newLine = function () {
-		return {
-			accountName: '',
-			account: null,
-			amount: '',
-			notes: ''
-		};
-	};
-
-	$scope.focusAmount = function (type) {
-		var e = angular.element('#' + type + this.$index)[0];
-		e.focus();
-	};
-
-	$scope.checkLine = function (e, ll) {
-		if (e.account)
-			ll.push(newLine());
-	};
-
-	$scope.checkExp = function (e, ll) {
-		if (e.notes)
-			ll.push(newLine());
+	$scope.showTransaction = function (tid) {
+		$location.path('/transaction/' + tid + '/' + $scope.cc_type);
 	};
 
 	$scope.updateTotalAmount = function () {
@@ -1688,25 +1631,9 @@ gassmanControllers.controller('TransactionTrashed', function($scope, $routeParam
 		}
 
 		$scope.totalAmount = t;
-
-		if (autoCompileTotalInvoice == 2) {
-			$scope.producers[0].amount = $scope.totalAmount;
-
-			$scope.updateTotalInvoice();
-		} else if (autoCompileTotalInvoice == 1) {
-			$scope.expenses[0].amount = $scope.totalAmount - $scope.totalInvoice;
-		} else {
-			$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice - $scope.totalExpenses);
-		}
 	}
 
 	$scope.updateTotalInvoice = function (f) {
-		var ac = autoCompilingTotalInvoice();
-		if (f !== undefined && ac < autoCompileTotalInvoice) {
-			autoCompileTotalInvoice = ac;
-		}
-
-		//console.log('update total invoice', f);
 		var t = 0.0;
 		for (var i in $scope.producers) {
 			var l = $scope.producers[i];
@@ -1716,17 +1643,9 @@ gassmanControllers.controller('TransactionTrashed', function($scope, $routeParam
 		}
 
 		$scope.totalInvoice = t;
-
-		$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice - $scope.totalExpenses);
 	}
 
 	$scope.updateTotalExpenses = function (f) {
-		var ac = autoCompilingTotalInvoice();
-		if (f !== undefined && ac < autoCompileTotalInvoice) {
-			autoCompileTotalInvoice = ac;
-		}
-
-		//console.log('update total invoice', f);
 		var t = 0.0;
 		for (var i in $scope.expenses) {
 			var l = $scope.expenses[i];
@@ -1736,153 +1655,7 @@ gassmanControllers.controller('TransactionTrashed', function($scope, $routeParam
 		}
 
 		$scope.totalExpenses = t;
-
-		$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice - $scope.totalExpenses);
 	}
-
-	$scope.savePayment = function () {
-		if ($scope.$invalid ||
-			$scope.currencyError ||
-			$scope.difference > .01)
-			return;
-
-		var data = {
-			transId: $scope.transId == 'new' ? null : $scope.transId,
-			cc_type: 'p',
-			currency: $scope.currency[0],
-			lines: [],
-			date: $scope.tdate,
-			description: $scope.tdesc
-		};
-
-		var f = -1;
-		var cc = function (l) {
-			if (l.amount > 0.0) {
-				if (l.account) {
-					data.lines.push({
-						amount: l.amount * f,
-						account: l.account,
-						notes: l.notes
-					});
-				}
-			}
-		}
-
-		angular.forEach($scope.lines, cc);
-		f = +1;
-		angular.forEach($scope.producers, cc);
-		angular.forEach($scope.expenses, function (l) {
-			// a differenza di clienti e produttori, qui non ho il conto:
-			// lo inserisce il server in base a csa e currency
-			if (l.amount > 0.0) {
-				data.lines.push({
-					amount: l.amount,
-					notes: l.notes,
-					account: null
-				});
-			}
-		});
-
-		if (data.lines.length == 0) {
-			return;
-		}
-
-		//data = angular.toJson(data) // lo fa già in automatico
-		gdata.transactionSave($scope.csaId, data).
-		then (function (r) {
-			console.log(r);
-			$scope.savedTransId = r.data;
-			$scope.transId = 'new';
-			$scope.lines = [];
-			$scope.producers = [];
-			$scope.expenses = [];
-			//$scope.accounts = {};
-			$scope.tsaveOk = true;
-		}).
-		then (undefined, function (error) {
-			$scope.tsaveError = error.data;
-		});
-	};
-
-	$scope.newTrans = function () {
-		$scope.tdate = new Date();
-		$scope.tdesc = 'Pagamento';
-		$scope.totalAmount = 0.0;
-		$scope.totalInvoice = 0.0;
-		$scope.totalExpenses = 0.0;
-		$scope.confirmDelete = false;
-		$scope.currency = null;
-		$scope.tsaveOk = null;
-		$scope.lines.push(newLine());
-		$scope.producers.push(newLine());
-		$scope.expenses.push(newLine());
-	};
-
-	$scope.viewLastTrans = function () {
-		$location.path('/transaction/' + $scope.savedTransId + '/p');
-	};
-
-	$scope.confirmCancelPayment = function () {
-		$scope.confirmDelete = true;
-		$timeout(function () { $scope.confirmDelete = false; }, 3200.0);
-	};
-
-	$scope.cancelPayment = function () {
-		$scope.confirmDelete = false;
-
-		var data = {
-				transId: $scope.transId,
-				cc_type: 't',
-				currency: $scope.currency[0],
-				lines: [],
-				date: $scope.tdate,
-				description: $scope.tdesc
-			};
-
-		gdata.transactionSave($scope.csaId, data).
-		then (function (r) {
-			console.log(r);
-			$scope.savedTransId = r.data;
-			$scope.transId = 'new';
-			$scope.lines = [];
-			$scope.producers = [];
-			$scope.expenses = [];
-			//$scope.accounts = {};
-			$scope.tsaveOk = true;
-		}).
-		then (undefined, function (error) {
-			$scope.tsaveError = error.data;
-		});
-	};
-
-	$scope.checkCurrencies = function () {
-		$scope.currency = null;
-
-		var cc = function (l) {
-			var a = l.account;
-
-			if (!a)
-				return;
-
-			var curr = $scope.currencies[a];
-
-			if (!$scope.currency) {
-				$scope.currency = curr.cur;
-			} else if (!angular.equals($scope.currency, curr.cur)) {
-				throw 'err';
-			}
-		}
-
-		try {
-			angular.forEach($scope.lines, cc);
-			angular.forEach($scope.producers, cc);
-
-			$scope.currencyError = false;
-		} catch (e) {
-			$scope.currency = null;
-			$scope.currencyError = true;
-		}
-	};
 
 	gdata.selectedCsa().
 	then (function (csaId) {
@@ -1894,44 +1667,28 @@ gassmanControllers.controller('TransactionTrashed', function($scope, $routeParam
 
 		$scope.currencies = accountAutocompletion.parse(r.data);
 
-		$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
+		//$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
 
-		return gdata.expensesTags($scope.csaId);
-	}).then(function (r) {
-		var expensesAccounts = r.data.accounts;
-		var expensesTags = r.data.tags;
-
-		angular.forEach(expensesAccounts, function (account) {
-			// 0:id, 1:gc_name, 3:currency_id
-			$scope.autocompletionExpenses.push(account[1]);
-		});
-
-		angular.forEach(expensesTags, function (tag) {
-			$scope.autocompletionExpenses.push(tag);
-		});
-
-		if ($scope.transId == 'new')
-			return {
-				data: {
-				transId: 'new',
-				description: 'Pagamento',
-				date: new Date(),
-				cc_type: 'p',
-				currency: null,
-				lines: []
-			} };
-		else
-			return gdata.transactionForEdit($scope.csaId, $scope.transId);
+		return gdata.transactionForEdit($scope.csaId, $scope.transId);
 	}).then(function (tdata) {
 		var t = tdata.data;
 
-		if (t.cc_type != 'p')
+		if (t.cc_type != 't')
 			throw "illegal type";
 
 		$scope.transId = t.transId;
 		$scope.tdesc = t.description;
 		$scope.tdate = new Date(t.date);
+		$scope.modified_by = t.modified_by;
+		$scope.modifies = t.modifies;
+		$scope.log_date = t.log_date;
+		$scope.operator = t.operator;
 
+		return gdata.transactionForEdit($scope.csaId, $scope.modifies);
+	}).then(function (tdata) {
+		var t = tdata.data;
+
+		$scope.cc_type = t.cc_type;
 		var clients = [];
 		var producers = [];
 		var expenses = [];
@@ -1957,24 +1714,18 @@ gassmanControllers.controller('TransactionTrashed', function($scope, $routeParam
 				continue;
 			}
 
-			if (!l.accountName)
-				l.accountName = $scope.currencies[l.account].name;
+			if (!l.accountNames)
+				l.accountNames = $scope.currencies[l.account].people;
 		}
-
-		clients.push(newLine());
-		producers.push(newLine());
-		expenses.push(newLine());
 
 		$scope.lines = clients;
 		$scope.producers = producers;
 		$scope.expenses = expenses;
 
-		autoCompileTotalInvoice = t.transId != 'new' ? 0 : 2;
-
 		$scope.updateTotalAmount();
 		$scope.updateTotalInvoice();
 		$scope.updateTotalExpenses()
-		$scope.checkCurrencies();
+//		$scope.checkCurrencies();
 		$scope.autocompletionDataError = null;
 
 		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
@@ -1989,7 +1740,6 @@ gassmanControllers.controller('TransactionTrashed', function($scope, $routeParam
 //		}
 	});
 });
-//###XXX
 
 gassmanControllers.controller('TransactionsIndex', function($scope, $location, gdata) {
 	$scope.transactions = null;

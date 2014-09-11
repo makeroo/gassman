@@ -1,0 +1,55 @@
+<div class="deposit">
+ <div class="lines-table">
+  <div class="body">
+   <div class="actions">
+    <div><label for="tdate">Data consegna:</label><span class="field">{{tdate | date}}</span></div>
+    <div><label for="tdesc">Descrizione e note:</label><span class="field">{{tdesc}}</span></div>
+   </div>
+<!--
+   <div class="header" ng-hide="autocompletionDataError">
+    Chi ha ritirato i prodotti:
+   </div>
+   <div ng-repeat="l in lines" class="row">
+    <div class="row-who field"><span ng-repeat="p in l.accountName"><a href="{{ p.pid ? '#/person/' + p.pid + '/details' : '#/account/' + l.account + '/details'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
+    <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
+    <div class="row-notes field" ng-show="l.notes">{{l.notes}}</div>
+   </div>
+   <div class="header" ng-hide="autocompletionDataError">
+    Fornitori:
+   </div>
+   <div ng-repeat="l in producers" class="row">
+    <div class="row-who field"><span ng-repeat="p in l.accountName"><a href="{{ p.pid ? '#/person/' + p.pid + '/details' : '#/account/' + l.account + '/details'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
+    <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
+    <div class="row-notes field" ng-show="l.notes">{{l.notes}}</div>
+   </div>
+
+   <div class="header" ng-hide="autocompletionDataError">
+    Altre spese:
+   </div>
+   <div ng-repeat="l in expenses" class="row">
+    <div class="row-who field">{{l.notes}}&nbsp;</div>
+    <div class="row-amount field">{{l.amount | currency: currency[1]}}</div>
+   </div>
+-->
+   <div ng-show="autocompletionDataError">
+     Caricamento fallito. Causa: {{autocompletionDataError}}.
+   </div>
+   <div class="actions">
+<!--
+    <div>
+        <span ng-show="!currencyError && totalAmount > 0 && difference < .01">Totale pagamenti: {{totalAmount | currency : currency[1] }}</span>
+        </div>
+-->
+   <div>
+       Cancellazione effettuata da <a href="#/person/{{operator.pid}}/details">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.
+   </div>
+   <div ng-show="modifies">
+       Dettagli della transazione cancellata: <button ng-click="showTransaction(modifies)">Esamina</button>
+   </div>
+   <div ng-show="modified_by">
+	   <em>Attenzione</em>. Questa cancellazione è stata annullata da una successiva modifica. <button ng-click="showTransaction(modified_by)">Esamina</button>
+   </div>
+   </div>
+  </div>
+ </div>
+</div>
