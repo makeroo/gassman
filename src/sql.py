@@ -543,7 +543,10 @@ def fetch_struct (cur):
     seqmode.value = lambda: []
     mapmode.value = lambda: {}
     r = {}
-    for k, v in zip(column_names(cur), cur.fetchone()):
+    row = cur.fetchone()
+    if row is None:
+        raise Exception('no rows feched')
+    for k, v in zip(column_names(cur), row):
         pp = k.split('__')
         if len(pp) > 1:
             t = r
