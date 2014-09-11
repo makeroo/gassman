@@ -1,4 +1,42 @@
-<form novalidate name="deposit" class="deposit" ng-submit="return;">
+<div ng-show="readonly" class="deposit">
+ <div class="lines-table">
+  <div class="header" ng-hide="autocompletionDataError">
+   Inserisci gli accrediti:
+  </div>
+  <div class="body">
+   <div ng-repeat="l in lines | filter:filledLine" class="row">
+    <div class="row-who field"><span ng-repeat="p in l.accountNames"><a href="{{ p.pid ? '#/person/' + p.pid + '/details' : '#/account/' + l.account + '/details'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
+    <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
+    <div class="row-notes field">{{l.notes}}&nbsp;</div>
+   </div>
+
+   <div ng-show="autocompletionDataError">
+     Caricamento fallito. Causa: {{autocompletionDataError}}.
+   </div>
+  </div>
+  <div class="actions">
+   <div>Data consegna: <span>{{tdate | date}}</span>, note: <span>{{tdesc}}</span><br/>
+       <span ng-show="!currencyError && totalAmount > 0">Totale accrediti: {{totalAmount | currency : currency[1] }}</span>
+       </div>
+   <div>
+       Movimento inserito da <a href="#/person/{{operator.pid}}/details">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.
+   </div>
+   <div ng-show="modifies">
+       Questo inserimento ne modifica uno precedente. <button ng-click="showTransaction(modifies)">Esamina</button>
+   </div>
+   <div ng-show="modified_by">
+	   <em>Attenzione</em>. Questo inserimento è stato annullato da una successiva modifica. <button ng-click="showTransaction(modified_by)">Esamina</button>
+   </div>
+   <button ng-show="canEdit && !modified_by" ng-click="modifyTransaction()">Modifica o cancella</button>
+<!--
+   <button ng-disabled="!csaId || !deposit.$valid || !totalAmount" ng-click="saveDeposit()">Registra in cassa</button>
+   <button ng-disabled="confirmDelete" ng-show="transId != 'new'" ng-click="confirmCancelDeposit()">Elimina la registrazione degli accrediti</button>
+   <button ng-show="confirmDelete" ng-click="cancelDeposit()">Conferma eliminazione</button>
+-->
+  </div>
+ </div>
+</div>
+<form ng-show="!readonly" novalidate name="deposit" class="deposit" ng-submit="return;">
  <div class="lines-table">
   <div class="header" ng-hide="autocompletionDataError">
    Inserisci gli accrediti:
@@ -57,6 +95,7 @@
        <span ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
        <span ng-show="!currencyError && !totalAmount">Nessun versamento inserito finora.</span>
        </div>
+   <button ng-show="transId != 'new'" ng-click="cancel()">Annulla</button>
    <button ng-disabled="!csaId || !deposit.$valid || !totalAmount" ng-click="saveDeposit()">Registra in cassa</button>
    <button ng-disabled="confirmDelete" ng-show="transId != 'new'" ng-click="confirmCancelDeposit()">Elimina la registrazione degli accrediti</button>
    <button ng-show="confirmDelete" ng-click="cancelDeposit()">Conferma eliminazione</button>
