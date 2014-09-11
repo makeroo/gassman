@@ -38,6 +38,15 @@
     <div>
         <span>Totale pagamenti: {{totalAmount | currency : currency[1] }}</span>
         </div>
+   <div>
+       Movimento inserito da <a href="#/person/{{operator.pid}}/details">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.
+   </div>
+   <div ng-show="modifies">
+       Questo inserimento ne modifica uno precedente. <button ng-click="showTransaction(modifies)">Esamina</button>
+   </div>
+   <div ng-show="modified_by">
+	   <em>Attenzione</em>. Questo inserimento è stato annullato da una successiva modifica. <button ng-click="showTransaction(modified_by)">Esamina</button>
+   </div>
    </div>
   </div>
  </div>

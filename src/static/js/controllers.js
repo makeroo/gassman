@@ -1082,7 +1082,7 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 	};
 
 	$scope.showTransaction = function (tid) {
-		$location.path('/transaction/' + tid + '/x');
+		$location.path('/transaction/' + tid + '/p');
 	};
 
 	var autoCompilingTotalInvoice = function () {
@@ -1406,6 +1406,10 @@ gassmanControllers.controller('TransactionGeneric', function($scope, $routeParam
 	$scope.tsaveOk = null;
 	$scope.tsaveError = null;
 
+	$scope.showTransaction = function (tid) {
+		$location.path('/transaction/' + tid + '/g');
+	};
+
 	$scope.updateTotalAmount = function () {
 		var t = 0.0;
 		for (var i in $scope.lines) {
@@ -1478,6 +1482,10 @@ gassmanControllers.controller('TransactionGeneric', function($scope, $routeParam
 		$scope.transId = t.transId;
 		$scope.tdesc = t.description;
 		$scope.tdate = new Date(t.date);
+		$scope.modified_by = t.modified_by;
+		$scope.modifies = t.modifies;
+		$scope.log_date = t.log_date;
+		$scope.operator = t.operator;
 
 		var clients = [];
 		var producers = [];
