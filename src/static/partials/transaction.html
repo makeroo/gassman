@@ -1,0 +1,23 @@
+<div ng-if="trans.cc_type == 'x'">
+<ng-include src="'static/partials/transaction_cashexchange.html'"></ng-include>
+</div>
+
+<div ng-if="trans.cc_type == 'p'">
+<ng-include src="'static/partials/transaction_payment.html'"></ng-include>
+</div>
+
+<div ng-if="trans.cc_type == 'w'">
+<ng-include src="'static/partials/transaction_withdrawal.html'"></ng-include>
+</div>
+
+<div ng-if="trans.cc_type == 'd'">
+<ng-include src="'static/partials/transaction_deposit.html'"></ng-include>
+</div>
+
+<div ng-if="trans.cc_type == 'g'">
+<ng-include src="'static/partials/transaction_generic.html'"></ng-include>
+</div>
+
+<div ng-if="trans.cc_type == 't'">
+<ng-include src="'static/partials/transaction_trashed.html'"></ng-include>
+</div>

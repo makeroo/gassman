@@ -135,7 +135,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 	});
 
 	$scope.showTransaction = function (mov) {
-		$location.path('/transaction/' + mov[4] + '/' + mov[6]);
+		$location.path('/transaction/' + mov[4]);
 	};
 
 	$scope.loadMore = function () {
@@ -151,7 +151,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 			concluded = true;
 			// TODO: FIXME: qui ho 2 errori...
 			$scope.serverError = error.data[1];
-			console.log('movements error:', error.data)
+			console.log('AccountDetails: movements error:', error.data)
 			$scope.showErrorMessage = false;
 			$scope.movementsError = error.data;
 			//console.log('error', data, status, headers, config);
@@ -248,816 +248,36 @@ gassmanControllers.controller('AccountsIndex', function($scope, $filter, $locati
 	});
 });
 
-gassmanControllers.controller('TransactionDeposit', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
-	$scope.transId = $routeParams['transId'];
-	$scope.lines = [];
-	$scope.tdate = new Date();
-	$scope.tdesc = 'Accredito';
-	$scope.totalAmount = 0.0;
-	$scope.confirmDelete = false;
-	$scope.currency = null;
-	$scope.currencyError = false;
-	$scope.currencies = {};
-	$scope.autocompletionData = [];
-	$scope.autocompletionDataError = null;
-	$scope.csaId = null;
-	$scope.tsaveOk = null;
-	$scope.tsaveError = null;
-	$scope.readonly = true;
-	$scope.canEdit = false;
+gassmanControllers.controller('Transaction', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
+	var transId = $routeParams['transId'];
+	var trans = {};
 
-	var setupTransaction = function (tdata) {
-		var t = tdata.data;
+	$scope.trans = trans;
 
-		if (t.cc_type != 'd')
-			throw "illegal type";
-
-		$scope.readonly = t.transId != 'new';
-		$scope.transId = t.transId;
-		$scope.tdesc = t.description;
-		$scope.tdate = new Date(t.date);
-		$scope.modified_by = t.modified_by;
-		$scope.modifies = t.modifies;
-		$scope.log_date = t.log_date;
-		$scope.operator = t.operator;
-
-		// caricata quindi rimuovo la riga negativa
-		for (var i in t.lines) {
-			var l = t.lines[i];
-			// il filtro currency digerisce anche le stringhe
-			// mentre input="number" no, devo prima convertire in float
-			// i Decimal su db vengono convertiti in json in stringa
-			var x = parseFloat(l.amount);
-
-			//console.log(x, typeof(x));
-			if (x < 0) {
-				t.lines.splice(i, 1);
-			} else {
-				l.amount = x;
-			}
-		}
-
-		for (var i in t.lines) {
-			var l = t.lines[i];
-			if (!l.accountName)
-				l.accountName = $scope.currencies[l.account].name;
-			if (!l.accountNames)
-				l.accountNames = $scope.currencies[l.account].people;
-		}
-
-		t.lines.push(newLine());
-
-		$scope.lines = t.lines;
-		$scope.updateTotalAmount();
-		$scope.checkCurrencies();
-		$scope.autocompletionDataError = null;
-
-		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
-		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
-		// comunque inutilizzabile
-	};
-
-	$scope.filledLine = function (line) {
-		return line.account != null;
-	};
-
-	$scope.modifyTransaction = function () {
-		$scope.readonly = false;
-	};
-	$scope.cancel = function () {
-		gdata.transactionForEdit($scope.csaId, $scope.transId).
-		then(setupTransaction).
-		then(undefined, function (error) {
-			$scope.autocompletionDataError = error.data;
-		});
-	};
-
-	$scope.showTransaction = function (tid) {
-		$location.path('/transaction/' + tid + '/d');
-	};
-
-	var newLine = function () {
-		return {
-			accountName: '',
-			account: null,
-			amount: '',
-			notes: ''
-		};
-	};
-
-	$scope.checkLine = function (e) {
-		$scope.lines.push(newLine());
-	};
-
-	$scope.updateTotalAmount = function () {
-		var t = 0.0;
-		for (var i in $scope.lines) {
-			var l = $scope.lines[i];
-			var a = parseFloat(l.amount);
-			if (!isNaN(a))
-				t += a;
-		}
-
-		$scope.totalAmount = t;
+	if (gassmanApp.isPk(transId)) {
+		trans.transId = transId;
+		trans.cc_type = null;
+	} else if (gassmanApp.isValidTransactionType(transId)) {
+		trans.transId = 'new';
+		trans.cc_type = transId;
+	} else {
+		// TODO: lanciare 404...
+		// ovvero impostare le variabili sotto affinché
+		// il template mostri errore
+		throw 'illegal url';
 	}
 
-	$scope.saveDeposit = function () {
-		if ($scope.$invalid || $scope.currencyError)
-			return;
-
-		var data = {
-			transId: $scope.transId == 'new' ? null : $scope.transId,
-			cc_type: 'd',
-			currency: $scope.currency[0],
-			lines: [],
-			date: $scope.tdate,
-			description: $scope.tdesc
-		};
-
-		for (var i in $scope.lines) {
-			var l = $scope.lines[i];
-
-			if (l.amount > 0.0) {
-				if (l.account) {
-					data.lines.push(l);
-				}
-			}
-		}
-
-		if (data.lines.length == 0) {
-			return;
-		}
-
-		//data = angular.toJson(data) // lo fa già in automatico
-		gdata.transactionSave($scope.csaId, data).
-		then (function (r) {
-			console.log(r);
-			$scope.savedTransId = r.data;
-			$scope.transId = 'new';
-			$scope.lines = [];
-			$scope.tsaveOk = true;
-		}).
-		then (undefined, function (error) {
-			$scope.tsaveError = error.data;
-		});
-	};
-
-	$scope.newTrans = function () {
-		$scope.tdate = new Date();
-		$scope.tdesc = 'Accredito';
-		$scope.totalAmount = 0.0;
-		$scope.confirmDelete = false;
-		$scope.currency = null;
-		$scope.tsaveOk = null;
-		$scope.lines.push(newLine());
-	};
-
-	$scope.viewLastTrans = function () {
-		$location.path('/transaction/' + $scope.savedTransId + '/d');
-	};
-
-	$scope.confirmCancelDeposit = function () {
-		$scope.confirmDelete = true;
-		$timeout(function () { $scope.confirmDelete = false; }, 3200.0);
-	};
-
-	$scope.cancelDeposit = function () {
-		$scope.confirmDelete = false;
-
-		var data = {
-				transId: $scope.transId,
-				cc_type: 't',
-				currency: $scope.currency[0],
-				lines: [],
-				date: $scope.tdate,
-				description: $scope.tdesc
-			};
-
-		gdata.transactionSave($scope.csaId, data).
-		then (function (r) {
-			console.log(r);
-			$scope.savedTransId = r.data;
-			$scope.transId = 'new';
-			$scope.lines = [];
-			$scope.tsaveOk = true;
-		}).
-		then (undefined, function (error) {
-			$scope.tsaveError = error.data;
-		});
-	};
-
-	$scope.checkCurrencies = function () {
-		$scope.currency = null;
-
-		for (var i in $scope.lines) {
-			var l = $scope.lines[i];
-			var a = l.account;
-
-			if (!a)
-				continue;
-
-			var curr = $scope.currencies[a];
-
-			if (!$scope.currency) {
-				$scope.currency = curr.cur;
-			} else if (!angular.equals($scope.currency, curr.cur)) {
-				$scope.currency = null;
-				$scope.currencyError = true;
-				return;
-			}
-		}
-
-		$scope.currencyError = false;
-	};
-
-	gdata.profileInfo().
-	then (function (profile) {
-		$scope.canEdit = (profile.permissions.indexOf(gassmanApp.P_canEnterDeposit) != -1);
-
-		return gdata.selectedCsa();
-	}).then (function (csaId) {
-		$scope.csaId = csaId;
-
-		return gdata.accountsNames($scope.csaId);
-	}).then (function (r) {
-		// trasforma data in autocompletionData
-
-		$scope.currencies = accountAutocompletion.parse(r.data);
-
-		$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
-
-		if ($scope.transId == 'new')
-			return {
-				data: {
-				transId: 'new',
-				description: 'Accredito',
-				date: new Date(),
-				cc_type: 'd',
-				currency: null,
-				lines: []
-			} };
-		else
-			return gdata.transactionForEdit($scope.csaId, $scope.transId);
-	}).then(setupTransaction).
-	then (undefined, function (error) {
-//		if (gdata.isError(error.data, gdata.E_already_modified)) {
-//			$location.path('/transaction/' + error.data[2] + '/d');
-//		} else {
-			$scope.autocompletionDataError = error.data;
-//		}
-	});
-});
-
-gassmanControllers.controller('TransactionCashExchange', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
-	$scope.transId = $routeParams['transId'];
-	$scope.lines = [];
-	$scope.tdate = new Date();
-	$scope.tdesc = 'Accredito';
-	$scope.totalAmount = 0.0;
+	$scope.modified_by = null;
+	$scope.modifies = null;
+	$scope.log_date = null;
+	$scope.operator = null;
+	$scope.totalAmount = null;
+	$scope.totalInvoice = null;
+	$scope.totalExpenses = null;
+	$scope.difference = null;
 	$scope.confirmDelete = false;
 	$scope.currency = null;
-	$scope.currencyError = false;
-	$scope.currencies = {};
-	$scope.autocompletionData = [];
-	$scope.autocompletionDataError = null;
-	$scope.csaId = null;
-	$scope.tsaveOk = null;
-	$scope.tsaveError = null;
-	$scope.readonly = true;
-	$scope.canEdit = false;
-
-	var setupTransaction = function (tdata) {
-		var t = tdata.data;
-
-		if (t.cc_type != 'x')
-			throw "illegal type";
-
-		$scope.readonly = t.transId != 'new';
-		$scope.transId = t.transId;
-		$scope.tdesc = t.description;
-		$scope.tdate = new Date(t.date);
-		$scope.modified_by = t.modified_by;
-		$scope.modifies = t.modifies;
-		$scope.log_date = t.log_date;
-		$scope.operator = t.operator;
-
-		// caricata quindi rimuovo la riga negativa
-		for (var i in t.lines) {
-			var l = t.lines[i];
-			// il filtro currency digerisce anche le stringhe
-			// mentre input="number" no, devo prima convertire in float
-			// i Decimal su db vengono convertiti in json in stringa
-			var x = parseFloat(l.amount);
-
-			//console.log(x, typeof(x));
-			if (x < 0) {
-				t.lines.splice(i, 1);
-				$scope.receiver.account = l.account;
-			} else {
-				l.amount = parseFloat(l.amount);
-			}
-		}
-
-		for (var i in t.lines) {
-			var l = t.lines[i];
-			if (!l.accountName)
-				l.accountName = $scope.currencies[l.account].name;
-			if (!l.accountNames)
-				l.accountNames = $scope.currencies[l.account].people;
-		}
-
-		t.lines.push(newLine());
-
-		var ra = $scope.currencies[$scope.receiver.account];
-		$scope.receiver.accountName = ra ? ra.name : '';
-		$scope.receiver.accountNames = ra ? ra.people : [];
-
-		$scope.lines = t.lines;
-		$scope.updateTotalAmount();
-		$scope.checkCurrencies();
-		$scope.autocompletionDataError = null;
-
-		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
-		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
-		// comunque inutilizzabile
-	};
-
-	$scope.filledLine = function (line) {
-		return line.account != null;
-	};
-
-	$scope.modifyTransaction = function () {
-		$scope.readonly = false;
-	};
-	$scope.cancel = function () {
-		gdata.transactionForEdit($scope.csaId, $scope.transId).
-		then(setupTransaction).
-		then(undefined, function (error) {
-			$scope.autocompletionDataError = error.data;
-		});
-	};
-
-	$scope.showTransaction = function (tid) {
-		$location.path('/transaction/' + tid + '/x');
-	};
-
-	var newLine = function () {
-		return {
-			accountName: '',
-			account: null,
-			amount: '',
-			notes: ''
-		};
-	};
-
-	$scope.receiver = newLine();
-
-	$scope.checkLine = function (e) {
-		$scope.lines.push(newLine());
-	};
-
-	$scope.focusAmount = function () {
-		var e = angular.element('#amount' + this.$index)[0];
-		e.focus();
-	};
-
-	$scope.updateTotalAmount = function () {
-		var t = 0.0;
-		for (var i in $scope.lines) {
-			var l = $scope.lines[i];
-			var a = parseFloat(l.amount);
-			if (!isNaN(a))
-				t += a;
-		}
-
-		$scope.totalAmount = t;
-	}
-
-	$scope.saveCashExchange = function () {
-		if ($scope.$invalid || $scope.currencyError)
-			return;
-
-		var data = {
-			transId: $scope.transId == 'new' ? null : $scope.transId,
-			cc_type: 'x',
-			currency: $scope.currency[0],
-			lines: [],
-			receiver: $scope.receiver.account,
-			date: $scope.tdate,
-			description: $scope.tdesc
-		};
-
-		for (var i in $scope.lines) {
-			var l = $scope.lines[i];
-
-			if (l.amount > 0.0) {
-				if (l.account) {
-					data.lines.push(l);
-				}
-			}
-		}
-
-		if (data.lines.length == 0) {
-			return;
-		}
-
-		//data = angular.toJson(data) // lo fa già in automatico
-		gdata.transactionSave($scope.csaId, data).
-		then (function (r) {
-			console.log(r);
-			$scope.savedTransId = r.data;
-			$scope.transId = 'new';
-			$scope.lines = [];
-			$scope.tsaveOk = true;
-		}).
-		then (undefined, function (error) {
-			$scope.tsaveError = error.data;
-		});
-	};
-
-	$scope.newTrans = function () {
-		$scope.tdate = new Date();
-		$scope.tdesc = 'Accredito';
-		$scope.totalAmount = 0.0;
-		$scope.confirmDelete = false;
-		$scope.currency = null;
-		$scope.tsaveOk = null;
-		$scope.lines.push(newLine());
-	};
-
-	$scope.viewLastTrans = function () {
-		$location.path('/transaction/' + $scope.savedTransId + '/x');
-	};
-
-	$scope.confirmCancelCashExchange = function () {
-		$scope.confirmDelete = true;
-		$timeout(function () { $scope.confirmDelete = false; }, 3200.0);
-	};
-
-	$scope.cancelCashExchange = function () {
-		$scope.confirmDelete = false;
-
-		var data = {
-				transId: $scope.transId,
-				cc_type: 't',
-				currency: $scope.currency[0],
-				lines: [],
-				date: $scope.tdate,
-				description: $scope.tdesc
-			};
-
-		gdata.transactionSave($scope.csaId, data).
-		then (function (r) {
-			console.log(r);
-			$scope.savedTransId = r.data;
-			$scope.transId = 'new';
-			$scope.lines = [];
-			$scope.tsaveOk = true;
-		}).
-		then (undefined, function (error) {
-			$scope.tsaveError = error.data;
-		});
-	};
-
-	$scope.checkCurrencies = function () {
-		$scope.currency = null;
-
-		for (var i in $scope.lines) {
-			var l = $scope.lines[i];
-			var a = l.account;
-
-			if (!a)
-				continue;
-
-			var curr = $scope.currencies[a];
-
-			if (!$scope.currency) {
-				$scope.currency = curr.cur;
-			} else if (!angular.equals($scope.currency, curr.cur)) {
-				$scope.currency = null;
-				$scope.currencyError = true;
-				return;
-			}
-		}
-
-		$scope.currencyError = false;
-	};
-
-	gdata.profileInfo().
-	then (function (profile) {
-		$scope.canEdit = (profile.permissions.indexOf(gassmanApp.P_canEnterCashExchange) != -1);
-
-		return gdata.selectedCsa();
-	}).then (function (csaId) {
-		$scope.csaId = csaId;
-
-		return gdata.accountsNames($scope.csaId);
-	}).then (function (r) {
-		// trasforma data in autocompletionData
-
-		$scope.currencies = accountAutocompletion.parse(r.data);
-
-		$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
-
-		if ($scope.transId == 'new')
-			return {
-				data: {
-				transId: 'new',
-				description: 'Accredito',
-				date: new Date(),
-				cc_type: 'x',
-				currency: null,
-				lines: [],
-				modified_by: null,
-				modifies: null
-			} };
-		else
-			return gdata.transactionForEdit($scope.csaId, $scope.transId);
-	}).then(setupTransaction).
-	then (undefined, function (error) {
-//		if (gdata.isError(error.data, gdata.E_already_modified)) {
-//			$location.path('/transaction/' + error.data[2] + '/x');
-//		} else {
-			$scope.autocompletionDataError = error.data;
-//		}
-	});
-});
-
-gassmanControllers.controller('TransactionWithdrawal', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
-	$scope.transId = $routeParams['transId'];
-	$scope.lines = [];
-	$scope.tdate = new Date();
-	$scope.tdesc = 'Prelievo';
-	$scope.totalAmount = 0.0;
-	$scope.confirmDelete = false;
-	$scope.currency = null;
-	$scope.currencyError = false;
-	$scope.currencies = {};
-	$scope.autocompletionData = [];
-	$scope.autocompletionDataError = null;
-	$scope.csaId = null;
-	$scope.tsaveOk = null;
-	$scope.tsaveError = null;
-	$scope.readonly = true;
-	$scope.canEdit = false;
-
-	var setupTransaction = function (tdata) {
-		var t = tdata.data;
-
-		if (t.cc_type != 'w')
-			throw "illegal type";
-
-		$scope.readonly = t.transId != 'new';
-		$scope.transId = t.transId;
-		$scope.tdesc = t.description;
-		$scope.tdate = new Date(t.date);
-		$scope.modified_by = t.modified_by;
-		$scope.modifies = t.modifies;
-		$scope.log_date = t.log_date;
-		$scope.operator = t.operator;
-
-		// caricata quindi rimuovo la riga negativa
-		for (var i in t.lines) {
-			var l = t.lines[i];
-			// il filtro currency digerisce anche le stringhe
-			// mentre input="number" no, devo prima convertire in float
-			// i Decimal su db vengono convertiti in json in stringa
-			var x = parseFloat(l.amount);
-
-			//console.log(x, typeof(x));
-			if (x > 0) {
-				t.lines.splice(i, 1);
-			} else {
-				l.amount = - x;
-			}
-		}
-
-		for (var i in t.lines) {
-			var l = t.lines[i];
-			if (!l.accountName)
-				l.accountName = $scope.currencies[l.account].name;
-			if (!l.accountNames)
-				l.accountNames = $scope.currencies[l.account].people;
-		}
-
-		t.lines.push(newLine());
-
-		$scope.lines = t.lines;
-		$scope.updateTotalAmount();
-		$scope.checkCurrencies();
-		$scope.autocompletionDataError = null;
-
-		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
-		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
-		// comunque inutilizzabile
-	};
-
-	$scope.filledLine = function (line) {
-		return line.account != null;
-	};
-
-	$scope.modifyTransaction = function () {
-		$scope.readonly = false;
-	};
-	$scope.cancel = function () {
-		gdata.transactionForEdit($scope.csaId, $scope.transId).
-		then(setupTransaction).
-		then(undefined, function (error) {
-			$scope.autocompletionDataError = error.data;
-		});
-	};
-
-	$scope.showTransaction = function (tid) {
-		$location.path('/transaction/' + tid + '/w');
-	};
-
-	var newLine = function () {
-		return {
-			accountName: '',
-			account: null,
-			amount: '',
-			notes: ''
-		};
-	};
-
-	$scope.checkLine = function (e) {
-		$scope.lines.push(newLine());
-	};
-
-	$scope.updateTotalAmount = function () {
-		var t = 0.0;
-		for (var i in $scope.lines) {
-			var l = $scope.lines[i];
-			var a = parseFloat(l.amount);
-			if (!isNaN(a))
-				t += a;
-		}
-
-		$scope.totalAmount = t;
-	}
-
-	$scope.saveWithdrawal = function () {
-		if ($scope.$invalid || $scope.currencyError)
-			return;
-
-		var data = {
-			transId: $scope.transId == 'new' ? null : $scope.transId,
-			cc_type: 'w',
-			currency: $scope.currency[0],
-			lines: [],
-			date: $scope.tdate,
-			description: $scope.tdesc
-		};
-
-		for (var i in $scope.lines) {
-			var l = $scope.lines[i];
-
-			if (l.amount > 0.0) {
-				if (l.account) {
-					data.lines.push(l);
-				}
-			}
-		}
-
-		if (data.lines.length == 0) {
-			return;
-		}
-
-		//data = angular.toJson(data) // lo fa già in automatico
-		gdata.transactionSave($scope.csaId, data).
-		then (function (r) {
-			console.log(r);
-			$scope.savedTransId = r.data;
-			$scope.transId = 'new';
-			$scope.lines = [];
-			$scope.tsaveOk = true;
-		}).
-		then (undefined, function (error) {
-			$scope.tsaveError = error.data;
-		});
-	};
-
-	$scope.newTrans = function () {
-		$scope.tdate = new Date();
-		$scope.tdesc = 'Prelievo';
-		$scope.totalAmount = 0.0;
-		$scope.confirmDelete = false;
-		$scope.currency = null;
-		$scope.tsaveOk = null;
-		$scope.lines.push(newLine());
-	};
-
-	$scope.viewLastTrans = function () {
-		$location.path('/transaction/' + $scope.savedTransId + '/w');
-	};
-
-	$scope.confirmCancelWithdrawal = function () {
-		$scope.confirmDelete = true;
-		$timeout(function () { $scope.confirmDelete = false; }, 3200.0);
-	};
-
-	$scope.cancelWithdrawal = function () {
-		$scope.confirmDelete = false;
-
-		var data = {
-				transId: $scope.transId,
-				cc_type: 't',
-				currency: $scope.currency[0],
-				lines: [],
-				date: $scope.tdate,
-				description: $scope.tdesc
-			};
-
-		gdata.transactionSave($scope.csaId, data).
-		then (function (r) {
-			console.log(r);
-			$scope.savedTransId = r.data;
-			$scope.transId = 'new';
-			$scope.lines = [];
-			$scope.tsaveOk = true;
-		}).
-		then (undefined, function (error) {
-			$scope.tsaveError = error.data;
-		});
-	};
-
-	$scope.checkCurrencies = function () {
-		$scope.currency = null;
-
-		for (var i in $scope.lines) {
-			var l = $scope.lines[i];
-			var a = l.account;
-
-			if (!a)
-				continue;
-
-			var curr = $scope.currencies[a];
-
-			if (!$scope.currency) {
-				$scope.currency = curr.cur;
-			} else if (!angular.equals($scope.currency, curr.cur)) {
-				$scope.currency = null;
-				$scope.currencyError = true;
-				return;
-			}
-		}
-
-		$scope.currencyError = false;
-	};
-
-	gdata.profileInfo().
-	then (function (profile) {
-		$scope.canEdit = (profile.permissions.indexOf(gassmanApp.P_canEnterCashExchange) != -1);
-
-		return gdata.selectedCsa();
-	}).then (function (csaId) {
-		$scope.csaId = csaId;
-
-		return gdata.accountsNames($scope.csaId);
-	}).then (function (r) {
-		// trasforma data in autocompletionData
-
-		$scope.currencies = accountAutocompletion.parse(r.data);
-
-		$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
-
-		if ($scope.transId == 'new')
-			return {
-				data: {
-				transId: 'new',
-				description: 'Prelievo',
-				date: new Date(),
-				cc_type: 'w',
-				currency: null,
-				lines: []
-			} };
-		else
-			return gdata.transactionForEdit($scope.csaId, $scope.transId);
-	}).then(setupTransaction).
-	then (undefined, function (error) {
-//		if (gdata.isError(error.data, gdata.E_already_modified)) {
-//			$location.path('/transaction/' + error.data[2] + '/w');
-//		} else {
-			$scope.autocompletionDataError = error.data;
-//		}
-	});
-});
-
-gassmanControllers.controller('TransactionPayment', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
-	$scope.transId = $routeParams['transId'];
-	$scope.lines = [];
-	$scope.producers = [];
-	$scope.expenses = [];
-	//$scope.accounts = {};
-	$scope.tdate = new Date();
-	$scope.tdesc = 'Pagamento';
-	$scope.totalAmount = 0.0;
-	$scope.totalInvoice = 0.0;
-	$scope.totalExpenses = 0.0;
-	$scope.difference = 0.0;
-	$scope.confirmDelete = false;
-	$scope.currency = null;
-	$scope.currencyError = false;
+	$scope.currencyError = null;
 	$scope.currencies = {};
 	$scope.autocompletionData = [];
 	$scope.autocompletionExpenses = [];
@@ -1070,105 +290,19 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 
 	var autoCompileTotalInvoice = 2;
 
-	var setupTransaction = function (tdata) {
-		var t = tdata.data;
-
-		if (t.cc_type != 'p')
-			throw "illegal type";
-
-		$scope.readonly = t.transId != 'new';
-		$scope.transId = t.transId;
-		$scope.tdesc = t.description;
-		$scope.tdate = new Date(t.date);
-		$scope.modified_by = t.modified_by;
-		$scope.modifies = t.modifies;
-		$scope.log_date = t.log_date;
-		$scope.operator = t.operator;
-
-		var clients = [];
-		var producers = [];
-		var expenses = [];
-
-		for (var i in t.lines) {
-			var l = t.lines[i];
-			// il filtro currency digerisce anche le stringhe
-			// mentre input="number" no, devo prima convertire in float
-			// i Decimal su db vengono convertiti in json in stringa
-			var x = parseFloat(l.amount);
-			var ac = $scope.currencies[l.account];
-
-			//console.log(x, typeof(x));
-			if (x < 0) {
-				clients.push(l);
-				l.amount = -x;
-			} else if (ac && Object.keys(ac.people).length) {
-				producers.push(l);
-				l.amount = +x;
-			} else {
-				expenses.push(l);
-				l.amount = +x;
-				continue;
-			}
-
-			if (!l.accountName)
-				l.accountName = $scope.currencies[l.account].name;
-			if (!l.accountNames)
-				l.accountNames = $scope.currencies[l.account].people;
-		}
-
-		clients.push(newLine());
-		producers.push(newLine());
-		expenses.push(newLine());
-
-		$scope.lines = clients;
-		$scope.producers = producers;
-		$scope.expenses = expenses;
-
-		autoCompileTotalInvoice = t.transId != 'new' ? 0 : 2;
-
-		$scope.updateTotalAmount();
-		$scope.updateTotalInvoice();
-		$scope.updateTotalExpenses()
-		$scope.checkCurrencies();
-		$scope.autocompletionDataError = null;
-
-		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
-		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
-		// comunque inutilizzabile
-	};
-
-	$scope.filledLine = function (line) {
-		return line.account != null;
-	};
-
-	$scope.modifyTransaction = function () {
-		$scope.readonly = false;
-	};
-	$scope.cancel = function () {
-		gdata.transactionForEdit($scope.csaId, $scope.transId).
-		then(setupTransaction).
-		then(undefined, function (error) {
-			$scope.autocompletionDataError = error.data;
-		});
-	};
-
-	$scope.showTransaction = function (tid) {
-		$location.path('/transaction/' + tid + '/p');
-	};
-
 	var autoCompilingTotalInvoice = function () {
 		if (
-			$scope.producers.length < 3 &&
-			($scope.producers.length == 1 || (!$scope.producers[1].accountName && !$scope.producers[1].amount)) &&
-			$scope.producers[0].amount == $scope.totalInvoice &&
-			$scope.expenses.length == 1 &&
-			!$scope.expenses[0].desc && !$scope.expenses[0].amount
+			$scope.trans.producers.length < 3 &&
+			($scope.trans.producers.length == 1 || (!$scope.trans.producers[1].accountName && !$scope.trans.producers[1].amount)) &&
+			$scope.trans.producers[0].amount == $scope.totalInvoice &&
+			$scope.trans.expenses.length == 1 &&
+			!$scope.trans.expenses[0].desc && !$scope.trans.expenses[0].amount
 			)
 			return 2;
 		if (
-			$scope.expenses.length < 3 &&
-			($scope.expenses.length == 1 || (!$scope.expenses[1].desc && !$scope.expenses[1].amount)) &&
-			$scope.expenses[0].amount == $scope.totalAmount - $scope.totalInvoice
+			$scope.trans.expenses.length < 3 &&
+			($scope.trans.expenses.length == 1 || (!$scope.trans.expenses[1].desc && !$scope.trans.expenses[1].amount)) &&
+			$scope.trans.expenses[0].amount == $scope.totalAmount - $scope.totalInvoice
 			)
 			return 1;
 		return 0;
@@ -1183,38 +317,102 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		};
 	};
 
-	$scope.focusAmount = function (type) {
-		var e = angular.element('#' + type + this.$index)[0];
-		e.focus();
-	};
+	var setupTransaction = function (tdata) {
+		var t = tdata.data;
+		//var trans = $scope.trans; // è nella chiusura
+		var clients = [];
+		var producers = [];
+		var expenses = [];
 
-	$scope.checkLine = function (e, ll) {
-		if (e.account)
-			ll.push(newLine());
-	};
+		if (trans.cc_type == null)
+			trans.cc_type = t.cc_type;
+		else if (t.cc_type != trans.cc_type)
+			// TODO: che senso ha lanciare eccezione?
+			// ovvero impostare le variabili sotto affinché
+			// il template mostri errore
+			throw "illegal transaction type";
 
-	$scope.checkExp = function (e, ll) {
-		if (e.notes)
-			ll.push(newLine());
+		$scope.canEdit = gassmanApp.isTransactionTypeEditableByUser(trans.cc_type, $scope.profile);
+		$scope.readonly = t.transId != 'new';
+
+		if (!$scope.canEdit && !$scope.readonly) {
+			// TODO: gestire l'errore
+			throw "permission denied";
+		}
+
+		trans.transId = t.transId;
+		trans.tdesc = t.description;
+		trans.tdate = new Date(t.date);
+		trans.clients = clients;
+		trans.producers = producers;
+		trans.expenses = expenses;
+		$scope.modified_by = t.modified_by;
+		$scope.modifies = t.modifies;
+		$scope.log_date = t.log_date;
+		$scope.operator = t.operator;
+
+		for (var i in t.lines) {
+			var l = t.lines[i];
+			// il filtro currency digerisce anche le stringhe
+			// mentre input="number" no, devo prima convertire in float
+			// i Decimal su db vengono convertiti in json in stringa
+			var x = parseFloat(l.amount);
+			var ac = $scope.currencies[l.account];
+
+			//console.log(x, typeof(x));
+			if (ac && Object.keys(ac.people).length) {
+				if (x < 0) {
+					clients.push(l);
+					l.amount = -x;
+				} else {
+					producers.push(l);
+					l.amount = +x;
+				}
+
+				if (!l.accountName)
+					l.accountName = $scope.currencies[l.account].name;
+				if (!l.accountNames)
+					l.accountNames = $scope.currencies[l.account].people;
+			} else {
+				expenses.push(l);
+				l.amount = +x;
+			}
+		}
+
+		clients.push(newLine());
+		producers.push(newLine());
+		expenses.push(newLine());
+
+		autoCompileTotalInvoice = $scope.trans.cc_type != 'p' || t.transId != 'new' ? 0 : 2;
+
+		$scope.updateTotalAmount();
+		$scope.updateTotalInvoice();
+		$scope.updateTotalExpenses()
+		$scope.checkCurrencies();
+		$scope.autocompletionDataError = null;
+
+		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
+		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
+		// comunque inutilizzabile
 	};
 
 	$scope.updateTotalAmount = function () {
 		var t = 0.0;
-		for (var i in $scope.lines) {
-			var l = $scope.lines[i];
+
+		angular.forEach($scope.trans.clients, function (l) {
 			var a = parseFloat(l.amount);
 			if (!isNaN(a))
 				t += a;
-		}
+		});
 
 		$scope.totalAmount = t;
 
 		if (autoCompileTotalInvoice == 2) {
-			$scope.producers[0].amount = $scope.totalAmount;
+			$scope.trans.producers[0].amount = $scope.totalAmount;
 
 			$scope.updateTotalInvoice();
 		} else if (autoCompileTotalInvoice == 1) {
-			$scope.expenses[0].amount = $scope.totalAmount - $scope.totalInvoice;
+			$scope.trans.expenses[0].amount = $scope.totalAmount - $scope.totalInvoice;
 		} else {
 			$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice - $scope.totalExpenses);
 		}
@@ -1228,12 +426,12 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 
 		//console.log('update total invoice', f);
 		var t = 0.0;
-		for (var i in $scope.producers) {
-			var l = $scope.producers[i];
+
+		angular.forEach($scope.trans.producers, function (l) {
 			var a = parseFloat(l.amount);
 			if (!isNaN(a))
 				t += a;
-		}
+		});
 
 		$scope.totalInvoice = t;
 
@@ -1248,132 +446,17 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 
 		//console.log('update total invoice', f);
 		var t = 0.0;
-		for (var i in $scope.expenses) {
-			var l = $scope.expenses[i];
+
+		angular.forEach($scope.trans.expenses, function (l) {
 			var a = parseFloat(l.amount);
 			if (!isNaN(a))
 				t += a;
-		}
+		});
 
 		$scope.totalExpenses = t;
 
 		$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice - $scope.totalExpenses);
 	}
-
-	$scope.savePayment = function () {
-		if ($scope.$invalid ||
-			$scope.currencyError ||
-			$scope.difference > .01)
-			return;
-
-		var data = {
-			transId: $scope.transId == 'new' ? null : $scope.transId,
-			cc_type: 'p',
-			currency: $scope.currency[0],
-			lines: [],
-			date: $scope.tdate,
-			description: $scope.tdesc
-		};
-
-		var f = -1;
-		var cc = function (l) {
-			if (l.amount > 0.0) {
-				if (l.account) {
-					data.lines.push({
-						amount: l.amount * f,
-						account: l.account,
-						notes: l.notes
-					});
-				}
-			}
-		}
-
-		angular.forEach($scope.lines, cc);
-		f = +1;
-		angular.forEach($scope.producers, cc);
-		angular.forEach($scope.expenses, function (l) {
-			// a differenza di clienti e produttori, qui non ho il conto:
-			// lo inserisce il server in base a csa e currency
-			if (l.amount > 0.0) {
-				data.lines.push({
-					amount: l.amount,
-					notes: l.notes,
-					account: null
-				});
-			}
-		});
-
-		if (data.lines.length == 0) {
-			return;
-		}
-
-		//data = angular.toJson(data) // lo fa già in automatico
-		gdata.transactionSave($scope.csaId, data).
-		then (function (r) {
-			console.log(r);
-			$scope.savedTransId = r.data;
-			$scope.transId = 'new';
-			$scope.lines = [];
-			$scope.producers = [];
-			$scope.expenses = [];
-			//$scope.accounts = {};
-			$scope.tsaveOk = true;
-		}).
-		then (undefined, function (error) {
-			$scope.tsaveError = error.data;
-		});
-	};
-
-	$scope.newTrans = function () {
-		$scope.tdate = new Date();
-		$scope.tdesc = 'Pagamento';
-		$scope.totalAmount = 0.0;
-		$scope.totalInvoice = 0.0;
-		$scope.totalExpenses = 0.0;
-		$scope.confirmDelete = false;
-		$scope.currency = null;
-		$scope.tsaveOk = null;
-		$scope.lines.push(newLine());
-		$scope.producers.push(newLine());
-		$scope.expenses.push(newLine());
-	};
-
-	$scope.viewLastTrans = function () {
-		$location.path('/transaction/' + $scope.savedTransId + '/p');
-	};
-
-	$scope.confirmCancelPayment = function () {
-		$scope.confirmDelete = true;
-		$timeout(function () { $scope.confirmDelete = false; }, 3200.0);
-	};
-
-	$scope.cancelPayment = function () {
-		$scope.confirmDelete = false;
-
-		var data = {
-				transId: $scope.transId,
-				cc_type: 't',
-				currency: $scope.currency[0],
-				lines: [],
-				date: $scope.tdate,
-				description: $scope.tdesc
-			};
-
-		gdata.transactionSave($scope.csaId, data).
-		then (function (r) {
-			console.log(r);
-			$scope.savedTransId = r.data;
-			$scope.transId = 'new';
-			$scope.lines = [];
-			$scope.producers = [];
-			$scope.expenses = [];
-			//$scope.accounts = {};
-			$scope.tsaveOk = true;
-		}).
-		then (undefined, function (error) {
-			$scope.tsaveError = error.data;
-		});
-	};
 
 	$scope.checkCurrencies = function () {
 		$scope.currency = null;
@@ -1391,11 +474,11 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			} else if (!angular.equals($scope.currency, curr.cur)) {
 				throw 'err';
 			}
-		}
+		};
 
 		try {
-			angular.forEach($scope.lines, cc);
-			angular.forEach($scope.producers, cc);
+			angular.forEach($scope.trans.clients, cc);
+			angular.forEach($scope.trans.producers, cc);
 
 			$scope.currencyError = false;
 		} catch (e) {
@@ -1404,9 +487,103 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 		}
 	};
 
+	$scope.confirmDeleteTransaction = function () {
+		$scope.confirmDelete = true;
+		$timeout(function () { $scope.confirmDelete = false; }, 3200.0);
+	};
+
+	$scope.deleteTransaction = function () {
+		$scope.confirmDelete = false;
+
+		var data = {
+				transId: $scope.trans.transId,
+				cc_type: 't',
+				currency: $scope.currency[0],
+				lines: [],
+				date: $scope.trans.tdate,
+				description: $scope.trans.tdesc
+			};
+
+		gdata.transactionSave($scope.csaId, data).
+		then (function (r) {
+			//console.log('Transaction: transactionSave/delete result:', r);
+			//$scope.savedTransId = r.data;
+			//$scope.transId = 'new';
+			//$scope.lines = [];
+			//$scope.tsaveOk = true;
+
+			$scope.showTransaction(r.data);
+		}).
+		then (undefined, function (error) {
+			$scope.tsaveError = error.data;
+		});
+	};
+
+	$scope.addLine = function (where) {
+		where.push(newLine());
+	};
+/*
+	$scope.newTrans = function (tt, desc) {
+		$scope.transId = 'new';
+		$scope.cc_type = tt;
+		$scope.trans = {
+			tdate: new Date(),
+			tdesc: desc,
+			clients: [ newLine() ],
+			producers: [ newLine() ],
+			expenses: [ newLine() ],
+		};
+		$scope.totalAmount = 0.0;
+		$scope.totalInvoice = 0.0;
+		$scope.totalExpenses = 0.0;
+		$scope.confirmDelete = false;
+		$scope.currency = null;
+		$scope.tsaveOk = null;
+	};
+*/
+	$scope.filledLine = function (line) {
+		return line.account != null;
+	};
+
+	$scope.modifyTransaction = function () {
+		$scope.readonly = false;
+	};
+
+	$scope.reloadForm = function () {
+		gdata.transactionForEdit($scope.csaId, $scope.trans.transId).
+		then(setupTransaction).
+		then(undefined, function (error) {
+			$scope.autocompletionDataError = error.data;
+		});
+	};
+
+	$scope.focusAmount = function (type) {
+		var e = angular.element('#' + type + this.$index)[0];
+		$timeout(function () {
+			e.focus();
+		}, 1);
+	};
+
+	$scope.showTransaction = function (tid) {
+		$location.path('/transaction/' + tid);
+	};
+
+	$scope.transactionFactory = function () {
+		return {
+			transId: 'new',
+			description: '',
+			date: new Date(),
+			cc_type: $scope.trans.cc_type,
+			currency: null,
+			lines: [],
+			modified_by: null,
+			modifies: null
+		};
+	};
+
 	gdata.profileInfo().
 	then (function (profile) {
-		$scope.canEdit = (profile.permissions.indexOf(gassmanApp.P_canEnterPayments) != -1);
+		$scope.profile = profile;
 
 		return gdata.selectedCsa();
 	}).then (function (csaId) {
@@ -1434,311 +611,224 @@ gassmanControllers.controller('TransactionPayment', function($scope, $routeParam
 			$scope.autocompletionExpenses.push(tag);
 		});
 
-		if ($scope.transId == 'new')
+		if ($scope.trans.transId == 'new')
 			return {
-				data: {
-				transId: 'new',
-				description: 'Pagamento',
-				date: new Date(),
-				cc_type: 'p',
-				currency: null,
-				lines: []
-			} };
+				data: $scope.transactionFactory()
+				};
 		else
-			return gdata.transactionForEdit($scope.csaId, $scope.transId);
+			return gdata.transactionForEdit($scope.csaId, $scope.trans.transId);
 	}).then(setupTransaction).
 	then (undefined, function (error) {
-//		if (gdata.isError(error.data, gdata.E_already_modified)) {
-//			$location.path('/transaction/' + error.data[2] + '/p');
-//		} else {
-			$scope.autocompletionDataError = error.data;
-//		}
+		$scope.autocompletionDataError = error.data;
 	});
+});
+
+gassmanControllers.controller('TransactionDeposit', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
+
+	$scope.saveDeposit = function () {
+		if ($scope.$invalid || $scope.currencyError)
+			return;
+
+		var data = {
+			transId: $scope.trans.transId == 'new' ? null : $scope.trans.transId,
+			cc_type: 'd',
+			currency: $scope.currency[0],
+			lines: [],
+			date: $scope.trans.tdate,
+			description: $scope.trans.tdesc
+		};
+
+		angular.forEach($scope.trans.producers, function (l) {
+			if (l.amount > 0.0) {
+				if (l.account) {
+					data.lines.push(l);
+				}
+			}
+		});
+
+		if (data.lines.length == 0) {
+			return;
+		}
+
+		//data = angular.toJson(data) // lo fa già in automatico
+		gdata.transactionSave($scope.csaId, data).
+		then (function (r) {
+			//console.log('TransactionDeposit: save result:', r);
+			//$scope.savedTransId = r.data;
+			//$scope.transId = 'new';
+			//$scope.lines = [];
+			//$scope.tsaveOk = true;
+
+			$scope.showTransaction(r.data);
+		}).
+		then (undefined, function (error) {
+			$scope.tsaveError = error.data;
+		});
+	};
+});
+
+gassmanControllers.controller('TransactionCashExchange', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
+
+	$scope.saveCashExchange = function () {
+		if ($scope.$invalid || $scope.currencyError)
+			return;
+
+		var data = {
+			transId: $scope.trans.transId == 'new' ? null : $scope.trans.transId,
+			cc_type: 'x',
+			currency: $scope.currency[0],
+			lines: [],
+			receiver: $scope.trans.clients[0].account,
+			date: $scope.trans.tdate,
+			description: $scope.trans.tdesc
+		};
+
+		angular.forEach($scope.trans.producers, function (l) {
+			if (l.amount > 0.0) {
+				if (l.account) {
+					data.lines.push(l);
+				}
+			}
+		});
+
+		if (data.lines.length == 0) {
+			return;
+		}
+
+		//data = angular.toJson(data) // lo fa già in automatico
+		gdata.transactionSave($scope.csaId, data).
+		then (function (r) {
+			//console.log('TransactionCashExchange: save result:', r);
+
+			$scope.showTransaction(r.data);
+			//$scope.savedTransId = r.data;
+			//$scope.transId = 'new';
+			//$scope.lines = [];
+			//$scope.tsaveOk = true;
+		}).
+		then (undefined, function (error) {
+			$scope.tsaveError = error.data;
+		});
+	};
+});
+
+gassmanControllers.controller('TransactionWithdrawal', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
+
+	$scope.saveWithdrawal = function () {
+		if ($scope.$invalid || $scope.currencyError)
+			return;
+
+		var data = {
+			transId: $scope.trans.transId == 'new' ? null : $scope.trans.transId,
+			cc_type: 'w',
+			currency: $scope.currency[0],
+			lines: [],
+			date: $scope.trans.tdate,
+			description: $scope.trans.tdesc
+		};
+
+		angular.forEach($scope.trans.clients, function (l) {
+			if (l.amount > 0.0) {
+				if (l.account) {
+					data.lines.push(l);
+				}
+			}
+		});
+
+		if (data.lines.length == 0) {
+			return;
+		}
+
+		//data = angular.toJson(data) // lo fa già in automatico
+		gdata.transactionSave($scope.csaId, data).
+		then (function (r) {
+			//console.log('TransactionWithdrawal: save result:', r);
+			//$scope.savedTransId = r.data;
+			//$scope.transId = 'new';
+			//$scope.lines = [];
+			//$scope.tsaveOk = true;
+
+			$scope.showTransaction(r.data);
+		}).
+		then (undefined, function (error) {
+			$scope.tsaveError = error.data;
+		});
+	};
+});
+
+gassmanControllers.controller('TransactionPayment', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
+
+	$scope.savePayment = function () {
+		if ($scope.$invalid ||
+			$scope.currencyError ||
+			$scope.difference > .01)
+			return;
+
+		var data = {
+			transId: $scope.trans.transId == 'new' ? null : $scope.trans.transId,
+			cc_type: 'p',
+			currency: $scope.currency[0],
+			lines: [],
+			date: $scope.trans.tdate,
+			description: $scope.trans.tdesc
+		};
+
+		var f = -1;
+		var cc = function (l) {
+			if (l.amount > 0.0) {
+				if (l.account) {
+					data.lines.push({
+						amount: l.amount * f,
+						account: l.account,
+						notes: l.notes
+					});
+				}
+			}
+		};
+
+		angular.forEach($scope.trans.clients, cc);
+		f = +1;
+		angular.forEach($scope.trans.producers, cc);
+		angular.forEach($scope.trans.expenses, function (l) {
+			// a differenza di clienti e produttori, qui non ho il conto:
+			// lo inserisce il server in base a csa e currency
+			if (l.amount > 0.0) {
+				data.lines.push({
+					amount: l.amount,
+					notes: l.notes,
+					account: null
+				});
+			}
+		});
+
+		if (data.lines.length == 0) {
+			return;
+		}
+
+		//data = angular.toJson(data) // lo fa già in automatico
+		gdata.transactionSave($scope.csaId, data).
+		then (function (r) {
+			//console.log('TransactionPayment: save result:', r);
+			//$scope.savedTransId = r.data;
+			//$scope.transId = 'new';
+			//$scope.lines = [];
+			//$scope.producers = [];
+			//$scope.expenses = [];
+			//$scope.accounts = {};
+			//$scope.tsaveOk = true;
+
+			$scope.showTransaction(r.data);
+		}).
+		then (undefined, function (error) {
+			$scope.tsaveError = error.data;
+		});
+	};
 });
 
 gassmanControllers.controller('TransactionGeneric', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
-	$scope.transId = $routeParams['transId'];
-	$scope.lines = [];
-	$scope.producers = [];
-	$scope.expenses = [];
-	$scope.tdate = new Date();
-	$scope.tdesc = 'Pagamento';
-	$scope.totalAmount = 0.0;
-	$scope.totalInvoice = 0.0;
-	$scope.totalExpenses = 0.0;
-	$scope.currency = null;
-	$scope.currencyError = false;
-	$scope.currencies = {};
-	$scope.autocompletionData = [];
-	$scope.autocompletionExpenses = [];
-	$scope.autocompletionDataError = null;
-	$scope.csaId = null;
-	$scope.tsaveOk = null;
-	$scope.tsaveError = null;
-
-	$scope.showTransaction = function (tid) {
-		$location.path('/transaction/' + tid + '/g');
-	};
-
-	$scope.updateTotalAmount = function () {
-		var t = 0.0;
-		for (var i in $scope.lines) {
-			var l = $scope.lines[i];
-			var a = parseFloat(l.amount);
-			if (!isNaN(a))
-				t += a;
-		}
-
-		$scope.totalAmount = t;
-	}
-
-	$scope.updateTotalInvoice = function (f) {
-		var t = 0.0;
-		for (var i in $scope.producers) {
-			var l = $scope.producers[i];
-			var a = parseFloat(l.amount);
-			if (!isNaN(a))
-				t += a;
-		}
-
-		$scope.totalInvoice = t;
-	}
-
-	$scope.updateTotalExpenses = function (f) {
-		var t = 0.0;
-		for (var i in $scope.expenses) {
-			var l = $scope.expenses[i];
-			var a = parseFloat(l.amount);
-			if (!isNaN(a))
-				t += a;
-		}
-
-		$scope.totalExpenses = t;
-	}
-
-	gdata.selectedCsa().
-	then (function (csaId) {
-		$scope.csaId = csaId;
-
-		return gdata.accountsNames($scope.csaId);
-	}).then (function (r) {
-		// trasforma data in autocompletionData
-
-		$scope.currencies = accountAutocompletion.parse(r.data);
-
-		//$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
-
-		return gdata.transactionForEdit($scope.csaId, $scope.transId);
-	}).then(function (tdata) {
-		var t = tdata.data;
-
-		if (t.cc_type != 'g')
-			throw "illegal type";
-
-		$scope.transId = t.transId;
-		$scope.tdesc = t.description;
-		$scope.tdate = new Date(t.date);
-		$scope.modified_by = t.modified_by;
-		$scope.modifies = t.modifies;
-		$scope.log_date = t.log_date;
-		$scope.operator = t.operator;
-
-		var clients = [];
-		var producers = [];
-		var expenses = [];
-
-		for (var i in t.lines) {
-			var l = t.lines[i];
-			// il filtro currency digerisce anche le stringhe
-			// mentre input="number" no, devo prima convertire in float
-			// i Decimal su db vengono convertiti in json in stringa
-			var x = parseFloat(l.amount);
-			var ac = $scope.currencies[l.account];
-
-			//console.log(x, typeof(x));
-			if (x < 0) {
-				clients.push(l);
-				l.amount = -x;
-			} else if (ac && Object.keys(ac.people).length) {
-				producers.push(l);
-				l.amount = +x;
-			} else {
-				expenses.push(l);
-				l.amount = +x;
-				continue;
-			}
-
-			if (!l.accountNames)
-				l.accountName = $scope.currencies[l.account].people;
-		}
-
-		$scope.lines = clients;
-		$scope.producers = producers;
-		$scope.expenses = expenses;
-
-		$scope.updateTotalAmount();
-		$scope.updateTotalInvoice();
-		$scope.updateTotalExpenses()
-/*		$scope.checkCurrencies();
-*/
-		$scope.autocompletionDataError = null;
-
-		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
-		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
-		// comunque inutilizzabile
-	}).
-	then (undefined, function (error) {
-//		if (gdata.isError(error.data, gdata.E_already_modified)) {
-//			$location.path('/transaction/' + error.data[2] + '/p');
-//		} else {
-			$scope.autocompletionDataError = error.data;
-//		}
-	});
 });
 
 gassmanControllers.controller('TransactionTrashed', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
-	$scope.transId = $routeParams['transId'];
-	$scope.lines = [];
-	$scope.producers = [];
-	$scope.expenses = [];
-	//$scope.accounts = {};
-	$scope.tdate = new Date();
-	$scope.tdesc = 'Cancellazione';
-	$scope.totalAmount = 0.0;
-	$scope.totalInvoice = 0.0;
-	$scope.totalExpenses = 0.0;
-	$scope.currency = null;
-	$scope.currencyError = false;
-	$scope.currencies = {};
-	$scope.autocompletionData = [];
-	$scope.autocompletionExpenses = [];
-	$scope.autocompletionDataError = null;
-	$scope.csaId = null;
-	$scope.tsaveOk = null;
-	$scope.tsaveError = null;
-
-	$scope.showTransaction = function (tid) {
-		$location.path('/transaction/' + tid + '/' + $scope.cc_type);
-	};
-
-	$scope.updateTotalAmount = function () {
-		var t = 0.0;
-		for (var i in $scope.lines) {
-			var l = $scope.lines[i];
-			var a = parseFloat(l.amount);
-			if (!isNaN(a))
-				t += a;
-		}
-
-		$scope.totalAmount = t;
-	}
-
-	$scope.updateTotalInvoice = function (f) {
-		var t = 0.0;
-		for (var i in $scope.producers) {
-			var l = $scope.producers[i];
-			var a = parseFloat(l.amount);
-			if (!isNaN(a))
-				t += a;
-		}
-
-		$scope.totalInvoice = t;
-	}
-
-	$scope.updateTotalExpenses = function (f) {
-		var t = 0.0;
-		for (var i in $scope.expenses) {
-			var l = $scope.expenses[i];
-			var a = parseFloat(l.amount);
-			if (!isNaN(a))
-				t += a;
-		}
-
-		$scope.totalExpenses = t;
-	}
-
-	gdata.selectedCsa().
-	then (function (csaId) {
-		$scope.csaId = csaId;
-
-		return gdata.accountsNames($scope.csaId);
-	}).then (function (r) {
-		// trasforma data in autocompletionData
-
-		$scope.currencies = accountAutocompletion.parse(r.data);
-
-		//$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
-
-		return gdata.transactionForEdit($scope.csaId, $scope.transId);
-	}).then(function (tdata) {
-		var t = tdata.data;
-
-		if (t.cc_type != 't')
-			throw "illegal type";
-
-		$scope.transId = t.transId;
-		$scope.tdesc = t.description;
-		$scope.tdate = new Date(t.date);
-		$scope.modified_by = t.modified_by;
-		$scope.modifies = t.modifies;
-		$scope.log_date = t.log_date;
-		$scope.operator = t.operator;
-
-		return gdata.transactionForEdit($scope.csaId, $scope.modifies);
-	}).then(function (tdata) {
-		var t = tdata.data;
-
-		$scope.cc_type = t.cc_type;
-		var clients = [];
-		var producers = [];
-		var expenses = [];
-
-		for (var i in t.lines) {
-			var l = t.lines[i];
-			// il filtro currency digerisce anche le stringhe
-			// mentre input="number" no, devo prima convertire in float
-			// i Decimal su db vengono convertiti in json in stringa
-			var x = parseFloat(l.amount);
-			var ac = $scope.currencies[l.account];
-
-			//console.log(x, typeof(x));
-			if (x < 0) {
-				clients.push(l);
-				l.amount = -x;
-			} else if (ac && Object.keys(ac.people).length) {
-				producers.push(l);
-				l.amount = +x;
-			} else {
-				expenses.push(l);
-				l.amount = +x;
-				continue;
-			}
-
-			if (!l.accountNames)
-				l.accountNames = $scope.currencies[l.account].people;
-		}
-
-		$scope.lines = clients;
-		$scope.producers = producers;
-		$scope.expenses = expenses;
-
-		$scope.updateTotalAmount();
-		$scope.updateTotalInvoice();
-		$scope.updateTotalExpenses()
-//		$scope.checkCurrencies();
-		$scope.autocompletionDataError = null;
-
-		// problema: se mi fallisce autocompletion data, non carico nemmeno la transazione
-		// del resto, in quel caso non so come risolvere i nomi dei conti quindi il form è
-		// comunque inutilizzabile
-	}).
-	then (undefined, function (error) {
-//		if (gdata.isError(error.data, gdata.E_already_modified)) {
-//			$location.path('/transaction/' + error.data[2] + '/p');
-//		} else {
-			$scope.autocompletionDataError = error.data;
-//		}
-	});
 });
 
 gassmanControllers.controller('TransactionsIndex', function($scope, $location, gdata) {
@@ -1789,12 +879,12 @@ gassmanControllers.controller('TransactionsIndex', function($scope, $location, g
 		then (undefined, function (error) {
 			$scope.concluded = true;
 			$scope.loadError = error.data[1];
-			console.log('transactions log error: ', error.data);
+			console.log('TransactionIndex: transactionsLog error:', error.data);
 		});
 	};
 
 	$scope.showTransaction = function (tl) {
-		$location.path('/transaction/' + tl[3] + '/' + tl[7]);
+		$location.path('/transaction/' + tl[3]);
 	};
 });
 
@@ -1872,7 +962,7 @@ gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeP
 			$scope.readOnly = true;
 		}).
 		then (undefined, function (error) {
-			console.log('save error', error);
+			console.log('PersonDetails: saveProfile error:', error);
 			$scope.saveError = error.data;
 		});
 	};

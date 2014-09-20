@@ -27,10 +27,10 @@ gassmanApp.functions = [
 		}, f:'#/accounts/index', l:'Membri del G.A.S.' },
 	//{ v:P_canAssignAccounts, f:null },
 	{ e: function () { return true; }, l:'Movimentazione contante', 'class': "grouptitle" },
-	{ p:gassmanApp.P_canEnterCashExchange, f:'#/transaction/new/x', l:'Scambio contante' },
-	{ p:gassmanApp.P_canEnterPayments, f:'#/transaction/new/p', l:'Registra pagamenti' },
-	{ p:gassmanApp.P_canEnterDeposit, f:'#/transaction/new/d', l:'Registra accrediti' },
-	{ p:gassmanApp.P_canEnterWithdrawal, f:'#/transaction/new/w', l:'Registra prelievi' },
+	{ p:gassmanApp.P_canEnterCashExchange, f:'#/transaction/x', l:'Scambio contante' },
+	{ p:gassmanApp.P_canEnterPayments, f:'#/transaction/p', l:'Registra pagamenti' },
+	{ p:gassmanApp.P_canEnterDeposit, f:'#/transaction/d', l:'Registra accrediti' },
+	{ p:gassmanApp.P_canEnterWithdrawal, f:'#/transaction/w', l:'Registra prelievi' },
 	{ e:function (pp) {
 		return pp.indexOf(gassmanApp.P_canEnterPayments) != -1 ||
 		       pp.indexOf(gassmanApp.P_canEnterDeposit) != -1 ||
@@ -78,6 +78,11 @@ gassmanApp.config([ '$routeProvider',
 				templateUrl: 'static/partials/accounts-index.html',
 				controller: 'AccountsIndex'
 			}).
+			when('/transaction/:transId', {
+				templateUrl: 'static/partials/transaction.html',
+				controller: 'Transaction'
+			}).
+/*
 			when('/transaction/:transId/d', {
 				templateUrl: 'static/partials/transaction_deposit.html',
 				controller: 'TransactionDeposit'
@@ -102,6 +107,7 @@ gassmanApp.config([ '$routeProvider',
 				templateUrl: 'static/partials/transaction_trashed.html',
 				controller: 'TransactionTrashed'
 			}).
+*/
 			when('/transactions/index', {
 				templateUrl: 'static/partials/transactions_index.html',
 				controller: 'TransactionsIndex'
@@ -126,3 +132,35 @@ gassmanApp.config([ '$routeProvider',
 				redirectTo: '/account/self/details'
 			})
 	}]);
+
+// funzioni di utilità, da trasferire in un servizio...
+
+gassmanApp.isPk = function (v) {
+	try {
+		var i = parseInt(v);
+
+		return !isNaN(i);
+	} catch (e) {
+		return false;
+	}
+};
+
+gassmanApp.transactionTypes = {
+	g: true, // non editabile
+	t: true, // vale il tipo della precedente
+	p: gassmanApp.P_canEnterPayments,
+	x: gassmanApp.P_canEnterCashExchange,
+	d: gassmanApp.P_canEnterDeposit,
+	w: gassmanApp.P_canEnterWithdrawal
+};
+gassmanApp.isValidTransactionType = function (v) {
+	return !!gassmanApp.transactionTypes[v];
+};
+gassmanApp.isTransactionTypeEditableByUser = function (t, u) {
+	var p = gassmanApp.transactionTypes[t];
+
+	if (angular.isNumber(p))
+		return u.permissions.indexOf(p) != -1;
+	else
+		return false;
+};

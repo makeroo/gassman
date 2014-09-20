@@ -422,6 +422,10 @@ a {
 	margin-top: 10px;
 }
 
+.deposit .actions .line {
+	height: 30px;
+}
+
 .deposit .actions label {
 	font-weight: bold;
 	font-size: smaller;
@@ -433,6 +437,10 @@ a {
 .deposit .field, .deposit input {
 	font-family: 'Lucida Grande', sans-serif;
 	font-size: 11px;
+}
+
+.deposit textarea {
+	width: 300px;
 }
 
 .deposit .field {

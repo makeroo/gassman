@@ -24,7 +24,7 @@ gassmanDirectives.directive('gmUnique', function (gdata) {
 					ctrl.$setValidity('unique', res);
 				}).
 				then (undefined, function (error) {
-					console.log('server error, email not checked', error);
+					console.log('gmUnique: server error, email not checked:', error);
 
 					ctrl.$setValidity('unique', false);
 				});
@@ -40,7 +40,7 @@ gassmanDirectives.directive('gmAmount', function () {
     	require: 'ngModel',
     	link: function (scope, elem, attrs, ctrl) {
     		var accountDefined = function (account, amount) {
-    			console.log('amount: checking defined:', account, amount, scope.l)
+    			//console.log('amount: checking defined:', account, amount, scope.l)
 
     			ctrl.$setValidity('accountWithoutAmount', !( account && !amount ));
 
@@ -58,9 +58,10 @@ gassmanDirectives.directive('gmAmount', function () {
     		ctrl.$parsers.push(function (value) {
     			if (ctrl.$error.number || value === null) {
     				// se non è un numero resetto gli altri controlli
+    				// TODO: usare gmMessages invece
     				ctrl.$setValidity('positive', true);
     				ctrl.$setValidity('decimals', true);
-    				return;
+    				return value;
     			}
 
     			var f = value > 0;
@@ -92,7 +93,7 @@ gassmanDirectives.directive('gmAccount', function () {
     	require: 'ngModel',
     	link: function (scope, elem, attrs, ctrl) {
     		var accountDefined = function (account, amount) {
-    			console.log('checking defined:', account, amount, scope.l)
+    			//console.log('checking defined:', account, amount, scope.l)
 
     			ctrl.$setValidity('amountWithoutAccount', !( !account && amount > 0 ));
 
@@ -108,7 +109,7 @@ gassmanDirectives.directive('gmAccount', function () {
     		);
 
     		ctrl.$parsers.push(function (value) {
-    			console.log('checking match:', value, scope.l)
+    			//console.log('checking match:', value, scope.l)
     			//console.log(scope.l, scope.$parent.autocompletionData);
     			var acd = scope.$parent.autocompletionData;
     			var empty = !value;
@@ -127,14 +128,14 @@ gassmanDirectives.directive('gmAccount', function () {
     			ctrl.$setValidity('accountMatch', f);
 
     			if (!f || empty) {
-    				console.log('not found, resetting account');
+    				//console.log('not found, resetting account');
     				scope.l.account = null;
     			} else {
-    				console.log('found, account defined')
+    				//console.log('found, account defined')
     				scope.$parent.checkCurrencies();
     			}
 
-    			console.log('returning value', typeof(value), scope.l);
+    			//console.log('returning value', typeof(value), scope.l);
     			return value;
     		});
 
@@ -151,7 +152,7 @@ gassmanDirectives.directive('gmAccount2', function () {
     	require: 'ngModel',
     	link: function (scope, elem, attrs, ctrl) {
     		ctrl.$parsers.push(function (value) {
-    			console.log('checking match:', value, scope.receiver);
+    			//console.log('checking match:', value, scope.trans.clients[0]);
 
     			//console.log(scope.l, scope.$parent.autocompletionData);
     			var acd = scope.autocompletionData;
@@ -163,7 +164,7 @@ gassmanDirectives.directive('gmAccount2', function () {
     					var acl = acd[i];
     					if (acl.name == value) {
     						f = true;
-    						scope.receiver.account = acl.acc;
+    						scope.trans.clients[0].account = acl.acc;
     						break;
     					}
     				}
@@ -172,7 +173,7 @@ gassmanDirectives.directive('gmAccount2', function () {
     			ctrl.$setValidity('accountDefined', !empty);
 
     			if (!f || empty)
-    				scope.receiver.account = null;
+    				scope.trans.clients[0].account = null;
     			else
     				scope.checkCurrencies();
 
@@ -188,7 +189,7 @@ gassmanDirectives.directive('gmExpense', function () {
     	require: 'ngModel',
     	link: function (scope, elem, attrs, ctrl) {
     		var descDefined = function (desc, amount) {
-    			console.log('checking expense:', desc, amount, scope.l)
+    			//console.log('checking expense:', desc, amount, scope.l)
 
     			ctrl.$setValidity('amountWithoutNotes', !( !desc && amount > 0 ));
 //    			ctrl.$setValidity('amountDefined', !( desc && !amount ));
@@ -216,7 +217,7 @@ gassmanDirectives.directive('gmAmount2', function () {
     	require: 'ngModel',
     	link: function (scope, elem, attrs, ctrl) {
     		var descDefined = function (desc, amount) {
-    			console.log('checking expense:', desc, amount, scope.l)
+    			//console.log('checking expense:', desc, amount, scope.l)
 
 //    			ctrl.$setValidity('amountWithoutNotes', !( !desc && amount > 0 ));
     			ctrl.$setValidity('notesWithoutAmount', !( desc && !amount ));

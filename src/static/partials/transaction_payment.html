@@ -1,32 +1,32 @@
-<div ng-show="readonly" class="deposit">
+<div ng-if="readonly" class="deposit">
  <div class="lines-table">
   <div class="body">
    <div class="actions">
-    <div><label for="tdate">Data consegna:</label><span class="field">{{tdate | date}}</span></div>
-    <div><label for="tdesc">Descrizione e note:</label><span class="field">{{tdesc}}</span></div>
+    <div><label for="tdate">Data consegna:</label><span class="field">{{trans.tdate | date}}</span></div>
+    <div><label for="tdesc">Descrizione e note:</label><span class="field">{{trans.tdesc}}</span></div>
    </div>
 
    <div class="header" ng-hide="autocompletionDataError">
     Chi ha ritirato i prodotti:
    </div>
-   <div ng-repeat="l in lines | filter:filledLine" class="row">
+   <div ng-repeat="l in trans.clients | filter:filledLine" class="row">
     <div class="row-who field"><span ng-repeat="p in l.accountNames"><a href="{{ p.pid ? '#/person/' + p.pid + '/details' : '#/account/' + l.account + '/details'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
     <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
     <div class="row-notes field">{{l.notes}}&nbsp;</div>
    </div>
-   <div class="header" ng-hide="autocompletionDataError">
+   <div class="header" ng-hide="!(trans.producers | filter:filledLine).length || autocompletionDataError">
     Fornitori:
    </div>
-   <div ng-repeat="l in producers | filter:filledLine" class="row">
+   <div ng-repeat="l in trans.producers | filter:filledLine" class="row">
     <div class="row-who field"><span ng-repeat="p in l.accountNames"><a href="{{ p.pid ? '#/person/' + p.pid + '/details' : '#/account/' + l.account + '/details'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
     <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
     <div class="row-notes field">{{l.notes}}&nbsp;</div>
    </div>
 
-   <div class="header" ng-hide="autocompletionDataError">
+   <div class="header" ng-hide="!(trans.expenses | filter:filledLine).length || autocompletionDataError">
     Altre spese:
    </div>
-   <div ng-repeat="l in expenses | filter:filledLine" class="row">
+   <div ng-repeat="l in trans.expenses | filter:filledLine" class="row">
     <div class="row-who field">{{l.notes}}&nbsp;</div>
     <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
    </div>
@@ -57,18 +57,18 @@
   </div>
  </div>
 </div>
-<form ng-show="!readonly" novalidate name="payment" class="deposit" ng-submit="return;">
+<form ng-if="!readonly" ng-controller="TransactionPayment" name="payment" class="deposit" ng-submit="return;">
  <div class="lines-table">
   <div class="body">
    <div class="actions">
-    <div><label for="tdate">Data consegna:</label><input type="date" id="tdate" ng-model="tdate"/></div>
-    <div><label for="tdesc">Descrizione e note:</label><textarea ng-model="tdesc"></textarea></div>
+    <div class="line"><label for="tdate">Data consegna:</label><input type="date" id="tdate" ng-model="trans.tdate"/></div>
+    <div class="line"><label for="tdesc">Descrizione e note:</label><textarea ng-model="trans.tdesc"></textarea></div>
    </div>
 
    <div class="header" ng-hide="autocompletionDataError">
     Chi ha ritirato i prodotti:
    </div>
-   <div ng-repeat="l in lines" class="row">
+   <div ng-repeat="l in trans.clients" class="row">
     <ng:form name="lineForm">
     <div class="row-who">
      <div><mac-autocomplete
@@ -78,7 +78,7 @@
             mac-autocomplete-delay="300"
             mac-autocomplete-on-select="focusAmount('amountc')"
             ng-model="l.accountName"
-            ng-blur="$last && l.account && $parent.checkLine(l, lines)"
+            ng-blur="$last && l.account && $parent.addLine(trans.clients)"
             gm-account
             /></div>
 	 <div class="error-message" ng-show="lineForm.account.$error.accountMatch">Nome non valido</div>
@@ -89,7 +89,7 @@
             name="amount"
             placeholder="Quanto"
             ng-model="l.amount"
-            ng-blur="$parent.updateTotalAmount() || ($last && l.account && $parent.checkLine(l, lines))"
+            ng-blur="$parent.updateTotalAmount() || ($last && l.account && $parent.addLine(trans.clients))"
             gm-amount
             id="amountc{{$index}}"
             /> <!-- TODO: fare text + smart-float! -->
@@ -102,7 +102,7 @@
      <input type="text"
             placeholder="Note"
             ng-model="l.notes"
-            ng-blur="$last && l.account && $parent.checkLine(l, lines)"
+            ng-blur="$last && l.account && $parent.addLine(trans.clients)"
             />
     </div>
     </ng:form>
@@ -110,7 +110,7 @@
    <div class="header" ng-hide="autocompletionDataError">
     Fornitori:
    </div>
-   <div ng-repeat="l in producers" class="row">
+   <div ng-repeat="l in trans.producers" class="row">
     <ng:form name="lineForm">
     <div class="row-who">
      <div><mac-autocomplete
@@ -120,7 +120,7 @@
             mac-autocomplete-delay="300"
             mac-autocomplete-on-select="focusAmount('amountp')"
             ng-model="l.accountName"
-            ng-blur="$last && l.account && $parent.checkLine(l, producers)"
+            ng-blur="$last && l.account && $parent.addLine(trans.producers)"
             gm-account
             /></div>
 	 <div class="error-message" ng-show="lineForm.account.$error.accountMatch">Nome non valido</div>
@@ -131,7 +131,7 @@
             name="amount"
             placeholder="Quanto"
             ng-model="l.amount"
-            ng-blur="$parent.updateTotalInvoice(lineForm) || ($last && l.account && $parent.checkLine(l, producers))"
+            ng-blur="$parent.updateTotalInvoice(lineForm) || ($last && l.account && $parent.addLine(trans.producers))"
             gm-amount
             id="amountp{{$index}}"
             /> <!-- TODO: fare text + smart-float! -->
@@ -144,7 +144,7 @@
      <input type="text"
             placeholder="Note"
             ng-model="l.notes"
-            ng-blur="$last && l.account && $parent.checkLine(l, producers)"
+            ng-blur="$last && l.account && $parent.addLine(trans.producers)"
             />
     </div>
     </ng:form>
@@ -153,7 +153,7 @@
    <div class="header" ng-hide="autocompletionDataError">
     Altre spese:
    </div>
-   <div ng-repeat="l in expenses" class="row">
+   <div ng-repeat="l in trans.expenses" class="row">
     <ng:form name="lineForm">
     <div class="row-who">
      <div><mac-autocomplete
@@ -163,7 +163,7 @@
             mac-autocomplete-delay="300"
             mac-autocomplete-on-select="focusAmount('amounte')"
             ng-model="l.notes"
-            ng-blur="$last && $parent.checkExp(l, expenses)"
+            ng-blur="$last && l.notes && $parent.addLine(trans.expenses)"
             gm-expense
             /></div>
 	 <div class="error-message" ng-show="lineForm.notes.$error.amountWithoutNotes">Specificare la spesa</div>
@@ -173,7 +173,7 @@
             name="amount"
             placeholder="Quanto"
             ng-model="l.amount"
-            ng-blur="$parent.updateTotalExpenses(lineForm) || ($last && $parent.checkExp(l, expenses))"
+            ng-blur="$parent.updateTotalExpenses(lineForm) || ($last && l.notes && $parent.addLine(trans.expenses))"
             gm-amount2
             id="amounte{{$index}}"
             /> <!-- TODO: fare text + smart-float! -->
@@ -195,23 +195,16 @@
         <span class="error-message" ng-show="!currencyError && !totalAmount">Nessun dato inserito finora.</span>
         <span class="error-message" ng-show="!currencyError && difference >= .01">Discrepanza fra contanti versati e pagamenti richiesti: {{totalInvoice - totalAmount + totalExpenses | currency: currency[1] }}</span>
         </div>
-    <button ng-show="transId != 'new'" ng-click="cancel()">Annulla</button>
+    <button ng-show="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
     <button ng-disabled="!csaId || !payment.$valid || !totalAmount || difference >= .01" ng-click="savePayment()">Registra in cassa</button>
-    <button ng-disabled="confirmDelete" ng-show="transId != 'new'" ng-click="confirmCancelPayment()">Elimina la registrazione dei pagamenti</button>
-    <button ng-show="confirmDelete" ng-click="cancelPayment()">Conferma eliminazione</button>
+    <button ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione dei pagamenti</button>
+    <button ng-show="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
    </div>
   </div>
  </div>
-</form>
-<div ng-show="tsaveOk || tsaveError" class="deposit-post-save">
-   <div ng-show="tsaveOk" class="msg">
-     Pagamenti registrati correttamente. Adesso:
-     <ul>
-     <li>C'è del lavoro da fare! <button ng-click="newTrans()">Ne inserisco un altro.</button></li>
-     <li>Sarà stato salvato correttamente? <button ng-click="viewLastTrans()">Fammi dare un'occhiata...</button></li>
-     </ul>
-   </div>
+ <div ng-show="tsaveError" class="deposit-post-save">
    <div ng-show="tsaveError" class="msg">
      Registrazione fallita. Causa: {{tsaveError}}.
    </div>
-</div>
+ </div>
+</form>

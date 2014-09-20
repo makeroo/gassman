@@ -314,7 +314,7 @@ gassmanServices.service('accountAutocompletion', function ($http, $q, $localStor
 			if (aa) {
 				aa.people[o[0]] = { pid:o[0], name: n, refs:[] };
 			} else {
-				console.log('accountPeople record without currency info:', o);
+				console.log('accountAutocompletion: accountPeople record without currency info:', o);
 			}
 		}
 		for (var i in accountPeopleAddresses) {
@@ -327,9 +327,9 @@ gassmanServices.service('accountAutocompletion', function ($http, $q, $localStor
 				if (pp)
 					pp.refs.push(o[0]);
 				else
-					console.log('address without person:')
+					console.log('accountAutocompletion: address without person:', o)
 			} else {
-				console.log('accountPeopleAddresses record without currency info:', o);
+				console.log('accountAutocompletion: accountPeopleAddresses record without currency info:', o);
 			}
 		}
 		for (var i in kitty) {
@@ -340,7 +340,7 @@ gassmanServices.service('accountAutocompletion', function ($http, $q, $localStor
 			if (aa) {
 				aa.people['kitty'] = { name:'CASSA COMUNE', refs:[] };
 			} else {
-				console.log('kitty account without currency info:', k);
+				console.log('accountAutocompletion: kitty account without currency info:', k);
 			}
 		}
 

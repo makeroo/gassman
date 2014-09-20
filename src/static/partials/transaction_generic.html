@@ -2,31 +2,31 @@
  <div class="lines-table">
   <div class="body">
    <div class="actions">
-    <div><label for="tdate">Data consegna:</label><span class="field">{{tdate | date}}</span></div>
-    <div><label for="tdesc">Descrizione e note:</label><span class="field">{{tdesc}}</span></div>
+    <div><label for="tdate">Data consegna:</label><span class="field">{{trans.tdate | date}}</span></div>
+    <div><label for="tdesc">Descrizione e note:</label><span class="field">{{trans.tdesc}}</span></div>
    </div>
 
-   <div class="header" ng-hide="autocompletionDataError || !lines.length">
+   <div class="header" ng-hide="autocompletionDataError || !(trans.clients | filter:filledLine).length">
     Chi ha dato denaro:
    </div>
-   <div ng-repeat="l in lines" class="row">
-    <div class="row-who field"><span ng-repeat="p in l.accountName"><a href="{{ p.pid ? '#/person/' + p.pid + '/details' : '#/account/' + l.account + '/details'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
+   <div ng-repeat="l in trans.clients | filter:filledLine" class="row">
+    <div class="row-who field"><span ng-repeat="p in l.accountNames"><a href="{{ p.pid ? '#/person/' + p.pid + '/details' : '#/account/' + l.account + '/details'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
     <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
     <div class="row-notes field" ng-show="l.notes">{{l.notes}}</div>
    </div>
-   <div class="header" ng-hide="autocompletionDataError || !producers.length">
+   <div class="header" ng-hide="autocompletionDataError || !(trans.producers | filter:filledLine).length">
     Chi ha ricevuto denaro:
    </div>
-   <div ng-repeat="l in producers" class="row">
-    <div class="row-who field"><span ng-repeat="p in l.accountName"><a href="#/person/{{p.pid}}/details">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
+   <div ng-repeat="l in trans.producers | filter:filledLine" class="row">
+    <div class="row-who field"><span ng-repeat="p in l.accountNames"><a href="#/person/{{p.pid}}/details">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
     <div class="row-amount field">{{ l.amount | currency : currency[1] }}</div>
     <div class="row-notes field" ng-show="l.notes">{{ l.notes }}</div>
    </div>
 
-   <div class="header" ng-hide="autocompletionDataError || !expenses.length">
+   <div class="header" ng-hide="autocompletionDataError || !(trans.expenses | filter:filledLine).length">
     Altre spese:
    </div>
-   <div ng-repeat="l in expenses" class="row">
+   <div ng-repeat="l in trans.expenses | filter:filledLine" class="row">
     <div class="row-who field">{{l.notes}}&nbsp;</div>
     <div class="row-amount field">{{l.amount | currency: currency[1]}}</div>
    </div>
