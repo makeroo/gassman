@@ -125,11 +125,17 @@ a {
 	border-radius: 10px;
 	padding: 5px;
 	display: flex;
+	display: -webkit-flex;
+	display: -ms-flex;
+	display: -moz-flex;
 	align-items: stretch;
 }
 
 .footer a {
 	flex-grow: 1;
+	-webkit-flex-grow: 1;
+	-ms-flex-grow: 1;
+	-moz-flex-grow: 1;
 	text-align: center;
 	font-size: smaller;
 	font-style: italic;
@@ -159,13 +165,22 @@ a {
 	bottom: 0;
 
 	display: flex;
+	display: -webkit-flex;
+	display: -ms-flex;
+	display: -moz-flex;
 	flex-direction: column;
+	-webkit-flex-direction: column;
+	-ms-flex-direction: column;
+	-moz-flex-direction: column;
 	align-items: stretch;
 }
 
 .accounts-index .table {
 	overflow: hidden;
 	flex-grow: 1;
+	-webkit-flex-grow: 1;
+	-ms-flex-grow: 1;
+	-moz-flex-grow: 1;
 	background-color: beige;
 	position: relative;
 }
@@ -243,7 +258,13 @@ a {
 	bottom: 0;
 
 	display: flex;
+	display: -webkit-flex;
+	display: -ms-flex;
+	display: -moz-flex;
 	flex-direction: column;
+	-webkit-flex-direction: column;
+	-ms-flex-direction: column;
+	-moz-flex-direction: column;
 	align-items: stretch;
 }
 
@@ -255,6 +276,9 @@ a {
 .account-details .table {
 	overflow: hidden;
 	flex-grow: 1;
+	-webkit-flex-grow: 1;
+	-ms-flex-grow: 1;
+	-moz-flex-grow: 1;
 	background-color: beige;
 	position: relative;
 }
@@ -277,6 +301,9 @@ a {
 	position: relative;
 	height: 30px;
 	flex: none;
+	-webkit-flex: none;
+	-ms-flex: none;
+	-moz-flex: none;
 	line-height: 30px;
 	overflow: hidden;
 }
@@ -347,6 +374,9 @@ a {
 	display: block;
 	text-align: right;
 	flex: none;
+	-webkit-flex: none;
+	-ms-flex: none;
+	-moz-flex: none;
 }
 
 .account-details .amount.negative {
@@ -610,6 +640,9 @@ input.ng-invalid {
 
 .person-details .subsection {
 	display: flex;
+	display: -webkit-flex;
+	display: -ms-flex;
+	display: -moz-flex;
 }
 
 .person-details .subsection .header {
