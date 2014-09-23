@@ -215,7 +215,23 @@ def transaction_lines (tid):
 
 def transaction_people (tid):
     # qui non verifico che acount_person sia del csa giusto perché è implicito nella transazione
-    return 'SELECT DISTINCT p.id, p.first_name, p.middle_name, p.last_name, l.account_id FROM transaction_line l JOIN account_person ap ON ap.account_id=l.account_id JOIN person p ON ap.person_id=p.id WHERE transaction_id=%s AND ap.to_date IS NULL', [ tid ]
+    # ma devo verificare che l'inserimento della transazione (quidi transaction_log.log_date e
+    # non transaction.transaction_date) ricada nell'intervallo di validità di
+    # account_person
+    return '''
+SELECT l.account_id, ap.person_id
+ FROM transaction t
+ JOIN transaction_line l ON t.id=l.transaction_id
+ JOIN transaction_log log ON log.transaction_id=t.id
+ JOIN account_person ap ON ap.account_id=l.account_id
+ WHERE t.id=%s AND
+       ap.from_date <= log.log_date AND (ap.to_date IS NULL OR ap.to_date >= log.log_date)''', [ tid ]
+
+#SELECT DISTINCT p.id, p.first_name, p.middle_name, p.last_name, l.account_id
+# FROM transaction_line l
+# JOIN account_person ap ON ap.account_id=l.account_id
+# JOIN person p ON ap.person_id=p.id
+# WHERE transaction_id=%s AND ap.to_date IS NULL''', [ tid ]
 
 #def transaction_account_gc_names (tid):
 #    return 'SELECT DISTINCT a.id, a.gc_name, c.symbol FROM transaction_line l JOIN account a ON a.id=l.account_id JOIN currency c ON c.id=a.currency_id WHERE transaction_id=%s', [ tid ]

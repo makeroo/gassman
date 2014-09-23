@@ -105,7 +105,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/accounts/(\d+)/index/(\d+)/(\d+)$', AccountsIndexHandler),
             (r'^/accounts/(\d+)/names$', AccountsNamesHandler),
             (r'^/expenses/(\d+)/tags$', ExpensesNamesHandler),
-            #(r'^/transaction/(\d+)/(\d+)/detail$', TransactionDetailHandler),
+            #(r'^/transaction/(\d+)/(\d+)/people', TransactionPeopleHandler),
             (r'^/transaction/(\d+)/(\d+)/edit$', TransactionEditHandler),
             (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
             (r'^/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
@@ -598,6 +598,14 @@ class TransactionEditHandler (JsonBaseHandler):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.transaction_lines(transId))
         r['lines'] = [ dict(account=l[1], notes=l[2], amount=l[3]) for l in cur]
+
+        accountPeopleIndex = {}
+        r['people'] = accountPeopleIndex
+        cur.execute(*self.application.sql.transaction_people(transId))
+        for accId, personId in cur.fetchall():
+            pp = accountPeopleIndex.setdefault(accId, [])
+            pp.append(personId)
+
         return r
 
 class TransactionSaveHandler (JsonBaseHandler):
@@ -876,8 +884,10 @@ class PeopleProfilesHandler (JsonBaseHandler):
         u = self.get_logged_user()
         if not self.application.hasPermissionByCsa(cur, sql.P_canViewContacts, u.id, csaId):
             raise Exception(error_codes.E_permission_denied)
-        accs, perms, args = self.application.sql.people_profiles2(csaId, pids)
         r = {}
+        if len(pids) == 0:
+            return r
+        accs, perms, args = self.application.sql.people_profiles2(csaId, pids)
         def record (pid):
             p = r.get(pid, None)
             if p is None:

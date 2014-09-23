@@ -7,6 +7,20 @@ var gassmanControllers = angular.module('gassmanControllers', [
 	'ngStorage',
     ]);
 
+function joinSkippingEmpties () {
+	var sep = arguments[0];
+	var r = '';
+	for (var i = 1; i < arguments.length; ++i) {
+		var x = arguments[i];
+		if (typeof(x) != 'string' || x.length == 0)
+			continue;
+		if (r.length > 0)
+			r += sep;
+		r += x;
+	}
+	return r;
+}
+
 gassmanControllers.controller('MenuController', function($scope, $filter, gdata) {
 	$scope.profile = null;
 	$scope.profileError = null;
@@ -357,10 +371,10 @@ gassmanControllers.controller('Transaction', function($scope, $routeParams, $loc
 			// mentre input="number" no, devo prima convertire in float
 			// i Decimal su db vengono convertiti in json in stringa
 			var x = parseFloat(l.amount);
-			var ac = $scope.currencies[l.account];
+			var owners = t.people[l.account]; //$scope.currencies[l.account];
 
 			//console.log(x, typeof(x));
-			if (ac && Object.keys(ac.people).length) {
+			if (owners && owners.length) {
 				if (x < 0) {
 					clients.push(l);
 					l.amount = -x;
@@ -369,10 +383,31 @@ gassmanControllers.controller('Transaction', function($scope, $routeParams, $loc
 					l.amount = +x;
 				}
 
-				if (!l.accountName)
-					l.accountName = $scope.currencies[l.account].name;
-				if (!l.accountNames)
-					l.accountNames = $scope.currencies[l.account].people;
+				if (!l.accountName) {
+					var ac = $scope.currencies[l.account];
+
+					if (ac) {
+						l.accountName = ac.name;
+						l.readonly = false;
+					} else {
+						l.readonly = true;
+					}
+				}
+
+				if (!l.accountNames) {
+					var pp = [];
+
+					angular.forEach(owners, function (o) {
+						var person = $scope.accountPeopleIndex[o];
+						pp.push({
+							pid: person.profile.id,
+							name: joinSkippingEmpties(' ', person.profile.first_name, person.profile.middle_name, person.profile.last_name)
+						});
+					});
+
+					l.accountNames = pp;
+					//l.accountNames = $scope.currencies[l.account].people;
+				}
 			} else {
 				expenses.push(l);
 				l.amount = +x;
@@ -568,18 +603,7 @@ gassmanControllers.controller('Transaction', function($scope, $routeParams, $loc
 		$location.path('/transaction/' + tid);
 	};
 
-	$scope.transactionFactory = function () {
-		return {
-			transId: 'new',
-			description: '',
-			date: new Date(),
-			cc_type: $scope.trans.cc_type,
-			currency: null,
-			lines: [],
-			modified_by: null,
-			modifies: null
-		};
-	};
+	var firstTransResp = null;
 
 	gdata.profileInfo().
 	then (function (profile) {
@@ -613,10 +637,35 @@ gassmanControllers.controller('Transaction', function($scope, $routeParams, $loc
 
 		if ($scope.trans.transId == 'new')
 			return {
-				data: $scope.transactionFactory()
+				data: {
+					transId: 'new',
+					description: '',
+					date: new Date(),
+					cc_type: $scope.trans.cc_type,
+					currency: null,
+					lines: [],
+					modified_by: null,
+					modifies: null
+					},
+				people: {}
 				};
 		else
 			return gdata.transactionForEdit($scope.csaId, $scope.trans.transId);
+	}).then(function (r) {
+		firstTransResp = r;
+
+		var x = [];
+		angular.forEach(r.data.people, function (pp) {
+			angular.forEach(pp, function(p) {
+				if (x.indexOf(p) == -1)
+					x.push(p);
+			});
+		});
+
+		return gdata.peopleProfiles($scope.csaId, x);
+	}).then(function (r) {
+		$scope.accountPeopleIndex = r.data;
+		return firstTransResp;
 	}).then(setupTransaction).
 	then (undefined, function (error) {
 		$scope.autocompletionDataError = error.data;
