@@ -103,7 +103,7 @@
   <div class="section accounts">
    <div class="header" ng-show="personProfile.accounts.length > 0">Conti</div>
    <div class="row" ng-repeat="a in personProfile.accounts | filter: visibleAccount | orderBy : a.to_date">
-    Periodo {{a.from_date | date }} &rarr; <span ng-hide="a.to_date">oggi</span><span ng-show="a.to_date">{{ a.to_date | date }}</span>: <span ng-show="a.amount">saldo {{ a.amount | currency : a.csym }}</span> <button ng-click="showAccount(a.id)" ng-disabled="!readOnly">dettagli</button>
+    Periodo {{a.from_date | date }} &rarr; <span ng-hide="a.to_date">oggi</span><span ng-show="a.to_date">{{ a.to_date | date }}</span>: <span ng-show="a.amount != null">saldo {{ a.amount | currency : a.csym }}</span> <button ng-click="showAccount(a.id)" ng-disabled="!readOnly">dettagli</button>
    </div>
   </div>
 
