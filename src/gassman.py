@@ -471,7 +471,8 @@ class AccountAmountHandler (JsonBaseHandler):
         if not self.application.hasAccount(cur, u.id, accId) and not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.account_amount(accId))
-        return cur.fetchone()
+        v = cur.fetchone()
+        return v[0] or 0.0, v[1]
 
 class CsaAmountHandler (JsonBaseHandler):
     def do (self, cur, csaId):
