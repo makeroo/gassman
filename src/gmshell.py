@@ -147,7 +147,7 @@ class GMShell (cmd.Cmd):
                 cur.execute('insert into account (state, gc_type, csa_id, currency_id) values (%s, %s, %s, %s)', [ sql.As_Open, sql.At_Asset, self.selectedCsa, cid ])
                 aid = cur.lastrowid
                 print('created account', aid, 'for currency', csym)
-                cur.execute('insert into account_person (from_date, person_id, account_id) values (now(), %s, %s)', [ pid, aid ])
+                cur.execute('insert into account_person (from_date, person_id, account_id) values (utc_timestamp(), %s, %s)', [ pid, aid ])
 
     def help_find_person (self): print('Look for people by name, contacts, etc. Usage: find_person <LIKETEXT>')
     def do_find_person (self, line):
