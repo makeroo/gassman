@@ -286,7 +286,6 @@ class GassmanWebApp (tornado.web.Application):
 
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user (self):
-        return 2
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
