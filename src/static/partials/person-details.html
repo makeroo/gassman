@@ -107,8 +107,8 @@
    </div>
   </div>
 
-  <div class="actions">
-   <button ng-show="profile.permissions.indexOf(gassmanApp.P_canEditContacts) !== -1" ng-click="modify()" ng-disabled="!readOnly">Modifica</button>
+  <div ng-show="editable" class="actions">
+   <button ng-show="editable" ng-click="modify()" ng-disabled="!readOnly">Modifica</button>
    <button ng-show="!readOnly" ng-disabled="personProfileForm.$invalid || isUnchanged()" ng-click="save()">Salva le modifiche</button>
    <button ng-show="!readOnly" ng-click="cancel()">Annulla</button>
   </div>

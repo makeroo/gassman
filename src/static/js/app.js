@@ -26,18 +26,12 @@ gassmanApp.functions = [
 		       pp.indexOf(gassmanApp.P_canViewContacts) != -1;
 		}, f:'#/accounts/index', l:'Membri del G.A.S.' },
 	//{ v:P_canAssignAccounts, f:null },
-	{ e: function () { return true; }, l:'Movimentazione contante', 'class': "grouptitle" },
+	{ e: function (pp) { return gassmanApp.canEditTransactions(null, pp) }, l:'Movimentazione contante', 'class': "grouptitle" },
 	{ p:gassmanApp.P_canEnterCashExchange, f:'#/transaction/x', l:'Scambio contante' },
 	{ p:gassmanApp.P_canEnterPayments, f:'#/transaction/p', l:'Registra pagamenti' },
 	{ p:gassmanApp.P_canEnterDeposit, f:'#/transaction/d', l:'Registra accrediti' },
 	{ p:gassmanApp.P_canEnterWithdrawal, f:'#/transaction/w', l:'Registra prelievi' },
-	{ e:function (pp) {
-		return pp.indexOf(gassmanApp.P_canEnterPayments) != -1 ||
-		       pp.indexOf(gassmanApp.P_canEnterDeposit) != -1 ||
-		       pp.indexOf(gassmanApp.P_canEnterCashExchange) != -1 ||
-		       pp.indexOf(gassmanApp.P_canEnterWithdrawal) != -1 ||
-		       pp.indexOf(gassmanApp.P_canManageTransactions) != -1;
-	  }, f:'#/transactions/index', l:' Movimenti inseriti' }
+	{ e: function (pp) { return gassmanApp.canEditTransactions(null, pp); }, f:'#/transactions/index', l:' Movimenti inseriti' }
 	//,
 	//{ p:gassmanApp.P_canViewContacts, f:'#/contacts/index', l:'Rubrica' }
 	];
@@ -163,4 +157,15 @@ gassmanApp.isTransactionTypeEditableByUser = function (t, u) {
 		return u.permissions.indexOf(p) != -1;
 	else
 		return false;
+};
+gassmanApp.canEditTransactions = function (u, pp) {
+	if (!pp)
+		pp = u.permissions;
+	return (
+		pp.indexOf(gassmanApp.P_canEnterPayments) != -1 ||
+		pp.indexOf(gassmanApp.P_canEnterCashExchange) != -1 ||
+		pp.indexOf(gassmanApp.P_canEnterDeposit) != -1 ||
+		pp.indexOf(gassmanApp.P_canEnterWithdrawal) != -1 ||
+		pp.indexOf(gassmanApp.P_canManageTransactions) != -1
+		);
 };

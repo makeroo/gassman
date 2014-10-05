@@ -41,7 +41,7 @@
         </div>
 -->
    <div>
-       Cancellazione effettuata da <a href="#/person/{{operator.pid}}/details">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.
+       Cancellazione effettuata da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/details">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.
    </div>
    <div ng-show="modifies">
        Dettagli della transazione cancellata: <button ng-click="showTransaction(modifies)">Esamina</button>

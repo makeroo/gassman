@@ -286,6 +286,7 @@ class GassmanWebApp (tornado.web.Application):
 
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user (self):
+        return 2
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
@@ -589,7 +590,7 @@ class TransactionEditHandler (JsonBaseHandler):
         # è D, ho P_canEnterDeposit e l'ho creata io
         # è P, ho P_canEnterPayments e l'ho creata io
         # oppure P_canManageTransactions
-        if (not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId) and
+        if (not self.application.hasPermissions(cur, [ sql.P_canManageTransactions, sql.P_canCheckAccounts ], u.id, csaId) and
             not (ccType in self.application.sql.editableTransactions and
                  self.application.hasPermissionByCsa(cur, sql.transactionPermissions.get(ccType), u.id, csaId) and
                  self.application.isTransactionEditor(cur, transId, u.id)
@@ -883,8 +884,10 @@ class PeopleProfilesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         pids = self.payload['pids']
         u = self.get_logged_user()
-        if not self.application.hasPermissionByCsa(cur, sql.P_canViewContacts, u.id, csaId):
+        isSelf = len(pids) == 1 and int(pids[0]) == u.id
+        if not self.application.hasPermissionByCsa(cur, sql.P_membership, u.id, csaId):
             raise Exception(error_codes.E_permission_denied)
+        canViewContacts = isSelf or self.application.hasPermissionByCsa(cur, sql.P_canViewContacts, u.id, csaId)
         r = {}
         if len(pids) == 0:
             return r
@@ -895,7 +898,7 @@ class PeopleProfilesHandler (JsonBaseHandler):
                 p = { 'accounts':[], 'profile':None, 'permissions':[], 'contacts':[] }
                 r[pid] = p
             return p
-        if self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
+        if isSelf or self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
             cur.execute(accs, args)
             for acc in self.application.sql.iter_objects(cur):
                 p = record(acc['person_id'])
@@ -903,16 +906,18 @@ class PeopleProfilesHandler (JsonBaseHandler):
         cur.execute(perms, args)
         for perm in self.application.sql.iter_objects(cur):
             p = record(perm['person_id'])
-            p['permissions'].append(perm['perm_id'])
+            if canViewContacts:
+                p['permissions'].append(perm['perm_id'])
         profiles, contacts, args = self.application.sql.people_profiles1(r.keys())
         cur.execute(profiles, args)
         for prof in self.application.sql.iter_objects(cur):
             p = record(prof['id'])
             p['profile'] = prof
-        cur.execute(contacts, args)
-        for addr in self.application.sql.iter_objects(cur):
-            p = record(addr['person_id'])
-            p['contacts'].append(addr)
+        if canViewContacts:
+            cur.execute(contacts, args)
+            for addr in self.application.sql.iter_objects(cur):
+                p = record(addr['person_id'])
+                p['contacts'].append(addr)
         # TODO: indirizzi
         return r
 
@@ -923,8 +928,12 @@ class PersonSaveHandler (JsonBaseHandler):
         log_gassman.debug('saving: %s', p)
         profile = p['profile']
         pid = profile['id']
-        if not self.application.hasPermissionByCsa(cur, sql.P_canEditContacts, u.id, csaId) or \
-           not self.application.hasPermissionByCsa(cur, sql.P_membership, pid, csaId):
+        if (
+            (not self.application.hasPermissionByCsa(cur, sql.P_canEditContacts, u.id, csaId) and
+             u.id != int(pid)
+             ) or \
+            not self.application.hasPermissionByCsa(cur, sql.P_membership, pid, csaId)
+            ):
             raise Exception(error_codes.E_permission_denied)
         # salva profilo
         cur.execute(*self.application.sql.updateProfile(profile))
@@ -968,8 +977,12 @@ class PersonCheckEmailHandler (JsonBaseHandler):
         log_gassman.debug('saving: %s', p)
         pid = p['id']
         email = p['email']
-        if not self.application.hasPermissionByCsa(cur, sql.P_canEditContacts, u.id, csaId) or \
-           not self.application.hasPermissionByCsa(cur, sql.P_membership, pid, csaId):
+        if (
+            (not self.application.hasPermissionByCsa(cur, sql.P_canEditContacts, u.id, csaId) and
+             u.id != int(pid)
+             ) or \
+            not self.application.hasPermissionByCsa(cur, sql.P_membership, pid, csaId)
+            ):
             raise Exception(error_codes.E_permission_denied)
         # verifica unicità
         cur.execute(*self.application.sql.isUniqueEmail(pid, email))

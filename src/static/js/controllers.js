@@ -301,6 +301,7 @@ gassmanControllers.controller('Transaction', function($scope, $routeParams, $loc
 	$scope.tsaveError = null;
 	$scope.readonly = true;
 	$scope.canEdit = false;
+	$scope.viewableContacts = false;
 
 	var autoCompileTotalInvoice = 2;
 
@@ -608,32 +609,49 @@ gassmanControllers.controller('Transaction', function($scope, $routeParams, $loc
 	gdata.profileInfo().
 	then (function (profile) {
 		$scope.profile = profile;
+		$scope.isTransactionEditor = gassmanApp.canEditTransactions($scope.profile);
+		$scope.viewableContacts = $scope.profile.permissions.indexOf(gassmanApp.P_canViewContacts) != -1;
 
 		return gdata.selectedCsa();
 	}).then (function (csaId) {
 		$scope.csaId = csaId;
 
-		return gdata.accountsNames($scope.csaId);
+		if ($scope.isTransactionEditor)
+			return gdata.accountsNames($scope.csaId);
+		else
+			return null;
 	}).then (function (r) {
 		// trasforma data in autocompletionData
 
-		$scope.currencies = accountAutocompletion.parse(r.data);
+		if (r) {
+			$scope.currencies = accountAutocompletion.parse(r.data);
 
-		$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
+			$scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
+		} else {
+			$scope.currencies = [ ];
+			$scope.autocompletionData = { };
+		}
 
-		return gdata.expensesTags($scope.csaId);
+		if ($scope.isTransactionEditor)
+			return gdata.expensesTags($scope.csaId);
+		else
+			return null;
 	}).then(function (r) {
-		var expensesAccounts = r.data.accounts;
-		var expensesTags = r.data.tags;
+		if (r) {
+			var expensesAccounts = r.data.accounts;
+			var expensesTags = r.data.tags;
 
-		angular.forEach(expensesAccounts, function (account) {
-			// 0:id, 1:gc_name, 3:currency_id
-			$scope.autocompletionExpenses.push(account[1]);
-		});
+			angular.forEach(expensesAccounts, function (account) {
+				// 0:id, 1:gc_name, 3:currency_id
+				$scope.autocompletionExpenses.push(account[1]);
+			});
 
-		angular.forEach(expensesTags, function (tag) {
-			$scope.autocompletionExpenses.push(tag);
-		});
+			angular.forEach(expensesTags, function (tag) {
+				$scope.autocompletionExpenses.push(tag);
+			});
+		} else {
+			$scope.autocompletionExpenses = [ ];
+		}
 
 		if ($scope.trans.transId == 'new')
 			return {
@@ -1038,13 +1056,21 @@ gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeP
 		$location.path('/account/' + accountId + '/details');
 	};
 
-	gdata.selectedCsa().
+	gdata.profileInfo().
+	then (function (p) {
+		$scope.profile = p;
+
+		return gdata.selectedCsa();
+	}).
 	then (function (csaId) {
 		$scope.csaId = csaId;
+
 		return gdata.profile(csaId, personId);
 	}).
 	then (function (prof) {
 		$scope.personProfile = prof;
+		$scope.editable = $scope.profile.permissions.indexOf(gassmanApp.P_canEditContacts) != -1 ||
+			personId == $scope.profile.logged_user.id;
 
 		var amounts = [];
 		angular.forEach($scope.personProfile.accounts, function (a) {
