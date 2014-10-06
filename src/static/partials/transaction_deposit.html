@@ -5,7 +5,7 @@
   </div>
   <div class="body">
    <div ng-repeat="l in trans.producers | filter:filledLine" class="row">
-    <div class="row-who field"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContacts">{{p.name}}</span><a ng-if="viewableContacts" href="{{ p.pid ? '#/person/' + p.pid + '/details' : '#/account/' + l.account + '/details'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
+    <div class="row-who field"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/details' : '#/account/' + l.account + '/details'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
     <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
     <div class="row-notes field">{{l.notes}}&nbsp;</div>
    </div>

@@ -108,6 +108,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 	$scope.accountDesc = null;
 	$scope.accountOwnerError = null;
 	$scope.amount = null;
+	$scope.viewableContacts = false;
 //	$scope.selectedMovement = null;
 
 	$scope.toggleErrorMessage = function () {
@@ -133,8 +134,18 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 		});
 	};
 
-	gdata.selectedCsa().
-	then (function (csaId) { $scope.csaId = csaId; return accId || gdata.accountByCsa(csaId); }).
+	gdata.profileInfo().
+	then (function (pData) {
+		$scope.profile = pData;
+		$scope.viewableContacts = $scope.profile.permissions.indexOf(gassmanApp.P_canViewContacts) != -1;
+
+		return gdata.selectedCsa();
+	}).
+	then (function (csaId) {
+		$scope.csaId = csaId;
+
+		return accId || gdata.accountByCsa(csaId);
+	}).
 	then (function (accId) {
 		showOwner(accId);
 		$scope.loadMore();
@@ -611,6 +622,7 @@ gassmanControllers.controller('Transaction', function($scope, $routeParams, $loc
 		$scope.profile = profile;
 		$scope.isTransactionEditor = gassmanApp.canEditTransactions($scope.profile);
 		$scope.viewableContacts = $scope.profile.permissions.indexOf(gassmanApp.P_canViewContacts) != -1;
+		$scope.viewableContactsOrAccounts = $scope.viewableContacts || $scope.profile.permissions.indexOf(gassmanApp.P_canCheckAccounts) != -1;
 
 		return gdata.selectedCsa();
 	}).then (function (csaId) {
