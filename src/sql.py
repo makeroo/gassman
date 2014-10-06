@@ -219,7 +219,7 @@ def transaction_people (tid):
     # non transaction.transaction_date) ricada nell'intervallo di validità di
     # account_person
     return '''
-SELECT l.account_id, ap.person_id
+SELECT DISTINCT l.account_id, ap.person_id
  FROM transaction t
  JOIN transaction_line l ON t.id=l.transaction_id
  JOIN transaction_log log ON log.transaction_id=t.id
