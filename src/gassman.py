@@ -604,8 +604,8 @@ class TransactionEditHandler (JsonBaseHandler):
         r['people'] = accountPeopleIndex
         cur.execute(*self.application.sql.transaction_people(transId))
         for accId, personId in cur.fetchall():
-            pp = accountPeopleIndex.setdefault(accId, [])
-            pp.append(personId)
+            pp = accountPeopleIndex.setdefault(accId, set())
+            pp.add(personId)
 
         return r
 

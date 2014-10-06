@@ -37,6 +37,9 @@ def encode_timedelta (v):
 def decode_timedelta (v):
     return None if empty_value(v) else datetime.timedelta(0, float(v))
 
+def encode_set (v):
+    return None if empty_value(v) else list(v)
+
 def empty_value (v):
     return v is None or (type(v) == str and len(v) == 0)
 
@@ -46,7 +49,8 @@ class ExtendedJSONEncoder (json.JSONEncoder):
         datetime.datetime: encode_date,
         datetime.time: encode_time,
         datetime.timedelta: encode_timedelta,
-        decimal.Decimal: encode_decimal
+        decimal.Decimal: encode_decimal,
+        set: encode_set,
     }
 
     def defaultObjectEncoding (self, o):
