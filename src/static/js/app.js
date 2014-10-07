@@ -56,17 +56,17 @@ gassmanApp.filter('noFractionCurrency',
 gassmanApp.config([ '$routeProvider',
 	function ($routeProvider) {
 		$routeProvider.
-		when('/person/:personId/details', {
-			templateUrl: 'static/partials/person-details.html',
-			controller: 'PersonDetails'
+		when('/person/:personId/detail', {
+			templateUrl: 'static/partials/person-detail.html',
+			controller: 'PersonDetail'
 		}).
-			when('/account/self/details', {
-				templateUrl: 'static/partials/account-details.html',
-				controller: 'AccountDetails'
+			when('/account/self/detail', {
+				templateUrl: 'static/partials/account-detail.html',
+				controller: 'AccountDetail'
 			}).
-			when('/account/:accountId/details', {
-				templateUrl: 'static/partials/account-details.html',
-				controller: 'AccountDetails'
+			when('/account/:accountId/detail', {
+				templateUrl: 'static/partials/account-detail.html',
+				controller: 'AccountDetail'
 			}).
 			when('/accounts/index', {
 				templateUrl: 'static/partials/accounts-index.html',
@@ -123,7 +123,7 @@ gassmanApp.config([ '$routeProvider',
 			//	controller: 'ContactsController'
 			//}).
 			otherwise({
-				redirectTo: '/account/self/details'
+				redirectTo: '/account/self/detail'
 			})
 	}]);
 

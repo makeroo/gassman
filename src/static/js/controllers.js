@@ -101,7 +101,7 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 	});
 });
 
-gassmanControllers.controller('AccountDetails', function($scope, $filter, $routeParams, $location, gdata) {
+gassmanControllers.controller('AccountDetail', function($scope, $filter, $routeParams, $location, gdata) {
 	$scope.movements = [];
 	$scope.movementsError = null;
 	$scope.accountOwner = null;
@@ -176,7 +176,7 @@ gassmanControllers.controller('AccountDetails', function($scope, $filter, $route
 			concluded = true;
 			// TODO: FIXME: qui ho 2 errori...
 			$scope.serverError = error.data[1];
-			console.log('AccountDetails: movements error:', error.data)
+			console.log('AccountDetail: movements error:', error.data)
 			$scope.showErrorMessage = false;
 			$scope.movementsError = error.data;
 			//console.log('error', data, status, headers, config);
@@ -253,9 +253,9 @@ gassmanControllers.controller('AccountsIndex', function($scope, $filter, $locati
 
 	$scope.showAccount = function (accountId, personId) {
 		if ($scope.profile.permissions.indexOf(gassmanApp.P_canViewContacts) == -1) {
-			$location.path('/account/' + accountId + '/details');
+			$location.path('/account/' + accountId + '/detail');
 		} else {
-			$location.path('/person/' + personId + '/details');
+			$location.path('/person/' + personId + '/detail');
 		}
 	};
 
@@ -982,7 +982,7 @@ gassmanControllers.controller('ProjectController', function($scope, gdata) {
 	}); // non gestisco l'errore
 });
 
-gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeParams, $location, gdata, $q) {
+gassmanControllers.controller('PersonDetail', function($scope, $filter, $routeParams, $location, gdata, $q) {
 	$scope.csaId = null;
 	$scope.personProfile = null;
 	$scope.personProfileError = null;
@@ -1041,7 +1041,7 @@ gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeP
 			$scope.readOnly = true;
 		}).
 		then (undefined, function (error) {
-			console.log('PersonDetails: saveProfile error:', error);
+			console.log('PersonDetail: saveProfile error:', error);
 			$scope.saveError = error.data;
 		});
 	};
@@ -1065,7 +1065,7 @@ gassmanControllers.controller('PersonDetails', function($scope, $filter, $routeP
 	};
 
 	$scope.showAccount = function (accountId) {
-		$location.path('/account/' + accountId + '/details');
+		$location.path('/account/' + accountId + '/detail');
 	};
 
 	gdata.profileInfo().
@@ -1154,7 +1154,7 @@ gassmanControllers.controller('ContactsController', function($scope, $filter, $l
 	};
 
 	$scope.showProfile = function (personId) {
-		$location.path('/person/' + personId + '/details');
+		$location.path('/person/' + personId + '/detail');
 	};
 
 	$scope.loadMore();

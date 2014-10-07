@@ -250,7 +250,7 @@ a {
 }
 
 
-.account-details {
+.account-detail {
 	position: absolute;
 	left: 0;
 	right: 0;
@@ -268,12 +268,12 @@ a {
 	align-items: stretch;
 }
 
-.account-details .page-header {
+.account-detail .page-header {
 	background-color: #ada;
 	font-weight: bold;
 }
 
-.account-details .table {
+.account-detail .table {
 	overflow: hidden;
 	flex-grow: 1;
 	-webkit-flex-grow: 1;
@@ -283,7 +283,7 @@ a {
 	position: relative;
 }
 
-.account-details .table .header {
+.account-detail .table .header {
 	height: 30px;
 	font-weight: bold;
 	background-image: url('/static/img/table_header.png');
@@ -293,11 +293,11 @@ a {
 	overflow: hidden;
 }
 
-.account-details .table .body .first-row {
+.account-detail .table .body .first-row {
 	height: 30px;
 }
 
-.account-details .table .header-error {
+.account-detail .table .header-error {
 	position: relative;
 	height: 30px;
 	flex: none;
@@ -308,7 +308,7 @@ a {
 	overflow: hidden;
 }
 
-.account-details .table .body {
+.account-detail .table .body {
 /*	width:500px;*/
 	overflow: auto;
 	position: absolute;
@@ -320,16 +320,16 @@ a {
 	height: 100%;
 }
 
-.account-details .table .mov-row {
+.account-detail .table .mov-row {
 	position: relative;
 	height: 30px;
 }
 
-.account-details .table .mov-row:hover {
+.account-detail .table .mov-row:hover {
 	background-color: #eef;
 }
 
-.account-details .table .mov-data {
+.account-detail .table .mov-data {
 	position: absolute;
 	left: 0;
 	top: 0;
@@ -339,7 +339,7 @@ a {
 	line-height: 30px;
 }
 
-.account-details .table .mov-desc {
+.account-detail .table .mov-desc {
 	position: absolute;
 	left: 102px;
 	right: 102px;
@@ -352,12 +352,12 @@ a {
 	line-height: 30px;
 }
 
-.account-details .table .mov-desc:HOVER {
+.account-detail .table .mov-desc:HOVER {
 	overflow: auto;
 	text-overflow: initial;
 }
 
-.account-details .table .mov-amount {
+.account-detail .table .mov-amount {
 	position: absolute;
 	right: 0;
 	top: 0;
@@ -369,7 +369,7 @@ a {
 	line-height: 30px;
 }
 
-.account-details .amount {
+.account-detail .amount {
 	width: 500px;
 	display: block;
 	text-align: right;
@@ -379,7 +379,7 @@ a {
 	-moz-flex: none;
 }
 
-.account-details .amount.negative {
+.account-detail .amount.negative {
 	color: #f77;
 	font-weight: bolder;
 }
@@ -601,7 +601,7 @@ input.ng-invalid {
 	position: static;
 }
 
-.person-details {
+.person-detail {
 	overflow: auto;
 	position: absolute;
 	left: 0;
@@ -610,7 +610,7 @@ input.ng-invalid {
 	bottom: 0;
 }
 
-.person-details input {
+.person-detail input {
 	border: 0;
 	border-bottom: 1px solid lightgray;
 	width: 300px;
@@ -618,50 +618,50 @@ input.ng-invalid {
 	font-size: 11pt;
 }
 
-.person-details .account-name {
+.person-detail .account-name {
 	margin: 10px 0;
 }
 
-.person-details .account-name label {
+.person-detail .account-name label {
 	font-size: 10pt;
 	color: gray;
 }
 
-.person-details .account-name input {
+.person-detail .account-name input {
 	font-size: 14pt;
 	margin-left: 10px;
 }
 
-.person-details .section .header {
+.person-detail .section .header {
 	font-size: 15pt;
 	font-weight: bold;
 	margin: 10px 5px 0 0;
 }
 
-.person-details .subsection {
+.person-detail .subsection {
 	display: flex;
 	display: -webkit-flex;
 	display: -ms-flex;
 	display: -moz-flex;
 }
 
-.person-details .subsection .header {
+.person-detail .subsection .header {
 	font-size: 10pt;
 	font-weight: normal;
 	color: gray;
 	width: 120px;
 }
 
-.person-details .row {
+.person-detail .row {
 	margin: 4px 0;
 }
 
-.person-details .row.none {
+.person-detail .row.none {
 	font-style: italic;
 	color: gray;
 }
 
-.person-details .error-message {
+.person-detail .error-message {
 	position: static;
 }
 

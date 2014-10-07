@@ -10,7 +10,7 @@
     Chi ha dato denaro:
    </div>
    <div ng-repeat="l in trans.clients | filter:filledLine" class="row">
-    <div class="row-who field"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/details' : '#/account/' + l.account + '/details'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
+    <div class="row-who field"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
     <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
     <div class="row-notes field" ng-show="l.notes">{{l.notes}}</div>
    </div>
@@ -18,7 +18,7 @@
     Chi ha ricevuto denaro:
    </div>
    <div ng-repeat="l in trans.producers | filter:filledLine" class="row">
-    <div class="row-who field"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/details' : '#/account/' + l.account + '/details'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
+    <div class="row-who field"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
     <div class="row-amount field">{{ l.amount | currency : currency[1] }}</div>
     <div class="row-notes field" ng-show="l.notes">{{ l.notes }}</div>
    </div>
@@ -39,7 +39,7 @@
         <span>Totale pagamenti: {{totalAmount | currency : currency[1] }}</span>
         </div>
    <div>
-       Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</a><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/details">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.
+       Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</a><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.
    </div>
    <div ng-show="modifies">
        Questo inserimento ne modifica uno precedente. <button ng-click="showTransaction(modifies)">Esamina</button>

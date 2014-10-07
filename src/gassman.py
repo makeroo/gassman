@@ -796,7 +796,7 @@ e il cui saldo è: %s %s
 Descrizione del movimento: %s
 Data: %s
 
-Per esaminare il conto vai su: http://www.gassmanager.org/home.html#/account/%s/details
+Per esaminare il conto vai su: http://www.gassmanager.org/home.html#/account/%s/detail
 
 Se qualcosa non torna, replica a questa mail aggiungendo in copia le altre persone interessate,
 ovvero, nel caso di accredito colui/colei a cui hai dato il denaro, nel caso di un ordine,

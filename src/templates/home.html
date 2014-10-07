@@ -36,7 +36,7 @@
    <p>Dati personali non disponibili: {{!profileError}}.</p>
   </div>
   <div class="profile-info" ng-show="profile">
-   <p><a href="#/person/{{! profile.logged_user.id }}/details">{{!profile.logged_user.firstName}} {{! profile.logged_user.middleName}} {{! profile.logged_user.lastName}}</a></p>
+   <p><a href="#/person/{{! profile.logged_user.id }}/detail">{{!profile.logged_user.firstName}} {{! profile.logged_user.middleName}} {{! profile.logged_user.lastName}}</a></p>
    <p ng-show="amount == amountError">Caricamento in corso...</p>
    <p ng-show="amountError">Saldo personale non disponible: {{! amountError }}.</p>
    <p ng-show="amount" class="amount {{! amountClass }}">Saldo: {{! amount | currency : currencySymbol }}</p>

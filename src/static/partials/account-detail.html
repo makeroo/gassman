@@ -1,8 +1,8 @@
-<div class="account-details">
+<div class="account-detail">
 
   <div class="page-header">
     <div ng-show="accountOwner == null && accountOwnerError == null && accountDesc == null">Sto caricando...</div>
-    <div class="header centered" ng-show="accountOwner">Conto di <span ng-repeat="o in accountOwner">{{$last ? ' e ' : $first ? '' : ', '}}<span ng-if="!viewableContacts" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</span><a ng-if="viewableContacts" href="#/person/{{o[3]}}/details" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</a></span></div>
+    <div class="header centered" ng-show="accountOwner">Conto di <span ng-repeat="o in accountOwner">{{$last ? ' e ' : $first ? '' : ', '}}<span ng-if="!viewableContacts" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</span><a ng-if="viewableContacts" href="#/person/{{o[3]}}/detail" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</a></span></div>
     <div class="header centered" ng-show="accountDesc">{{ accountDesc[0] }} di {{ accountDesc[1] }}</div>
     <div class="header right-aligned" ng-show="amount != null">Saldo: {{amount[0] | currency : amount[1] }}</div>
     <div class="header-error" ng-show="accountOwnerError">Informazioni sul titolare del conto non disponibili: {{ accountOwnerError }}.</div>
@@ -36,34 +36,3 @@
   </div>
 
 </div>
-
-<!--
-<div class="transaction-details" ng-show="transactionError">Dati della transazione non disponibili: {{transactionError}}.</div>
-
-<div class="transaction-details" ng-show="transaction">
- <div class="theader">
- <p class="title">Movimento del {{ transaction.mov[1] | date:"shortDate" }}</p>
- <p class="tdesc">{{ transaction.mov[0] }}</p>
-  <div class="header">
-   <div class="desc">Descrizione</div>
-   <div class="account">Conto</div>
-   <div class="amount">Importo</div>
-  </div>
- </div>
-
- <div class="lines">
-  <div ng-repeat="l in transaction.lines" class="row">
-  <!-- 0:id 1:accId 2:desc 3:amount - ->
-   <div class="desc">{{ l[2] }}</div>
-   <div class="account">{{ transactionAccount(l[1]) }}</div>
-   <div class="amount">{{ l[3] | currency : transactionCurrency(l[1]) }}</div>
-  </div>
- </div>
-<!- -
- <div ng-switch="transaction.lines.length">
-  <div ng-switch-when="1"></div>
-  <dov ng-switch-default></dov>
- </div>
-- ->
-</div>
--->
