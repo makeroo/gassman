@@ -38,8 +38,6 @@ gassmanApp.functions = [
 		       pp.indexOf(gassmanApp.P_canEnterWithdrawal) != -1 ||
 		       pp.indexOf(gassmanApp.P_canManageTransactions) != -1;
 	  }, f:'#/transactions/index', l:' Movimenti inseriti' }
-	//,
-	//{ p:gassmanApp.P_canViewContacts, f:'#/contacts/index', l:'Rubrica' }
 	];
 
 /*
@@ -66,71 +64,49 @@ gassmanApp.config([ '$routeProvider',
 			templateUrl: 'static/partials/person-details.html',
 			controller: 'PersonDetails'
 		}).
-			when('/account/self/details', {
-				templateUrl: 'static/partials/account-details.html',
-				controller: 'AccountDetails'
-			}).
-			when('/account/:accountId/details', {
-				templateUrl: 'static/partials/account-details.html',
-				controller: 'AccountDetails'
-			}).
-			when('/accounts/index', {
-				templateUrl: 'static/partials/accounts-index.html',
-				controller: 'AccountsIndex'
-			}).
-			when('/transaction/:transId', {
-				templateUrl: 'static/partials/transaction.html',
-				controller: 'Transaction'
-			}).
-/*
-			when('/transaction/:transId/d', {
-				templateUrl: 'static/partials/transaction_deposit.html',
-				controller: 'TransactionDeposit'
-			}).
-			when('/transaction/:transId/p', {
-				templateUrl: 'static/partials/transaction_payment.html',
-				controller: 'TransactionPayment'
-			}).
-			when('/transaction/:transId/x', {
-				templateUrl: 'static/partials/transaction_cashexchange.html',
-				controller: 'TransactionCashExchange'
-			}).
-			when('/transaction/:transId/w', {
-				templateUrl: 'static/partials/transaction_withdrawal.html',
-				controller: 'TransactionWithdrawal'
-			}).
-			when('/transaction/:transId/g', {
-				templateUrl: 'static/partials/transaction_generic.html',
-				controller: 'TransactionGeneric'
-			}).
-			when('/transaction/:transId/t', {
-				templateUrl: 'static/partials/transaction_trashed.html',
-				controller: 'TransactionTrashed'
-			}).
-*/
-			when('/transactions/index', {
-				templateUrl: 'static/partials/transactions_index.html',
-				controller: 'TransactionsIndex'
-			}).
-			when('/help', {
-				templateUrl: 'static/partials/help.html',
-				controller: 'HelpController'
-			}).
-			when('/faq', {
-				templateUrl: 'static/partials/faq.html',
-				controller: 'FaqController'
-			}).
-			when('/project', {
-				templateUrl: 'static/partials/project.html',
-				controller: 'ProjectController'
-			}).
-			//when('/contacts/index', {
-			//	templateUrl: 'static/partials/contacts_index.html',
-			//	controller: 'ContactsController'
-			//}).
-			otherwise({
-				redirectTo: '/account/self/details'
-			})
+		when('/account/self/details', {
+			templateUrl: 'static/partials/account-details.html',
+			controller: 'AccountDetails'
+		}).
+		when('/account/:accountId/details', {
+			templateUrl: 'static/partials/account-details.html',
+			controller: 'AccountDetails'
+		}).
+		when('/accounts/index', {
+			templateUrl: 'static/partials/accounts-index.html',
+			controller: 'AccountsIndex'
+		}).
+		when('/transaction/:transId', {
+			templateUrl: 'static/partials/transaction.html',
+			controller: 'Transaction'
+		}).
+		when('/transactions/index', {
+			templateUrl: 'static/partials/transactions_index.html',
+			controller: 'TransactionsIndex'
+		}).
+		when('/help', {
+			templateUrl: 'static/partials/help.html',
+			controller: 'HelpController'
+		}).
+		when('/faq', {
+			templateUrl: 'static/partials/faq.html',
+			controller: 'FaqController'
+		}).
+		when('/project', {
+			templateUrl: 'static/partials/project.html',
+			controller: 'ProjectController'
+		}).
+		when('/not_found', {
+			templateUrl: 'static/partials/not_found.html',
+			controller: 'NotFoundController'
+		}).
+		when('/', {
+			templateUrl: 'static/partials/home.html',
+			controller: 'HomeSelectorController'
+		}).
+		otherwise({
+			redirectTo: '/not_found'
+		})
 	}]);
 
 // funzioni di utilità, da trasferire in un servizio...
