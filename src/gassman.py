@@ -18,8 +18,11 @@ import tornado.web
 import tornado.auth
 import tornado.gen
 import tornado.escape
+import tornado.httpclient
+import tornado.escape
 
 import gassman_settings as settings
+import oauth2lib
 
 logging.config.dictConfig(settings.LOG)
 
@@ -42,12 +45,34 @@ def rss_feed_id (pid):
 class GoogleUser (object):
     authenticator = 'Google'
 
-    def __init__ (self, userInfo):
-        self.userId = userInfo['claimed_id']
-        self.firstName = userInfo.get('first_name', '')
-        self.middleName = None
-        self.lastName = userInfo.get('last_name', '')
-        self.email = userInfo.get('email', '')
+    def __init__ (self, id_token):
+        oauth2token = oauth2lib.extract_payload_from_oauth2_id_token(id_token['id_token'])
+        self.userId = oauth2token['id']
+        #TODO: self.firstName = userInfo.get('first_name', '')
+        #self.middleName = None
+        #TODO: self.lastName = userInfo.get('last_name', '')
+        self.email = oauth2token['email']
+        self.access_token = id_token['access_token']
+
+    @tornado.gen.coroutine
+    def loadFullProfile (self):
+        http = tornado.httpclient.AsyncHTTPClient()
+        response = yield http.fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + self.access_token,
+                                   method="GET")
+        if response.error:
+            raise Exception('Google auth error: %s' % str(response))
+
+        profile = tornado.escape.json_decode(response.body)
+        self.firstName = profile.get('given_name')
+        self.middleName =  None
+        self.lastName = profile.get('family_name')
+        self.gProfile = profile.get('link')
+        self.picture = profile.get('picture')
+        # altri attributi: id, email, gender, locale
+
+#    def __getattr__ (self, name):
+#        if 'name' in ['firstName', 'middleName', 'lastName', 'gProfile', 'picture']:
+#            pass
 
 class Session (object):
     def __init__ (self, app):
@@ -95,7 +120,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/login.html$', LoginHandler),
             (r'^/home.html$', HomeHandler),
             (r'^/auth/google$', GoogleAuthLoginHandler),
-            (r'^/incomplete_profile.html$', IncompleteProfileHandler),
+#            (r'^/incomplete_profile.html$', IncompleteProfileHandler),
             (r'^/sys/version$', SysVersionHandler),
 #            (r'^/account/movements/(\d+)/(\d+)$', SelfAccountMovementsHandler),
             (r'^/account/(\d+)/owner$', AccountOwnerHandler),
@@ -124,6 +149,11 @@ class GassmanWebApp (tornado.web.Application):
             xsrf_cookies = True,
             xsrf_cookie_version = 1,
             login_url = '/login.html',
+            google_oauth = {
+                            "key": settings.GOOGLE_OAUTH2_CLIENTID,
+                            "secret": settings.GOOGLE_OAUTH2_SECRET,
+                            },
+            google_oauth_redirect=settings.GOOGLE_OAUTH2_REDIRECT,
             )
         super().__init__(handlers, **sett)
         self.mailer = mailer
@@ -173,15 +203,16 @@ class GassmanWebApp (tornado.web.Application):
                              body
                              )
 
-    def hasAccounts (self, pid):
-        with self.conn as cur:
-            cur.execute(*self.sql.has_accounts(pid))
-            return cur.fetchone()[0] > 0
+#    def hasAccounts (self, pid):
+#        with self.conn as cur:
+#            cur.execute(*self.sql.has_accounts(pid))
+#            return cur.fetchone()[0] > 0
 
     def hasAccount (self, cur, pid, accId):
         cur.execute(*self.sql.has_account(pid, accId))
         return cur.fetchone()[0] > 0
 
+    @tornado.gen.coroutine
     def checkProfile (self, requestHandler, user):
         with self.conn as cur:
             cur.execute(*self.sql.check_user(user.userId, user.authenticator))
@@ -195,6 +226,7 @@ class GassmanWebApp (tornado.web.Application):
                 log_gassman.debug('found profile: authId=%s, person=%s', user.userId, p)
             except Person.DoesNotExist:
                 try:
+                    yield user.loadFullProfile()
                     # non ho trovato niente su db
                     cur.execute(*self.sql.create_contact(user.userId, self.sql.Ck_Id, user.authenticator))
                     contactId = cur.lastrowid
@@ -307,66 +339,70 @@ class IndexHandler (BaseHandler):
         log_gassman.debug('index: lu=%s', p)
         if p is None:
             self.redirect("/login.html")
-        elif self.application.hasAccounts(p.id):
+        else: #if self.application.hasAccounts(p.id):
             self.redirect("/home.html")
-        else:
-            self.redirect("/incomplete_profile.html")
+#        else:
+#            self.redirect("/incomplete_profile.html")
 
 class LoginHandler (BaseHandler):
     def get (self):
         p = self.get_logged_user(None, None)
         if p is None:
             self.render('login.html')
-        elif self.application.hasAccounts(p.id):
+        else: #if self.application.hasAccounts(p.id):
             self.redirect("/home.html")
+#        else:
+#            self.redirect("/incomplete_profile.html")
+
+#class IncompleteProfileHandler (BaseHandler):
+#    def get (self):
+#        s = self.application.session(self)
+#        p = self.get_logged_user(s, None)
+#        if not p or self.application.hasAccounts(p.id):
+#            self.redirect('/')
+#        elif not s.registrationNotificationSent:
+#            s.registrationNotificationSent = self.application.notify('INFO',
+#                                                                     'Complete registration for %s %s' %
+#                                                                     (p.firstName, p.lastName),
+#                                                                     'User without account: %s' % p)
+#            self.render('incomplete_profile.html')
+
+class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
+    @tornado.gen.coroutine
+    def get(self):
+        if self.get_argument('code', False):
+            id_token = yield self.get_authenticated_user(
+                redirect_uri=self.settings['google_oauth_redirect'],
+                code=self.get_argument('code')
+                )
+            token_user = GoogleUser(id_token)
+            _person = yield self.application.checkProfile(self, token_user)
+#            if self.application.hasAccounts(person.id):
+            self.redirect("/home.html")
+#            else:
+#                self.redirect("/incomplete_profile.html")
         else:
-            self.redirect("/incomplete_profile.html")
+            yield self.authorize_redirect(
+                redirect_uri=self.settings['google_oauth_redirect'],
+                client_id=self.settings['google_oauth']['key'],
+                scope=['profile', 'email'],
+                response_type='code',
+                extra_params={'approval_prompt': 'auto'})
 
-class IncompleteProfileHandler (BaseHandler):
-    def get (self):
-        s = self.application.session(self)
-        p = self.get_logged_user(s, None)
-        if not p or self.application.hasAccounts(p.id):
-            self.redirect('/')
-        elif not s.registrationNotificationSent:
-            s.registrationNotificationSent = self.application.notify('INFO',
-                                                                     'Complete registration for %s %s' %
-                                                                     (p.firstName, p.lastName),
-                                                                     'User without account: %s' % p)
-            self.render('incomplete_profile.html')
-
-#class GoogleAuthLoginHandler2 (tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
+#class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleMixin):
 #    @tornado.gen.coroutine
 #    def get (self):
-#        if self.get_argument('code', False):
-#            user = yield self.get_authenticated_user(
-#                redirect_uri='http://your.site.com/auth/google',
-#                code=self.get_argument('code'))
-#            # Save the user with e.g. set_secure_cookie
-#            log_gassman.debug('user received: %s', user)
-#            self.redirect("/home.html")
+#        if self.get_argument("openid.mode", None):
+#            user = yield self.get_authenticated_user()
+#            #log_gassman.debug('user received: %s', user)
+#            person = self.application.checkProfile(self, GoogleUser(user))
+#            self.application.session(self).logged_user = person
+#            if self.application.hasAccounts(person.id):
+#                self.redirect("/home.html")
+#            else:
+#                self.redirect("/incomplete_profile.html")
 #        else:
-#            yield self.authorize_redirect(
-#                redirect_uri='http://localhost:8180/auth/google',
-#                client_id=self.settings['google_oauth']['key'],
-#                scope=['profile', 'email'],
-#                response_type='code',
-#                extra_params={'approval_prompt': 'auto'})
-
-class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleMixin):
-    @tornado.gen.coroutine
-    def get (self):
-        if self.get_argument("openid.mode", None):
-            user = yield self.get_authenticated_user()
-            #log_gassman.debug('user received: %s', user)
-            person = self.application.checkProfile(self, GoogleUser(user))
-            self.application.session(self).logged_user = person
-            if self.application.hasAccounts(person.id):
-                self.redirect("/home.html")
-            else:
-                self.redirect("/incomplete_profile.html")
-        else:
-            self.authenticate_redirect(ax_attrs=["name", "email"])
+#            self.authenticate_redirect(ax_attrs=["name", "email"])
 
 # TODO: facebook login
 
