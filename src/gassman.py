@@ -17,7 +17,6 @@ import tornado.ioloop
 import tornado.web
 import tornado.auth
 import tornado.gen
-import tornado.escape
 import tornado.httpclient
 import tornado.escape
 
@@ -43,14 +42,11 @@ def rss_feed_id (pid):
     return hashlib.sha256((settings.COOKIE_SECRET + str(pid)).encode('utf-8')).hexdigest()
 
 class GoogleUser (object):
-    authenticator = 'Google'
+    authenticator = 'Google2'
 
     def __init__ (self, id_token):
         oauth2token = oauth2lib.extract_payload_from_oauth2_id_token(id_token['id_token'])
         self.userId = oauth2token['id']
-        #TODO: self.firstName = userInfo.get('first_name', '')
-        #self.middleName = None
-        #TODO: self.lastName = userInfo.get('last_name', '')
         self.email = oauth2token['email']
         self.access_token = id_token['access_token']
 
@@ -212,43 +208,82 @@ class GassmanWebApp (tornado.web.Application):
         cur.execute(*self.sql.has_account(pid, accId))
         return cur.fetchone()[0] > 0
 
+    def add_contact (self, cur, pid, addr, kind, notes):
+        if addr:
+            cur.execute(*self.sql.create_contact(addr, kind, notes))
+            cid = cur.lastrowid
+            cur.execute(*self.sql.assign_contact(cid, pid))
+
     @tornado.gen.coroutine
     def checkProfile (self, requestHandler, user):
         with self.conn as cur:
-            cur.execute(*self.sql.check_user(user.userId, user.authenticator))
-            try:
+            authMode = (user.userId, user.authenticator, sql.Ck_Id)
+            cur.execute(*self.sql.check_user(*authMode))
+            pp = list(cur)
+            if len(pp) == 0:
+                log_gassman.debug('profile not found: credentials=%s', authMode)
+                authMode = (user.email, 'verified', sql.Ck_Email)
+                cur.execute(*self.sql.check_user(*authMode))
                 pp = list(cur)
-                if len(pp) == 0:
-                    raise Person.DoesNotExist
+            if len(pp) == 0:
+                log_gassman.info('profile not found: credentials=%s', authMode)
+                p = None
+            else:
                 p = Person(*pp[0])
+                if len(pp) == 1:
+                    log_gassman.debug('found profile: credentials=%s, person=%s', authMode, p)
                 if len(pp) > 1:
-                    self.notify('ERROR', 'Multiple auth id for %s' % p, 'Check auth id %s' % user.userId)
-                log_gassman.debug('found profile: authId=%s, person=%s', user.userId, p)
-            except Person.DoesNotExist:
+                    self.notify('ERROR', 'Multiple auth id for %s' % p, 'Check credentials %s' % authMode)
+            attrsToComplete = [('email', self.sql.Ck_Email, 'verified'),
+                               ('gProfile', self.sql.Ck_GProfile, ''),
+                               ('picture', self.sql.Ck_Picture, ''),
+                               ]
+            contactToDelete = None
+            if p is None:
+                pass
+            elif authMode[2] == sql.Ck_Email:
+                cur.execute(*self.sql.fetchAllContacts(p.id))
+                for pcId, aId, kind, contactType in list(cur):
+                    if kind == self.sql.Ck_Id and contactType == 'Google':
+                        contactToDelete = (pcId, aId)
+                    else:
+                        attrsToComplete = list(filter(lambda x: x[1] != kind, attrsToComplete))
+                if contactToDelete is None:
+                    attrsToComplete = []
+            else:
+                attrsToComplete = []
+            if contactToDelete:
+                cur.execute(*self.sql.removePersonContact(contactToDelete[0]))
+                cur.execute(*self.sql.removeContactAddress(contactToDelete[1]))
+            if attrsToComplete:
                 try:
                     yield user.loadFullProfile()
                     # non ho trovato niente su db
                     cur.execute(*self.sql.create_contact(user.userId, self.sql.Ck_Id, user.authenticator))
                     contactId = cur.lastrowid
-                    cur.execute(*self.sql.create_person(user.firstName, user.middleName, user.lastName))
-                    p_id = cur.lastrowid
-                    rfi = rss_feed_id(p_id)
-                    cur.execute(*self.sql.assign_rss_feed_id(p_id, rfi))
+                    if p is None:
+                        cur.execute(*self.sql.create_person(user.firstName, user.middleName, user.lastName))
+                        p_id = cur.lastrowid
+                        rfi = rss_feed_id(p_id)
+                        cur.execute(*self.sql.assign_rss_feed_id(p_id, rfi))
+                        p = Person(p_id, user.firstName, user.middleName, user.lastName, rfi)
+                        log_gassman.info('profile created: newUser=%s', p)
+                    else:
+                        p_id = p.id
                     cur.execute(*self.sql.assign_contact(contactId, p_id))
-                    if user.email:
-                        cur.execute(*self.sql.create_contact(user.email, self.sql.Ck_Email, ''))
-                        emailId = cur.lastrowid
-                        cur.execute(*self.sql.assign_contact(emailId, p_id))
-                    p = Person(p_id, user.firstName, user.middleName, user.lastName, rfi)
-                    log_gassman.info('profile created: newUser=%s', p)
+                    for attrName, kind, notes in attrsToComplete:
+                        self.add_contact(cur, p_id, getattr(user, attrName), kind, notes)
+                    #self.add_contact(cur, p_id, user.email, self.sql.Ck_Email, '')
+                    #self.add_contact(cur, p_id, user.gProfile, self.sql.Ck_GProfile, '')
+                    #self.add_contact(cur, p_id, user.picture, self.sql.Ck_Picture, '')
                 except:
                     etype, evalue, tb = sys.exc_info()
                     log_gassman.error('profile creation failed: cause=%s/%s\nfull stacktrace:\n%s', etype, evalue, loglib.TracebackFormatter(tb))
                     self.notify('ERROR', 'User profile creation failed', 'Cause: %s/%s\nAuthId: %s (%s %s)\nTraceback:\n%s' %
                                    (etype, evalue, user.userId, user.firstName, user.lastName, loglib.TracebackFormatter(tb))
                                    )
-                    return None
-        requestHandler.set_secure_cookie("user", tornado.escape.json_encode(p.id))
+        if p is not None:
+            requestHandler.set_secure_cookie("user", tornado.escape.json_encode(p.id))
         return p
 
     def session (self, requestHandler):
@@ -861,24 +896,6 @@ class TransactionsEditableHandler (JsonBaseHandler):
         else:
             raise Exception(error_codes.E_permission_denied)
         return list(cur)
-
-
-# TODO: ripristinare se si fa la pagina di associazione conto
-#class IncompleteProfilesHandler (JsonBaseHandler):
-#    '''
-#    Restituisce le persone senza account.
-#    '''
-#    def post (self):
-#        u = self.application.session(self).get_logged_user('not authenticated')
-#        if not self.application.hasPermission(sql.P_canAssignAccounts, u.id):
-#            raise Exception(error_codes.E_permission_denied)
-#        with self.application.conn as cur:
-#            cur.execute(*self.application.sql.find_users_without_account())
-#            pwa = list(cur)
-#            data = dict(
-#                        users_without_account=pwa
-#                        )
-#        self.write_response(data)
 
 def shortDate (d):
     return d.strftime('%Y/%m/%d') # FIXME il formato dipende dal locale dell'utente
