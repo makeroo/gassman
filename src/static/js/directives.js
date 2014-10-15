@@ -1,3 +1,5 @@
+'use strict';
+
 var gassmanDirectives = angular.module('gassmanDirectives', [
     'gassmanServices'
     ]);

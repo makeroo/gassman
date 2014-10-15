@@ -78,6 +78,9 @@ Ck_Email = 'E'
 Ck_Fax = 'F'
 Ck_Id = 'I'
 Ck_Nickname = 'N'
+Ck_Picture = 'P'
+Ck_GProfile = '+'
+Ck_Web = 'W'
 
 As_Open = 'O'
 As_Closing = 'C'
@@ -153,8 +156,8 @@ def accounts_index (csaId, q, o, fromLine, toLine):
        fromLine
        ]
 
-def check_user (userId, authenticator):
-    return 'SELECT p.id, p.first_name, p.middle_name, p.last_name, p.rss_feed_id FROM contact_address c JOIN person_contact pc ON c.id=pc.address_id JOIN person p ON p.id=pc.person_id WHERE c.kind=%s AND c.contact_type=%s AND c.address=%s', [ 'I', authenticator, userId ]
+def check_user (userId, authenticator, kind):
+    return 'SELECT p.id, p.first_name, p.middle_name, p.last_name, p.rss_feed_id FROM contact_address c JOIN person_contact pc ON c.id=pc.address_id JOIN person p ON p.id=pc.person_id WHERE c.kind=%s AND c.contact_type=%s AND c.address=%s', [ kind, authenticator, userId ]
 
 def create_contact (addr, kind, contactType):
     return 'INSERT INTO contact_address (address, kind, contact_type) VALUES (%s,%s,%s)', [ addr, kind, contactType ]
@@ -270,7 +273,7 @@ def account_people (csaId):
 def account_people_addresses (csaId):
     return 'SELECT c.address, p.id, a.id FROM person p JOIN account_person ap ON ap.person_id=p.id JOIN account a ON ap.account_id=a.id JOIN person_contact pc ON p.id=pc.person_id JOIN contact_address c ON pc.address_id=c.id WHERE a.csa_id=%s AND c.kind IN (%s, %s) AND ap.to_date IS NULL', [ csaId, Ck_Email, Ck_Nickname ]
 
-def account_kitty (csaId):
+def account_kitty (csaId): # FIXME duplicato di csa_account
     return 'SELECT a.id FROM account_csa ac JOIN account a ON ac.account_id=a.id WHERE ac.csa_id=%s AND a.gc_type=%s', [ csaId, At_Asset ]
 
 def account_email_for_notifications (accountIds):
@@ -494,6 +497,12 @@ def updateProfile (p):
         p['id'],
         ]
 
+def removeContactAddress (aId):
+    return 'DELETE FROM contact_address WHERE id=%s', [ aId ]
+
+def removePersonContact (pcId):
+    return 'DELETE FROM person_contact WHERE id=%s', [ pcId ]
+
 def removeContactAddresses (aids):
     return 'DELETE FROM contact_address WHERE id in (%s)' % ','.join([ '%s' ] * len(aids)), aids
 
@@ -518,6 +527,9 @@ def linkAddress (pid, aid, pri):
 def fetchContacts (pid):
     return 'SELECT a.id FROM person_contact pc JOIN contact_address a ON pc.address_id=a.id WHERE pc.person_id=%s AND a.kind != %s', [ pid, Ck_Id ]
 #    return 'SELECT pc.id, pc.priority, a.id, a.kind, a.address, a.contact_type FROM person_contact pc JOIN contact_address a ON pc.address_id=a.id WHERE pc.person_id=%s ORDER BY pc.priority', [ pid ]
+
+def fetchAllContacts (pid):
+    return 'SELECT pc.id, a.id, a.kind, a.contact_type FROM person_contact pc JOIN contact_address a ON pc.address_id=a.id WHERE pc.person_id=%s', [ pid ]
 
 def revokePermissions (pid, csaId, level):
     return (

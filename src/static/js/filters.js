@@ -1,3 +1,5 @@
+'use strict';
+
 var gassmanFilters = angular.module('gassmanFilters', []);
 
 gassmanFilters.R_ISO8601_STR = /^(\d{4})-?(\d\d)-?(\d\d)(?:T(\d\d)(?::?(\d\d)(?::?(\d\d)(?:\.(\d+))?)?)?(Z|([+-])(\d\d):?(\d\d))?)?$/;

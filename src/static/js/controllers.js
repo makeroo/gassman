@@ -21,6 +21,30 @@ function joinSkippingEmpties () {
 	return r;
 }
 
+gassmanControllers.controller('NotFoundController', function() {
+});
+
+gassmanControllers.controller('HomeSelectorController', function($scope, $location, gdata) {
+	$scope.error = null;
+
+	gdata.profileInfo().
+	then (function (profile) {
+		$scope.profile = profile;
+
+		return gdata.selectedCsa();
+	}).
+	then (function (csaId) {
+		if (typeof(csaId) == 'string' && csaId)
+			$location.path('/account/self/detail');
+		else
+			$location.path('/person/' + $scope.profile.logged_user.id + '/detail');
+	}).
+	then (undefined, function (error) {
+		$scope.error = error;
+	});
+});
+
+
 gassmanControllers.controller('MenuController', function($scope, $filter, gdata) {
 	$scope.profile = null;
 	$scope.profileError = null;
