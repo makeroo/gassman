@@ -92,9 +92,10 @@ Tl_Deleted = 'D'
 Tl_Modified = 'M'
 Tl_Error = 'E'
 
-At_Asset = 'ASSET' # kitty
+At_Asset = 'ASSET' # persone
 At_Expense = 'EXPENSE' # spese
 At_Income = 'INCOME' # versamenti
+At_Kitty = 'KITTY' # kitty
 
 def account_owners (accountId):
     return 'SELECT p.first_name, p.middle_name, p.last_name, p.id, ap.from_date, ap.to_date FROM person p JOIN account_person ap ON ap.person_id=p.id WHERE ap.account_id=%s', [ accountId ]
@@ -249,10 +250,14 @@ def rss_id (personId):
     return 'SELECT rss_feed_id FROM person WHERE id=%s', [ personId ]
 
 def csa_amount (csaId):
-    return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND a.gc_type=%s AND a.csa_id=%s GROUP BY c.symbol', [ Tt_Unfinished, Tt_Error, At_Asset, csaId ]
+    return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND a.gc_type in (%s, %s) AND a.csa_id=%s GROUP BY c.symbol', [ Tt_Unfinished, Tt_Error, At_Asset, At_Kitty, csaId ]
 
-def csa_account (csaId, accountType, currencyId):
-    return 'SELECT a.id FROM account_csa ac JOIN account a ON ac.account_id=a.id WHERE ac.csa_id=%s AND a.gc_type=%s AND a.currency_id=%s', [ csaId, accountType, currencyId ]
+def csa_account (csaId, accountType, currencyId=None):
+    q = 'SELECT a.id FROM account a WHERE a.csa_id=%s AND a.gc_type=%s'
+    if currencyId is None:
+        return q, [ csaId, accountType ]
+    else:
+        return q + ' AND a.currency_id=%s', [ csaId, accountType, currencyId ]
 
 def account_currency (accId, csaId, requiredCurr):
     return 'SELECT count(*) FROM account a WHERE a.id=%s AND a.csa_id=%s AND a.currency_id=%s', [ accId, csaId, requiredCurr ]
@@ -272,9 +277,6 @@ def account_people (csaId):
 
 def account_people_addresses (csaId):
     return 'SELECT c.address, p.id, a.id FROM person p JOIN account_person ap ON ap.person_id=p.id JOIN account a ON ap.account_id=a.id JOIN person_contact pc ON p.id=pc.person_id JOIN contact_address c ON pc.address_id=c.id WHERE a.csa_id=%s AND c.kind IN (%s, %s) AND ap.to_date IS NULL', [ csaId, Ck_Email, Ck_Nickname ]
-
-def account_kitty (csaId): # FIXME duplicato di csa_account
-    return 'SELECT a.id FROM account_csa ac JOIN account a ON ac.account_id=a.id WHERE ac.csa_id=%s AND a.gc_type=%s', [ csaId, At_Asset ]
 
 def account_email_for_notifications (accountIds):
     return '''
@@ -327,8 +329,7 @@ def complete_deposit_or_withdrawal (tid, csaId, atype):
     return '''
 INSERT INTO transaction_line (transaction_id, account_id, amount)
  SELECT t.id, ca.id, - SUM(l.amount)
-  FROM account_csa ac
-  JOIN account ca ON ac.account_id=ca.id,
+  FROM account ca,
 
   transaction_line l
   JOIN transaction t ON l.transaction_id=t.id

@@ -159,21 +159,6 @@ CREATE TABLE account (
 );
 
 
--- ogni csa ha 3 conti per ogni currency che usa
--- i conti sono: kitty (cassa comune): ASSET
--- Uscite: EXPENSES, Entrate: INCOME
-CREATE TABLE account_csa (
-  id INT NOT NULL AUTO_INCREMENT,
-  csa_id INT NOT NULL,
-  account_id INT NOT NULL,
-
-  FOREIGN KEY (csa_id) REFERENCES csa(id),
-  FOREIGN KEY (account_id) REFERENCES account(id),
-  PRIMARY KEY (id)
-);
-
-
-
 CREATE TABLE person (
   id INT NOT NULL AUTO_INCREMENT,
 

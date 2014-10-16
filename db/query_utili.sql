@@ -52,7 +52,7 @@ select distinct ap.id, AP.from_date, ap.person_id from transaction t join transa
 
 -- conti non associati né a persone né a csa
 --
-select * from account where id not in (select account_id from account_person) and id not in (select account_id  from account_csa);
+select * from account where id not in (select account_id from account_person);
 
 -- expenses
 select * from account where gc_type ='EXPENSE';
