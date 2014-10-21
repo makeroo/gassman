@@ -334,7 +334,7 @@ gassmanServices.service('accountAutocompletion', function ($http, $q, $localStor
 			var aa = resp[k];
 
 			if (aa) {
-				aa.people['kitty'] = { name:'CASSA COMUNE', refs:[] };
+				aa.people['kitty'] = { name:'CASSA COMUNE', refs:[] }; // FIXME: i18n
 			} else {
 				console.log('accountAutocompletion: kitty account without currency info:', k);
 			}

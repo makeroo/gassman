@@ -444,6 +444,26 @@ gassmanControllers.controller('Transaction', function($scope, $routeParams, $loc
 					l.accountNames = pp;
 					//l.accountNames = $scope.currencies[l.account].people;
 				}
+			} else if (t.kitty.indexOf(l.account) != -1) {
+				if (x < 0) {
+					clients.push(l);
+					l.amount = -x;
+				} else {
+					producers.push(l);
+					l.amount = +x;
+				}
+
+
+				if (!l.accountName) {
+					l.accountName = 'CASSA COMUNE'; // FIXME: i18n
+					l.readonly = false;
+				}
+
+				l.accountNames = [{
+					//pid: null,
+					name: 'CASSA COMUNE', // FIXME: i18n
+					refs:[],
+				}];
 			} else {
 				expenses.push(l);
 				l.amount = +x;
