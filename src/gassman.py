@@ -116,9 +116,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/login.html$', LoginHandler),
             (r'^/home.html$', HomeHandler),
             (r'^/auth/google$', GoogleAuthLoginHandler),
-#            (r'^/incomplete_profile.html$', IncompleteProfileHandler),
             (r'^/sys/version$', SysVersionHandler),
-#            (r'^/account/movements/(\d+)/(\d+)$', SelfAccountMovementsHandler),
             (r'^/account/(\d+)/owner$', AccountOwnerHandler),
             (r'^/account/(\d+)/movements/(\d+)/(\d+)$', AccountMovementsHandler),
             (r'^/account/(\d+)/amount$', AccountAmountHandler),
@@ -126,13 +124,11 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/accounts/(\d+)/index/(\d+)/(\d+)$', AccountsIndexHandler),
             (r'^/accounts/(\d+)/names$', AccountsNamesHandler),
             (r'^/expenses/(\d+)/tags$', ExpensesNamesHandler),
-            #(r'^/transaction/(\d+)/(\d+)/people', TransactionPeopleHandler),
             (r'^/transaction/(\d+)/(\d+)/edit$', TransactionEditHandler),
             (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
             (r'^/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
-            (r'^/csa/(\d+)/total_amount$', CsaAmountHandler),
+            #(r'^/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/rss/(.+)$', RssFeedHandler),
-#            (r'^/people/(\d+)/index/(\d+)/(\d+)$', PeopleIndexHandler),
             (r'^/people/(\d+)/profiles$', PeopleProfilesHandler),
             (r'^/person/(\d+)/save$', PersonSaveHandler),
             (r'^/person/(\d+)/check_email', PersonCheckEmailHandler),
@@ -198,11 +194,6 @@ class GassmanWebApp (tornado.web.Application):
                              '[GASsMan] %s %s' % (level, subject),
                              body
                              )
-
-#    def hasAccounts (self, pid):
-#        with self.conn as cur:
-#            cur.execute(*self.sql.has_accounts(pid))
-#            return cur.fetchone()[0] > 0
 
     def hasAccount (self, cur, pid, accId):
         cur.execute(*self.sql.has_account(pid, accId))
@@ -386,21 +377,6 @@ class LoginHandler (BaseHandler):
             self.render('login.html')
         else: #if self.application.hasAccounts(p.id):
             self.redirect("/home.html")
-#        else:
-#            self.redirect("/incomplete_profile.html")
-
-#class IncompleteProfileHandler (BaseHandler):
-#    def get (self):
-#        s = self.application.session(self)
-#        p = self.get_logged_user(s, None)
-#        if not p or self.application.hasAccounts(p.id):
-#            self.redirect('/')
-#        elif not s.registrationNotificationSent:
-#            s.registrationNotificationSent = self.application.notify('INFO',
-#                                                                     'Complete registration for %s %s' %
-#                                                                     (p.firstName, p.lastName),
-#                                                                     'User without account: %s' % p)
-#            self.render('incomplete_profile.html')
 
 class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
     @tornado.gen.coroutine
@@ -412,10 +388,7 @@ class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAu
                 )
             token_user = GoogleUser(id_token)
             _person = yield self.application.checkProfile(self, token_user)
-#            if self.application.hasAccounts(person.id):
             self.redirect("/home.html")
-#            else:
-#                self.redirect("/incomplete_profile.html")
         else:
             yield self.authorize_redirect(
                 redirect_uri=self.settings['google_oauth_redirect'],
@@ -423,21 +396,6 @@ class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAu
                 scope=['profile', 'email'],
                 response_type='code',
                 extra_params={'approval_prompt': 'auto'})
-
-#class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleMixin):
-#    @tornado.gen.coroutine
-#    def get (self):
-#        if self.get_argument("openid.mode", None):
-#            user = yield self.get_authenticated_user()
-#            #log_gassman.debug('user received: %s', user)
-#            person = self.application.checkProfile(self, GoogleUser(user))
-#            self.application.session(self).logged_user = person
-#            if self.application.hasAccounts(person.id):
-#                self.redirect("/home.html")
-#            else:
-#                self.redirect("/incomplete_profile.html")
-#        else:
-#            self.authenticate_redirect(ax_attrs=["name", "email"])
 
 # TODO: facebook login
 
@@ -510,11 +468,6 @@ class SysVersionHandler (JsonBaseHandler):
         data = [ gassman_version.version ]
         self.write_response(data)
 
-#class SelfAccountMovementsHandler (JsonBaseHandler):
-#    def post (self, fromIdx, toIdx):
-#        a = self.application.session(self).get_logged_user('not authenticated').account
-#        self.fetchMovements(a, fromIdx, toIdx)
-
 class AccountOwnerHandler (JsonBaseHandler):
     def do (self, cur, accId):
         u = self.get_logged_user()
@@ -545,13 +498,14 @@ class AccountAmountHandler (JsonBaseHandler):
         v = cur.fetchone()
         return v[0] or 0.0, v[1]
 
-class CsaAmountHandler (JsonBaseHandler):
-    def do (self, cur, csaId):
-        u = self.get_logged_user()
-        if not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
-            raise Exception(error_codes.E_permission_denied)
-        cur.execute(*self.application.sql.csa_amount(csaId))
-        return cur.fetchone()
+# lo lascio per futura pagina diagnostica: deve comunque ritornare sempre 0.0
+#class CsaAmountHandler (JsonBaseHandler):
+#    def do (self, cur, csaId):
+#        u = self.get_logged_user()
+#        if not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
+#            raise Exception(error_codes.E_permission_denied)
+#        cur.execute(*self.application.sql.csa_amount(csaId))
+#        return cur.fetchone()
 
 # TODO: riprisitnare quando si edita il profilo utente
 #class PermissionsHandler (JsonBaseHandler):
@@ -624,28 +578,6 @@ class ExpensesNamesHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.expenses_transaction_descriptions(csaId))
         r['tags'] += [ x[0] for x in cur]
         return r
-
-#class TransactionDetailHandler (JsonBaseHandler):
-#    def do (self, cur, csaId, tid):
-#        # restituisco:
-#        # lines: [ id, desc, amount, accId ]
-#        # people: [ id, first, middle, last, accId ]
-#        # accounts: [ id, gc_name, currency ]
-#        u = self.get_logged_user()
-#        cur.execute(*self.application.sql.transaction_lines(tid))
-#        lines = list(cur)
-#        cur.execute(*self.application.sql.transaction_people(tid))
-#        people = dict([ (c[4], c) for c in cur])
-#        if not u.id in [c[0] for c in people.values()] and \
-#            not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
-#            raise Exception(error_codes.E_permission_denied)
-#        cur.execute(*self.application.sql.transaction_account_gc_names(tid))
-#        accs = dict([( c[0], (c[1], c[2])) for c in cur])
-#        return dict(
-#                    lines = lines,
-#                    people = people,
-#                    accounts = accs,
-#                    )
 
 class TransactionEditHandler (JsonBaseHandler):
     def do (self, cur, csaId, transId):
@@ -857,6 +789,7 @@ class TransactionSaveHandler (JsonBaseHandler):
         for accId, accData in accounts.items():
             total, currSym = accData['account']
             people = accData['people']
+            # FIXME: usare tornado template!
             self.application.notify(
                 'ATTENZIONE' if total < LVL_THRES else 'INFO',
                 'Aggiornamento cassa GAS',
@@ -923,16 +856,6 @@ class RssFeedHandler (tornado.web.RequestHandler):
                         pubDate=pubDate,
                         currency=currency,
                         )
-
-#class PeopleIndexHandler (JsonBaseHandler):
-#    def do (self, cur, csaId, fromIdx, toIdx):
-#        q = '%%%s%%' % self.payload['q']
-#        o = self.application.sql.accounts_index_order_by[int(self.payload['o'])]
-#        u = self.get_logged_user()
-#        if not self.application.hasPermissionByCsa(cur, sql.P_canViewContacts, u.id, csaId):
-#            raise Exception(error_codes.E_permission_denied)
-#        cur.execute(*self.application.sql.people_index(csaId, q, o, int(fromIdx), int(toIdx)))
-#        return list(cur)
 
 class PeopleProfilesHandler (JsonBaseHandler):
     def do (self, cur, csaId):

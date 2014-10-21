@@ -49,8 +49,6 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 	$scope.profile = null;
 	$scope.profileError = null;
 	$scope.functions = [];
-	$scope.totalAmount = null;
-	$scope.totalAmountError = null;
 	$scope.amount = null;
 	$scope.amountError = null;
 	$scope.currencySymbol = null;
@@ -73,21 +71,6 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 			$scope.amountError = error.data;
 		})/*.
 		done()*/;
-
-		if ($scope.profile.permissions.indexOf(gassmanApp.P_canCheckAccounts) == -1) {
-			$scope.totalAmountError = null;
-			$scope.totalAmount = null;
-		} else {
-			gdata.totalAmount($scope.csaId).
-			then(function (r) {
-				$scope.totalAmountError = null;
-				$scope.totalAmount = r.data;
-			}).
-			then (undefined, function (error) {
-				$scope.totalAmount = null;
-				$scope.totalAmountError = error;
-			});
-		}
 	};
 
 	$scope.$on('AmountsChanged', function () {
