@@ -15,7 +15,8 @@
  <script src="{{ static_url('lib2/angular-i18n/angular-locale_it-it.js') }}"></script>
  <script src="{{ static_url('lib2/ngstorage/ngStorage' + MINIFIED + '.js') }}"></script>
  <script src="{{ static_url('lib2/angular-macgyver/lib/macgyver' + MINIFIED + '.js') }}"></script>
- <!-- script src="{{ static_url('lib/datejs/date.js') }}"></script -->
+ <script src="{{ static_url('lib2/datejs/build/' + ('production/' if MINIFIED else '') + 'date' + MINIFIED + '.js') }}"></script>
+ <script src="{{ static_url('lib2/datejs/build/' + ('production/' if MINIFIED else '') + 'date-it-IT' + MINIFIED + '.js') }}"></script>
 
  <script src="{{ static_url('js/services.js') }}"></script>
  <script src="{{ static_url('js/directives.js') }}"></script>
