@@ -14,6 +14,7 @@
     <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
     <div class="row-notes field">{{l.notes}}&nbsp;</div>
    </div>
+
    <div class="header" ng-hide="!(trans.producers | filter:filledLine).length || autocompletionDataError">
     Fornitori:
    </div>
@@ -107,6 +108,7 @@
     </div>
     </ng:form>
    </div>
+
    <div class="header" ng-hide="autocompletionDataError">
     Fornitori:
    </div>
@@ -150,6 +152,7 @@
     </ng:form>
    </div>
 
+<!--
    <div class="header" ng-hide="autocompletionDataError">
     Altre spese:
    </div>
@@ -176,13 +179,21 @@
             ng-blur="$parent.updateTotalExpenses(lineForm) || ($last && l.notes && $parent.addLine(trans.expenses))"
             gm-amount2
             id="amounte{{$index}}"
-            /> <!-- TODO: fare text + smart-float! -->
+            /> < ! - - TODO: fare text + smart-float! - - >
 	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.decimals">Troppi decimali</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.notesWithoutAmount">Specificare l'importo</div>
     </div>
     </ng:form>
+   </div>
+-->
+   <div class="header" ng-hide="!(trans.expenses | filter:filledLine).length || autocompletionDataError">
+    Altre spese:
+   </div>
+   <div ng-repeat="l in trans.expenses | filter:filledLine" class="row">
+    <div class="row-who field">{{l.notes}}&nbsp;</div>
+    <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
    </div>
 
    <div ng-show="autocompletionDataError">
