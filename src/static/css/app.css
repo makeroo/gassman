@@ -357,6 +357,16 @@ a {
 	text-overflow: initial;
 }
 
+.account-detail .table .mov-desc.desc2 {
+	line-height: 14px;
+}
+
+.mov-desc small {
+	font-style: italic;
+	color: gray;
+	font-size: 11px;
+}
+
 .account-detail .table .mov-amount {
 	position: absolute;
 	right: 0;

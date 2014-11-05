@@ -15,7 +15,7 @@
       <div class="first-row"></div>
       <div ng-repeat="mov in movements" class="mov-row" ng-click="showTransaction(mov)">
         <div class="mov-data">{{ mov[1] | date:"shortDate" }}</div>
-        <div class="mov-desc">{{ mov[0] }}</div>
+        <div class="mov-desc" ng-class="mov[2] ? 'desc2' : ''">{{ mov[0] }}<br/><small>{{ mov[2] }}</small></div>
         <div class="mov-amount">{{ mov[3] | currency : mov[5] }}</div>
       </div>
       <div ng-show="movementsError">
