@@ -29,7 +29,12 @@ def encode_date (v):
     return None if v is None else v.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
 def decode_date (s):
-    return None if empty_value(s) else datetime.datetime.strptime(s[:-1], '%Y-%m-%dT%H:%M:%S.%f')
+    if empty_value(s):
+        return None
+    try:
+        return datetime.datetime.strptime(s[:-1], '%Y-%m-%dT%H:%M:%S.%f') # 24
+    except ValueError:
+        return datetime.datetime.strptime(s[:-1], '%Y-%m-%dT%H:%M:%S') # 20
 
 def encode_timedelta (v):
     return None if v is None else v.total_seconds()
