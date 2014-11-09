@@ -60,6 +60,7 @@
     <div class="row-who">
      <div><mac-autocomplete
             name="account"
+            autocomplete="off"
             mac-placeholder="'Chi ha versato'"
             mac-autocomplete-source="autocompletionData"
             mac-autocomplete-delay="300"
@@ -99,6 +100,7 @@
     Chi ha ricevuto il denaro:
     <span><mac-autocomplete
      name="receiver"
+     autocomplete="off"
      mac-autocomplete-source="autocompletionData"
      mac-autocomplete-delay="300"
      ng-model="trans.clients[0].accountName"
