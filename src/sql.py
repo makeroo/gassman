@@ -104,20 +104,19 @@ def account_description (accountId):
     return 'SELECT a.gc_name, c.name, c.id FROM account a JOIN csa c ON a.csa_id=c.id WHERE a.id=%s', [ accountId ]
 
 def account_movements (accountDbId, fromLine, toLine):
-    return (
-'''SELECT t.description, t.transaction_date, l.description, l.amount, t.id, c.symbol, t.cc_type
+    q = '''
+SELECT t.description, t.transaction_date, l.description, l.amount, t.id, c.symbol, t.cc_type
  FROM transaction t
  JOIN transaction_line l ON l.transaction_id=t.id
  JOIN currency c ON c.id=t.currency_id
  WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s
  ORDER BY t.transaction_date DESC
- LIMIT %s OFFSET %s''', [
-        Tt_Unfinished, Tt_Error,
-        accountDbId,
-        toLine - fromLine + 1,
-        fromLine
-        ]
-            )
+ '''
+    a = [ Tt_Unfinished, Tt_Error, accountDbId ]
+    if fromLine is not None:
+        q += ' LIMIT %s OFFSET %s'
+        a.extend([ toLine - fromLine + 1, fromLine ])
+    return q, a
 
 def account_amount (accountDbId):
     return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a on l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s', [ Tt_Unfinished, Tt_Error, accountDbId ]

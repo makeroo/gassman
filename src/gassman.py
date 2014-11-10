@@ -20,8 +20,11 @@ import tornado.gen
 import tornado.httpclient
 import tornado.escape
 
+import xlwt
+
 import gassman_settings as settings
 import oauth2lib
+from tornado.web import HTTPError
 
 logging.config.dictConfig(settings.LOG)
 
@@ -120,6 +123,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/account/(\d+)/owner$', AccountOwnerHandler),
             (r'^/account/(\d+)/movements/(\d+)/(\d+)$', AccountMovementsHandler),
             (r'^/account/(\d+)/amount$', AccountAmountHandler),
+            (r'^/account/(\d+)/xls$', AccountXlsHandler),
             (r'^/profile-info$', ProfileInfoHandler),
             (r'^/accounts/(\d+)/index/(\d+)/(\d+)$', AccountsIndexHandler),
             (r'^/accounts/(\d+)/names$', AccountsNamesHandler),
@@ -497,6 +501,52 @@ class AccountAmountHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.account_amount(accId))
         v = cur.fetchone()
         return v[0] or 0.0, v[1]
+
+class AccountXlsHandler (BaseHandler):
+    def get (self, accId):
+        u = self.get_logged_user()
+        self.clear_header('Content-Type')
+        self.add_header('Content-Type', 'application/vnd.ms-excel')
+        self.clear_header('Content-Disposition')
+        self.add_header('Content-Disposition', 'attachment; filename="account-%s.xls"' % accId)
+        with self.application.conn as cur:
+            if not self.application.hasAccount(cur, u.id, accId) and not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId):
+                raise HTTPError(403)
+            style = xlwt.XFStyle()
+            style.num_format_str='YYYY-MM-DD' # FIXME: i18n
+            w = xlwt.Workbook(encoding='utf-8')
+            s = w.add_sheet('Conto') # FIXME: correggere e i18n
+            cur.execute(*self.application.sql.account_movements(accId, None, None))
+            # t.description, t.transaction_date, l.description, l.amount, t.id, c.symbol, t.cc_type
+            row = 1
+            tdescmaxlength = 0
+            ldescmaxlength = 0
+            s.write(0, 0, "Data") # FIXME: i18n
+            s.write(0, 1, "#")
+            s.write(0, 2, "Ammontare")
+            s.write(0, 3, "Valuta")
+            s.write(0, 4, "Descrizione")
+            s.write(0, 5, "Note")
+            for tdesc, tdate, ldesc, lamount, tid, csym, _tcctype in cur.fetchall():
+                s.write(row, 0, tdate, style)
+                s.write(row, 1, tid)
+                s.write(row, 2, lamount)
+                s.write(row, 3, csym)
+                if tdesc:
+                    s.write(row, 4, tdesc)
+                    if len(tdesc) > tdescmaxlength:
+                        tdescmaxlength = len(tdesc)
+                if ldesc:
+                    s.write(row, 5, ldesc)
+                    if len(ldesc) > ldescmaxlength:
+                        ldescmaxlength = len(ldesc)
+                row += 1
+            if tdescmaxlength:
+                s.col(4).width = 256 * tdescmaxlength
+            if ldescmaxlength:
+                s.col(4).width = 256 * ldescmaxlength
+            w.save(self)
+            self.finish()
 
 # lo lascio per futura pagina diagnostica: deve comunque ritornare sempre 0.0
 #class CsaAmountHandler (JsonBaseHandler):
