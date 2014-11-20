@@ -408,11 +408,7 @@ class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAu
 class HomeHandler (BaseHandler):
     @tornado.web.authenticated
     def get (self):
-        u = self.get_logged_user()
-        with self.application.conn as cur:
-            cur.execute(*self.application.sql.rss_id(u.id))
         self.render('home.html',
-                    rssId=cur.fetchone()[0],
                     MINIFIED=settings.MINIFIED)
 
 class JsonBaseHandler (BaseHandler):

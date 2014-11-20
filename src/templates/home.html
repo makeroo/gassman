@@ -3,7 +3,7 @@
 <head>
  <meta charset="utf-8">
  <title>GASsMan</title>
- <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss/{{ rssId }}" />
+ <link ng-if="profile.logged_user.rssFeedId" rel="alternate" type="application/rss+xml" title="RSS" href="/rss/{{! profile.logged_user.rssFeedId }}" />
  <link rel="stylesheet" href="{{ static_url('css/html5reset-1.6.1.css') }}">
  <link rel="stylesheet" href="{{ static_url('lib2/angular-macgyver/lib/macgyver.css') }}">
  <link rel="stylesheet" href="{{ static_url('css/app.css') }}">
@@ -55,7 +55,7 @@
    <a href="#/faq" class="faq">FAQ</a>
    <a href="#/help" class="troubleshoting">Aiuto</a>
    <a href="#/project" class="project">Progetto</a>
-   <a href="/rss/{{! profile.logged_user.rssFeedId }}">RSS</a>
+   <a ng-if="profile.logged_user.rssFeedId" href="/rss/{{! profile.logged_user.rssFeedId }}">RSS</a>
   </div>
 
  </div>

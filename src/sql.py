@@ -245,8 +245,8 @@ def rss_feed (rssId):
 def rss_user (rssId):
     return 'SELECT first_name, middle_name, last_name FROM person WHERE rss_feed_id=%s', [ rssId ]
 
-def rss_id (personId):
-    return 'SELECT rss_feed_id FROM person WHERE id=%s', [ personId ]
+#def rss_id (personId):
+#    return 'SELECT rss_feed_id FROM person WHERE id=%s', [ personId ]
 
 def csa_amount (csaId):
     return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND a.gc_type in (%s, %s) AND a.csa_id=%s GROUP BY c.symbol', [ Tt_Unfinished, Tt_Error, At_Asset, At_Kitty, csaId ]
