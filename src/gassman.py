@@ -408,8 +408,12 @@ class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAu
 class HomeHandler (BaseHandler):
     @tornado.web.authenticated
     def get (self):
-        self.render('home.html',
-                    MINIFIED=settings.MINIFIED)
+        p = self.get_logged_user(None, None)
+        if p is None:
+            self.redirect('/login.html')
+        else: #if self.application.hasAccounts(p.id):
+            self.render('home.html',
+                        MINIFIED=settings.MINIFIED)
 
 class JsonBaseHandler (BaseHandler):
     notifyExceptions = False
