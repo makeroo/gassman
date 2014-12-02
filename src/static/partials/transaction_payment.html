@@ -208,10 +208,10 @@
         <span class="error-message" ng-show="!currencyError && !totalAmount">Nessun dato inserito finora.</span>
         <span class="error-message" ng-show="!currencyError && difference >= .01">Discrepanza fra contanti versati e pagamenti richiesti: {{totalInvoice - totalAmount + totalExpenses | currency: currency[1] }}</span>
         </div>
-    <button ng-show="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
+    <button ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
     <button ng-disabled="!csaId || !payment.$valid || !totalAmount || difference >= .01" ng-click="savePayment()">Registra in cassa</button>
     <button ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione dei pagamenti</button>
-    <button ng-show="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
+    <button ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
    </div>
   </div>
  </div>

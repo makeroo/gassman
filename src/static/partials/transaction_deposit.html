@@ -93,10 +93,10 @@
        <span ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
        <span ng-show="!currencyError && !totalInvoice">Nessun versamento inserito finora.</span>
        </div>
-   <button ng-show="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
+   <button ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
    <button ng-disabled="!csaId || !deposit.$valid || !totalInvoice" ng-click="saveDeposit()">Registra in cassa</button>
    <button ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione degli accrediti</button>
-   <button ng-show="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
+   <button ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
   </div>
  </div>
  <div ng-show="tsaveError" class="deposit-post-save">
