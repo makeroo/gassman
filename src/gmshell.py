@@ -232,6 +232,16 @@ select a.id, a.gc_name from account a
 #            except:
 #                print('Unknown csa')
 
+    def do_merge_people (self, line):
+        # select * from person where first_name ='livia';
+        # select * from person_contact where person_id in (398, 452);
+        # select * from permission_grant where person_id in (398, 452);
+        # select * from account_person where person_id in (398, 452);
+        # update permission_grant set person_id = 452 where person_id = 398;
+        # update account_person set person_id = 452 where person_id = 398;
+        # delete from person where id=398;
+        pass
+
 if __name__ == '__main__':
     try:
         conn = pymysql.connect(host=settings.DB_HOST,
