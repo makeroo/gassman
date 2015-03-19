@@ -49,7 +49,7 @@ class GoogleUser (object):
 
     def __init__ (self, id_token):
         oauth2token = oauth2lib.extract_payload_from_oauth2_id_token(id_token['id_token'])
-        self.userId = oauth2token['id']
+        self.userId = oauth2token['sub']
         self.email = oauth2token['email']
         self.access_token = id_token['access_token']
 
