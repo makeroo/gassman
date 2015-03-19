@@ -11,7 +11,7 @@ select * from account order by id desc limit 1;
 insert into account_person (from_date, person_id, account_id) values (now(), PERSONID, ACCOUNTID);
 
 -- prospetto degli utenti e dei loro conti
-select p.id, p.first_name, p.last_name, c.address, a.gc_name, k.name
+select p.id, p.first_name, p.last_name, c.address, a.id as 'conto', a.gc_name, k.name
  from person p
  left join person_contact pc on pc.person_id=p.id
  left join contact_address c on pc.address_id=c.id
@@ -20,6 +20,8 @@ select p.id, p.first_name, p.last_name, c.address, a.gc_name, k.name
  left join csa k on k.id=a.csa_id
  where ap.to_date is null and (c.kind='E' or c.kind is null)
  order by p.id;
+
+
 
 -- persone senza permessi ma con conti (fantasmi)
 select * from person where id not in (select person_id from permission_grant) and id in (select person_id from account_person);
