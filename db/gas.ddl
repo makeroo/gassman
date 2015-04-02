@@ -1,4 +1,4 @@
--- version 9
+-- version 10
 
 SET SESSION storage_engine = "MyISAM";
 SET SESSION time_zone = "+0:00";
@@ -132,6 +132,8 @@ CREATE TABLE account (
 
   csa_id INT NOT NULL,
   currency_id INT NOT NULL,
+
+  annual_kitty_amount DECIMAL(15,2) NOT NULL DEFAULT 0,
 
 --  cassa_id int not null,
 --  saldo CURRENCY not null, -- magari si calcola con una join?

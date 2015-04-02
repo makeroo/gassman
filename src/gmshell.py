@@ -10,6 +10,7 @@ import os
 import cmd
 import traceback
 import sys
+import datetime
 
 import pymysql
 
@@ -84,6 +85,7 @@ class GMShell (cmd.Cmd):
             print(last_error)
 
     def help_list_csa (self): print('List all CSA')
+    @catchall
     def do_list_csa (self, line):
         with self.conn as cur:
             cur.execute('select id, name, description from csa order by id')
@@ -91,6 +93,7 @@ class GMShell (cmd.Cmd):
                 print('%3d %s%s' % (csa[0], csa[1], ': %s' % csa[2] if csa[2] else ''))
 
     def help_list_currency (self): print('List all currencies')
+    @catchall
     def do_list_currency (self, line):
         with self.conn as cur:
             cur.execute('select id, symbol, iso_4217 from currency order by id')
@@ -98,6 +101,7 @@ class GMShell (cmd.Cmd):
                 print('%3d %s (%s)' % (csa[0], csa[1], csa[2]))
 
     def help_select_csa (self): print('Select CSA. Usage: select_csa <CSAID>')
+    @catchall
     def do_select_csa (self, line):
         with self.conn as cur:
             k = line.strip()
@@ -110,6 +114,7 @@ class GMShell (cmd.Cmd):
                 print('Unknown csa')
 
     def help_create_person (self): print('Create a person profile with account. Usage: create_person <FIRSTNAME> <LASTNAME>')
+    @catchall
     def do_create_person (self, line):
         if not self.selectedCsa:
             print('No CSA selected')
@@ -150,6 +155,7 @@ class GMShell (cmd.Cmd):
                 cur.execute('insert into account_person (from_date, person_id, account_id) values (utc_timestamp(), %s, %s)', [ pid, aid ])
 
     def help_find_person (self): print('Look for people by name, contacts, etc. Usage: find_person <LIKETEXT>')
+    @catchall
     def do_find_person (self, line):
         p = line.strip()
         with self.conn as cur:
@@ -169,6 +175,7 @@ select distinct p.id, p.first_name, p.middle_name, p.last_name, c.kind, c.addres
                 print(r)
 
     def help_show_person (self): print('Show full profile info. Usage: show_person <PID>')
+    @catchall
     def do_show_person (self, line):
         pid = line.strip()
         with self.conn as cur:
@@ -194,6 +201,7 @@ select distinct p.id, p.first_name, p.middle_name, p.last_name, c.kind, c.addres
             print()
 
     def help_add_contact (self): print('Add contact to existing person. Usage: <PID> <ADDRESS> <KIND> <TYPE>')
+    @catchall
     def do_add_contact(self, line):
         pid, address, kind, ctype = line.split()
         kk = dict([ (v, k[3:]) for k, v in vars(sql).items() if k.startswith('Ck_')])
@@ -206,6 +214,7 @@ select distinct p.id, p.first_name, p.middle_name, p.last_name, c.kind, c.addres
             cur.execute('insert into person_contact (person_id, address_id, priority) select p.id, %s, 0 from person p where p.id=%s', [ aid, pid ])
 
     def help_find_account (self): print('Look for account by old GnuCash account name. Usage: find_account <LIKETEXT>')
+    @catchall
     def do_find_account (self, line):
         p = line.strip()
         with self.conn as cur:
@@ -218,6 +227,7 @@ select a.id, a.gc_name from account a
 
     # TODO: creare una persona senza conto, ma agganciata al conto di un altro
     def help_add_person (self): print('')
+    @catchall
     def do_add_person (self, line):
         pass
 #    def help_select_csa (self): print('Select CSA. Usage: select_csa <CSAID>')
@@ -232,6 +242,34 @@ select a.id, a.gc_name from account a
 #            except:
 #                print('Unknown csa')
 
+    def help_charge_kitty_amount (self): print('Charge per account defined kitty amount to each open account. Usage: charge_kitty_amount <userid> <transaction description>')
+    @catchall
+    def do_charge_kitty_amount (self, line):
+        if not self.selectedCsa:
+            print('No CSA selected')
+            return
+        x = line.index(' ')
+        uid = int(line[:x])
+        tDesc = line[x:].strip() or "Quota cassa comune"
+        with self.conn as cur:
+            now = datetime.datetime.utcnow()
+            cur.execute('select id, currency_id from account where csa_id = %s and gc_type = %s', [ self.selectedCsa, sql.At_Kitty ])
+            kittyId, currencyId = cur.fetchone()
+            cur.execute(*sql.insert_transaction(tDesc,
+                                                now,
+                                                sql.Tt_CashExchange,
+                                                currencyId,
+                                                self.selectedCsa
+                                                )
+                        )
+            tid = cur.lastrowid
+            cur.execute('select a.id, - a.annual_kitty_amount from account a where a.csa_id=%s and a.currency_id=%s and a.annual_kitty_amount > 0', [ self.selectedCsa, currencyId ])
+            for accId, amount in cur:
+                cur.execute(*sql.insert_transaction_line(tid, '', amount, accId))
+            cur.execute(*sql.complete_cashexchange(tid, kittyId))
+            cur.execute(*sql.log_transaction(tid, uid, sql.Tl_Added, 'gmshell op', now))
+
+    @catchall
     def do_merge_people (self, line):
         # select * from person where first_name ='livia';
         # select * from person_contact where person_id in (398, 452);
