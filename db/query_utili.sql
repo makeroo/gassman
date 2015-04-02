@@ -11,6 +11,7 @@ select * from account order by id desc limit 1;
 insert into account_person (from_date, person_id, account_id) values (now(), PERSONID, ACCOUNTID);
 
 -- prospetto degli utenti e dei loro conti
+-- BUG: chi ha contact_type ma nessuno di tipo E non si vede qua
 select p.id, p.first_name, p.last_name, c.address, a.id as 'conto', a.gc_name, k.name
  from person p
  left join person_contact pc on pc.person_id=p.id
@@ -31,6 +32,40 @@ select * from person where id not in (select person_id from permission_grant) an
 
 -- trasformare i fantasmi in membri del gas
 insert into permission_grant (csa_id, person_id, perm_id) select 1, id, 1 from person where id not in (select person_id from permission_grant) and id in (select person_id from account_person);
+
+-- conti di nessuno
+select * from account a where a.id not in (select account_id from account_person);
+
+
+-- calcolare la comunità di un gas per addebitare la quota in cassa comune
+select a.id, a.gc_name, count(ap.id) as "owners", max(t.transaction_date) as "ultimo_movimento"
+ from account a
+ join account_person ap on ap.account_id = a.id
+ join transaction_line tl on tl.account_id = a.id
+ join transaction t on t.id = tl.transaction_id
+ where
+  a.csa_id = 1 and
+  ap.to_date is null
+ order by max(t.transaction_date)
+ group by a.id;
+
+select a.id, a.gc_name, count(ap.id) as "owners", mx.tdate as "ultimo_movimento"
+ from account a
+ join (
+   select a.id, max(t.transaction_date) as tdate
+   from account a
+   join transaction_line tl on tl.account_id = a.id
+   join transaction t on t.id = tl.transaction_id
+   group by a.id
+ ) mx on a.id = mx.id
+ join account_person ap on ap.account_id = a.id
+ where
+  a.csa_id = 1 and
+  ap.to_date is null
+ group by a.id
+ order by mx.tdate desc;
+
+
 
 -- conti senza transazioni
 select * from account where id not in
