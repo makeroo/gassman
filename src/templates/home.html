@@ -44,6 +44,7 @@
   </div>
   <div class="functions" ng-show="functions.length">
    <ul>
+    <li ng-show="csa"><a href="#/csa/{{! csa.id }}/detail">{{! csa.name }}</a>
     <li ng-repeat="f in functions" ng-class="f.class">
      <a href="{{!f.f}}" ng-if="f.f">{{!f.l}}</a>
      <span ng-if="!f.f">{{!f.l}}</span>

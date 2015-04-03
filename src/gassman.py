@@ -131,6 +131,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/transaction/(\d+)/(\d+)/edit$', TransactionEditHandler),
             (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
             (r'^/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
+            (r'^/csa/(\d+)/info', CsaInfoHandler),
             #(r'^/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/rss/(.+)$', RssFeedHandler),
             (r'^/people/(\d+)/profiles$', PeopleProfilesHandler),
@@ -501,6 +502,17 @@ class AccountAmountHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.account_amount(accId))
         v = cur.fetchone()
         return v[0] or 0.0, v[1]
+
+class CsaInfoHandler (JsonBaseHandler):
+    def do (self, cur, csaId):
+        u = self.get_logged_user()
+        if not self.application.hasPermissionByCsa(cur, sql.P_membership, u.id, csaId):
+            raise Exception(error_codes.E_permission_denied)
+        cur.execute(*self.application.sql.csa_info(csaId))
+        r = sql.fetch_object(cur)
+        cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty))
+        r['kitty'] = sql.fetch_object(cur)
+        return r
 
 class AccountXlsHandler (BaseHandler):
     def get (self, accId):

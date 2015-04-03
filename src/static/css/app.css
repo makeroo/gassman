@@ -675,6 +675,48 @@ input.ng-invalid {
 	position: static;
 }
 
+.movements-syn {
+	
+}
+
+.movements-syn .mov-row {
+	position: relative;
+	height: 20px;
+	line-height: 20px;
+	font-size: 12px;
+}
+
+.movements-syn .mov-row:hover {
+	background-color: #eef;
+}
+
+.movements-syn .mov-row .mov-data {
+	position: absolute;
+}
+
+.movements-syn .mov-row .mov-desc {
+	position: absolute;
+	left: 55px;
+	width: 245px;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.movements-syn .mov-row .mov-amount {
+	position: absolute;
+	left: 300px;
+	width: 50px;
+	text-align: right;
+}
+
+.csa-info h1 {
+	margin-bottom: .5em;
+}
+
+.csa-card {
+	margin: 1em;
+}
+
 .mac-menu {
 	z-index: 1;
 }

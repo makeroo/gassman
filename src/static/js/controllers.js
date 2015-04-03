@@ -35,7 +35,7 @@ gassmanControllers.controller('HomeSelectorController', function($scope, $locati
 	}).
 	then (function (csaId) {
 		if (typeof(csaId) == 'string' && csaId)
-			$location.path('/account/self/detail');
+			$location.path('/csa/' + csaId + "/detail");
 		else
 			$location.path('/person/' + $scope.profile.logged_user.id + '/detail');
 	}).
@@ -81,23 +81,24 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 	then (function (pData) {
 		$scope.profile = pData;
 
-		for (var i in gassmanApp.functions) {
-			var f = gassmanApp.functions[i];
+		angular.forEach(gassmanApp.functions, function (f) {
+			if (('p' in f && pData.permissions.indexOf(f.p) == -1) ||
+				('e' in f && !f.e(pData.permissions))
+				)
+				return;
 
-			if (pData.permissions.indexOf(f.p) != -1 ||
-				('e' in f && f.e(pData.permissions))) {
-				$scope.functions.push(f);
-
-				//if ('justAdded' in f)
-				//	f.justAdded($scope, gdata);
-			}
-		}
+			$scope.functions.push(f);
+		});
 
 		return gdata.selectedCsa();
 	}).
 	then (function (csaId) {
 		$scope.csaId = csaId;
-		return gdata.accountByCsa(csaId);
+		return gdata.csaInfo(csaId);
+	}).
+	then (function (r) {
+		$scope.csa = r.data;
+		return gdata.accountByCsa($scope.csaId);
 	}).
 	then (function (accId) {
 		$scope.accountId = accId;
@@ -1133,6 +1134,53 @@ gassmanControllers.controller('PersonDetail', function($scope, $filter, $routePa
 	});
 });
 
+gassmanControllers.controller('CsaDetail', function($scope, $filter, $location, $routeParams, gdata, $q) {
+	var csaId = $routeParams['csaId'];
+
+	$scope.profile = null;
+	$scope.csa = null;
+	$scope.loadError = null;
+	$scope.openOrders = null;
+	//$scope.openOrdersError = null;
+	$scope.deliveringOrders = null;
+	//$scope.deliveringOrdersError = null;
+	$scope.draftOrders = null;
+	$scope.movements = null;
+
+	$scope.showAccount = function (accountId) {
+		$location.path('/account/' + accountId + '/detail');
+	};
+
+	$scope.showTransaction = function (mov) {
+		$location.path('/transaction/' + mov[4]);
+	};
+
+	gdata.profileInfo().
+	then (function (pData) {
+		$scope.profile = pData;
+
+		return $q.all([ gdata.csaInfo(csaId),
+		                gdata.accountByCsa(csaId),
+		                ]);
+	}).
+	then (function (r) {
+		$scope.csa = r[0].data;
+		$scope.accId = r[1];
+
+		// TODO: in realtà degli ordini CPY mi interessano solo le mie ordinazioni!!
+		return $q.all([
+				gdata.accountMovements($scope.accId, 0, 5),
+				gdata.accountAmount($scope.csa.kitty.id),
+				]);
+	}).
+	then (function (rr) {
+		$scope.movements = rr[0].data;
+		$scope.csa.kitty.amount = rr[1].data;
+	}).
+	then (undefined, function (error) {
+		$scope.loadError = error.data;
+	});
+});
 /*
 gassmanControllers.controller('ContactsController', function($scope, $filter, $location, gdata) {
 	$scope.people = [];

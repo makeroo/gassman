@@ -1,0 +1,36 @@
+<div ng-if="csa" class="csa-info">
+<h1>{{csa.name}}</h1>
+
+<div class="csa-card">
+<p ng-if="csa.description">{{csa.description}}</p>
+
+<div ng-if="csa.kitty.amount">Saldo in cassa comune: {{ csa.kitty.amount[0] | currency: csa.kitty.amount[1] }}</div>
+<button ng-click="showAccount(csa.kitty.id)">dettagli</button>
+
+</div>
+
+<h2>Ultimi movimenti sul tuo conto</h2>
+<div class="csa-card">
+ <div ng-if="movements" class="movements-syn">
+  <div ng-repeat="mov in movements" class="mov-row" ng-click="showTransaction(mov)">
+    <div class="mov-data">{{ mov[1] | date:"shortDate" }}</div>
+    <div class="mov-desc">{{ mov[0] }}</div>
+    <div class="mov-amount">{{ mov[3] | currency : mov[5] }}</div>
+  </div>
+  <button ng-click="showAccount(accId)">dettagli</button>
+ </div>
+ <div ng-if="movements != null && movements.length == 0">
+ Nessuno
+ </div>
+
+</div>
+
+<!-- TODO: ultimi movimenti in cassa comune -->
+
+
+</div>
+
+<div ng-if="loadError">
+Pagina temporaneamente non disponible.
+Causa: {{loadError}}
+</div>
