@@ -1171,11 +1171,13 @@ gassmanControllers.controller('CsaDetail', function($scope, $filter, $location, 
 		return $q.all([
 				gdata.accountMovements($scope.accId, 0, 5),
 				gdata.accountAmount($scope.csa.kitty.id),
+				gdata.accountMovements($scope.csa.kitty.id, 0, 5),
 				]);
 	}).
 	then (function (rr) {
 		$scope.movements = rr[0].data;
 		$scope.csa.kitty.amount = rr[1].data;
+		$scope.csa.kitty.movements = rr[2].data;
 	}).
 	then (undefined, function (error) {
 		$scope.loadError = error.data;

@@ -267,7 +267,7 @@ select a.id, a.gc_name from account a
             for accId, amount in cur:
                 cur.execute(*sql.insert_transaction_line(tid, '', amount, accId))
             cur.execute(*sql.complete_cashexchange(tid, kittyId))
-            cur.execute(*sql.log_transaction(tid, uid, sql.Tl_Added, 'gmshell op', now))
+            cur.execute(*sql.log_transaction(tid, uid, sql.Tl_Added, sql.Tn_kitty_deposit, now))
 
     @catchall
     def do_merge_people (self, line):

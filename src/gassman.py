@@ -512,6 +512,8 @@ class CsaInfoHandler (JsonBaseHandler):
         r = sql.fetch_object(cur)
         cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty))
         r['kitty'] = sql.fetch_object(cur)
+        cur.execute(*self.application.sql.csa_last_kitty_deposit(r['kitty']['id']))
+        r['last_kitty_deposit'] = sql.fetch_object(cur)
         return r
 
 class AccountXlsHandler (BaseHandler):

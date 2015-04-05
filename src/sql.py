@@ -15,6 +15,7 @@ P_canEnterWithdrawal = 8
 P_canViewContacts = 9
 P_canEditContacts = 10
 P_canGrantPermissions = 11
+P_canEditAnnualKittyAmount = 12
 
 Tt_Generic = 'g'
 Tt_Deposit = 'd'
@@ -91,6 +92,8 @@ Tl_Added = 'A'
 Tl_Deleted = 'D'
 Tl_Modified = 'M'
 Tl_Error = 'E'
+
+Tn_kitty_deposit = 'kitty_deposit'
 
 At_Asset = 'ASSET' # persone
 At_Expense = 'EXPENSE' # spese
@@ -260,6 +263,22 @@ def csa_account (csaId, accountType, currencyId=None):
         return q, [ csaId, accountType ]
     else:
         return q + ' AND a.currency_id=%s', [ csaId, accountType, currencyId ]
+
+def csa_last_kitty_deposit (kittyId):
+    return '''
+SELECT l.log_date, t.id as tid, p.id, p.first_name, p.middle_name, p.last_name
+ FROM transaction_log l
+ JOIN transaction t ON t.id = l.transaction_id
+ JOIN transaction_line tl ON tl.transaction_id = t.id
+ JOIN person p ON p.id = l.operator_id
+ WHERE l.op_type = %s AND l.notes = %s AND tl.account_id = %s
+ ORDER BY l.log_date
+ LIMIT %s''', [
+  Tl_Added,
+  Tn_kitty_deposit,
+  kittyId,
+  1,
+  ]
 
 def account_currency (accId, csaId, requiredCurr):
     return 'SELECT count(*) FROM account a WHERE a.id=%s AND a.csa_id=%s AND a.currency_id=%s', [ accId, csaId, requiredCurr ]
@@ -562,8 +581,9 @@ def iter_objects (cur):
     cn = column_names(cur)
     return [ dict(zip(cn, x)) for x in list(cur) ]
 
-def fetch_object (cur):
-    return dict(zip(column_names(cur), cur.fetchone()))
+def fetch_object (cur, returnIfNone=None):
+    v = cur.fetchone()
+    return dict(zip(column_names(cur), v)) if v else returnIfNone
 
 def fetch_struct (cur):
     def seqmode (c, k, v):

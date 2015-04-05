@@ -717,6 +717,10 @@ input.ng-invalid {
 	margin: 1em;
 }
 
+.csa-card p {
+	margin: .5em;
+}
+
 .mac-menu {
 	z-index: 1;
 }
