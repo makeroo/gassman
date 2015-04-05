@@ -4,11 +4,14 @@
 <div class="csa-card">
 <p ng-if="csa.description">{{csa.description}}</p>
 
-<p ng-if="csa.kitty.amount">Saldo in cassa comune: {{ csa.kitty.amount[0] | currency: csa.kitty.amount[1] }}.</p>
+<p ng-if="csa.kitty.amount">Saldo in cassa comune: {{ csa.kitty.amount[0] | currency: csa.kitty.amount[1] }}.
+ <button ng-click="showAccount(csa.kitty.id)">dettagli</button>
+</p>
 <p ng-if="csa.last_kitty_deposit">Ultimo versamento in cassa risalente al {{ csa.last_kitty_deposit.log_date | date }} registrato da {{ csa.last_kitty_deposit.first_name}} {{ csa.last_kitty_deposit.last_name }}.
   <button ng-click="showTransaction([0,0,0,0,csa.last_kitty_deposit.tid])">dettagli</button>
 </p>
 
+<!--
 <h2>Ultimi movimenti in cassa comune</h2>
  <div ng-if="csa.kitty.movements" class="movements-syn">
   <div ng-repeat="mov in csa.kitty.movements" class="mov-row" ng-click="showTransaction(mov)">
@@ -21,7 +24,7 @@
  <div ng-if="csa.kitty.movements != null && csa.kitty.movements.length == 0">
  Nessuno
  </div>
-
+-->
 </div>
 
 <h2>Ultimi movimenti sul tuo conto</h2>
