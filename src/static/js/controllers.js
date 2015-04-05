@@ -1017,6 +1017,7 @@ gassmanControllers.controller('PersonDetail', function($scope, $filter, $routePa
 	$scope.readOnly = true;
 	$scope.editable = false;
 	$scope.saveError = null;
+	$scope.annual_kitty_amount = null;
 
 	var master = null;
 	var personId = $routeParams['personId'];
@@ -1127,6 +1128,11 @@ gassmanControllers.controller('PersonDetail', function($scope, $filter, $routePa
 			var am = amounts[c];
 			acc.amount = am.data[0];
 			acc.csym = am.data[1];
+
+			if (acc.to_date == null) {
+				$scope.annual_kitty_amount = acc.annual_kitty_amount;
+				$scope.aka_csym = acc.csym;
+			}
 		}
 	}).
 	then (undefined, function (error) {

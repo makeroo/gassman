@@ -105,6 +105,8 @@
    <div class="row" ng-repeat="a in personProfile.accounts | filter: visibleAccount | orderBy : a.to_date">
     Periodo {{a.from_date | date }} &rarr; <span ng-hide="a.to_date">oggi</span><span ng-show="a.to_date">{{ a.to_date | date }}</span>: <span ng-show="a.amount != null">saldo {{ a.amount | currency : a.csym }}</span> <button ng-click="showAccount(a.id)" ng-disabled="!readOnly">dettagli</button>
    </div>
+   <div ng-if="annual_kitty_amount == 0.0">Non partecipa alla cassa comune.</div>
+   <div ng-if="annual_kitty_amount > 0.0">Quota partecipativa: {{ annual_kitty_amount | currency : aka_csym }}.</div>
   </div>
 
   <div ng-show="editable" class="actions">
