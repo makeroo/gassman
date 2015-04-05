@@ -328,6 +328,13 @@ SELECT a.id, sum(l.amount), c.symbol
  GROUP BY a.id
 ''' % (','.join(['%s'] * len(accountIds))), [ Tt_Unfinished, Tt_Error ] + list(accountIds)
 
+def account_updateAnnualKittyAmount (csaId, personId, amount):
+    return '''
+UPDATE account a
+ INNER JOIN account_person ap ON a.id=ap.account_id
+ SET a.annual_kitty_amount = %s
+ WHERE ap.person_id = %s AND ap.to_date IS NULL AND a.csa_id = %s''', [ amount, personId, csaId ]
+
 def expenses_accounts (csaId):
     return 'SELECT id, gc_name, currency_id FROM account where gc_type =%s AND csa_id=%s AND state=%s', [ At_Expense, csaId, As_Open]
 
