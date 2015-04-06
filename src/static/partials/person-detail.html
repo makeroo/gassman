@@ -98,8 +98,8 @@
        </select>
     </div>
    </div>
-   <div ng-if="!readOnly && personProfile.membershipFee">
-    Quota partecipativa: <input type="number" min="0.0" ng-model="personProfile.membershipFee.amount"/>
+   <div ng-if="!readOnly && personProfile.membership_fee">
+    Quota partecipativa: <input type="number" min="0.0" ng-model="personProfile.membership_fee.amount"/>
    </div>
   </div>
 
@@ -108,9 +108,9 @@
    <div class="row" ng-repeat="a in personProfile.accounts | filter: visibleAccount | orderBy : a.to_date">
     Periodo {{a.from_date | date }} &rarr; <span ng-hide="a.to_date">oggi</span><span ng-show="a.to_date">{{ a.to_date | date }}</span>: <span ng-show="a.amount != null">saldo {{ a.amount | currency : a.csym }}</span> <button ng-click="showAccount(a.id)" ng-disabled="!readOnly">dettagli</button>
    </div>
-   <div ng-if="readOnly || !personProfile.membershipFee">
-   <div ng-if="annual_kitty_amount == 0.0">Non partecipa alla cassa comune.</div>
-   <div ng-if="annual_kitty_amount > 0.0">Quota partecipativa: {{ annual_kitty_amount | currency : aka_csym }}.</div>
+   <div ng-if="readOnly || !personProfile.membership_fee">
+   <div ng-if="membership_fee == 0.0">Non partecipa alla cassa comune.</div>
+   <div ng-if="membership_fee > 0.0">Quota partecipativa: {{ membership_fee | currency : aka_csym }}.</div>
    </div>
   </div>
 

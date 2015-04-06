@@ -332,7 +332,7 @@ def account_updateAnnualKittyAmount (csaId, personId, amount):
     return '''
 UPDATE account a
  INNER JOIN account_person ap ON a.id=ap.account_id
- SET a.annual_kitty_amount = %s
+ SET a.membership_fee = %s
  WHERE ap.person_id = %s AND ap.to_date IS NULL AND a.csa_id = %s''', [ amount, personId, csaId ]
 
 def expenses_accounts (csaId):

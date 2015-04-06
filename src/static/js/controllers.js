@@ -1017,7 +1017,7 @@ gassmanControllers.controller('PersonDetail', function($scope, $filter, $routePa
 	$scope.readOnly = true;
 	$scope.editable = false;
 	$scope.saveError = null;
-	$scope.annual_kitty_amount = null;
+	$scope.membership_fee = null;
 
 	var master = null;
 	var personId = $routeParams['personId'];
@@ -1068,8 +1068,8 @@ gassmanControllers.controller('PersonDetail', function($scope, $filter, $routePa
 		gdata.saveProfile($scope.csaId, $scope.personProfile).
 		then (function (r) {
 			$scope.readOnly = true;
-			if ($scope.personProfile.membershipFee)
-				$scope.annual_kitty_amount = $scope.personProfile.membershipFee.amount;
+			if ($scope.personProfile.membership_fee)
+				$scope.membership_fee = $scope.personProfile.membership_fee.amount;
 		}).
 		then (undefined, function (error) {
 			console.log('PersonDetail: saveProfile error:', error);
@@ -1133,13 +1133,13 @@ gassmanControllers.controller('PersonDetail', function($scope, $filter, $routePa
 
 			if (acc.to_date == null) {
 				// nb: qui assumo una sola moneta per gas... FIXME
-				$scope.annual_kitty_amount = acc.annual_kitty_amount;
+				$scope.membership_fee = acc.membership_fee;
 				$scope.aka_csym = acc.csym;
 
 				if ($scope.profile.permissions.indexOf(gassmanApp.P_canEditAnnualKittyAmount) != -1) {
-					$scope.personProfile.membershipFee = {
+					$scope.personProfile.membership_fee = {
 						//account: acc.id,
-						amount: parseFloat(acc.annual_kitty_amount),
+						amount: parseFloat(acc.membership_fee),
 					};
 				}
 			}

@@ -1010,7 +1010,7 @@ class PersonSaveHandler (JsonBaseHandler):
                 if p < ulevel:
                     cur.execute(*self.application.sql.grantPermission(pid, p, csaId))
         # TODO: salva indirizzi
-        fee = p.get('membershipFee')
+        fee = p.get('membership_fee')
         if fee and self.application.hasPermissionByCsa(cur, sql.P_canEditAnnualKittyAmount, u.id, csaId):
             #accId = fee.get('account')
             amount = fee.get('amount')

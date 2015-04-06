@@ -108,7 +108,7 @@ CREATE TABLE csa (
   --kitty_id INT NOT NULL,
   -- Quanto versano, ogni anno, i partecipanti del gas in cassa comune
   -- TODO: gestire il caso di persone che appartengano a più gas: magari versano in un gas solo? O un po' in tutti?
-  annual_kitty_amount DECIMAL(15,2) NOT NULL DEFAULT 0,
+  membership_fee DECIMAL(15,2) NOT NULL DEFAULT 0,
   -- Soglia di default per i nuovi arrivati
   default_account_threshold DECIMAL(15,2) NOT NULL DEFAULT 0,
   -- Conto per le uscite (finché si rimane al modello salvadenaio...)
@@ -133,7 +133,7 @@ CREATE TABLE account (
   csa_id INT NOT NULL,
   currency_id INT NOT NULL,
 
-  annual_kitty_amount DECIMAL(15,2) NOT NULL DEFAULT 0,
+  membership_fee DECIMAL(15,2) NOT NULL DEFAULT 0,
 
 --  cassa_id int not null,
 --  saldo CURRENCY not null, -- magari si calcola con una join?

@@ -242,33 +242,6 @@ select a.id, a.gc_name from account a
 #            except:
 #                print('Unknown csa')
 
-    def help_charge_kitty_amount (self): print('Charge per account defined kitty amount to each open account. Usage: charge_kitty_amount <userid> <transaction description>')
-    @catchall
-    def do_charge_kitty_amount (self, line):
-        if not self.selectedCsa:
-            print('No CSA selected')
-            return
-        x = line.index(' ')
-        uid = int(line[:x])
-        tDesc = line[x:].strip() or "Quota cassa comune"
-        with self.conn as cur:
-            now = datetime.datetime.utcnow()
-            cur.execute('select id, currency_id from account where csa_id = %s and gc_type = %s', [ self.selectedCsa, sql.At_Kitty ])
-            kittyId, currencyId = cur.fetchone()
-            cur.execute(*sql.insert_transaction(tDesc,
-                                                now,
-                                                sql.Tt_CashExchange,
-                                                currencyId,
-                                                self.selectedCsa
-                                                )
-                        )
-            tid = cur.lastrowid
-            cur.execute('select a.id, - a.annual_kitty_amount from account a where a.csa_id=%s and a.currency_id=%s and a.annual_kitty_amount > 0', [ self.selectedCsa, currencyId ])
-            for accId, amount in cur:
-                cur.execute(*sql.insert_transaction_line(tid, '', amount, accId))
-            cur.execute(*sql.complete_cashexchange(tid, kittyId))
-            cur.execute(*sql.log_transaction(tid, uid, sql.Tl_Added, sql.Tn_kitty_deposit, now))
-
     @catchall
     def do_merge_people (self, line):
         # select * from person where first_name ='livia';
