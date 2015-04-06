@@ -1184,7 +1184,7 @@ gassmanControllers.controller('CsaDetail', function($scope, $filter, $location, 
 			gdata.chargeMembershipFee(csaId, {
 				amount: v,
 				kitty: $scope.csa.kitty.id,
-				description: '',
+				description: $scope.csa.kitty.charge_description,
 			}).
 			then (function (r) {
 				$location.path('/transaction/' + r.data.tid);

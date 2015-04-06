@@ -13,7 +13,8 @@
 
 <button ng-if="!viewChargeMembershipForm" ng-click="showChargeMembershipFeeForm(true)">Addebita quota di partecipazione</button>
 <form ng-if="viewChargeMembershipForm" name="membershipFeeForm">
-Quota di partecipazione: <input type="number" min="0" ng-model="csa.kitty.membership_fee"/>
+Quota di partecipazione: <input type="number" min="0" ng-model="csa.kitty.membership_fee"/><br/>
+Annotazioni: <input type="text" ng-model="csa.kitty.charge_description"/><br/>
 <div ng-if="membershipFeeError">{{membershipFeeError}}.</div>
 <button ng-click="chargeMembershipFee()">Conferma</button>
 <button ng-click="showChargeMembershipFeeForm(false)">Annulla</button>
