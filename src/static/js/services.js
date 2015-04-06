@@ -142,6 +142,10 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $
 		return $http.post('/csa/' + csaId + '/info?_xsrf=' + $cookies._xsrf);
 	}
 
+	this.chargeMembershipFee = function (csaId, p) {
+		return $http.post('/csa/' + csaId + '/charge_membership_fee?_xsrf=' + $cookies._xsrf, p);
+	}
+
 	this.accountsIndex = function (csaId, query, order, start, blockSize) {
 		return $http.post('/accounts/' + csaId + '/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf, { q: query, o: order });
 	}

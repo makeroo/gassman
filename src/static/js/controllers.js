@@ -1136,7 +1136,7 @@ gassmanControllers.controller('PersonDetail', function($scope, $filter, $routePa
 				$scope.membership_fee = acc.membership_fee;
 				$scope.aka_csym = acc.csym;
 
-				if ($scope.profile.permissions.indexOf(gassmanApp.P_canEditAnnualKittyAmount) != -1) {
+				if ($scope.profile.permissions.indexOf(gassmanApp.P_canEditMembershipFee) != -1) {
 					$scope.personProfile.membership_fee = {
 						//account: acc.id,
 						amount: parseFloat(acc.membership_fee),
@@ -1171,9 +1171,37 @@ gassmanControllers.controller('CsaDetail', function($scope, $filter, $location, 
 		$location.path('/transaction/' + mov[4]);
 	};
 
+	$scope.showChargeMembershipFeeForm = function (v) {
+		$scope.viewChargeMembershipForm = v;
+	};
+
+	$scope.chargeMembershipFee = function () {
+		$scope.membershipFeeError = null;
+
+		var v = $scope.csa.kitty.membership_fee;
+
+		if (v > 0) {
+			gdata.chargeMembershipFee(csaId, {
+				amount: v,
+				kitty: $scope.csa.kitty.id,
+				description: '',
+			}).
+			then (function (r) {
+				$location.path('/transaction/' + r.data.tid);
+			}).
+			then (undefined, function (error) {
+				$scope.membershipFeeError = error.data;
+			});
+		} else {
+			$scope.membershipFeeError = 'negative';
+		}
+	};
+
 	gdata.profileInfo().
 	then (function (pData) {
 		$scope.profile = pData;
+
+		$scope.editableMembershipFee = $scope.profile.permissions.indexOf(gassmanApp.P_canEditMembershipFee) != -1;
 
 		return $q.all([ gdata.csaInfo(csaId),
 		                gdata.accountByCsa(csaId),
@@ -1181,6 +1209,7 @@ gassmanControllers.controller('CsaDetail', function($scope, $filter, $location, 
 	}).
 	then (function (r) {
 		$scope.csa = r[0].data;
+		$scope.csa.kitty.membership_fee = parseFloat($scope.csa.kitty.membership_fee);
 		$scope.accId = r[1];
 
 		// TODO: in realtà degli ordini CPY mi interessano solo le mie ordinazioni!!

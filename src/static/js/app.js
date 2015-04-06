@@ -18,7 +18,7 @@ gassmanApp.P_canEnterCashExchange = 7;
 gassmanApp.P_canEnterWithdrawal = 8;
 gassmanApp.P_canViewContacts = 9;
 gassmanApp.P_canEditContacts = 10;
-gassmanApp.P_canEditAnnualKittyAmount = 12;
+gassmanApp.P_canEditMembershipFee = 12;
 
 gassmanApp.functions = [
 	//{ p:gassmanApp.P_membership, f:'#/account/detail', l:'Il tuo conto' },

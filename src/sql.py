@@ -15,7 +15,7 @@ P_canEnterWithdrawal = 8
 P_canViewContacts = 9
 P_canEditContacts = 10
 P_canGrantPermissions = 11
-P_canEditAnnualKittyAmount = 12
+P_canEditMembershipFee = 12
 
 Tt_Generic = 'g'
 Tt_Deposit = 'd'
@@ -257,12 +257,18 @@ def csa_info (csaId):
 def csa_amount (csaId):
     return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND a.gc_type in (%s, %s) AND a.csa_id=%s GROUP BY c.symbol', [ Tt_Unfinished, Tt_Error, At_Asset, At_Kitty, csaId ]
 
-def csa_account (csaId, accountType, currencyId=None):
-    q = 'SELECT a.id FROM account a WHERE a.csa_id=%s AND a.gc_type=%s'
-    if currencyId is None:
-        return q, [ csaId, accountType ]
-    else:
-        return q + ' AND a.currency_id=%s', [ csaId, accountType, currencyId ]
+def csa_account (csaId, accountType, currencyId=None, accId=None, full=False):
+    q = 'SELECT '
+    q += 'a.*' if full else 'a.id'
+    q += ' FROM account a WHERE a.csa_id=%s AND a.gc_type=%s'
+    a = [ csaId, accountType ]
+    if currencyId is not None:
+        q += ' AND a.currency_id=%s'
+        a.append(currencyId)
+    if accId is not None:
+        q += ' AND id=%s'
+        a.append(accId)
+    return q, a
 
 def csa_last_kitty_deposit (kittyId):
     return '''
@@ -328,7 +334,7 @@ SELECT a.id, sum(l.amount), c.symbol
  GROUP BY a.id
 ''' % (','.join(['%s'] * len(accountIds))), [ Tt_Unfinished, Tt_Error ] + list(accountIds)
 
-def account_updateAnnualKittyAmount (csaId, personId, amount):
+def account_updateMembershipFee (csaId, personId, amount):
     return '''
 UPDATE account a
  INNER JOIN account_person ap ON a.id=ap.account_id
@@ -349,6 +355,13 @@ def insert_transaction (desc, tDate, ccType, currencyId, csaId):
 
 def insert_transaction_line (tid, desc, amount, accId):
     return 'INSERT INTO transaction_line (transaction_id, account_id, description, amount) SELECT %s, a.id, %s, %s FROM account a WHERE a.id = %s', [ tid, desc, amount, accId ]
+
+def insert_transaction_line_membership_fee (tid, amount, csaId, currencyId):
+    return '''
+INSERT INTO transaction_line (transaction_id, account_id, description, amount)
+ SELECT %s, a.id, %s, - a.membership_fee * %s
+  FROM account a
+  WHERE a.csa_id = %s AND a.currency_id = %s AND a.gc_type = %s AND a.membership_fee > 0''', [ tid, '', amount, csaId, currencyId, At_Asset ]
 
 def check_transaction_coherency (tid):
     return 'SELECT DISTINCT a.currency_id, a.csa_id FROM transaction_line l JOIN account a ON a.id=l.account_id WHERE l.transaction_id = %s', [ tid ]

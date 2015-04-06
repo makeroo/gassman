@@ -132,6 +132,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
             (r'^/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
             (r'^/csa/(\d+)/info', CsaInfoHandler),
+            (r'^/csa/(\d+)/charge_membership_fee$', CsaChargeMembershipFeeHandler),
             #(r'^/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/rss/(.+)$', RssFeedHandler),
             (r'^/people/(\d+)/profiles$', PeopleProfilesHandler),
@@ -510,11 +511,42 @@ class CsaInfoHandler (JsonBaseHandler):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.csa_info(csaId))
         r = sql.fetch_object(cur)
-        cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty))
+        cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty, full=True))
         r['kitty'] = sql.fetch_object(cur)
         cur.execute(*self.application.sql.csa_last_kitty_deposit(r['kitty']['id']))
         r['last_kitty_deposit'] = sql.fetch_object(cur)
         return r
+
+class CsaChargeMembershipFeeHandler (JsonBaseHandler):
+    def do (self, cur, csaId):
+        u = self.get_logged_user()
+        if not self.application.hasPermissionByCsa(cur, sql.P_canEditMembershipFee, u.id, csaId):
+            raise Exception(error_codes.E_permission_denied)
+        
+        p = self.payload
+        tDesc = p['description']
+        amount = p['amount']
+        kittyId = p['kitty']
+        if amount < 0:
+            raise Exception(error_codes.E_illegal_payload)
+        now = datetime.datetime.utcnow()
+        cur.execute(*sql.csa_account(csaId, sql.At_Kitty, accId=kittyId, full=True))
+        acc = sql.fetch_object(cur)
+        if acc is None:
+            raise Exception(error_codes.E_illegal_payload)
+        currencyId = acc['currency_id']
+        cur.execute(*sql.insert_transaction(tDesc,
+                                            now,
+                                            sql.Tt_CashExchange,
+                                            currencyId,
+                                            csaId
+                                            )
+                    )
+        tid = cur.lastrowid
+        cur.execute(*sql.insert_transaction_line_membership_fee(tid, amount, csaId, currencyId))
+        cur.execute(*sql.complete_cashexchange(tid, kittyId))
+        cur.execute(*sql.log_transaction(tid, u.id, sql.Tl_Added, sql.Tn_kitty_deposit, now))
+        return { 'tid': tid }
 
 class AccountXlsHandler (BaseHandler):
     def get (self, accId):
@@ -1011,11 +1043,11 @@ class PersonSaveHandler (JsonBaseHandler):
                     cur.execute(*self.application.sql.grantPermission(pid, p, csaId))
         # TODO: salva indirizzi
         fee = p.get('membership_fee')
-        if fee and self.application.hasPermissionByCsa(cur, sql.P_canEditAnnualKittyAmount, u.id, csaId):
+        if fee and self.application.hasPermissionByCsa(cur, sql.P_canEditMembershipFee, u.id, csaId):
             #accId = fee.get('account')
             amount = fee.get('amount')
             if amount >= 0:
-                cur.execute(*self.application.sql.account_updateAnnualKittyAmount(csaId, pid, amount))
+                cur.execute(*self.application.sql.account_updateMembershipFee(csaId, pid, amount))
 
 class PersonCheckEmailHandler (JsonBaseHandler):
     def do (self, cur, csaId):

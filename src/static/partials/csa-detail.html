@@ -11,6 +11,14 @@
   <button ng-click="showTransaction([0,0,0,0,csa.last_kitty_deposit.tid])">dettagli</button>
 </p>
 
+<button ng-if="!viewChargeMembershipForm" ng-click="showChargeMembershipFeeForm(true)">Addebita quota di partecipazione</button>
+<form ng-if="viewChargeMembershipForm" name="membershipFeeForm">
+Quota di partecipazione: <input type="number" min="0" ng-model="csa.kitty.membership_fee"/>
+<div ng-if="membershipFeeError">{{membershipFeeError}}.</div>
+<button ng-click="chargeMembershipFee()">Conferma</button>
+<button ng-click="showChargeMembershipFeeForm(false)">Annulla</button>
+</form>
+
 <!--
 <h2>Ultimi movimenti in cassa comune</h2>
  <div ng-if="csa.kitty.movements" class="movements-syn">
