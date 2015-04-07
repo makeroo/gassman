@@ -1046,7 +1046,7 @@ class PersonSaveHandler (JsonBaseHandler):
         if fee and self.application.hasPermissionByCsa(cur, sql.P_canEditMembershipFee, u.id, csaId):
             #accId = fee.get('account')
             amount = fee.get('amount')
-            if amount >= 0:
+            if float(amount) >= 0:
                 cur.execute(*self.application.sql.account_updateMembershipFee(csaId, pid, amount))
 
 class PersonCheckEmailHandler (JsonBaseHandler):

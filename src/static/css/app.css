@@ -628,6 +628,10 @@ input.ng-invalid {
 	font-size: 11pt;
 }
 
+.person-detail input.fee {
+	width: auto;
+}
+
 .person-detail .account-name {
 	margin: 10px 0;
 }
