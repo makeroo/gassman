@@ -231,6 +231,10 @@ a {
 	margin-top: 2px;
 }
 
+.accounts-index .body .acc-row.fee .acc-name .name {
+	font-weight: bold;
+}
+
 .accounts-index .body .acc-cnt {
 	float: left;
 	font-size: 13px;

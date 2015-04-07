@@ -131,7 +131,7 @@ accounts_index_order_by = [ 'p.first_name, p.last_name',
                            ]
 
 def accounts_index (csaId, q, o, fromLine, toLine):
-    return '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount) AS ta, c.symbol, MAX(t.transaction_date) AS td
+    return '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount) AS ta, c.symbol, MAX(t.transaction_date) AS td, a.membership_fee
  FROM person p
  JOIN permission_grant g ON g.person_id=p.id
  LEFT JOIN account_person ap ON ap.person_id=p.id

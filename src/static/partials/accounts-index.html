@@ -6,10 +6,10 @@
     Sto caricando i dati...
    </div>
    <div class="first-row"></div>
-   <div ng-repeat="a in accounts" class="acc-row" ng-click="showAccount(a[4], a[0])">
+   <div ng-repeat="a in accounts" class="acc-row" ng-click="showAccount(a[4], a[0])" ng-class="{ fee: a[8] > 0.0 }">
     <div style="opacity: {{ a[7] | alphaTimeDiff }}">
      <div class="acc-name">
-      <div>{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
+      <div class="name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
       <span class="acc-cnt" ng-show="a.profile.mainEmail">{{a.profile.mainEmail}}</span>
       <span class="acc-cnt" ng-show="a.profile.mainTelephone">{{a.profile.mainTelephone}}</span>
      </div>
