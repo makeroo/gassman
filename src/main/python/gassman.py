@@ -139,11 +139,11 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/person/(\d+)/save$', PersonSaveHandler),
             (r'^/person/(\d+)/check_email', PersonCheckEmailHandler),
             ]
-        codeHome = os.path.dirname(__file__)
+        #codeHome = os.path.dirname(__file__)
         sett = dict(
             cookie_secret = settings.COOKIE_SECRET,
-            template_path = os.path.join(codeHome, 'templates'),
-            static_path = os.path.join(codeHome, "static"),
+            template_path = settings.TEMPLATE_PATH, #os.path.join(codeHome, 'templates'),
+            static_path = settings.STATIC_PATH, #os.path.join(codeHome, "static"),
             xsrf_cookies = True,
             xsrf_cookie_version = 1,
             login_url = '/login.html',
@@ -415,7 +415,8 @@ class HomeHandler (BaseHandler):
             self.redirect('/login.html')
         else: #if self.application.hasAccounts(p.id):
             self.render('home.html',
-                        MINIFIED=settings.MINIFIED)
+                        LOCALE=self.locale.code,
+                        )
 
 class JsonBaseHandler (BaseHandler):
     notifyExceptions = False
@@ -1069,12 +1070,16 @@ class PersonCheckEmailHandler (JsonBaseHandler):
 
 if __name__ == '__main__':
     io_loop = tornado.ioloop.IOLoop.instance()
+
+    tornado.locale.load_translations(settings.TRANSLATIONS_PATH)
+
     mailer = asyncsmtp.Mailer(settings.SMTP_SERVER,
                               settings.SMTP_PORT,
                               settings.SMTP_NUM_THREADS,
                               settings.SMTP_QUEUE_TIMEOUT,
                               io_loop
                               ) if settings.SMTP_SERVER else None
+
     connArgs = dict(
                     host=settings.DB_HOST,
                     port=settings.DB_PORT,
@@ -1083,10 +1088,13 @@ if __name__ == '__main__':
                     db=settings.DB_NAME,
                     charset='utf8'
                     )
+
     application = GassmanWebApp(sql,
                                 mailer,
                                 connArgs
                                 )
     application.listen(settings.HTTP_PORT)
+
     log_gassman.info('GASsMAN web server up and running...')
+
     io_loop.start()

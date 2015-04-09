@@ -189,7 +189,7 @@ a {
 	height: 40px;
 	line-height: 30px;
 	font-weight: bold;
-	background-image: url('/static/img/table_header.png');
+	background-image: url('/static/images/table_header.png');
 	position: absolute;
 	left: 0;
 	right: 0;
@@ -290,7 +290,7 @@ a {
 .account-detail .table .header {
 	height: 30px;
 	font-weight: bold;
-	background-image: url('/static/img/table_header.png');
+	background-image: url('/static/images/table_header.png');
 	position: absolute;
 	left: 0;
 	right: 0;
