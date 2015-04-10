@@ -10,7 +10,6 @@ import os
 import cmd
 import traceback
 import sys
-import datetime
 
 import pymysql
 
