@@ -1,3 +1,6 @@
+# Mantengo www perché contenendo file generati è bene che non finiscano versionati
+target
+
 ### python ###
 __pycache__
 
