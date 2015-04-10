@@ -158,7 +158,6 @@ gulp.task('less', function () {
   gulp.src([ 'bower_components/angular-macgyver/lib/macgyver.css' ])
   .pipe(gulp.dest(config.dest + '/static/css'));
 
-/*
   gulp.src('./src/main/less/app.less')
     .pipe(less({
       paths: [ path.resolve(__dirname, 'src/main/less'), path.resolve(__dirname, 'bower_components') ]
@@ -176,7 +175,6 @@ gulp.task('less', function () {
     .pipe(cssmin())
     .pipe(rename({suffix: '.min'}))
     .pipe(gulp.dest(path.join(config.dest, 'static/css')));
-*/
 });
 
 
