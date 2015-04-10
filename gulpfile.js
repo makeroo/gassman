@@ -153,11 +153,6 @@ gulp.task('html', function() {
 ======================================================================*/
 
 gulp.task('less', function () {
-  gulp.src([ 'src/main/web/**/*.css' ])
-  .pipe(gulp.dest(config.dest));
-  gulp.src([ 'bower_components/angular-macgyver/lib/macgyver.css' ])
-  .pipe(gulp.dest(config.dest + '/static/css'));
-
   gulp.src('./src/main/less/app.less')
     .pipe(less({
       paths: [ path.resolve(__dirname, 'src/main/less'), path.resolve(__dirname, 'bower_components') ]
