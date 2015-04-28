@@ -6,12 +6,13 @@
 
 var config = {
   dest: 'target/www',
+  minify_js: true,
   minify_images: true,
 
   vendor: {
     js: [
       './bower_components/jquery/dist/jquery.js',
-      //'./bower_components/bootstrap/dist/js/bootstrap.js',
+      './bower_components/bootstrap/dist/js/bootstrap.js',
       './bower_components/angular/angular.js',
       './bower_components/angular-route/angular-route.js',
       './bower_components/angular-cookies/angular-cookies.js',
@@ -66,7 +67,9 @@ var gulp           = require('gulp'),
     streamqueue    = require('streamqueue'),
     rename         = require('gulp-rename'),
     path           = require('path'),
-    spawn          = require('child_process').spawn;
+    spawn          = require('child_process').spawn,
+    gutil          = require('gulp-util')
+    ;
 
 
 /*================================================
@@ -190,7 +193,7 @@ gulp.task('js', function() {
     .pipe(sourcemaps.init())
     .pipe(concat('app.js'))
     .pipe(ngAnnotate())
-    .pipe(uglify())
+    .pipe(config.minify_js ? uglify() : gutil.noop())
     .pipe(rename({suffix: '.min'}))
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(path.join(config.dest, 'static/js')));
@@ -202,7 +205,7 @@ gulp.task('js', function() {
 ===================================================================*/
 
 gulp.task('watch', function () {
-  if (typeof config.server) {
+  if (config.server) {
     gulp.watch([config.dest + '/**/*',
                 './src/main/templates/**/*',
                 './src/main/python/**/*'
@@ -236,7 +239,7 @@ gulp.task('build', function(done) {
 gulp.task('default', function(done){
   var tasks = [];
 
-  if (typeof config.server) {
+  if (config.server) {
     tasks.push('connect');
   };
 

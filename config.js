@@ -8,13 +8,8 @@ module.exports = function (config) {
 
   // Development web server
 
-  config.server = true;
+  config.server = false;
 
   // Set to false to disable it:
   // config.server = false;
-  
-  // 3rd party components
-  // config.vendor.js.push('.bower_components/lib/dist/lib.js');
-
-  // config.vendor.fonts.push('.bower_components/font/dist/*');
 };
