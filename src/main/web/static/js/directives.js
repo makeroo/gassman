@@ -265,7 +265,7 @@ gassmanDirectives.directive('gmAmount2', function () {
     	}
     };
 });
-
+/*
 gassmanDirectives.directive('whenScrolled', function() {
 	return function (scope, elm, attr) {
 		var raw = elm[0];
@@ -276,4 +276,6 @@ gassmanDirectives.directive('whenScrolled', function() {
 			}
 		});
 	};
-});
+})
+*/
+;
