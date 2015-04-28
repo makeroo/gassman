@@ -44,7 +44,7 @@ gassmanControllers.controller('HomeSelectorController', function($scope, $locati
 	});
 });
 
-
+/*
 gassmanControllers.controller('MenuController', function($scope, $filter, gdata) {
 	$scope.profile = null;
 	$scope.profileError = null;
@@ -69,8 +69,8 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 			$scope.amount = null;
 			$scope.currencySymbol = null;
 			$scope.amountError = error.data;
-		})/*.
-		done()*/;
+		})/ *.
+		done()* /;
 	};
 
 	$scope.$on('AmountsChanged', function () {
@@ -108,7 +108,7 @@ gassmanControllers.controller('MenuController', function($scope, $filter, gdata)
 		$scope.profileError = error;
 	});
 });
-
+*/
 gassmanControllers.controller('AccountDetail', function($scope, $filter, $routeParams, $location, gdata) {
 	$scope.movements = [];
 	$scope.movementsError = null;
@@ -190,95 +190,6 @@ gassmanControllers.controller('AccountDetail', function($scope, $filter, $routeP
 			//console.log('error', data, status, headers, config);
 		});
 	};
-});
-
-gassmanControllers.controller('AccountsIndex', function($scope, $filter, $location, $localStorage, gdata) {
-	$scope.accounts = [];
-	$scope.accountsError = null;
-	$scope.queryFilter = $localStorage.accountIndex_queryFilter || '';
-	$scope.queryOrder = 0;
-	$scope.profile = null;
-	$scope.profileError = null;
-
-	var start = 0;
-	var blockSize = 25;
-	$scope.concluded = false;
-
-	var lastQuery = $scope.queryFilter;
-	var lastQueryOrder = 0;
-
-	$scope.search = function () {
-		if ($scope.queryFilter == lastQuery && $scope.queryOrder == lastQueryOrder)
-			return;
-		lastQuery = $scope.queryFilter;
-		lastQueryOrder = $scope.queryOrder;
-		$localStorage.accountIndex_queryFilter = $scope.queryFilter;
-
-		reset();
-		$scope.loadMore();
-	};
-
-	var reset = function () {
-		$scope.accounts = [];
-		$scope.accountsError = null;
-		start = 0;
-		$scope.concluded = false;
-	};
-
-	var currCsa = null;
-
-	$scope.loadMore = function () {
-		if ($scope.concluded) return;
-
-		gdata.accountsIndex(currCsa, lastQuery, lastQueryOrder, start, blockSize).
-		then(function (r) {
-			$scope.concluded = r.data.length < blockSize;
-			start += r.data.length;
-			$scope.accounts = $scope.accounts.concat(r.data);
-
-			angular.forEach(r.data, function (e) {
-				e.accountData = !!e[4];
-			});
-
-			if ($scope.profile.permissions.indexOf(gassmanApp.P_canViewContacts) == -1)
-				return;
-
-			angular.forEach(r.data, function (e) {
-				if (e.profile)
-					return;
-				var pid = e[0];
-				gdata.profile(currCsa, pid).
-				then(function (p) {
-					e.profile = p;
-				});
-			});
-		}).
-		then (undefined, function (error) {
-			$scope.concluded = true;
-			$scope.accountsError = error.data;
-		});
-	};
-
-	$scope.showAccount = function (accountId, personId) {
-		if ($scope.profile.permissions.indexOf(gassmanApp.P_canViewContacts) == -1) {
-			$location.path('/account/' + accountId + '/detail');
-		} else {
-			$location.path('/person/' + personId + '/detail');
-		}
-	};
-
-	gdata.selectedCsa().
-	then (function (csaId) {
-		currCsa = csaId;
-		return gdata.profileInfo();
-	}).
-	then (function (pData) {
-		$scope.profile = pData;
-		$scope.loadMore();
-	}).
-	then (undefined, function (error) {
-		$scope.profileError = error.data;
-	});
 });
 
 gassmanControllers.controller('Transaction', function($scope, $routeParams, $location, $timeout, gdata, accountAutocompletion) {
@@ -1150,84 +1061,6 @@ gassmanControllers.controller('PersonDetail', function($scope, $filter, $routePa
 	});
 });
 
-gassmanControllers.controller('CsaDetail', function($scope, $filter, $location, $routeParams, gdata, $q) {
-	var csaId = $routeParams['csaId'];
-
-	$scope.profile = null;
-	$scope.csa = null;
-	$scope.loadError = null;
-	$scope.openOrders = null;
-	//$scope.openOrdersError = null;
-	$scope.deliveringOrders = null;
-	//$scope.deliveringOrdersError = null;
-	$scope.draftOrders = null;
-	$scope.movements = null;
-
-	$scope.showAccount = function (accountId) {
-		$location.path('/account/' + accountId + '/detail');
-	};
-
-	$scope.showTransaction = function (mov) {
-		$location.path('/transaction/' + mov[4]);
-	};
-
-	$scope.showChargeMembershipFeeForm = function (v) {
-		$scope.viewChargeMembershipForm = v;
-	};
-
-	$scope.chargeMembershipFee = function () {
-		$scope.membershipFeeError = null;
-
-		var v = $scope.csa.kitty.membership_fee;
-
-		if (v > 0) {
-			gdata.chargeMembershipFee(csaId, {
-				amount: v,
-				kitty: $scope.csa.kitty.id,
-				description: $scope.csa.kitty.charge_description,
-			}).
-			then (function (r) {
-				$location.path('/transaction/' + r.data.tid);
-			}).
-			then (undefined, function (error) {
-				$scope.membershipFeeError = error.data;
-			});
-		} else {
-			$scope.membershipFeeError = 'negative';
-		}
-	};
-
-	gdata.profileInfo().
-	then (function (pData) {
-		$scope.profile = pData;
-
-		$scope.editableMembershipFee = $scope.profile.permissions.indexOf(gassmanApp.P_canEditMembershipFee) != -1;
-
-		return $q.all([ gdata.csaInfo(csaId),
-		                gdata.accountByCsa(csaId),
-		                ]);
-	}).
-	then (function (r) {
-		$scope.csa = r[0].data;
-		$scope.csa.kitty.membership_fee = parseFloat($scope.csa.kitty.membership_fee);
-		$scope.accId = r[1];
-
-		// TODO: in realtà degli ordini CPY mi interessano solo le mie ordinazioni!!
-		return $q.all([
-				gdata.accountMovements($scope.accId, 0, 5),
-				gdata.accountAmount($scope.csa.kitty.id),
-				//gdata.accountMovements($scope.csa.kitty.id, 0, 5),
-				]);
-	}).
-	then (function (rr) {
-		$scope.movements = rr[0].data;
-		$scope.csa.kitty.amount = rr[1].data;
-		//$scope.csa.kitty.movements = rr[2].data;
-	}).
-	then (undefined, function (error) {
-		$scope.loadError = error.data;
-	});
-});
 /*
 gassmanControllers.controller('ContactsController', function($scope, $filter, $location, gdata) {
 	$scope.people = [];
