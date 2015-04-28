@@ -6,10 +6,9 @@ module.exports = function (config) {
   // Images minification
   config.minify_images = true;
 
+  // Javascript minification
+  config.minify_js = false;
+
   // Development web server
-
   config.server = false;
-
-  // Set to false to disable it:
-  // config.server = false;
 };

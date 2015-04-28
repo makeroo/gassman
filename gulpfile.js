@@ -20,7 +20,7 @@ var config = {
       './bower_components/ngstorage/ngStorage.js',
       './bower_components/angular-macgyver/lib/macgyver.js',
       './bower_components/datejs/build/date.js',
-      './bower_components/datejs/build/date-it-IT.js',
+      './bower_components/datejs/build/date-it-IT.js'
 //      './bower_components/angular-touch/angular-touch.js',
 //      './bower_components/mobile-angular-ui/dist/js/mobile-angular-ui.js',
     ],
@@ -30,14 +30,14 @@ var config = {
     ]
   },
 
-  server: false,
+  server: false
 };
 
 
 if (require('fs').existsSync('./config.js')) {
   var configFn = require('./config');
   configFn(config);
-};
+}
 
 /*-----  End of Configuration  ------*/
 
@@ -104,7 +104,7 @@ gulp.task('connect', function() {
 	}
 
 	tornadoServer = spawn('./src/main/python/gassman.py', [], {
-		stdio: 'inherit',
+		stdio: 'inherit'
 	});
 
 	tornadoServer.unref();
@@ -117,7 +117,7 @@ gulp.task('connect', function() {
 =====================================*/
 
 gulp.task('images', function () {
-  var stream = gulp.src('src/main/web/static/images/**/*')
+  var stream = gulp.src('src/main/web/static/images/**/*');
 
   if (config.minify_images) {
     stream = stream.pipe(imagemin({
@@ -125,7 +125,7 @@ gulp.task('images', function () {
         svgoPlugins: [{removeViewBox: false}],
         use: [pngcrush()]
     }))
-  };
+  }
 
   return stream.pipe(gulp.dest(path.join(config.dest, 'static/images')));
 });
@@ -162,11 +162,11 @@ gulp.task('less', function () {
     }))
     .pipe(mobilizer('app.css', {
       'app.css': {
-        hover: 'exclude',
+        hover: 'exclude'
         //screens: ['0px']      
       },
       'hover.css': {
-        hover: 'only',
+        hover: 'only'
         //screens: ['0px']
       }
     }))
@@ -210,7 +210,7 @@ gulp.task('watch', function () {
                 './src/main/templates/**/*',
                 './src/main/python/**/*'
                 ], ['connect']);
-  };
+  }
   // TODO: fonts?
   gulp.watch(['./src/main/web/static/partials/**/*'], ['html']);
   gulp.watch(['./src/main/less/**/*'], ['less']);
@@ -241,7 +241,7 @@ gulp.task('default', function(done){
 
   if (config.server) {
     tasks.push('connect');
-  };
+  }
 
   tasks.push('watch');
   
