@@ -146,7 +146,7 @@ gulp.task('fonts', function() {
 =================================================*/
 
 gulp.task('html', function() {
-  gulp.src(['src/main/web/**/*.html'])
+  gulp.src(['src/main/templates/**/*.html'])
   .pipe(gulp.dest(config.dest));
 });
 
@@ -186,9 +186,11 @@ gulp.task('js', function() {
     streamqueue({ objectMode: true },
       gulp.src(config.vendor.js),
       gulp.src('./src/main/web/**/*.js').pipe(ngFilesort()),
-      gulp.src(['./src/main/templates/**/*.html',
-                './src/main/web/static/partials/**/*.html'
-                ]).pipe(templateCache({ module: 'gassmanApp' }))
+      gulp.src(['./src/main/web/static/partials/**/*.html'
+                ]).pipe(templateCache({
+          module: 'gassmanApp',
+          root: 'static/partials/'
+      }))
     )
     .pipe(sourcemaps.init())
     .pipe(concat('app.js'))
