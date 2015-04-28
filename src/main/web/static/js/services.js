@@ -108,7 +108,7 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $
 		}
 
 		return d.promise;
-	}
+	};
 
 	this.accountByCsa = function (csaId) {
 		// restituisci l'account dell'utente loggato in base al csa indicato
@@ -136,43 +136,43 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $
 		);
 
 		return d.promise;
-	}
+	};
 
 	this.csaInfo = function (csaId) {
 		return $http.post('/csa/' + csaId + '/info?_xsrf=' + $cookies._xsrf);
-	}
+	};
 
 	this.chargeMembershipFee = function (csaId, p) {
 		return $http.post('/csa/' + csaId + '/charge_membership_fee?_xsrf=' + $cookies._xsrf, p);
-	}
+	};
 
 	this.accountsIndex = function (csaId, query, order, start, blockSize) {
 		return $http.post('/accounts/' + csaId + '/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf, { q: query, o: order });
-	}
+	};
 
 	this.accountsNames = function (csaId) {
 		return $http.post('/accounts/' + csaId + '/names?_xsrf=' + $cookies._xsrf);
-	}
+	};
 
 	this.expensesTags = function (csaId) {
 		return $http.post('/expenses/' + csaId + '/tags?_xsrf=' + $cookies._xsrf);
-	}
+	};
 
 	this.accountAmount = function (accId) {
 		return $http.post('/account/' + accId + '/amount?_xsrf=' + $cookies._xsrf);
-	}
+	};
 
 	this.accountOwner = function (accId) {
 		return $http.post('/account/' + accId + '/owner?_xsrf=' + $cookies._xsrf);
-	}
+	};
 
 	this.accountMovements = function (accId, start, blockSize) {
 		return $http.post('/account/' + accId + '/movements/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf); // null, { xsrfCookieName:'_xsrf' })
-	}
+	};
 
 	this.transactionForEdit = function (csaId, tid) {
 		return $http.post('/transaction/' + csaId + '/' + tid + '/edit?_xsrf=' + $cookies._xsrf);
-	}
+	};
 
 	this.transactionSave = function (csaId, tData) {
 		var p = $http.post('/transaction/' + csaId + '/save?_xsrf=' + $cookies._xsrf, tData);
@@ -181,19 +181,19 @@ gassmanServices.service('gdata', function ($http, $q, $localStorage, $cookies, $
 			return r;
 		});
 		return p;
-	}
+	};
 
 	this.transactionsLog = function (csaId, query, order, start, blockSize) {
 		return $http.post('/transactions/' + csaId + '/editable/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf, { q: query, o: order });
-	}
+	};
 
 	this.peopleIndex = function (csaId, query, order, start, blockSize) {
 		return $http.post('/people/' + csaId + '/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf, { q: query, o: order });
-	}
+	};
 
 	this.peopleProfiles = function (csaId, pids) {
 		return $http.post('/people/' + csaId + '/profiles?_xsrf=' + $cookies._xsrf, { pids: pids });
-	}
+	};
 
 	var PROFILE_REQUEST_DELAY = .300; // secondi
 	var profilesToRequest = {};
