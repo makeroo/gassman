@@ -152,6 +152,7 @@ class GassmanWebApp (tornado.web.Application):
                             "secret": settings.GOOGLE_OAUTH2_SECRET,
                             },
             google_oauth_redirect=settings.GOOGLE_OAUTH2_REDIRECT,
+            debug = settings.DEBUG_MODE,
             )
         super().__init__(handlers, **sett)
         self.mailer = mailer
@@ -350,6 +351,7 @@ class GassmanWebApp (tornado.web.Application):
 
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user (self):
+        #return 1
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
@@ -380,7 +382,9 @@ class LoginHandler (BaseHandler):
     def get (self):
         p = self.get_logged_user(None, None)
         if p is None:
-            self.render('login.html')
+            self.render('login.html',
+                        LOCALE=self.locale.code,
+                        )
         else: #if self.application.hasAccounts(p.id):
             self.redirect("/home.html")
 
