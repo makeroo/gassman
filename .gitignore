@@ -87,6 +87,9 @@ local.properties
 .settings/
 .loadpath
 
+### JetBrains ###
+.idea
+
 # External tool builders
 .externalToolBuilders/
 
