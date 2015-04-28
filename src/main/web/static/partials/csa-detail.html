@@ -1,26 +1,41 @@
 <div ng-if="csa" class="csa-info">
-<h1>{{csa.name}}</h1>
 
-<div class="csa-card">
-<p ng-if="csa.description">{{csa.description}}</p>
+ <p ng-if="csa.description">{{csa.description}}</p>
 
-<p ng-if="csa.kitty.amount">Saldo in cassa comune: {{ csa.kitty.amount[0] | currency: csa.kitty.amount[1] }}.
- <button ng-click="showAccount(csa.kitty.id)">dettagli</button>
-</p>
-<p ng-if="csa.last_kitty_deposit">Ultimo versamento in cassa risalente al {{ csa.last_kitty_deposit.log_date | date }} registrato da {{ csa.last_kitty_deposit.first_name}} {{ csa.last_kitty_deposit.last_name }}.
-  <button ng-click="showTransaction([0,0,0,0,csa.last_kitty_deposit.tid])">dettagli</button>
-</p>
+ <div class="panel panel-default">
+  <div class="panel-heading">
+   <h3 class="panel-title">Cassa comune</h3>
+  </div>
+  <div class="panel-body">
 
-<div ng-if="editableMembershipFee">
-<button ng-if="!viewChargeMembershipForm" ng-click="showChargeMembershipFeeForm(true)">Addebita quota di partecipazione</button>
-<form ng-if="viewChargeMembershipForm" name="membershipFeeForm">
-Quota di partecipazione: <input type="number" min="0" ng-model="csa.kitty.membership_fee"/><br/>
-Annotazioni: <input type="text" ng-model="csa.kitty.charge_description"/><br/>
-<div ng-if="membershipFeeError">{{membershipFeeError}}.</div>
-<button ng-click="chargeMembershipFee()">Conferma</button>
-<button ng-click="showChargeMembershipFeeForm(false)">Annulla</button>
-</form>
-</div>
+   <p ng-if="csa.kitty.amount">Saldo in cassa comune: {{ csa.kitty.amount[0] | currency: csa.kitty.amount[1] }}.
+    <button class="btn btn-default" ng-click="showAccount(csa.kitty.id)">Visualizza tutti i movimenti</button>
+   </p>
+   <p ng-if="csa.last_kitty_deposit">Ultimo versamento in cassa risalente al {{ csa.last_kitty_deposit.log_date | date }} registrato da {{ csa.last_kitty_deposit.first_name}} {{ csa.last_kitty_deposit.last_name }}.
+    <button class="btn btn-default" ng-click="showTransaction([0,0,0,0,csa.last_kitty_deposit.tid])">Dettagli</button>
+   </p>
+
+   <div ng-if="editableMembershipFee">
+    <button class="btn btn-default" ng-if="!viewChargeMembershipForm" ng-click="showChargeMembershipFeeForm(true)">Addebita quota di partecipazione</button>
+
+    <form ng-if="viewChargeMembershipForm" name="membershipFeeForm">
+     <div class="form-group">
+      <label for="membership_fee">Quota di partecipazione</label>
+      <input type="number" min="0" ng-model="csa.kitty.membership_fee" class="form-control" id="membership_fee" placeholder="TODO">
+     </div>
+     <div class="form-group">
+      <label for="charge_description">Annotazioni</label>
+      <input type="text" class="form-control" ng-model="csa.kitty.charge_description" id="charge_description" placeholder="">
+     </div>
+     <button class="btn btn-default" ng-click="chargeMembershipFee()">Conferma</button>
+     <button class="btn btn-default" ng-click="showChargeMembershipFeeForm(false)">Annulla</button>
+     <div ng-if="membershipFeeError">{{membershipFeeError}}.</div>
+    </form>
+
+   </div>
+
+  </div>
+ </div>
 
 <!--
 <h2>Ultimi movimenti in cassa comune</h2>
@@ -36,30 +51,35 @@ Annotazioni: <input type="text" ng-model="csa.kitty.charge_description"/><br/>
  Nessuno
  </div>
 -->
-</div>
 
-<h2>Ultimi movimenti sul tuo conto</h2>
-<div class="csa-card">
- <div ng-if="movements" class="movements-syn">
-  <div ng-repeat="mov in movements" class="mov-row" ng-click="showTransaction(mov)">
-    <div class="mov-data">{{ mov[1] | date:"shortDate" }}</div>
-    <div class="mov-desc">{{ mov[0] }}</div>
-    <div class="mov-amount">{{ mov[3] | currency : mov[5] }}</div>
+ <div class="panel panel-default">
+  <div class="panel-heading">
+   <h3 class="panel-title">Ultimi movimenti sul tuo conto</h3>
   </div>
-  <button ng-click="showAccount(accId)">dettagli</button>
- </div>
- <div ng-if="movements != null && movements.length == 0">
- Nessuno
- </div>
+  <div class="panel-body">
 
-</div>
-
-<!-- TODO: ultimi movimenti in cassa comune -->
+   <div ng-if="movements" class="movements-syn">
+    <table class="table table-hover">
+     <tbody>
+      <tr ng-repeat="mov in movements" ng-click="showTransaction(mov)">
+       <td class="col-md-2">{{ mov[1] | date:"shortDate" }}</td>
+       <td class="col-md-8">{{ mov[0] }}</td>
+       <td class="col-md-2">{{ mov[3] | currency : mov[5] }}</td>
+      </tr>
+     </tbody>
+    </table>
+    <button class="btn btn-default" ng-click="showAccount(accId)">Elenco completo</button>
+   </div>
+   <div ng-if="movements != null && movements.length == 0">
+    <p>Nessuno</p>
+   </div>
+  </div>
+ </div>
 
 
 </div>
 
 <div ng-if="loadError">
-Pagina temporaneamente non disponible.
-Causa: {{loadError}}
+ <p>Pagina temporaneamente non disponible.</p>
+ <p>Causa: {{loadError}}</p>
 </div>
