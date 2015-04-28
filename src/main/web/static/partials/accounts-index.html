@@ -1,12 +1,3 @@
-<!--
-<div class="infinite-scroll-container">
- <div class="infinite-scroll">
-  <div when-scrolled="loadMore()" class="infinite-scroll-body">
-   <div ng-show="!accounts.length && !accountsError">
-    Sto caricando i dati...
-   </div>
--->
-
 <form class="form-inline accounts-index-search">
   <div class="form-group">
     <label for="accountsIndexNameFilter">Filtra per nome</label>
@@ -19,12 +10,9 @@
       <option value="1">saldo</option>
       <option value="2">attività</option>
     </select>
-    <!-- <input type="email" class="form-control" id="exampleInputEmail2" placeholder="jane.doe@example.com"> -->
   </div>
-  <!-- <button type="submit" class="btn btn-default">Send invitation</button> -->
 </form>
 
-<!--   <div class="first-row"></div>  -->
 <table class="table accounts-index" when-scrolled="loadMore()">
   <tbody>
 
@@ -49,17 +37,3 @@
 <div ng-show="accountsError">Errore nel caricamento dei dati: {{accountsError}}.</div>
 <div ng-show="!accountsError && !concluded" ng-click="loadMore()">Carica altri conti</div>
 <div ng-show="!accountsError && concluded">Nessun conto ulteriore</div>
-<!--
-  </div>
-  -->
-<!--
-  <div class="header centered">
-   Membri del G.A.S.
-   <input type="text" placeholder="Cerca per nome" ng-model="queryFilter" ng-keypress="$event.keyCode == 13 && search()"/>
-   Ordina per <select ng-model="queryOrder" ng-change="search()"><option value="0">nome</option><option value="1">saldo</option><option value="2">attività</option></select>
-  </div>
-  -->
-<!--
- </div>
-</div>
--->
