@@ -1,14 +1,14 @@
 <!doctype html>
-<html ng-app="gassmanApp">
+<html ng-app="gassmanApp" lang="{{LOCALE}}">
 <head>
  <meta charset="utf-8">
  <title>GASsMan</title>
- <link rel="stylesheet" href="{{ static_url('css/app.css') }}">
-<!--<link rel="stylesheet" href="css/bootstrap.css">-->
+ <link href="{{ static_url('css/app.min.css') }}" rel="stylesheet">
+ <link href="{{ static_url('css/hover.min.css') }}" rel="stylesheet">
 </head>
 <body>
-<div class="frontpage">
-<div class="title">Benvenuto sul sito della rete dei GAS di Lucca</div>
+<div class="container">
+<h1>Benvenuto sul sito della rete dei GAS di Lucca</h1>
 
 <p>In questa pagina potete leggere lo stato cassa, i pagamenti e gli accrediti effettuati.</p>
 
@@ -19,14 +19,15 @@
 
 <p>Adesso clicca sull'immagine sottostante e segui le istruzioni.</p>
 
+<p class="text-center">
 <a href="/auth/google"><img alt="Autenticazione tramite account Google" src="{{ static_url('images/btn_g+normal.png') }}"></a>
-
+</p>
 <!--
 <a href=""><img alt="Autenticazione tramite account Facebook" src=""></a>
 <a href=""><img alt="Autenticazione tramite account Twitter" src=""></a>
 -->
 
-<div class="notes">Attenzione: questo sito non riceve né memorizza la password che userai per accedere.</div>
+<small>Attenzione: questo sito non riceve né memorizza la password che userai per accedere.</small>
 </div>
 
 
