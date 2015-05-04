@@ -1,38 +1,35 @@
-<div class="account-detail">
+<div ng-show="accountOwner == null && accountOwnerError == null && accountDesc == null">Sto caricando...</div>
+<h3 ng-show="accountOwner">Conto di <span ng-repeat="o in accountOwner">{{$last ? ' e ' : $first ? '' : ', '}}<span ng-if="!viewableContacts" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</span><a ng-if="viewableContacts" href="#/person/{{o[3]}}/detail" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</a></span> (<a href="/account/{{accId}}/xls">xls</a>)</h3>
+<div ng-show="accountDesc">{{ accountDesc[0] }} di {{ accountDesc[1] }} (<a href="/account/{{accId}}/xls">xls</a>)</div>
+<h4 ng-show="amount != null">Saldo: {{amount[0] | currency : amount[1] }}</h4>
+<div ng-show="accountOwnerError">Informazioni sul titolare del conto non disponibili: {{ accountOwnerError }}.</div>
 
-  <div class="page-header">
-    <div ng-show="accountOwner == null && accountOwnerError == null && accountDesc == null">Sto caricando...</div>
-    <div class="header centered" ng-show="accountOwner">Conto di <span ng-repeat="o in accountOwner">{{$last ? ' e ' : $first ? '' : ', '}}<span ng-if="!viewableContacts" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</span><a ng-if="viewableContacts" href="#/person/{{o[3]}}/detail" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</a></span> (<a href="/account/{{accId}}/xls">xls</a>)</div>
-    <div class="header centered" ng-show="accountDesc">{{ accountDesc[0] }} di {{ accountDesc[1] }} (<a href="/account/{{accId}}/xls">xls</a>)</div>
-    <div class="header right-aligned" ng-show="amount != null">Saldo: {{amount[0] | currency : amount[1] }}</div>
-    <div class="header-error" ng-show="accountOwnerError">Informazioni sul titolare del conto non disponibili: {{ accountOwnerError }}.</div>
-  </div>
-  <div class="table">
-    <div class="body" when-scrolled="loadMore()">
-      <div ng-show="!movements.length && !movementsError">
-       <div class="message">Sto caricando i dati, un attimo di pazienza.</div>
-      </div>
-      <div class="first-row"></div>
-      <div ng-repeat="mov in movements" class="mov-row" ng-click="showTransaction(mov)">
-        <div class="mov-data">{{ mov[1] | date:"shortDate" }}</div>
-        <div class="mov-desc" ng-class="mov[2] ? 'desc2' : ''">{{ mov[0] }}<br/><small>{{ mov[2] }}</small></div>
-        <div class="mov-amount">{{ mov[3] | currency : mov[5] }}</div>
-      </div>
-      <div ng-show="movementsError">
-       <div class="server-error">
-        <p>Qualcosa è andato storto, <a href="" ng-click="toggleErrorMessage()">clicca per saperne di più</a>.</p>
-        <p ng-show="showErrorMessage" class="message">{{ serverError }}</p> <!-- TODO: serverError è html... -->
-        <p>Se il messaggio non ti dice niente prova a ricaricare la pagina.
-           Dopo qualche tentativo fallito, contatta il cassiere direttamente o sulla mailing list.
-           </p>
-       </div>
-      </div>
-    </div>
-    <div class="header">
-      <div class="mov-data">Data</div>
-      <div class="mov-desc">Descrizione</div>
-      <div class="mov-amount">Importo</div>
-    </div>
-  </div>
+<table class="table" when-scrolled="loadMore()">
+  <thead>
+      <th>Data</th>
+      <th>Descrizione</th>
+      <th>Importo</th>
+  </thead>
+  <tbody>
+    <tr ng-repeat="mov in movements" class="mov-row" ng-click="showTransaction(mov)">
+      <td>{{ mov[1] | date:"shortDate" }}</td>
+      <td ng-class="mov[2] ? 'desc2' : ''">{{ mov[0] }}<br/><small>{{ mov[2] }}</small></td>
+      <td>{{ mov[3] | currency : mov[5] }}</td>
+    </tr>
 
+  </tbody>
+</table>
+
+<div ng-show="movements == null && movementsError == null">
+  <div class="message">Sto caricando i dati, un attimo di pazienza.</div>
+</div>
+
+<div ng-show="movementsError">
+  <div class="server-error">
+    <p>Qualcosa è andato storto, <a href="" ng-click="toggleErrorMessage()">clicca per saperne di più</a>.</p>
+    <p ng-show="showErrorMessage" class="message">{{ serverError }}</p> <!-- TODO: serverError è html... -->
+    <p>Se il messaggio non ti dice niente prova a ricaricare la pagina.
+       Dopo qualche tentativo fallito, contatta il cassiere direttamente o sulla mailing list.
+    </p>
+  </div>
 </div>

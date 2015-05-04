@@ -72,16 +72,22 @@ function($scope,   $filter,   $routeParams,   $location,   gdata) {
 		$location.path('/transaction/' + mov[4]);
 	};
 
+    var loading = false;
+
 	$scope.loadMore = function () {
-		if (concluded) return;
+		if (concluded || loading) return;
+
+        loading = true;
 
 		gdata.accountMovements($scope.accId, start, blockSize).
 		then (function (r) {
+            loading = false;
 			concluded = r.data.length < blockSize;
 			start += r.data.length;
 			$scope.movements = $scope.movements.concat(r.data);
 		}).
 		then (undefined, function (error) {
+            loading = false;
 			concluded = true;
 			// TODO: FIXME: qui ho 2 errori...
 			$scope.serverError = error.data[1];
