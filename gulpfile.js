@@ -18,15 +18,19 @@ var config = {
       './bower_components/angular-cookies/angular-cookies.js',
       // bower_components/angular-i18n/angular-locale_it-it.js
       './bower_components/ngstorage/ngStorage.js',
-      './bower_components/angular-macgyver/lib/macgyver.js',
-      './bower_components/datejs/build/date.js',
-      './bower_components/datejs/build/date-it-IT.js'
+      './bower_components/angular-macgyver/lib/macgyver.js'
+      //'./bower_components/datejs/build/date.js',
+      //'./bower_components/datejs/build/date-it-IT.js'
 //      './bower_components/angular-touch/angular-touch.js',
 //      './bower_components/mobile-angular-ui/dist/js/mobile-angular-ui.js',
     ],
 
     fonts: [
       './bower_components/bootstrap/fonts/glyphicons-halflings-regular.*'
+    ],
+
+    i18n: [
+      './bower_components/angular-i18n/angular-locale_*'
     ]
   },
 
@@ -146,8 +150,10 @@ gulp.task('fonts', function() {
 =================================================*/
 
 gulp.task('html', function() {
-  gulp.src(['src/main/templates/**/*.html'])
-  .pipe(gulp.dest(config.dest));
+  //gulp.src(['src/main/templates/**/*.html'])
+  //.pipe(gulp.dest(config.dest));
+  gulp.src(config.vendor.i18n)
+  .pipe(gulp.dest(path.join(config.dest, 'static/js')));
 });
 
 
@@ -214,10 +220,9 @@ gulp.task('watch', function () {
                 ], ['connect']);
   }
   // TODO: fonts?
-  gulp.watch(['./src/main/web/static/partials/**/*'], ['html']);
+  gulp.watch(config.vendor.i18n, ['html']);
   gulp.watch(['./src/main/less/**/*'], ['less']);
   gulp.watch(['./src/main/web/static/js/**/*',
-              './src/main/templates/**/*',
               './src/main/web/static/partials/**/*',
               config.vendor.js
               ], ['js']);
