@@ -12,7 +12,6 @@ function ($window,   $document) {
         var w = $($window);
 
 		w.bind('scroll', function() {
-            console.log('scrolling: winScrollTop=', w.scrollTop, 'height=', w.height(), 'docHeight=', $document.height(), 'trigger=', trigger);
             if (w.scrollTop() + w.height() >= $document.height() - trigger) {
                 //vecchio if: (raw.scrollTop + raw.offsetHeight >= raw.scrollHeight) {
                 scope.$apply(attr.whenScrolled);
