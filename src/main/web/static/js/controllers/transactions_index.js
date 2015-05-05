@@ -43,19 +43,28 @@ function ($scope,   $location,   gdata) {
 	};
 
 	gdata.selectedCsa().
-	then (function (csaId) { $scope.csaId = csaId; $scope.loadMore(); }).
-	then (undefined, function (error) { $scope.loadError = error.data; });
+	then (function (csaId) {
+        $scope.csaId = csaId;
+        $scope.loadMore();
+    }).
+	then (undefined, function (error) {
+        $scope.loadError = error.data;
+    });
+
+    var loading = false;
 
 	$scope.loadMore = function () {
-		if ($scope.concluded) return;
+		if (loading || $scope.concluded) return;
 
 		gdata.transactionsLog($scope.csaId, lastQuery, lastQueryOrder, start, blockSize).
 		then (function (r) {
+            loading = false;
 			$scope.concluded = r.data.length < blockSize;
 			start += r.data.length;
 			$scope.transactions = $scope.transactions == null ? r.data : $scope.transactions.concat(r.data);
 		}).
 		then (undefined, function (error) {
+            loading = false;
 			$scope.concluded = true;
 			$scope.loadError = error.data[1];
 			console.log('TransactionIndex: transactionsLog error:', error.data);
