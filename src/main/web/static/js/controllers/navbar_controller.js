@@ -53,7 +53,6 @@ function ($scope,   gdata,   $q) {
 	then (function (r) {
 		$scope.csa = r[0].data;
 		$scope.accId = r[1];
-        console.log('resp3 ', r)
 	}).
 	then (undefined, function (error) {
 		$scope.initError = error;
