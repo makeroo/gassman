@@ -8,6 +8,7 @@ var gassmanApp = angular.module('gassmanApp', [
     'GassmanApp.controllers.AccountsIndex',
     'GassmanApp.controllers.AccountDetail',
     'GassmanApp.controllers.PersonDetail',
+    'GassmanApp.controllers.TransactionsIndex',
 	'gassmanControllers',
 	'gassmanServices',
 	'gassmanDirectives',
