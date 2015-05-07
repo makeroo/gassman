@@ -2,6 +2,7 @@
 
 var gassmanApp = angular.module('gassmanApp', [
 	'ngRoute',
+    'ngSanitize',
     'GassmanApp.directives.WhenScrolled',
     'GassmanApp.controllers.NotFoundController',
     'GassmanApp.controllers.HomeSelectorController',
