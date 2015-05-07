@@ -7,6 +7,8 @@
 var config = {
   dest: 'target/www',
   minify_js: true,
+  generate_js_maps: false,
+
   minify_images: true,
 
   vendor: {
@@ -16,9 +18,11 @@ var config = {
       './bower_components/angular/angular.js',
       './bower_components/angular-route/angular-route.js',
       './bower_components/angular-cookies/angular-cookies.js',
+      './bower_components/angular-sanitize/angular-sanitize.js',
       // bower_components/angular-i18n/angular-locale_it-it.js
       './bower_components/ngstorage/ngStorage.js',
-      './bower_components/angular-macgyver/lib/macgyver.js'
+      './bower_components/angular-ui-select/dist/select.js'
+      //'./bower_components/angular-macgyver/lib/macgyver.js'
       //'./bower_components/datejs/build/date.js',
       //'./bower_components/datejs/build/date-it-IT.js'
 //      './bower_components/angular-touch/angular-touch.js',
@@ -198,12 +202,12 @@ gulp.task('js', function() {
           root: 'static/partials/'
       }))
     )
-    .pipe(sourcemaps.init())
+    .pipe(config.generate_js_maps ? sourcemaps.init() : gutil.noop())
     .pipe(concat('app.js'))
     .pipe(ngAnnotate())
     .pipe(config.minify_js ? uglify() : gutil.noop())
     .pipe(rename({suffix: '.min'}))
-    .pipe(sourcemaps.write('.'))
+    .pipe(config.generate_js_maps ? sourcemaps.write('.') : gutil.noop())
     .pipe(gulp.dest(path.join(config.dest, 'static/js')));
 });
 

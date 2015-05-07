@@ -8,6 +8,7 @@ module.exports = function (config) {
 
   // Javascript minification
   config.minify_js = false;
+  config.generate_js_maps = false;
 
   // Development web server
   config.server = false;
