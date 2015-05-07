@@ -1,7 +1,8 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.Transaction', [
-    'gassmanServices'
+    'gassmanServices',
+    'ui.select'
 ])
 
 .controller('Transaction', [
@@ -201,7 +202,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 
 		$scope.updateTotalAmount();
 		$scope.updateTotalInvoice();
-		$scope.updateTotalExpenses()
+		$scope.updateTotalExpenses();
 		$scope.checkCurrencies();
 		$scope.autocompletionDataError = null;
 
@@ -230,7 +231,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 		} else {
 			$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice - $scope.totalExpenses);
 		}
-	}
+	};
 
 	$scope.updateTotalInvoice = function (f) {
 		var ac = autoCompilingTotalInvoice();
@@ -250,7 +251,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 		$scope.totalInvoice = t;
 
 		$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice - $scope.totalExpenses);
-	}
+	};
 
 	$scope.updateTotalExpenses = function (f) {
 		var ac = autoCompilingTotalInvoice();
@@ -270,7 +271,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 		$scope.totalExpenses = t;
 
 		$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice - $scope.totalExpenses);
-	}
+	};
 
 	$scope.checkCurrencies = function () {
 		$scope.currency = null;

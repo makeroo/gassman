@@ -45,16 +45,76 @@
   </div>
  </div>
 </div>
-<form ng-if="!readonly" ng-controller="TransactionCashExchange" name="deposit" class="deposit" ng-submit="return;">
+
+
+<form ng-if="!readonly" ng-controller="TransactionCashExchange" name="deposit" class="form-horizontal transaction" ng-submit="return;">
+
+  <div class="form-group">
+    <label for="tdate" class="col-sm-2 control-label">Data ritiro:</label>
+    <div class="col-sm-10">
+      <input id="tdate" class="form-control" type="date" ng-model="trans.tdate"/>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="tdesc" class="col-sm-2 control-label">Note:</label>
+    <div class="col-sm-10">
+      <textarea id="tdesc" class="form-control" ng-model="trans.tdesc"></textarea>
+    </div>
+  </div>
+
+  <h4 ng-hide="autocompletionDataError">Inserisci gli accrediti:</h4>
+
+  <div ng-repeat="l in trans.producers" class="row">
+    <ng:form name="lineForm">
+      <div class="col-sm-6">
+		<ui-select theme="bootstrap"
+                   name="account"
+                   ng-model="l.accountName"
+                   >
+		  <ui-select-match placeholder="Chi ha versato">{{$select.selected.name}}</ui-select-match>
+		  <ui-select-choices repeat="accountInfo.name as accountInfo in autocompletionData | filter: {name: $select.search} track by accountInfo.acc">
+		    <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
+		  </ui-select-choices>
+		</ui-select>
+      </div>
+      <div class="col-sm-2">
+        <input class="form-control"
+               type="number"
+               name="amount"
+               placeholder="Quanto"
+               ng-model="l.amount"
+               ng-blur="$parent.updateTotalInvoice() || ($last && l.account && $parent.addLine(trans.producers))"
+               gm-amount
+               id="amount{{$index}}"
+               />
+      </div>
+      <div class="col-sm-4">
+        <input class="form-control"
+               type="text"
+               placeholder="Note"
+               ng-model="l.notes"
+               ng-blur="$last && l.account && $parent.addLine(trans.producers)"
+               />
+
+      </div>
+    </ng:form>
+  </div>
+
+  <h4 ng-hide="autocompletionDataError">Chi ha ricevuto il denaro:</h4>
+
+  <div class="row">
+    <p class="bg-info" ng-show="!currencyError && totalInvoice > 0">Totale accrediti: {{totalInvoice | currency : currency[1] }}</p>
+    <p class="bg-warning" ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</p>
+    <p class="bg-warning" ng-show="!currencyError && !totalInvoice">Nessun versamento inserito finora.</p>
+    <button class="btn btn-default" ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
+    <button class="btn btn-default" ng-disabled="!csaId || !deposit.$valid || !totalInvoice || !trans.clients[0].account" ng-click="saveCashExchange()">Registra in cassa</button>
+    <button class="btn btn-default" ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione degli accrediti</button>
+    <button class="btn btn-default" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
+  </div>
+
+<!--
  <div class="lines-table">
   <div class="body">
-  <div class="actions">
-   <div class="line"><label for="tdate">Data ritiro:</label><input type="date" id="tdate" ng-model="trans.tdate"/></div>
-   <div class="line"><label for="tdesc">Note:</label><textarea ng-model="trans.tdesc"></textarea></div>
-  </div>
-  <div class="header" ng-hide="autocompletionDataError">
-   Inserisci gli accrediti:
-  </div>
    <div ng-repeat="l in trans.producers" class="row">
     <ng:form name="lineForm">
     <div class="row-who">
@@ -80,7 +140,7 @@
             ng-blur="$parent.updateTotalInvoice() || ($last && l.account && $parent.addLine(trans.producers))"
             gm-amount
             id="amount{{$index}}"
-            /> <!-- TODO: fare text + smart-float! -->
+            /> <!- - TODO: fare text + smart-float! - ->
 	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.decimals">Troppi decimali</div>
@@ -114,21 +174,11 @@
      Caricamento fallito. Causa: {{autocompletionDataError}}.
    </div>
   </div>
-  <div class="actions">
-   <div>
-       <span ng-show="!currencyError && totalInvoice > 0">Totale accrediti: {{totalInvoice | currency : currency[1] }}</span>
-       <span class="error-message" ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
-       <span class="error-message" ng-show="!currencyError && !totalInvoice">Nessun versamento inserito finora.</span>
-       </div>
-   <button ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
-   <button ng-disabled="!csaId || !deposit.$valid || !totalInvoice || !trans.clients[0].account" ng-click="saveCashExchange()">Registra in cassa</button>
-   <button ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione degli accrediti</button>
-   <button ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
-  </div>
  </div>
  <div ng-show="tsaveError" class="deposit-post-save">
    <div ng-show="tsaveError" class="msg">
      Registrazione fallita. Causa: {{tsaveError}}.
    </div>
  </div>
+-->
 </form>
