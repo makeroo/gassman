@@ -203,6 +203,14 @@ def find_user_accounts (personId):
 #def find_users_without_account ():
 #    return 'SELECT id, first_name, middle_name, last_name FROM person WHERE current_account_id IS NULL'
 
+def check_membership_by_kitty (personId, accId):
+    return '''
+SELECT a.csa_id
+ FROM account a
+ JOIN permission_grant g ON g.csa_id = a.csa_id
+ WHERE a.id = %s AND a.gc_type = %s AND g.person_id = %s AND g.perm_id = %s
+''', [ accId, At_Kitty, personId, P_membership ]
+
 def has_permission_by_account (perm, personId, accId):
     '''Uso accId solo per determinare la CSA, non verifico che personId abbia intestato accId, anzi in generale non è vero.
     Vedi il caso canCheckAccounts.
