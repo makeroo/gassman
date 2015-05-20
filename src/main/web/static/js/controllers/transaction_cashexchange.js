@@ -11,7 +11,6 @@ angular.module('GassmanApp.controllers.TransactionCashExchange', [
 .controller('TransactionCashExchange', [
          '$scope', '$routeParams', '$location', '$timeout', 'gdata', 'accountAutocompletion',
 function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAutocompletion) {
-
 	$scope.saveCashExchange = function () {
 		if ($scope.$invalid || $scope.currencyError)
 			return;

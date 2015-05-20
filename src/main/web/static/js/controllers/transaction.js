@@ -273,6 +273,14 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 		$scope.difference = Math.abs($scope.totalAmount - $scope.totalInvoice - $scope.totalExpenses);
 	};
 
+    $scope.accountCurrency = function (a) {
+        try {
+            return $scope.currencies[a].cur[1];
+        } catch (e) {
+            return ' ';
+        }
+    }
+
 	$scope.checkCurrencies = function () {
 		$scope.currency = null;
 
@@ -372,13 +380,20 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 		});
 	};
 
+	$scope.focusElement = function (eid) {
+		var e = angular.element(eid);
+		$timeout(function () {
+			e.focus();
+		});
+	};
+/*
 	$scope.focusAmount = function (type) {
 		var e = angular.element('#' + type + this.$index)[0];
 		$timeout(function () {
 			e.focus();
 		}, 1);
 	};
-
+*/
 	$scope.showTransaction = function (tid) {
 		$location.path('/transaction/' + tid);
 	};

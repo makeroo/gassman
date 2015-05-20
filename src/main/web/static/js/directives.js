@@ -89,7 +89,7 @@ gassmanDirectives.directive('gmAmount', function () {
     };
 });
 
-gassmanDirectives.directive('gmAccount', function () {
+gassmanDirectives.directive('required-if', function () {
     return {
     	restrict: 'A',
     	require: 'ngModel',
@@ -102,14 +102,12 @@ gassmanDirectives.directive('gmAccount', function () {
     			return account;
     		};
 
-    		scope.$watch(function () {
-    			return scope.l.amount;
-    		},
+    		scope.$watch(attrs.requiredIf,
     		function (value) {
-    			accountDefined(scope.l.accountName, value);
+    			accountDefined(attrs.ngModel, value);
     		}
     		);
-
+/*
     		ctrl.$parsers.push(function (value) {
     			//console.log('checking match:', value, scope.l)
     			//console.log(scope.l, scope.$parent.autocompletionData);
@@ -140,7 +138,7 @@ gassmanDirectives.directive('gmAccount', function () {
     			//console.log('returning value', typeof(value), scope.l);
     			return value;
     		});
-
+*/
     		ctrl.$parsers.push(function (value) {
     			return accountDefined(value, scope.l.amount);
     		});
@@ -148,39 +146,35 @@ gassmanDirectives.directive('gmAccount', function () {
     };
 });
 
-gassmanDirectives.directive('gmAccount2', function () {
+gassmanDirectives.directive('requiredAccount', function () {
     return {
     	restrict: 'A',
     	require: 'ngModel',
     	link: function (scope, elem, attrs, ctrl) {
+    		scope.$watch(attrs.ngModel,
+    		function (value) {
+				var valid = (typeof(value) == 'number');
+    			ctrl.$setValidity('accountDefined', valid);
+    			console.log('gmacc2 value: ', value);
+				if (valid)
+    				scope.checkCurrencies();
+    		}
+    		);
+            /* non viene invocato quando svuoto
     		ctrl.$parsers.push(function (value) {
     			//console.log('checking match:', value, scope.trans.clients[0]);
 
-    			//console.log(scope.l, scope.$parent.autocompletionData);
-    			var acd = scope.autocompletionData;
+    			console.log('gmaccount 2 parser: ', value);
     			var empty = !value;
-    			var f = empty;
 
-    			if (!f)
-    				for (var i in acd) {
-    					var acl = acd[i];
-    					if (acl.name == value) {
-    						f = true;
-    						scope.trans.clients[0].account = acl.acc;
-    						break;
-    					}
-    				}
-
-    			ctrl.$setValidity('accountMatch', f);
     			ctrl.$setValidity('accountDefined', !empty);
 
-    			if (!f || empty)
-    				scope.trans.clients[0].account = null;
-    			else
+    			if (!empty)
     				scope.checkCurrencies();
 
     			return value;
     		});
+    		*/
     	}
     };
 });

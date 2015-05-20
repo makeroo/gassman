@@ -361,7 +361,9 @@ gassmanServices.service('accountAutocompletion', function ($http, $q, $localStor
 
 			l.name = x.join(', ');
 			//l.label = 'Intestatari: ' + l.name;
-			resp.push(l);
+
+			if (l.name)
+				resp.push(l);
 		});
 
 		return resp;
