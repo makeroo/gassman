@@ -18,15 +18,15 @@
   <h4>Accrediti:</h4>
 
   <div ng-repeat="l in trans.producers | filter:filledLine" class="row transaction-line">
-      <div class="col-sm-6">
-        <p class="form-control-static"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></p>
-      </div>
-      <div class="col-sm-2">
-        <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
-      </div>
-      <div class="col-sm-4">
-        <p class="form-control-static">{{ l.notes }}</p>
-      </div>
+    <div class="col-sm-6">
+      <p class="form-control-static"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
+    </div>
+    <div class="col-sm-4">
+      <p class="form-control-static">{{ l.notes }}</p>
+    </div>
   </div>
 
   <div class="row">
