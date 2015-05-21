@@ -151,6 +151,7 @@
                name="receiver"
                ng-model="trans.clients[0].account"
                required-account
+               on-select="checkCurrencies()"
                >
       <ui-select-match placeholder="Chi ha versato">{{ $select.selected.name }}</ui-select-match>
       <ui-select-choices repeat="accountInfo.acc as accountInfo in autocompletionData | filter: {name: $select.search} track by accountInfo.acc">

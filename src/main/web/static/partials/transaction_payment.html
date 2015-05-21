@@ -84,164 +84,183 @@
 </div>
 
 
+<form ng-if="!readonly" ng-controller="TransactionPayment" name="payment" class="form-horizontal transaction" ng-submit="return;">
 
-<form ng-if="!readonly" ng-controller="TransactionPayment" name="payment" class="deposit" ng-submit="return;">
- <div class="lines-table">
-  <div class="body">
-   <div class="actions">
-    <div class="line"><label for="tdate">Data consegna:</label><input type="date" id="tdate" ng-model="trans.tdate"/></div>
-    <div class="line"><label for="tdesc">Descrizione e note:</label><textarea ng-model="trans.tdesc"></textarea></div>
-   </div>
+  <h3 ng-if="trans.transId == null">Inserisci pagamenti</h3>
+  <h3 ng-if="trans.transId != null">Modifica pagamenti</h3>
 
-   <div class="header" ng-hide="autocompletionDataError">
-    Chi ha ritirato i prodotti:
-   </div>
-   <div ng-repeat="l in trans.clients" class="row">
-    <ng:form name="lineForm">
-    <div class="row-who">
-     <div><mac-autocomplete
-            name="account"
-            autocomplete="off"
-            mac-placeholder="'Chi ha ordinato'"
-            mac-autocomplete-source="autocompletionData"
-            mac-autocomplete-delay="300"
-            mac-autocomplete-on-select="focusAmount('amountc')"
-            ng-model="l.accountName"
-            ng-blur="$last && l.account && $parent.addLine(trans.clients)"
-            gm-account
-            /></div>
-	 <div class="error-message" ng-show="lineForm.account.$error.accountMatch">Nome non valido</div>
-	 <div class="error-message" ng-show="lineForm.account.$error.amountWithoutAccount">Specificare chi ha pagato</div>
+  <div class="form-group">
+    <label for="tdate" class="col-sm-2 control-label">Data consegna:</label>
+    <div class="col-sm-10">
+      <input id="tdate" class="form-control" type="date" ng-model="trans.tdate"/>
     </div>
-    <div class="row-amount">
-     <input type="number"
-            name="amount"
-            placeholder="Quanto"
-            ng-model="l.amount"
-            ng-blur="$parent.updateTotalAmount() || ($last && l.account && $parent.addLine(trans.clients))"
-            gm-amount
-            id="amountc{{$index}}"
-            /> <!-- TODO: fare text + smart-float! -->
-	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
-	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>
-	 <div class="error-message" ng-show="lineForm.amount.$error.decimals">Troppi decimali</div>
-	 <div class="error-message" ng-show="lineForm.amount.$error.accountWithoutAmount">Specificare l'importo</div>
-    </div>
-    <div class="row-notes">
-     <input type="text"
-            placeholder="Note"
-            ng-model="l.notes"
-            ng-blur="$last && l.account && $parent.addLine(trans.clients)"
-            />
-    </div>
-    </ng:form>
-   </div>
-
-   <div class="header" ng-hide="autocompletionDataError">
-    Fornitori:
-   </div>
-   <div ng-repeat="l in trans.producers" class="row">
-    <ng:form name="lineForm">
-    <div class="row-who">
-     <div><mac-autocomplete
-            name="account"
-            autocomplete="off"
-            mac-placeholder="'Fornitore'"
-            mac-autocomplete-source="autocompletionData"
-            mac-autocomplete-delay="300"
-            mac-autocomplete-on-select="focusAmount('amountp')"
-            ng-model="l.accountName"
-            ng-blur="$last && l.account && $parent.addLine(trans.producers)"
-            gm-account
-            /></div>
-	 <div class="error-message" ng-show="lineForm.account.$error.accountMatch">Nome non valido</div>
-	 <div class="error-message" ng-show="lineForm.account.$error.amountWithoutAccount">Specificare chi ha pagato</div>
-    </div>
-    <div class="row-amount">
-     <input type="number"
-            name="amount"
-            placeholder="Quanto"
-            ng-model="l.amount"
-            ng-blur="$parent.updateTotalInvoice(lineForm) || ($last && l.account && $parent.addLine(trans.producers))"
-            gm-amount
-            id="amountp{{$index}}"
-            /> <!-- TODO: fare text + smart-float! -->
-	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
-	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>
-	 <div class="error-message" ng-show="lineForm.amount.$error.decimals">Troppi decimali</div>
-	 <div class="error-message" ng-show="lineForm.amount.$error.accountWithoutAmount">Specificare l'importo</div>
-    </div>
-    <div class="row-notes">
-     <input type="text"
-            placeholder="Note"
-            ng-model="l.notes"
-            ng-blur="$last && l.account && $parent.addLine(trans.producers)"
-            />
-    </div>
-    </ng:form>
-   </div>
-
-<!--
-   <div class="header" ng-hide="autocompletionDataError">
-    Altre spese:
-   </div>
-   <div ng-repeat="l in trans.expenses" class="row">
-    <ng:form name="lineForm">
-    <div class="row-who">
-     <div><mac-autocomplete
-            name="notes"
-            mac-placeholder="'Descrizione della spesa'"
-            mac-autocomplete-source="autocompletionExpenses"
-            mac-autocomplete-delay="300"
-            mac-autocomplete-on-select="focusAmount('amounte')"
-            ng-model="l.notes"
-            ng-blur="$last && l.notes && $parent.addLine(trans.expenses)"
-            gm-expense
-            /></div>
-	 <div class="error-message" ng-show="lineForm.notes.$error.amountWithoutNotes">Specificare la spesa</div>
-    </div>
-    <div class="row-amount">
-     <input type="number"
-            name="amount"
-            placeholder="Quanto"
-            ng-model="l.amount"
-            ng-blur="$parent.updateTotalExpenses(lineForm) || ($last && l.notes && $parent.addLine(trans.expenses))"
-            gm-amount2
-            id="amounte{{$index}}"
-            /> < ! - - TODO: fare text + smart-float! - - >
-	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
-	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>
-	 <div class="error-message" ng-show="lineForm.amount.$error.decimals">Troppi decimali</div>
-	 <div class="error-message" ng-show="lineForm.amount.$error.notesWithoutAmount">Specificare l'importo</div>
-    </div>
-    </ng:form>
-   </div>
--->
-   <div class="header" ng-hide="!(trans.expenses | filter:filledLine).length || autocompletionDataError">
-    Altre spese:
-   </div>
-   <div ng-repeat="l in trans.expenses | filter:filledLine" class="row">
-    <div class="row-who field">{{l.notes}}&nbsp;</div>
-    <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
-   </div>
-
-   <div ng-show="autocompletionDataError">
-     Caricamento fallito. Causa: {{autocompletionDataError}}.
-   </div>
-   <div class="actions">
-    <div>
-        <span ng-show="!currencyError && totalAmount > 0 && difference < .01">Totale pagamenti: {{totalAmount | currency : currency[1] }}</span>
-        <span class="error-message" ng-show="currencyError">I conti selezionati non sono omogenei per moneta.</span>
-        <span class="error-message" ng-show="!currencyError && !totalAmount">Nessun dato inserito finora.</span>
-        <span class="error-message" ng-show="!currencyError && difference >= .01">Discrepanza fra contanti versati e pagamenti richiesti: {{totalInvoice - totalAmount + totalExpenses | currency: currency[1] }}</span>
-        </div>
-    <button ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
-    <button ng-disabled="!csaId || !payment.$valid || !totalAmount || difference >= .01" ng-click="savePayment()">Registra in cassa</button>
-    <button ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione dei pagamenti</button>
-    <button ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
-   </div>
   </div>
- </div>
+  <div class="form-group">
+    <label for="tdesc" class="col-sm-2 control-label">Descrizione e note:</label>
+    <div class="col-sm-10">
+      <textarea id="tdesc" class="form-control" ng-model="trans.tdesc"></textarea>
+    </div>
+  </div>
+
+  <h4 ng-hide="autocompletionDataError">Chi ha ritirato i prodotti:</h4>
+
+  <div ng-repeat="l in trans.clients" class="row transaction-line">
+    <ng:form name="lineForm">
+      <div class="col-sm-6">
+        <label for="accountc{{ $index }}" class="sr-only">Conto per la riga {{ $index }}</label>
+		<ui-select id="accountc{{ $index }}"
+                   theme="bootstrap"
+                   name="account"
+                   ng-model="l.account"
+                   on-select="$last && l.account && $parent.addLine(trans.clients)"
+                   required-if="l.amount"
+                   on-select="checkCurrencies()"
+                   ng-keypress="$event.keyCode == 13 && focusElement('#amountc' + $index)"
+                   >
+		  <ui-select-match placeholder="Chi ha ordinato">{{ $select.selected.name }}</ui-select-match>
+		  <ui-select-choices repeat="accountInfo.acc as accountInfo in autocompletionData | filter: {name: $select.search} track by accountInfo.acc">
+		    <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
+		  </ui-select-choices>
+		</ui-select>
+	    <p class="text-danger" ng-show="lineForm.account.$error.amountWithoutAccount">Specificare chi ha pagato</p>
+      </div>
+      <div class="col-sm-2">
+        <div class="form-group">
+          <label for="amountc{{ $index }}" class="sr-only">Importo per la riga {{ $index }}</label>
+          <div class="input-group">
+            <input class="form-control"
+               type="text"
+               name="amount"
+               placeholder="Quanto"
+               ng-model="l.amount"
+               ng-blur="$parent.updateTotalAmount() || ($last && l.account && $parent.addLine(trans.clients))"
+               gm-amount
+               id="amountc{{ $index }}"
+               />
+            <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
+          </div>
+          <p class="text-danger" ng-show="lineForm.amount.$error.number">Inserisci un numero</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.decimals">Troppi decimali</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.accountWithoutAmount">Specificare l'importo</p>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <input class="form-control"
+               type="text"
+               placeholder="Note"
+               ng-model="l.notes"
+               ng-blur="$last && l.account && $parent.addLine(trans.clients)"
+               />
+
+      </div>
+    </ng:form>
+  </div>
+
+  <h4 ng-hide="autocompletionDataError">Produttori:</h4>
+
+  <div ng-repeat="l in trans.producers" class="row transaction-line">
+    <ng:form name="lineForm">
+      <div class="col-sm-6">
+        <label for="accountp{{ $index }}" class="sr-only">Conto per la riga {{ $index }}</label>
+		<ui-select id="accountp{{ $index }}"
+                   theme="bootstrap"
+                   name="account"
+                   ng-model="l.account"
+                   on-select="$last && l.account && $parent.addLine(trans.producers)"
+                   required-if="l.amount"
+                   on-select="checkCurrencies()"
+                   ng-keypress="$event.keyCode == 13 && focusElement('#amountp' + $index)"
+                   >
+		  <ui-select-match placeholder="Produttore">{{ $select.selected.name }}</ui-select-match>
+		  <ui-select-choices repeat="accountInfo.acc as accountInfo in autocompletionData | filter: {name: $select.search} track by accountInfo.acc">
+		    <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
+		  </ui-select-choices>
+		</ui-select>
+	    <p class="text-danger" ng-show="lineForm.account.$error.amountWithoutAccount">Specificare il produttore</p>
+      </div>
+      <div class="col-sm-2">
+        <div class="form-group">
+          <label for="amountp{{ $index }}" class="sr-only">Importo per la riga {{ $index }}</label>
+          <div class="input-group">
+            <input class="form-control"
+               type="text"
+               name="amount"
+               placeholder="Quanto"
+               ng-model="l.amount"
+               ng-blur="$parent.updateTotalInvoice(lineForm) || ($last && l.account && $parent.addLine(trans.producers))"
+               gm-amount
+               id="amountp{{ $index }}"
+               />
+            <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
+          </div>
+          <p class="text-danger" ng-show="lineForm.amount.$error.number">Inserisci un numero</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.decimals">Troppi decimali</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.accountWithoutAmount">Specificare l'importo</p>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <input class="form-control"
+               type="text"
+               placeholder="Note"
+               ng-model="l.notes"
+               ng-blur="$last && l.account && $parent.addLine(trans.producers)"
+               />
+
+      </div>
+    </ng:form>
+  </div>
+
+  <div class="header" ng-hide="!(trans.expenses | filter:filledLine).length || autocompletionDataError">
+    <h4>Altre spese:</h4>
+
+    <div ng-repeat="l in trans.expenses | filter:filledLine" class="row transaction-line">
+      <div class="col-sm-6">
+        <p class="form-control-static">{{ l.notes }}</p>
+      </div>
+      <div class="col-sm-2">
+        <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" ng-show="!currencyError && totalAmount > 0 && difference < .01">
+    <div class="col-sm-6">
+      <p class="form-control-static text-info">Totale pagamenti:</p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static text-info">{{ totalAmount | currency : currency[1] }}</p>
+    </div>
+  </div>
+  <div class="row" ng-show="!currencyError && difference >= .01">
+    <div class="col-sm-6">
+      <p class="form-control-static bg-danger">Discrepanza fra contanti versati e pagamenti richiesti:</p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static bg-danger">{{totalInvoice - totalAmount + totalExpenses | currency: currency[1] }}</p>
+    </div>
+  </div>
+  <div class="row" ng-show="currencyError">
+    <p class="bg-warning">I conti selezionati non sono omogenei per moneta.</p>
+  </div>
+  <div class="row" ng-show="!currencyError && !totalAmount">
+    <p class="bg-warning">Nessun dato inserito finora.</p>
+  </div>
+
+
+  <div class="row" ng-show="autocompletionDataError">
+    <p class="bg-danger">Caricamento fallito. Causa: {{autocompletionDataError}}.</p>
+  </div>
+
+
+  <div class="row">
+    <button class="btn btn-default" ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
+    <button class="btn btn-default" ng-disabled="!csaId || !payment.$valid || !totalAmount || difference >= .01" ng-click="savePayment()">Registra in cassa</button>
+    <button class="btn btn-default" ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione dei pagamenti</button>
+    <button class="btn btn-default" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
+  </div>
+
  <div ng-show="tsaveError" class="deposit-post-save">
    <div ng-show="tsaveError" class="msg">
      Registrazione fallita. Causa: {{tsaveError}}.

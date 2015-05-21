@@ -156,13 +156,12 @@ gassmanDirectives.directive('requiredAccount', function () {
 				var valid = (typeof(value) == 'number');
     			ctrl.$setValidity('accountDefined', valid);
     			console.log('gmacc2 value: ', value);
-				if (valid)
-    				scope.checkCurrencies();
     		}
     		);
             /* non viene invocato quando svuoto
     		ctrl.$parsers.push(function (value) {
     			//console.log('checking match:', value, scope.trans.clients[0]);
+
 
     			console.log('gmaccount 2 parser: ', value);
     			var empty = !value;
@@ -178,98 +177,23 @@ gassmanDirectives.directive('requiredAccount', function () {
     	}
     };
 });
-
-gassmanDirectives.directive('gmExpense', function () {
-    return {
-    	restrict: 'A',
-    	require: 'ngModel',
-    	link: function (scope, elem, attrs, ctrl) {
-    		var descDefined = function (desc, amount) {
-    			//console.log('checking expense:', desc, amount, scope.l)
-
-    			ctrl.$setValidity('amountWithoutNotes', !( !desc && amount > 0 ));
-//    			ctrl.$setValidity('amountDefined', !( desc && !amount ));
-
-    			return desc;
-    		};
-
-    		scope.$watch(function () {
-    			return scope.l.amount;
-    		},
-    		function (value) {
-    			descDefined(scope.l.notes, value);
-    		}
-    		);
-
-    		ctrl.$parsers.push(function (value) {
-    			return descDefined(value, scope.l.amount);
-    		});
-    	}
-    };
-});
-gassmanDirectives.directive('gmAmount2', function () {
-    return {
-    	restrict: 'A',
-    	require: 'ngModel',
-    	link: function (scope, elem, attrs, ctrl) {
-    		var descDefined = function (desc, amount) {
-    			//console.log('checking expense:', desc, amount, scope.l)
-
-//    			ctrl.$setValidity('amountWithoutNotes', !( !desc && amount > 0 ));
-    			ctrl.$setValidity('notesWithoutAmount', !( desc && !amount ));
-
-    			return amount;
-    		};
-
-    		scope.$watch(function () {
-    			return scope.l.notes;
-    		},
-    		function (value) {
-    			descDefined(value, scope.l.amount);
-    		}
-    		);
-
-    		ctrl.$parsers.push(function (value) {
-    			if (ctrl.$error.number || value === null) {
-    				// se non è un numero resetto gli altri controlli
-    				ctrl.$setValidity('positive', true);
-    				ctrl.$setValidity('decimals', true);
-    				return value;
-    			}
-
-    			var f = value > 0;
-				ctrl.$setValidity('positive', f);
-
-				if (!f)
-					// non faccio controlli multipli
-					return value;
-
-				var dd = Math.pow(10, 2); // TODO: fare che 2 dipende dalla currency
-				var x = value * dd;
-				f = x - Math.floor(x + .5) < .05;
-
-				ctrl.$setValidity('decimals', f);
-
-				return value;
-    		});
-
-    		ctrl.$parsers.push(function (value) {
-    			return descDefined(scope.l.notes, value);
-    		});
-    	}
-    };
-});
 /*
-gassmanDirectives.directive('whenScrolled', function() {
-	return function (scope, elm, attr) {
-		var raw = elm[0];
+gassmanDirectives.directive('checkCurrencies', function () {
+    return {
+    	restrict: 'A',
+    	require: 'ngModel',
+    	link: function (scope, elem, attrs, ctrl) {
+    		scope.$watch(attrs.ngModel,
+    		function (value) {
+				var valid = (typeof(value) == 'number');
+//    			ctrl.$setValidity('accountDefined', valid);
 
-		elm.bind('scroll', function() {
-			if (raw.scrollTop + raw.offsetHeight >= raw.scrollHeight) {
-				scope.$apply(attr.whenScrolled);
-			}
-		});
-	};
-})
+				if (valid)
+    				scope.checkCurrencies();
+    		}
+    		);
+    	}
+    };
+});
 */
 ;
