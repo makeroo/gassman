@@ -57,51 +57,51 @@ gassmanApp.config([ '$routeProvider',
 	function ($routeProvider) {
 		$routeProvider.
 		when('/csa/:csaId/detail', {
-			templateUrl: 'static/partials/csa-detail.html',
+			templateUrl: 'template/csa-detail.html',
 			controller: 'CsaDetail'
 		}).
 		when('/person/:personId/detail', {
-			templateUrl: 'static/partials/person-detail.html',
+			templateUrl: 'template/person-detail.html',
 			controller: 'PersonDetail'
 		}).
 		when('/account/self/detail', {
-			templateUrl: 'static/partials/account-detail.html',
+			templateUrl: 'template/account-detail.html',
 			controller: 'AccountDetail'
 		}).
 		when('/account/:accountId/detail', {
-			templateUrl: 'static/partials/account-detail.html',
+			templateUrl: 'template/account-detail.html',
 			controller: 'AccountDetail'
 		}).
 		when('/accounts/index', {
-			templateUrl: 'static/partials/accounts-index.html',
+			templateUrl: 'template/accounts-index.html',
 			controller: 'AccountsIndex'
 		}).
 		when('/transaction/:transId', {
-			templateUrl: 'static/partials/transaction.html',
+			templateUrl: 'template/transaction.html',
 			controller: 'Transaction'
 		}).
 		when('/transactions/index', {
-			templateUrl: 'static/partials/transactions_index.html',
+			templateUrl: 'template/transactions_index.html',
 			controller: 'TransactionsIndex'
 		}).
 		when('/help', {
-			templateUrl: 'static/partials/help.html',
+			templateUrl: 'template/help.html',
 			controller: 'HelpController'
 		}).
 		when('/faq', {
-			templateUrl: 'static/partials/faq.html',
+			templateUrl: 'template/faq.html',
 			controller: 'FaqController'
 		}).
 		when('/project', {
-			templateUrl: 'static/partials/project.html',
+			templateUrl: 'template/project.html',
 			controller: 'ProjectController'
 		}).
 		when('/not_found', {
-			templateUrl: 'static/partials/not_found.html',
+			templateUrl: 'template/not_found.html',
 			controller: 'NotFoundController'
 		}).
 		when('/', {
-			templateUrl: 'static/partials/home.html',
+			templateUrl: 'template/home.html',
 			controller: 'HomeSelectorController'
 		}).
 		otherwise({

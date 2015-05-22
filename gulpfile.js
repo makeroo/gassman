@@ -195,11 +195,11 @@ gulp.task('less', function () {
 gulp.task('js', function() {
     streamqueue({ objectMode: true },
       gulp.src(config.vendor.js),
-      gulp.src('./src/main/web/**/*.js').pipe(ngFilesort()),
-      gulp.src(['./src/main/web/static/partials/**/*.html'
+      gulp.src('./src/main/js/**/*.js').pipe(ngFilesort()),
+      gulp.src(['./src/main/template/**/*.html'
                 ]).pipe(templateCache({
           module: 'gassmanApp',
-          root: 'static/partials/'
+          root: 'template/'
       }))
     )
     .pipe(config.generate_js_maps ? sourcemaps.init() : gutil.noop())
@@ -226,8 +226,8 @@ gulp.task('watch', function () {
   // TODO: fonts?
   gulp.watch(config.vendor.i18n, ['html']);
   gulp.watch(['./src/main/less/**/*'], ['less']);
-  gulp.watch(['./src/main/web/static/js/**/*',
-              './src/main/web/static/partials/**/*',
+  gulp.watch(['./src/main/js/**/*',
+              './src/main/template/**/*',
               config.vendor.js
               ], ['js']);
   gulp.watch(['./src/main/web/static/images/**/*'], ['images']);
