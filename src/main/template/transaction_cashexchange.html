@@ -106,7 +106,7 @@
                placeholder="Quanto"
                ng-model="l.amount"
                ng-blur="$parent.updateTotalInvoice() || ($last && l.account && $parent.addLine(trans.producers))"
-               gm-amount
+               gm-currency
                id="amount{{ $index }}"
                />
             <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
@@ -168,74 +168,4 @@
     <button class="btn btn-default" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
   </div>
 
-<!--
- <div class="lines-table">
-  <div class="body">
-   <div ng-repeat="l in trans.producers" class="row">
-    <ng:form name="lineForm">
-    <div class="row-who">
-     <div><mac-autocomplete
-            name="account"
-            autocomplete="off"
-            mac-placeholder="'Chi ha versato'"
-            mac-autocomplete-source="autocompletionData"
-            mac-autocomplete-delay="300"
-            mac-autocomplete-on-select="focusAmount('amount')"
-            ng-model="l.accountName"
-            ng-blur="$last && l.account && $parent.addLine(trans.producers)"
-            gm-account
-            /></div>
-	 <div class="error-message" ng-show="lineForm.account.$error.accountMatch">Nome non valido</div>
-	 <div class="error-message" ng-show="lineForm.account.$error.amountWithoutAccount">Specificare chi ha versato</div>
-    </div>
-    <div class="row-amount">
-     <input type="number"
-            name="amount"
-            placeholder="Quanto"
-            ng-model="l.amount"
-            ng-blur="$parent.updateTotalInvoice() || ($last && l.account && $parent.addLine(trans.producers))"
-            gm-amount
-            id="amount{{$index}}"
-            /> <!- - TODO: fare text + smart-float! - ->
-	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
-	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>
-	 <div class="error-message" ng-show="lineForm.amount.$error.decimals">Troppi decimali</div>
-	 <div class="error-message" ng-show="lineForm.amount.$error.accountWithoutAmount">Specificare l'importo</div>
-    </div>
-    <div class="row-notes">
-     <input type="text"
-            placeholder="Note"
-            ng-model="l.notes"
-            ng-blur="$last && l.account && $parent.addLine(trans.producers)"
-            />
-
-    </div>
-    </ng:form>
-   </div>
-
-   <div class="header receiver" ng-hide="autocompletionDataError">
-    Chi ha ricevuto il denaro:
-    <span><mac-autocomplete
-     name="receiver"
-     autocomplete="off"
-     mac-autocomplete-source="autocompletionData"
-     mac-autocomplete-delay="300"
-     ng-model="trans.clients[0].accountName"
-     gm-account2
-     /></span>
-	 <span class="error-message" ng-show="deposit.receiver.$error.accountMatch">Nome non valido</span>
-	 <span class="error-message" ng-show="deposit.receiver.$error.accountDefined">Specificare chi ha ritirato</span>
-   </div>
-
-   <div ng-show="autocompletionDataError">
-     Caricamento fallito. Causa: {{autocompletionDataError}}.
-   </div>
-  </div>
- </div>
- <div ng-show="tsaveError" class="deposit-post-save">
-   <div ng-show="tsaveError" class="msg">
-     Registrazione fallita. Causa: {{tsaveError}}.
-   </div>
- </div>
--->
 </form>

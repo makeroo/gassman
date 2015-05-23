@@ -134,7 +134,7 @@
                placeholder="Quanto"
                ng-model="l.amount"
                ng-blur="$parent.updateTotalAmount() || ($last && l.account && $parent.addLine(trans.clients))"
-               gm-amount
+               gm-currency
                id="amountc{{ $index }}"
                />
             <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
@@ -189,7 +189,7 @@
                placeholder="Quanto"
                ng-model="l.amount"
                ng-blur="$parent.updateTotalInvoice(lineForm) || ($last && l.account && $parent.addLine(trans.producers))"
-               gm-amount
+               gm-currency
                id="amountp{{ $index }}"
                />
             <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>

@@ -5,7 +5,7 @@ var gassmanDirectives = angular.module('gassmanDirectives', [
     ]);
 
 
-gassmanDirectives.directive('gmAmount', function () {
+gassmanDirectives.directive('gmCurrency', function () {
     return {
     	restrict: 'A',
     	require: 'ngModel',
@@ -17,6 +17,8 @@ gassmanDirectives.directive('gmAmount', function () {
 
     			return amount;
     		};
+
+			var decimals = parseInt(attrs.gmCurrency);
 
     		scope.$watch(function () {
     			return scope.l.account;
@@ -42,7 +44,7 @@ gassmanDirectives.directive('gmAmount', function () {
 					// non faccio controlli multipli
 					return value;
 
-				var dd = Math.pow(10, 2); // TODO: fare che 2 dipende dalla currency
+				var dd = Math.pow(10, decimals); // TODO: fare che 2 dipende dalla currency
 				var x = value * dd;
 				f = x - Math.floor(x + .5) < .05;
 

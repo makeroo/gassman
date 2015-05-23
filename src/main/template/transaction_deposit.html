@@ -65,7 +65,7 @@
             placeholder="Quanto"
             ng-model="l.amount"
             ng-blur="$parent.updateTotalInvoice() || ($last && l.account && $parent.addLine(trans.producers))"
-            gm-amount
+            gm-currency
             id="amount{{$index}}"
             /> <!-- TODO: fare text + smart-float! -->
 	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
