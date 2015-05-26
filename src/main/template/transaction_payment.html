@@ -112,9 +112,8 @@
                    theme="bootstrap"
                    name="account"
                    ng-model="l.account"
-                   on-select="$last && l.account && $parent.addLine(trans.clients)"
+                   on-select="checkCurrencies() || ($last && l.account && $parent.addLine(trans.clients))"
                    required-if="l.amount"
-                   on-select="checkCurrencies()"
                    ng-keypress="$event.keyCode == 13 && focusElement('#amountc' + $index)"
                    >
 		  <ui-select-match placeholder="Chi ha ordinato">{{ $select.selected.name }}</ui-select-match>
@@ -122,7 +121,7 @@
 		    <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
 		  </ui-select-choices>
 		</ui-select>
-	    <p class="text-danger" ng-show="lineForm.account.$error.amountWithoutAccount">Specificare chi ha pagato</p>
+	    <p class="text-danger" ng-show="lineForm.account.$error.required">Specificare chi ha pagato</p>
       </div>
       <div class="col-sm-2">
         <div class="form-group">
@@ -134,7 +133,7 @@
                placeholder="Quanto"
                ng-model="l.amount"
                ng-blur="$parent.updateTotalAmount() || ($last && l.account && $parent.addLine(trans.clients))"
-               gm-currency
+               gm-currency="2"
                id="amountc{{ $index }}"
                />
             <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
@@ -142,7 +141,7 @@
           <p class="text-danger" ng-show="lineForm.amount.$error.number">Inserisci un numero</p>
           <p class="text-danger" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</p>
           <p class="text-danger" ng-show="lineForm.amount.$error.decimals">Troppi decimali</p>
-          <p class="text-danger" ng-show="lineForm.amount.$error.accountWithoutAmount">Specificare l'importo</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.required">Specificare l'importo</p>
         </div>
       </div>
       <div class="col-sm-4">
@@ -167,9 +166,8 @@
                    theme="bootstrap"
                    name="account"
                    ng-model="l.account"
-                   on-select="$last && l.account && $parent.addLine(trans.producers)"
+                   on-select="checkCurrencies() || ($last && l.account && $parent.addLine(trans.producers))"
                    required-if="l.amount"
-                   on-select="checkCurrencies()"
                    ng-keypress="$event.keyCode == 13 && focusElement('#amountp' + $index)"
                    >
 		  <ui-select-match placeholder="Produttore">{{ $select.selected.name }}</ui-select-match>
@@ -177,7 +175,7 @@
 		    <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
 		  </ui-select-choices>
 		</ui-select>
-	    <p class="text-danger" ng-show="lineForm.account.$error.amountWithoutAccount">Specificare il produttore</p>
+	    <p class="text-danger" ng-show="lineForm.account.$error.required">Specificare il produttore</p>
       </div>
       <div class="col-sm-2">
         <div class="form-group">
@@ -189,7 +187,7 @@
                placeholder="Quanto"
                ng-model="l.amount"
                ng-blur="$parent.updateTotalInvoice(lineForm) || ($last && l.account && $parent.addLine(trans.producers))"
-               gm-currency
+               gm-currency="2"
                id="amountp{{ $index }}"
                />
             <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
@@ -197,7 +195,7 @@
           <p class="text-danger" ng-show="lineForm.amount.$error.number">Inserisci un numero</p>
           <p class="text-danger" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</p>
           <p class="text-danger" ng-show="lineForm.amount.$error.decimals">Troppi decimali</p>
-          <p class="text-danger" ng-show="lineForm.amount.$error.accountWithoutAmount">Specificare l'importo</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.required">Specificare l'importo</p>
         </div>
       </div>
       <div class="col-sm-4">

@@ -1,6 +1,9 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.Transaction', [
+	'GassmanApp.directives.GmUniqueEmail',
+	'GassmanApp.directives.RequiredIf',
+	'GassmanApp.directives.Currency',
     'gassmanServices',
     'ui.select'
 ])

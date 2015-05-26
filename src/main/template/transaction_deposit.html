@@ -57,7 +57,7 @@
               {{item.name}}
              </span></mac-autocomplete></div>
 	 <div class="error-message" ng-show="lineForm.account.$error.accountMatch">Nome non valido</div>
-	 <div class="error-message" ng-show="lineForm.account.$error.amountWithoutAccount">Specificare chi ha versato</div>
+	 <div class="error-message" ng-show="lineForm.account.$error.required">Specificare chi ha versato</div>
     </div>
     <div class="row-amount">
      <input type="number"
@@ -65,13 +65,13 @@
             placeholder="Quanto"
             ng-model="l.amount"
             ng-blur="$parent.updateTotalInvoice() || ($last && l.account && $parent.addLine(trans.producers))"
-            gm-currency
+            gm-currency="2"
             id="amount{{$index}}"
             /> <!-- TODO: fare text + smart-float! -->
 	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.decimals">Troppi decimali</div>
-	 <div class="error-message" ng-show="lineForm.amount.$error.accountWithoutAmount">Specificare l'importo</div>
+	 <div class="error-message" ng-show="lineForm.amount.$error.required">Specificare l'importo</div>
     </div>
     <div class="row-notes">
      <input type="text"

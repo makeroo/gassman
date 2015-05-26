@@ -85,7 +85,7 @@
                    theme="bootstrap"
                    name="account"
                    ng-model="l.account"
-                   on-select="$last && l.account && $parent.addLine(trans.producers)"
+                   on-select="checkCurrencies() || ($last && l.account && $parent.addLine(trans.producers))"
                    required-if="l.amount"
                    ng-keypress="$event.keyCode == 13 && focusElement('#amount' + $index)"
                    >
@@ -94,7 +94,7 @@
 		    <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
 		  </ui-select-choices>
 		</ui-select>
-	    <p class="text-danger" ng-show="lineForm.account.$error.amountWithoutAccount">Specificare chi ha versato</p>
+	    <p class="text-danger" ng-show="lineForm.account.$error.required">Specificare chi ha versato</p>
       </div>
       <div class="col-sm-2">
         <div class="form-group">
@@ -106,7 +106,7 @@
                placeholder="Quanto"
                ng-model="l.amount"
                ng-blur="$parent.updateTotalInvoice() || ($last && l.account && $parent.addLine(trans.producers))"
-               gm-currency
+               gm-currency="2"
                id="amount{{ $index }}"
                />
             <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
@@ -114,7 +114,7 @@
           <p class="text-danger" ng-show="lineForm.amount.$error.number">Inserisci un numero</p>
           <p class="text-danger" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</p>
           <p class="text-danger" ng-show="lineForm.amount.$error.decimals">Troppi decimali</p>
-          <p class="text-danger" ng-show="lineForm.amount.$error.accountWithoutAmount">Specificare l'importo</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.required">Specificare l'importo</p>
         </div>
       </div>
       <div class="col-sm-4">
