@@ -150,7 +150,7 @@
     <ui-select theme="bootstrap"
                name="receiver"
                ng-model="trans.clients[0].account"
-               required-account
+               gm-required-account
                on-select="checkCurrencies()"
                >
       <ui-select-match placeholder="Chi ha versato">{{ $select.selected.name }}</ui-select-match>

@@ -20,7 +20,6 @@ var gassmanApp = angular.module('gassmanApp', [
     'GassmanApp.controllers.TransactionGeneric',
     'GassmanApp.controllers.TransactionTrashed',
 	'gassmanServices',
-	'gassmanDirectives',
 	'gassmanFilters'
 	]);
 

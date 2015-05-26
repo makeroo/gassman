@@ -4,7 +4,7 @@
  * Created by makeroo on 22/05/15.
  */
 
-angular.module('GassmanApp.directives.Currency', [
+angular.module('GassmanApp.directives.GmCurrency', [
     ])
 
 .directive('gmCurrency', [
