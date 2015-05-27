@@ -18,9 +18,7 @@ var gassmanApp = angular.module('gassmanApp', [
     'GassmanApp.controllers.TransactionWithdrawal',
     'GassmanApp.controllers.TransactionPayment',
     'GassmanApp.controllers.TransactionGeneric',
-    'GassmanApp.controllers.TransactionTrashed',
-	'gassmanServices',
-	'gassmanFilters'
+    'GassmanApp.controllers.TransactionTrashed'
 	]);
 
 gassmanApp.P_membership = 1;

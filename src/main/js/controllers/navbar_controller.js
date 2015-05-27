@@ -4,7 +4,9 @@
 
 'use strict';
 
-angular.module('GassmanApp.controllers.Navbar', [ 'gassmanServices' ])
+angular.module('GassmanApp.controllers.Navbar', [
+	'GassmanApp.services.Gdata'
+])
 
 .controller('NavbarController', [
          '$scope', 'gdata', '$q',

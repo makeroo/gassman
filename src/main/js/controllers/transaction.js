@@ -5,7 +5,8 @@ angular.module('GassmanApp.controllers.Transaction', [
 	'GassmanApp.directives.GmUniqueEmail',
 	'GassmanApp.directives.GmCurrency',
 	'GassmanApp.directives.GmRequiredAccount',
-    'gassmanServices',
+	'GassmanApp.services.Gdata',
+	'GassmanApp.services.AccountAutocompletion',
     'ui.select'
 ])
 

@@ -5,7 +5,7 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.HomeSelectorController', [
-    'gassmanServices'
+	'GassmanApp.services.Gdata'
 ])
 
 .controller('HomeSelectorController', [

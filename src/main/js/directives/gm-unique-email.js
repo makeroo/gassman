@@ -5,8 +5,8 @@
  */
 
 angular.module('GassmanApp.directives.GmUniqueEmail', [
-    'gassmanServices'
-    ])
+	'GassmanApp.services.Gdata'
+])
 
 .directive('gmUniqueEmail', [
          'gdata',

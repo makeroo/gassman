@@ -5,12 +5,12 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.TransactionPayment', [
-    'gassmanServices'
+	'GassmanApp.services.Gdata'
 ])
 
 .controller('TransactionPayment', [
-         '$scope', '$routeParams', '$location', '$timeout', 'gdata', 'accountAutocompletion',
-function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAutocompletion) {
+         '$scope', '$routeParams', '$location', '$timeout', 'gdata',
+function ($scope,   $routeParams,   $location,   $timeout,   gdata) {
 
 	$scope.savePayment = function () {
 		if ($scope.$invalid ||

@@ -5,12 +5,12 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.TransactionCashExchange', [
-    'gassmanServices'
+	'GassmanApp.services.Gdata'
 ])
 
 .controller('TransactionCashExchange', [
-         '$scope', '$routeParams', '$location', '$timeout', 'gdata', 'accountAutocompletion',
-function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAutocompletion) {
+         '$scope', '$routeParams', '$location', '$timeout', 'gdata',
+function ($scope,   $routeParams,   $location,   $timeout,   gdata) {
 	$scope.saveCashExchange = function () {
 		if ($scope.$invalid || $scope.currencyError)
 			return;

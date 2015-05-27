@@ -5,8 +5,10 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.AccountsIndex', [
-    'gassmanServices',
-	'ngStorage'
+	'GassmanApp.services.Gdata',
+	'ngStorage',
+	'GassmanApp.filters.HumanTimeDiff',
+	'GassmanApp.filters.AlphaTimeDiff'
 ])
 
 .controller('AccountsIndex', [

@@ -5,7 +5,7 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.PersonDetail', [
-    'gassmanServices'
+	'GassmanApp.services.Gdata'
 ])
 
 .controller('PersonDetail', [

@@ -5,7 +5,7 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.TransactionsIndex', [
-    'gassmanServices'
+	'GassmanApp.services.Gdata'
 ])
 
 .controller('TransactionsIndex', [

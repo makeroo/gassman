@@ -5,8 +5,6 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.NotFoundController', [
-    'gassmanServices',
-	'ngStorage'
 ])
 
 .controller('NotFoundController', function() {
