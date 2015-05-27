@@ -12,54 +12,57 @@ angular.module('GassmanApp.filters.HumanTimeDiff', [
          'iso8601Parser',
 function (iso8601Parser) {
 
+	var isSameDay = function (d1, d2) {
+		return d1.getFullYear() == d2.getFullYear() && d1.getMonth() == d2.getMonth() && d1.getDate() == d2.getDate();
+	};
+/*
+	var isToday = function (d) {
+		return isSameDay(d, new Date());
+	};
+*/
+	var toStartOfTheDay = function (d) {
+		d.setHours(0);
+		d.setMinutes(0);
+		d.setSeconds(0);
+		d.setMilliseconds(0);
+	};
+
 	return function (input) {
 		if (!input)
 			return '';
 
 		var d = iso8601Parser.jsonStringToDate(input);
+		var now = new Date();
 
-		// provo coi giorni
+		if (isSameDay(d, now))
+			return 'oggi';
 
-		if (d.isToday())
-			return 'oggi'
+		toStartOfTheDay(now);
 
-		var n = Date.today().addDays(-1);
-
-		if (d.isSameDay(n))
-			return 'ieri';
-
-		for (var c = 2; c < 6; ++c) {
-			n.addDays(-1);
-			if (d.isSameDay(n))
-				return c + ' giorni fa'
-		}
-
-		// provo con le settimane
-
-		var td = new Date() - d; // td è in millisecondi
+		var td = now - d; // td è in millisecondi
 
 		td /= 1000 * 60 * 60; // adesso è in ore
+		td /= 24; // adesso è in giorni
 
-		var tdweeks = parseInt(td / 24 / 7); // adesso è in settimane
+		if (td < 2)
+			return 'ieri';
 
-		if (tdweeks == 1)
-			return '1 settimana fa';
-		if (tdweeks < 4)
-			return tdweeks + ' settimane fa';
+		if (td < 14)
+			return parseInt(td) + ' giorni fa';
 
-		var tdmonths = parseInt(td / 24 / 30); // adesso è approssimativamente in mesi
+		if (td < 30)
+			return parseInt(td / 7) + ' settimane fa';
 
-		if (tdmonths == 1)
+		if (td < 60)
 			return '1 mese fa';
-		if (tdmonths < 10)
-			return tdmonths + ' mesi fa'
 
-		var tdyears = parseInt(td / 24 / 365); // adesso è approssimativamente in anni
+		if (td < 359)
+			return parseInt(td / 30) + ' mesi fa';
 
-		if (tdyears == 1)
-			return '1 anno fa'
+		if (td < 730)
+			return '1 anno fa';
 
-		return tdyears + ' anni fa'
-	}
+		return parseInt(td / 365) + ' anni fa';
+	};
 }])
 ;
