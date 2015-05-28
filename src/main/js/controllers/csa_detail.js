@@ -61,7 +61,7 @@ function ($scope,   $filter,   $location,   $routeParams,   gdata,   $q) {
 	then (function (pData) {
 		$scope.profile = pData;
 
-		$scope.editableMembershipFee = $scope.profile.permissions.indexOf(gassmanApp.P_canEditMembershipFee) != -1;
+		$scope.editableMembershipFee = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
 
 		return $q.all([ gdata.csaInfo(csaId),
 		                gdata.accountByCsa(csaId)

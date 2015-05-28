@@ -12,16 +12,16 @@ angular.module('GassmanApp.controllers.Navbar', [
          '$scope', 'gdata', '$q',
 function ($scope,   gdata,   $q) {
     var ttypes = [
-        { p:gassmanApp.P_canEnterCashExchange, f:'#/transaction/x', l:'Inserisci scambio contante' },
-        { p:gassmanApp.P_canEnterPayments, f:'#/transaction/p', l:'Registra pagamenti' },
-        { p:gassmanApp.P_canEnterDeposit, f:'#/transaction/d', l:'Registra accrediti' },
-        { p:gassmanApp.P_canEnterWithdrawal, f:'#/transaction/w', l:'Registra prelievi' },
+        { p:gdata.permissions.P_canEnterCashExchange, f:'#/transaction/x', l:'Inserisci scambio contante' },
+        { p:gdata.permissions.P_canEnterPayments, f:'#/transaction/p', l:'Registra pagamenti' },
+        { p:gdata.permissions.P_canEnterDeposit, f:'#/transaction/d', l:'Registra accrediti' },
+        { p:gdata.permissions.P_canEnterWithdrawal, f:'#/transaction/w', l:'Registra prelievi' },
         { e: function (pp) { return gdata.canEditTransactions(null, pp); }, f:'#/transactions/index', l:' Storia dei movimenti inseriti' },
         ];
-/*        //{ p:gassmanApp.P_membership, f:'#/account/detail', l:'Il tuo conto' },
+/*        //{ p:gdata.permissions.P_membership, f:'#/account/detail', l:'Il tuo conto' },
         { e:function (pp) {
-            return pp.indexOf(gassmanApp.P_canCheckAccounts) != -1 ||
-                   pp.indexOf(gassmanApp.P_canViewContacts) != -1;
+            return pp.indexOf(gdata.permissions.P_canCheckAccounts) != -1 ||
+                   pp.indexOf(gdata.permissions.P_canViewContacts) != -1;
             }, f:'#/accounts/index', l:'Membri del G.A.S.' },
         //{ v:P_canAssignAccounts, f:null },
         { e: function (pp) { return gdata.canEditTransactions(null, pp) }, l:'Movimentazione contante', 'class': "grouptitle" },

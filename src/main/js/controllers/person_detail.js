@@ -112,7 +112,7 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q) {
 	}).
 	then (function (prof) {
 		$scope.personProfile = prof;
-		$scope.editable = $scope.profile.permissions.indexOf(gassmanApp.P_canEditContacts) != -1 ||
+		$scope.editable = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditContacts) != -1 ||
 			personId == $scope.profile.logged_user.id;
 
 		var amounts = [];
@@ -136,7 +136,7 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q) {
 				//$scope.membership_fee = acc.membership_fee;
 				//$scope.aka_csym = acc.csym;
 
-				$scope.canEditMembershipFee = $scope.profile.permissions.indexOf(gassmanApp.P_canEditMembershipFee) != -1;
+				$scope.canEditMembershipFee = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
 
 					$scope.personProfile.membership_fee = {
 						//account: acc.id,

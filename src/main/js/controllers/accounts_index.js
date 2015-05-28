@@ -65,7 +65,7 @@ function ($scope,   $filter,   $location,   $localStorage,   gdata) {
 				e.accountData = !!e[4];
 			});
 
-			if ($scope.profile.permissions.indexOf(gassmanApp.P_canViewContacts) == -1)
+			if ($scope.profile.permissions.indexOf(gdata.permissions.P_canViewContacts) == -1)
 				return;
 
 			angular.forEach(r.data, function (e) {
@@ -86,7 +86,7 @@ function ($scope,   $filter,   $location,   $localStorage,   gdata) {
 	};
 
 	$scope.showAccount = function (accountId, personId) {
-		if ($scope.profile.permissions.indexOf(gassmanApp.P_canViewContacts) == -1) {
+		if ($scope.profile.permissions.indexOf(gdata.permissions.P_canViewContacts) == -1) {
 			$location.path('/account/' + accountId + '/detail');
 		} else {
 			$location.path('/person/' + personId + '/detail');

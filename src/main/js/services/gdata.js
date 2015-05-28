@@ -31,6 +31,20 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 	var profileInfo = null;
 	var peopleProfiles = {};
 
+	this.permissions = {
+		P_membership: 1,
+		P_canCheckAccounts: 2,
+		//P_canAssignAccounts: 3,
+		P_canEnterDeposit: 4,
+		P_canEnterPayments: 5,
+		P_canManageTransactions: 6,
+		P_canEnterCashExchange: 7,
+		P_canEnterWithdrawal: 8,
+		P_canViewContacts: 9,
+		P_canEditContacts: 10,
+		P_canEditMembershipFee: 12
+	};
+
 	this.E_class = "<class 'Exception'>";
 	this.E_already_modified = 'already modified';
 
@@ -56,10 +70,10 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 	var transactionTypes = {
 		g: true, // non editabile
 		t: true, // vale il tipo della precedente
-		p: gassmanApp.P_canEnterPayments,
-		x: gassmanApp.P_canEnterCashExchange,
-		d: gassmanApp.P_canEnterDeposit,
-		w: gassmanApp.P_canEnterWithdrawal
+		p: gdata.permissions.P_canEnterPayments,
+		x: gdata.permissions.P_canEnterCashExchange,
+		d: gdata.permissions.P_canEnterDeposit,
+		w: gdata.permissions.P_canEnterWithdrawal
 	};
 
 	this.isValidTransactionType = function (v) {
@@ -79,11 +93,11 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 		if (!pp)
 			pp = u.permissions;
 		return (
-			pp.indexOf(gassmanApp.P_canEnterPayments) != -1 ||
-			pp.indexOf(gassmanApp.P_canEnterCashExchange) != -1 ||
-			pp.indexOf(gassmanApp.P_canEnterDeposit) != -1 ||
-			pp.indexOf(gassmanApp.P_canEnterWithdrawal) != -1 ||
-			pp.indexOf(gassmanApp.P_canManageTransactions) != -1
+			pp.indexOf(gdata.permissions.P_canEnterPayments) != -1 ||
+			pp.indexOf(gdata.permissions.P_canEnterCashExchange) != -1 ||
+			pp.indexOf(gdata.permissions.P_canEnterDeposit) != -1 ||
+			pp.indexOf(gdata.permissions.P_canEnterWithdrawal) != -1 ||
+			pp.indexOf(gdata.permissions.P_canManageTransactions) != -1
 			);
 	};
 

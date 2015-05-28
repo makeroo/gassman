@@ -46,7 +46,7 @@ function($scope,   $filter,   $routeParams,   $location,   gdata) {
 	gdata.profileInfo().
 	then (function (pData) {
 		$scope.profile = pData;
-		$scope.viewableContacts = $scope.profile.permissions.indexOf(gassmanApp.P_canViewContacts) != -1;
+		$scope.viewableContacts = $scope.profile.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
 
 		return gdata.selectedCsa();
 	}).

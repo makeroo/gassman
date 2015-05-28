@@ -409,8 +409,8 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 	then (function (profile) {
 		$scope.profile = profile;
 		$scope.isTransactionEditor = gdata.canEditTransactions($scope.profile);
-		$scope.viewableContacts = $scope.profile.permissions.indexOf(gassmanApp.P_canViewContacts) != -1;
-		$scope.viewableContactsOrAccounts = $scope.viewableContacts || $scope.profile.permissions.indexOf(gassmanApp.P_canCheckAccounts) != -1;
+		$scope.viewableContacts = $scope.profile.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
+		$scope.viewableContactsOrAccounts = $scope.viewableContacts || $scope.profile.permissions.indexOf(gdata.permissions.P_canCheckAccounts) != -1;
 
 		return gdata.selectedCsa();
 	}).then (function (csaId) {

@@ -1,6 +1,6 @@
 'use strict';
 
-var gassmanApp = angular.module('gassmanApp', [
+angular.module('gassmanApp', [
 	'ngRoute',
     'ngSanitize',
     'GassmanApp.directives.WhenScrolled',
@@ -19,19 +19,7 @@ var gassmanApp = angular.module('gassmanApp', [
     'GassmanApp.controllers.TransactionPayment',
     'GassmanApp.controllers.TransactionGeneric',
     'GassmanApp.controllers.TransactionTrashed'
-	]);
-
-gassmanApp.P_membership = 1;
-gassmanApp.P_canCheckAccounts = 2;
-//gassmanApp.P_canAssignAccounts = 3;
-gassmanApp.P_canEnterDeposit = 4;
-gassmanApp.P_canEnterPayments = 5;
-gassmanApp.P_canManageTransactions = 6;
-gassmanApp.P_canEnterCashExchange = 7;
-gassmanApp.P_canEnterWithdrawal = 8;
-gassmanApp.P_canViewContacts = 9;
-gassmanApp.P_canEditContacts = 10;
-gassmanApp.P_canEditMembershipFee = 12;
+	])
 
 /*
 gassmanApp.filter('noFractionCurrency',
@@ -50,60 +38,62 @@ gassmanApp.filter('noFractionCurrency',
 		  } ]);
 */
 
-gassmanApp.config([ '$routeProvider',
-	function ($routeProvider) {
-		$routeProvider.
-		when('/csa/:csaId/detail', {
-			templateUrl: 'template/csa-detail.html',
-			controller: 'CsaDetail'
-		}).
-		when('/person/:personId/detail', {
-			templateUrl: 'template/person-detail.html',
-			controller: 'PersonDetail'
-		}).
-		when('/account/self/detail', {
-			templateUrl: 'template/account-detail.html',
-			controller: 'AccountDetail'
-		}).
-		when('/account/:accountId/detail', {
-			templateUrl: 'template/account-detail.html',
-			controller: 'AccountDetail'
-		}).
-		when('/accounts/index', {
-			templateUrl: 'template/accounts-index.html',
-			controller: 'AccountsIndex'
-		}).
-		when('/transaction/:transId', {
-			templateUrl: 'template/transaction.html',
-			controller: 'Transaction'
-		}).
-		when('/transactions/index', {
-			templateUrl: 'template/transactions_index.html',
-			controller: 'TransactionsIndex'
-		}).
-		when('/help', {
-			templateUrl: 'template/help.html',
-			controller: 'HelpController'
-		}).
-		when('/faq', {
-			templateUrl: 'template/faq.html',
-			controller: 'FaqController'
-		}).
-		when('/project', {
-			templateUrl: 'template/project.html',
-			controller: 'ProjectController'
-		}).
-		when('/not_found', {
-			templateUrl: 'template/not_found.html',
-			controller: 'NotFoundController'
-		}).
-		when('/', {
-			templateUrl: 'template/home.html',
-			controller: 'HomeSelectorController'
-		}).
-		otherwise({
-			redirectTo: '/not_found'
-		})
-	}]);
+.config([
+         '$routeProvider',
+function ($routeProvider) {
+	$routeProvider.
+	when('/csa/:csaId/detail', {
+		templateUrl: 'template/csa-detail.html',
+		controller: 'CsaDetail'
+	}).
+	when('/person/:personId/detail', {
+		templateUrl: 'template/person-detail.html',
+		controller: 'PersonDetail'
+	}).
+	when('/account/self/detail', {
+		templateUrl: 'template/account-detail.html',
+		controller: 'AccountDetail'
+	}).
+	when('/account/:accountId/detail', {
+		templateUrl: 'template/account-detail.html',
+		controller: 'AccountDetail'
+	}).
+	when('/accounts/index', {
+		templateUrl: 'template/accounts-index.html',
+		controller: 'AccountsIndex'
+	}).
+	when('/transaction/:transId', {
+		templateUrl: 'template/transaction.html',
+		controller: 'Transaction'
+	}).
+	when('/transactions/index', {
+		templateUrl: 'template/transactions_index.html',
+		controller: 'TransactionsIndex'
+	}).
+	when('/help', {
+		templateUrl: 'template/help.html',
+		controller: 'HelpController'
+	}).
+	when('/faq', {
+		templateUrl: 'template/faq.html',
+		controller: 'FaqController'
+	}).
+	when('/project', {
+		templateUrl: 'template/project.html',
+		controller: 'ProjectController'
+	}).
+	when('/not_found', {
+		templateUrl: 'template/not_found.html',
+		controller: 'NotFoundController'
+	}).
+	when('/', {
+		templateUrl: 'template/home.html',
+		controller: 'HomeSelectorController'
+	}).
+	otherwise({
+		redirectTo: '/not_found'
+	})
+}])
+;
 
 // funzioni di utilità, da trasferire in un servizio...
