@@ -19,7 +19,7 @@ angular.module('gassmanApp', [
     'GassmanApp.controllers.TransactionPayment',
     'GassmanApp.controllers.TransactionGeneric',
     'GassmanApp.controllers.TransactionTrashed'
-	])
+])
 
 /*
 gassmanApp.filter('noFractionCurrency',
@@ -95,5 +95,3 @@ function ($routeProvider) {
 	})
 }])
 ;
-
-// funzioni di utilità, da trasferire in un servizio...
