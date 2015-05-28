@@ -75,7 +75,6 @@
 </nav>
 
 <!--
-<div class="main">
  <div class="left-col" ng-controller="MenuController">
 
   <div class="profile-info" ng-show="profile == profileError">
@@ -90,24 +89,12 @@
    <p ng-show="amountError">Saldo personale non disponible: {{! amountError }}.</p>
    <p ng-show="amount" class="amount {{! amountClass }}">Saldo: {{! amount | currency : currencySymbol }}</p>
   </div>
-  <div class="functions" ng-show="functions.length">
-   <ul>
-    <li ng-show="csa"><a href="#/csa/{{! csa.id }}/detail">{{! csa.name }}</a>
-    <li ng-repeat="f in functions" ng-class="f.class">
-     <a href="{{!f.f}}" ng-if="f.f">{{!f.l}}</a>
-     <span ng-if="!f.f">{{!f.l}}</span>
-    </li>
-   </ul>
-  </div>
 
- </div>
 -->
 
 
  <div ng-view class="container"></div>
-<!--
-</div>
--->
+
  <div class="footer container">
   <div class="row">
    <div class="col-md-6 col-md-offset-3">
