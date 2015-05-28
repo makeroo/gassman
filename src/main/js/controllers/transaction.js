@@ -32,10 +32,10 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 
 	$scope.trans = trans;
 
-	if (gassmanApp.isPk(transId)) {
+	if (gdata.isPk(transId)) {
 		trans.transId = transId;
 		trans.cc_type = null;
-	} else if (gassmanApp.isValidTransactionType(transId)) {
+	} else if (gdata.isValidTransactionType(transId)) {
 		trans.transId = 'new';
 		trans.cc_type = transId;
 	} else {
@@ -111,7 +111,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 			// il template mostri errore
 			throw "illegal transaction type";
 
-		$scope.canEdit = gassmanApp.isTransactionTypeEditableByUser(trans.cc_type, $scope.profile);
+		$scope.canEdit = gdata.isTransactionTypeEditableByUser(trans.cc_type, $scope.profile);
 		$scope.readonly = t.transId != 'new';
 
 		if (!$scope.canEdit && !$scope.readonly) {
@@ -408,7 +408,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 	gdata.profileInfo().
 	then (function (profile) {
 		$scope.profile = profile;
-		$scope.isTransactionEditor = gassmanApp.canEditTransactions($scope.profile);
+		$scope.isTransactionEditor = gdata.canEditTransactions($scope.profile);
 		$scope.viewableContacts = $scope.profile.permissions.indexOf(gassmanApp.P_canViewContacts) != -1;
 		$scope.viewableContactsOrAccounts = $scope.viewableContacts || $scope.profile.permissions.indexOf(gassmanApp.P_canCheckAccounts) != -1;
 

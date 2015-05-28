@@ -16,7 +16,7 @@ function ($scope,   gdata,   $q) {
         { p:gassmanApp.P_canEnterPayments, f:'#/transaction/p', l:'Registra pagamenti' },
         { p:gassmanApp.P_canEnterDeposit, f:'#/transaction/d', l:'Registra accrediti' },
         { p:gassmanApp.P_canEnterWithdrawal, f:'#/transaction/w', l:'Registra prelievi' },
-        { e: function (pp) { return gassmanApp.canEditTransactions(null, pp); }, f:'#/transactions/index', l:' Storia dei movimenti inseriti' },
+        { e: function (pp) { return gdata.canEditTransactions(null, pp); }, f:'#/transactions/index', l:' Storia dei movimenti inseriti' },
         ];
 /*        //{ p:gassmanApp.P_membership, f:'#/account/detail', l:'Il tuo conto' },
         { e:function (pp) {
@@ -24,7 +24,7 @@ function ($scope,   gdata,   $q) {
                    pp.indexOf(gassmanApp.P_canViewContacts) != -1;
             }, f:'#/accounts/index', l:'Membri del G.A.S.' },
         //{ v:P_canAssignAccounts, f:null },
-        { e: function (pp) { return gassmanApp.canEditTransactions(null, pp) }, l:'Movimentazione contante', 'class': "grouptitle" },
+        { e: function (pp) { return gdata.canEditTransactions(null, pp) }, l:'Movimentazione contante', 'class': "grouptitle" },
         ];
 */
 	$scope.transactionTypes = [];

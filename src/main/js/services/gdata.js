@@ -43,6 +43,50 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 			);
 	};
 
+	this.isPk = function (v) {
+		try {
+			var i = parseInt(v);
+
+			return !isNaN(i);
+		} catch (e) {
+			return false;
+		}
+	};
+
+	var transactionTypes = {
+		g: true, // non editabile
+		t: true, // vale il tipo della precedente
+		p: gassmanApp.P_canEnterPayments,
+		x: gassmanApp.P_canEnterCashExchange,
+		d: gassmanApp.P_canEnterDeposit,
+		w: gassmanApp.P_canEnterWithdrawal
+	};
+
+	this.isValidTransactionType = function (v) {
+		return !!transactionTypes[v];
+	};
+
+	this.isTransactionTypeEditableByUser = function (t, u) {
+		var p = transactionTypes[t];
+
+		if (angular.isNumber(p))
+			return u.permissions.indexOf(p) != -1;
+		else
+			return false;
+	};
+
+	this.canEditTransactions = function (u, pp) {
+		if (!pp)
+			pp = u.permissions;
+		return (
+			pp.indexOf(gassmanApp.P_canEnterPayments) != -1 ||
+			pp.indexOf(gassmanApp.P_canEnterCashExchange) != -1 ||
+			pp.indexOf(gassmanApp.P_canEnterDeposit) != -1 ||
+			pp.indexOf(gassmanApp.P_canEnterWithdrawal) != -1 ||
+			pp.indexOf(gassmanApp.P_canManageTransactions) != -1
+			);
+	};
+
 	this.sysVersion = function () {
 		return $http.post('/sys/version?_xsrf=' + $cookies._xsrf);
 	}
