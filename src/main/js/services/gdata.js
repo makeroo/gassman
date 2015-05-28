@@ -115,9 +115,11 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 			success(function (data) {
 				profileInfo = data;
 				d.resolve(profileInfo);
+				$rootScope.profile = profileInfo;
 			}).
 			error(function (data) {
 				d.reject(data);
+				$rootScope.profile = null;
 			});
 		}
 
