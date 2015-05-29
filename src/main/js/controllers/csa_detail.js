@@ -76,12 +76,14 @@ function ($scope,   $filter,   $location,   $routeParams,   gdata,   $q) {
 		return $q.all([
 				gdata.accountMovements($scope.accId, 0, 5),
 				gdata.accountAmount($scope.csa.kitty.id),
+				gdata.accountAmount($scope.accId),
 				//gdata.accountMovements($scope.csa.kitty.id, 0, 5),
 				]);
 	}).
 	then (function (rr) {
 		$scope.movements = rr[0].data;
 		$scope.csa.kitty.amount = rr[1].data;
+		$scope.personalAmount = rr[2].data;
 		//$scope.csa.kitty.movements = rr[2].data;
 	}).
 	then (undefined, function (error) {

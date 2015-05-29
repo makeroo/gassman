@@ -58,6 +58,8 @@
   </div>
   <div class="panel-body">
 
+   <h4 ng-show="personalAmount != null">Saldo personale: {{personalAmount[0] | currency : personalAmount[1] }}</h4>
+
    <div ng-if="movements" class="movements-syn">
     <table class="table table-hover">
      <tbody>
