@@ -1,23 +1,29 @@
-<div ng-if="trans.cc_type == 'x'">
+<div ng-if="autocompletionDataError == null && trans.cc_type == 'x'">
 <ng-include src="'template/transaction_cashexchange.html'"></ng-include>
 </div>
 
-<div ng-if="trans.cc_type == 'p'">
+<div ng-if="autocompletionDataError == null && trans.cc_type == 'p'">
 <ng-include src="'template/transaction_payment.html'"></ng-include>
 </div>
 
-<div ng-if="trans.cc_type == 'w'">
+<div ng-if="autocompletionDataError == null && trans.cc_type == 'w'">
 <ng-include src="'template/transaction_withdrawal.html'"></ng-include>
 </div>
 
-<div ng-if="trans.cc_type == 'd'">
+<div ng-if="autocompletionDataError == null && trans.cc_type == 'd'">
 <ng-include src="'template/transaction_deposit.html'"></ng-include>
 </div>
 
-<div ng-if="trans.cc_type == 'g'">
+<div ng-if="autocompletionDataError == null && trans.cc_type == 'g'">
 <ng-include src="'template/transaction_generic.html'"></ng-include>
 </div>
 
-<div ng-if="trans.cc_type == 't'">
+<div ng-if="autocompletionDataError == null && trans.cc_type == 't'">
 <ng-include src="'template/transaction_trashed.html'"></ng-include>
+</div>
+
+<div ng-if="autocompletionDataError">
+  <div class="row">
+    <p class="bg-danger">Caricamento fallito, dati non disponibili. Prova a ricaricare la pagina.</p>
+  </div>
 </div>
