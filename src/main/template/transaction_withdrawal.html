@@ -1,41 +1,58 @@
-<div ng-if="readonly" class="deposit">
- <div class="lines-table">
-  <div class="header" ng-hide="autocompletionDataError">
-   Inserisci chi ha prelevato:
-  </div>
-  <div class="body">
-   <div ng-repeat="l in trans.clients | filter:filledLine" class="row">
-    <div class="row-who field"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
-    <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
-    <div class="row-notes field">{{l.notes}}&nbsp;</div>
-   </div>
+<div ng-if="readonly" class="transaction">
 
-   <div ng-show="autocompletionDataError">
-     Caricamento fallito. Causa: {{autocompletionDataError}}.
-   </div>
+  <h3>Prelievo</h3>
+
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Data ritiro:</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{ trans.tdate | date }}</p>
+    </div>
   </div>
-  <div class="actions">
-   <div>Data ritiro: <span>{{trans.tdate | date}}</span>, note: <span>{{trans.tdesc}}</span><br/>
-       <span ng-show="!currencyError && totalAmount > 0">Totale prelievi: {{totalAmount | currency : currency[1] }}</span>
-       </div>
-   <div>
-       Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.
-   </div>
-   <div ng-show="modifies">
-       Questo inserimento ne modifica uno precedente. <button ng-click="showTransaction(modifies)">Esamina</button>
-   </div>
-   <div ng-show="modified_by">
-	   <em>Attenzione</em>. Questo inserimento è stato annullato da una successiva modifica. <button ng-click="showTransaction(modified_by)">Esamina</button>
-   </div>
-   <button ng-show="canEdit && !modified_by" ng-click="modifyTransaction()">Modifica o cancella</button>
-<!--
-   <button ng-disabled="!csaId || !deposit.$valid || !totalAmount" ng-click="saveWithdrawal()">Registra in cassa</button>
-   <button ng-disabled="confirmDelete" ng-show="transId != 'new'" ng-click="confirmCancelWithdrawal()">Elimina la registrazione dei prelievi</button>
-   <button ng-show="confirmDelete" ng-click="cancelWithdrawal()">Conferma eliminazione</button>
--->
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Note:</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{ trans.tdesc }}</p>
+    </div>
+  </div>
+
+  <h4>Chi ha prelevato:</h4>
+
+  <div ng-repeat="l in trans.clients | filter:filledLine" class="row transaction-line">
+    <div class="col-sm-6">
+      <p class="form-control-static"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
+    </div>
+    <div class="col-sm-4">
+      <p class="form-control-static">{{ l.notes }}</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-6">
+      <p class="form-control-static text-info">Totale prelievi:</p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static text-info">{{totalAmount | currency : currency[1] }}</p>
+    </div>
+  </div>
+
+  <p class="bg-info">Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
+
+  <p ng-show="modifies" class="bg-info">Questo inserimento ne modifica uno precedente. <button class="btn btn-info" ng-click="showTransaction(modifies)">Esamina</button></p>
+
+  <p class="bg-warning" ng-show="modified_by">
+    <em>Attenzione</em>. Questo inserimento è stato annullato da una successiva modifica. <button class="btn btn-info" ng-click="showTransaction(modified_by)">Esamina</button>
+  </p>
+
+  <button class="btn btn-primary" ng-show="canEdit && !modified_by" ng-click="modifyTransaction()">Modifica o cancella</button>
+
   </div>
  </div>
 </div>
+
+<!--
 <form ng-if="!readonly" ng-controller="TransactionWithdrawal" name="deposit" class="deposit" ng-submit="return;">
  <div class="lines-table">
   <div class="header" ng-hide="autocompletionDataError">
@@ -65,7 +82,7 @@
             ng-blur="$parent.updateTotalAmount() || ($last && l.account && $parent.addLine(trans.clients))"
             gm-currency="2"
             id="amount{{$index}}"
-            /> <!-- TODO: fare text + smart-float! -->
+            /> <!- - TODO: fare text + smart-float! - ->
 	 <div class="error-message" ng-show="lineForm.amount.$error.number">Inserisci un numero</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</div>
 	 <div class="error-message" ng-show="lineForm.amount.$error.decimals">Troppi decimali</div>
@@ -103,3 +120,4 @@
    </div>
  </div>
 </form>
+-->
