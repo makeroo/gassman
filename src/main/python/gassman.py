@@ -304,6 +304,12 @@ class GassmanWebApp (tornado.web.Application):
                 log_gassman.info('created session: agent=%s, from=%s', requestHandler.request.headers['User-Agent'], requestHandler.request.headers.get('X-Forwarded-For', 'NA'))
         return s
 
+    def checkMembershipByKitty (self, cur, personId, accId):
+        cur.execute(*self.sql.check_membership_by_kitty(personId, accId))
+        r = int(cur.fetchone()[0]) > 0
+        log_gassman.debug('check membership by kitty: user=%s, acc=%s, r=%s', personId, accId, r)
+        return r
+
     def hasPermissionByAccount (self, cur, perm, personId, accId):
         cur.execute(*self.sql.has_permission_by_account(perm, personId, accId))
         r = int(cur.fetchone()[0]) > 0
@@ -482,7 +488,10 @@ class SysVersionHandler (JsonBaseHandler):
 class AccountOwnerHandler (JsonBaseHandler):
     def do (self, cur, accId):
         u = self.get_logged_user()
-        if not self.application.hasAccount(cur, u.id, accId) and not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId):
+        if (not self.application.hasAccount(cur, u.id, accId) and
+            not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId) and
+            not self.application.checkMembershipByKitty(cur, u.id, accId)
+            ):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.account_owners(accId))
         oo = list(cur)
@@ -495,7 +504,10 @@ class AccountOwnerHandler (JsonBaseHandler):
 class AccountMovementsHandler (JsonBaseHandler):
     def do (self, cur, accId, fromIdx, toIdx):
         u = self.get_logged_user()
-        if not self.application.hasAccount(cur, u.id, accId) and not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId):
+        if (not self.application.hasAccount(cur, u.id, accId) and
+            not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId) and
+            not self.application.checkMembershipByKitty(cur, u.id, accId)
+            ):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.account_movements(accId, int(fromIdx), int(toIdx)))
         return list(cur)
@@ -503,7 +515,10 @@ class AccountMovementsHandler (JsonBaseHandler):
 class AccountAmountHandler (JsonBaseHandler):
     def do (self, cur, accId):
         u = self.get_logged_user()
-        if not self.application.hasAccount(cur, u.id, accId) and not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId):
+        if (not self.application.hasAccount(cur, u.id, accId) and
+            not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId) and
+            not self.application.checkMembershipByKitty(cur, u.id, accId)
+            ):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.account_amount(accId))
         v = cur.fetchone()
@@ -561,7 +576,10 @@ class AccountXlsHandler (BaseHandler):
         self.clear_header('Content-Disposition')
         self.add_header('Content-Disposition', 'attachment; filename="account-%s.xls"' % accId)
         with self.application.conn as cur:
-            if not self.application.hasAccount(cur, u.id, accId) and not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId):
+            if (not self.application.hasAccount(cur, u.id, accId) and
+                not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId) and
+                not self.application.checkMembershipByKitty(cur, u.id, accId)
+                ):
                 raise HTTPError(403)
             style = xlwt.XFStyle()
             style.num_format_str='YYYY-MM-DD' # FIXME: i18n
