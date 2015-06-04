@@ -1,26 +1,30 @@
-<div class="deposit">
- <div class="lines-table">
-  <div class="body">
-   <div class="actions">
-    <div><label for="tdate">Data operazione:</label><span class="field">{{trans.tdate | date}}</span></div>
-    <div><label for="tdesc">Descrizione e note:</label><span class="field">{{trans.tdesc}}</span></div>
-   </div>
+<div ng-if="readonly" class="transaction">
 
-   <div ng-show="autocompletionDataError">
-     Caricamento fallito. Causa: {{autocompletionDataError}}.
-   </div>
-   <div class="actions">
+  <h3>Transazione cancellata</h3>
 
-   <div>
-       Cancellazione effettuata da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.
-   </div>
-   <div ng-show="modifies">
-       Dettagli della transazione cancellata: <button ng-click="showTransaction(modifies)">Esamina</button>
-   </div>
-   <div ng-show="modified_by">
-	   <em>Attenzione</em>. Questa cancellazione è stata annullata da una successiva modifica. <button ng-click="showTransaction(modified_by)">Esamina</button>
-   </div>
-   </div>
+  <div class="row">
+    <div class="form-group">
+      <label class="col-sm-2 control-label">Data operazione:</label>
+      <div class="col-sm-10">
+        <p class="form-control-static">{{ trans.tdate | date }}</p>
+      </div>
+    </div>
   </div>
- </div>
+  <div class="row">
+    <div class="form-group">
+      <label class="col-sm-2 control-label">Descrizione e note:</label>
+      <div class="col-sm-10">
+        <p class="form-control-static">{{ trans.tdesc }}</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="bg-info">Cancellazione effettuata da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
+
+  <p ng-show="modifies" class="bg-info">Dettagli della transazione cancellata: <button class="btn btn-info" ng-click="showTransaction(modifies)">Esamina</button></p>
+
+  <p class="bg-warning" ng-show="modified_by">
+    <em>Attenzione</em>. Questo inserimento è stato annullato da una successiva modifica. <button class="btn btn-info" ng-click="showTransaction(modified_by)">Esamina</button>
+  </p>
+
 </div>
