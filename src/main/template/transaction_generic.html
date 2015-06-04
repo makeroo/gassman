@@ -1,53 +1,76 @@
-<div class="deposit">
- <div class="lines-table">
-  <div class="body">
-   <div class="actions">
-    <div><label for="tdate">Data consegna:</label><span class="field">{{trans.tdate | date}}</span></div>
-    <div><label for="tdesc">Descrizione e note:</label><span class="field">{{trans.tdesc}}</span></div>
-   </div>
+<div ng-if="readonly" class="transaction">
 
-   <div class="header" ng-hide="autocompletionDataError || !(trans.clients | filter:filledLine).length">
-    Chi ha dato denaro:
-   </div>
-   <div ng-repeat="l in trans.clients | filter:filledLine" class="row">
-    <div class="row-who field"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
-    <div class="row-amount field">{{l.amount | currency : currency[1] }}</div>
-    <div class="row-notes field" ng-show="l.notes">{{l.notes}}</div>
-   </div>
-   <div class="header" ng-hide="autocompletionDataError || !(trans.producers | filter:filledLine).length">
-    Chi ha ricevuto denaro:
-   </div>
-   <div ng-repeat="l in trans.producers | filter:filledLine" class="row">
-    <div class="row-who field"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></div>
-    <div class="row-amount field">{{ l.amount | currency : currency[1] }}</div>
-    <div class="row-notes field" ng-show="l.notes">{{ l.notes }}</div>
-   </div>
+  <h3>Transazione</h3>
 
-   <div class="header" ng-hide="autocompletionDataError || !(trans.expenses | filter:filledLine).length">
-    Altre spese:
-   </div>
-   <div ng-repeat="l in trans.expenses | filter:filledLine" class="row">
-    <div class="row-who field">{{l.notes}}&nbsp;</div>
-    <div class="row-amount field">{{l.amount | currency: currency[1]}}</div>
-   </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Data movimento:</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{ trans.tdate | date }}</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Descrizione e note:</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{ trans.tdesc }}</p>
+    </div>
+  </div>
 
-   <div ng-show="autocompletionDataError">
-     Caricamento fallito. Causa: {{autocompletionDataError}}.
-   </div>
-   <div class="actions">
-    <div>
-        <span>Totale pagamenti: {{totalAmount | currency : currency[1] }}</span>
-        </div>
-   <div>
-       Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</a><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.
-   </div>
-   <div ng-show="modifies">
-       Questo inserimento ne modifica uno precedente. <button ng-click="showTransaction(modifies)">Esamina</button>
-   </div>
-   <div ng-show="modified_by">
-	   <em>Attenzione</em>. Questo inserimento è stato annullato da una successiva modifica. <button ng-click="showTransaction(modified_by)">Esamina</button>
-   </div>
-   </div>
+  <h4 ng-hide="!(trans.clients | filter:filledLine).length">Chi ha dato denaro:</h4>
+
+  <div ng-repeat="l in trans.clients | filter:filledLine" class="row transaction-line">
+    <div class="col-sm-6">
+      <p class="form-control-static"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
+    </div>
+    <div class="col-sm-4">
+      <p class="form-control-static">{{ l.notes }}</p>
+    </div>
+  </div>
+
+  <h4 ng-hide="!(trans.producers | filter:filledLine).length">Chi ha ricevuto denaro:</h4>
+
+  <div ng-repeat="l in trans.producers | filter:filledLine" class="row transaction-line">
+    <div class="col-sm-6">
+      <p class="form-control-static"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
+    </div>
+    <div class="col-sm-4">
+      <p class="form-control-static">{{ l.notes }}</p>
+    </div>
+  </div>
+
+  <h4 ng-hide="!(trans.expenses | filter:filledLine).length">Altre spese:</h4>
+
+  <div ng-repeat="l in trans.expenses | filter:filledLine" class="row transaction-line">
+    <div class="col-sm-6">
+      <p class="form-control-static">{{ l.notes }}</p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-6">
+      <p class="form-control-static text-info">Totale pagamenti:</p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static text-info">{{totalAmount | currency : currency[1] }}</p>
+    </div>
+  </div>
+
+  <p class="bg-info">Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
+
+  <p ng-show="modifies" class="bg-info">Questo inserimento ne modifica uno precedente. <button class="btn btn-info" ng-click="showTransaction(modifies)">Esamina</button></p>
+
+  <p class="bg-warning" ng-show="modified_by">
+    <em>Attenzione</em>. Questo inserimento è stato annullato da una successiva modifica. <button class="btn btn-info" ng-click="showTransaction(modified_by)">Esamina</button>
+  </p>
+
   </div>
  </div>
 </div>
