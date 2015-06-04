@@ -1,0 +1,41 @@
+<h1>Membri del GAS</h1>
+
+<form class="form-inline accounts-index-search">
+  <div class="form-group">
+    <label for="accountsIndexNameFilter">Filtra per nome</label>
+    <input type="text" class="form-control" id="accountsIndexNameFilter" placeholder="Cerca per nome" ng-model="queryFilter" ng-keypress="$event.keyCode == 13 && search()"/>
+  </div>
+  <div class="form-group">
+    <label for="accountsIndexOrder">Ordina per</label>
+    <select class="form-control" id="accountsIndexOrder" ng-model="queryOrder" ng-change="search()">
+      <option value="0">nome</option>
+      <option value="1">saldo</option>
+      <option value="2">attività</option>
+    </select>
+  </div>
+</form>
+
+<table class="table accounts-index" when-scrolled="loadMore()">
+  <tbody>
+
+    <tr ng-repeat="a in accounts" class="row" ng-click="showAccount(a[4], a[0])" ng-class="{ fee: a[8] > 0.0 }" style="opacity: {{ a[7] | alphaTimeDiff }}">
+
+      <td class="col-md-8">
+        <div class="name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
+        <small ng-show="a.profile.mainEmail">{{a.profile.mainEmail}}</small>
+        <small ng-show="a.profile.mainTelephone">{{a.profile.mainTelephone}}</small>
+      </td>
+      <td ng-show="a.accountData" class="col-md-4 text-right">
+        <div>Saldo {{ a[5] | currency : a[6] }}</div>
+	    <small ng-show="a.accountData && a[7]">Ultimo movimento: {{ a[7] | humanTimeDiff }} (il  {{ a[7] | date }})</small>
+        <small ng-hide="!a.accountData || a[7]">Ancora nessun movimento effettuato.</small>
+      </td>
+
+    </tr>
+
+  </tbody>
+</table>
+
+<div ng-show="accountsError">Errore nel caricamento dei dati: {{accountsError}}.</div>
+<div ng-show="!accountsError && !concluded" ng-click="loadMore()">Carica altri conti</div>
+<div ng-show="!accountsError && concluded">Nessun conto ulteriore</div>

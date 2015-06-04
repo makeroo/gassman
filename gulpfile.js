@@ -6,37 +6,46 @@
 
 var config = {
   dest: 'target/www',
+  minify_js: true,
+  generate_js_maps: false,
+
   minify_images: true,
 
   vendor: {
     js: [
       './bower_components/jquery/dist/jquery.js',
-      //'./bower_components/bootstrap/dist/js/bootstrap.js',
+      './bower_components/bootstrap/dist/js/bootstrap.js',
       './bower_components/angular/angular.js',
       './bower_components/angular-route/angular-route.js',
       './bower_components/angular-cookies/angular-cookies.js',
+      './bower_components/angular-sanitize/angular-sanitize.js',
       // bower_components/angular-i18n/angular-locale_it-it.js
       './bower_components/ngstorage/ngStorage.js',
-      './bower_components/angular-macgyver/lib/macgyver.js',
-      './bower_components/datejs/build/date.js',
-      './bower_components/datejs/build/date-it-IT.js',
+      './bower_components/angular-ui-select/dist/select.js'
+      //'./bower_components/angular-macgyver/lib/macgyver.js'
+      //'./bower_components/datejs/build/date.js',
+      //'./bower_components/datejs/build/date-it-IT.js'
 //      './bower_components/angular-touch/angular-touch.js',
 //      './bower_components/mobile-angular-ui/dist/js/mobile-angular-ui.js',
     ],
 
     fonts: [
       './bower_components/bootstrap/fonts/glyphicons-halflings-regular.*'
+    ],
+
+    i18n: [
+      './bower_components/angular-i18n/angular-locale_*'
     ]
   },
 
-  server: false,
+  server: false
 };
 
 
 if (require('fs').existsSync('./config.js')) {
   var configFn = require('./config');
   configFn(config);
-};
+}
 
 /*-----  End of Configuration  ------*/
 
@@ -66,7 +75,9 @@ var gulp           = require('gulp'),
     streamqueue    = require('streamqueue'),
     rename         = require('gulp-rename'),
     path           = require('path'),
-    spawn          = require('child_process').spawn;
+    spawn          = require('child_process').spawn,
+    gutil          = require('gulp-util')
+    ;
 
 
 /*================================================
@@ -101,7 +112,7 @@ gulp.task('connect', function() {
 	}
 
 	tornadoServer = spawn('./src/main/python/gassman.py', [], {
-		stdio: 'inherit',
+		stdio: 'inherit'
 	});
 
 	tornadoServer.unref();
@@ -114,7 +125,7 @@ gulp.task('connect', function() {
 =====================================*/
 
 gulp.task('images', function () {
-  var stream = gulp.src('src/main/web/static/images/**/*')
+  var stream = gulp.src('src/main/web/static/images/**/*');
 
   if (config.minify_images) {
     stream = stream.pipe(imagemin({
@@ -122,7 +133,7 @@ gulp.task('images', function () {
         svgoPlugins: [{removeViewBox: false}],
         use: [pngcrush()]
     }))
-  };
+  }
 
   return stream.pipe(gulp.dest(path.join(config.dest, 'static/images')));
 });
@@ -143,8 +154,10 @@ gulp.task('fonts', function() {
 =================================================*/
 
 gulp.task('html', function() {
-  gulp.src(['src/main/web/**/*.html'])
-  .pipe(gulp.dest(config.dest));
+  //gulp.src(['src/main/templates/**/*.html'])
+  //.pipe(gulp.dest(config.dest));
+  gulp.src(config.vendor.i18n)
+  .pipe(gulp.dest(path.join(config.dest, 'static/js')));
 });
 
 
@@ -159,11 +172,11 @@ gulp.task('less', function () {
     }))
     .pipe(mobilizer('app.css', {
       'app.css': {
-        hover: 'exclude',
+        hover: 'exclude'
         //screens: ['0px']      
       },
       'hover.css': {
-        hover: 'only',
+        hover: 'only'
         //screens: ['0px']
       }
     }))
@@ -182,17 +195,19 @@ gulp.task('less', function () {
 gulp.task('js', function() {
     streamqueue({ objectMode: true },
       gulp.src(config.vendor.js),
-      gulp.src('./src/main/web/**/*.js').pipe(ngFilesort()),
-      gulp.src(['./src/main/templates/**/*.html',
-                './src/main/web/static/partials/**/*.html'
-                ]).pipe(templateCache({ module: 'gassmanApp' }))
+      gulp.src('./src/main/js/**/*.js').pipe(ngFilesort()),
+      gulp.src(['./src/main/template/**/*.html'
+                ]).pipe(templateCache({
+          module: 'gassmanApp',
+          root: 'template/'
+      }))
     )
-    .pipe(sourcemaps.init())
+    .pipe(config.generate_js_maps ? sourcemaps.init() : gutil.noop())
     .pipe(concat('app.js'))
     .pipe(ngAnnotate())
-    .pipe(uglify())
+    .pipe(config.minify_js ? uglify() : gutil.noop())
     .pipe(rename({suffix: '.min'}))
-    .pipe(sourcemaps.write('.'))
+    .pipe(config.generate_js_maps ? sourcemaps.write('.') : gutil.noop())
     .pipe(gulp.dest(path.join(config.dest, 'static/js')));
 });
 
@@ -202,18 +217,17 @@ gulp.task('js', function() {
 ===================================================================*/
 
 gulp.task('watch', function () {
-  if (typeof config.server) {
+  if (config.server) {
     gulp.watch([config.dest + '/**/*',
                 './src/main/templates/**/*',
                 './src/main/python/**/*'
                 ], ['connect']);
-  };
+  }
   // TODO: fonts?
-  gulp.watch(['./src/main/web/static/partials/**/*'], ['html']);
+  gulp.watch(config.vendor.i18n, ['html']);
   gulp.watch(['./src/main/less/**/*'], ['less']);
-  gulp.watch(['./src/main/web/static/js/**/*',
-              './src/main/templates/**/*',
-              './src/main/web/static/partials/**/*',
+  gulp.watch(['./src/main/js/**/*',
+              './src/main/template/**/*',
               config.vendor.js
               ], ['js']);
   gulp.watch(['./src/main/web/static/images/**/*'], ['images']);
@@ -236,9 +250,9 @@ gulp.task('build', function(done) {
 gulp.task('default', function(done){
   var tasks = [];
 
-  if (typeof config.server) {
+  if (config.server) {
     tasks.push('connect');
-  };
+  }
 
   tasks.push('watch');
   

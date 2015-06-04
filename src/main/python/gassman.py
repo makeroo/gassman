@@ -152,6 +152,7 @@ class GassmanWebApp (tornado.web.Application):
                             "secret": settings.GOOGLE_OAUTH2_SECRET,
                             },
             google_oauth_redirect=settings.GOOGLE_OAUTH2_REDIRECT,
+            debug = settings.DEBUG_MODE,
             )
         super().__init__(handlers, **sett)
         self.mailer = mailer
@@ -350,6 +351,7 @@ class GassmanWebApp (tornado.web.Application):
 
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user (self):
+        #return 1
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
@@ -380,7 +382,9 @@ class LoginHandler (BaseHandler):
     def get (self):
         p = self.get_logged_user(None, None)
         if p is None:
-            self.render('login.html')
+            self.render('login.html',
+                        LOCALE=self.locale.code,
+                        )
         else: #if self.application.hasAccounts(p.id):
             self.redirect("/home.html")
 
@@ -756,17 +760,17 @@ class TransactionSaveHandler (JsonBaseHandler):
             tid = cur.lastrowid
             if tid == 0:
                 raise Exception(error_codes.E_illegal_currency)
-            fam = -1.0 if ttype == self.application.sql.Tt_Withdrawal else 1.0
+            fam = '-' if ttype == self.application.sql.Tt_Withdrawal else ''
             for l in tlines:
                 desc = l['notes']
                 amount = l['amount']
                 accId = l['account']
-                if amount <= 0:
+                if float(amount) <= 0:
                     ttype = self.application.sql.Tt_Error
                     tlogType = self.application.sql.Tl_Error
                     tlogDesc = error_codes.E_negative_amount
                     break
-                cur.execute(*self.application.sql.insert_transaction_line(tid, desc, fam * amount, accId))
+                cur.execute(*self.application.sql.insert_transaction_line(tid, desc, fam + amount, accId))
                 involvedAccounts.add(accId)
             if ttype != self.application.sql.Tt_Error:
                 cur.execute(*self.application.sql.check_transaction_coherency(tid))

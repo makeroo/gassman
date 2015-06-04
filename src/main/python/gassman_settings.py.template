@@ -4,6 +4,8 @@ Created on 03/mar/2014
 @author: makeroo
 '''
 
+DEBUG_MODE=False
+
 HTTP_PORT=8180
 
 DB_HOST='127.0.0.1'

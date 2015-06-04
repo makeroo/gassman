@@ -1,0 +1,169 @@
+<div ng-if="readonly" class="transaction">
+
+  <h3>Scambio contante</h3>
+
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Data ritiro:</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{ trans.tdate | date }}</p>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Note:</label>
+    <div class="col-sm-10">
+      <p class="form-control-static">{{ trans.tdesc }}</p>
+    </div>
+  </div>
+
+  <h4>Accrediti:</h4>
+
+  <div ng-repeat="l in trans.producers | filter:filledLine" class="row transaction-line">
+    <div class="col-sm-6">
+      <p class="form-control-static"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
+    </div>
+    <div class="col-sm-4">
+      <p class="form-control-static">{{ l.notes }}</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-6">
+      <p class="form-control-static text-info">Totale accrediti:</p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static text-info">{{totalInvoice | currency : currency[1] }}</p>
+    </div>
+  </div>
+
+  <h4>Chi ha ricevuto il denaro:</h4>
+
+  <p class="form-control-static">{{ trans.clients[0].accountName }}</p>
+
+  <p class="bg-info">Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
+
+  <p ng-show="modifies" class="bg-info">Questo inserimento ne modifica uno precedente. <button class="btn btn-info" ng-click="showTransaction(modifies)">Esamina</button></p>
+
+  <p class="bg-warning" ng-show="modified_by">
+    <em>Attenzione</em>. Questo inserimento è stato annullato da una successiva modifica. <button class="btn btn-info" ng-click="showTransaction(modified_by)">Esamina</button>
+  </p>
+
+  <button class="btn btn-primary" ng-show="canEdit && !modified_by" ng-click="modifyTransaction()">Modifica o cancella</button>
+
+</div>
+
+
+<form ng-if="!readonly" ng-controller="TransactionCashExchange" name="deposit" class="form-horizontal transaction" ng-submit="return;">
+
+  <h3 ng-if="trans.transId == null">Inserisci scambio contante</h3>
+  <h3 ng-if="trans.transId != null">Modifica scambio contante</h3>
+
+  <div class="form-group">
+    <label for="tdate" class="col-sm-2 control-label">Data ritiro:</label>
+    <div class="col-sm-10">
+      <input id="tdate" class="form-control" type="date" ng-model="trans.tdate"/>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="tdesc" class="col-sm-2 control-label">Note:</label>
+    <div class="col-sm-10">
+      <textarea id="tdesc" class="form-control" ng-model="trans.tdesc"></textarea>
+    </div>
+  </div>
+
+  <h4>Inserisci gli accrediti:</h4>
+
+  <div ng-repeat="l in trans.producers" class="row transaction-line">
+    <ng:form name="lineForm">
+      <div class="col-sm-6">
+        <label for="account{{ $index }}" class="sr-only">Conto per la riga {{ $index }}</label>
+		<ui-select id="account{{ $index }}"
+                   theme="bootstrap"
+                   name="account"
+                   ng-model="l.account"
+                   on-select="checkCurrencies() || ($last && l.account && $parent.addLine(trans.producers))"
+                   required-if="l.amount"
+                   ng-keypress="$event.keyCode == 13 && focusElement('#amount' + $index)"
+                   >
+		  <ui-select-match placeholder="Chi ha versato">{{ $select.selected.name }}</ui-select-match>
+		  <ui-select-choices repeat="accountInfo.acc as accountInfo in autocompletionData | filter: {name: $select.search} track by accountInfo.acc">
+		    <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
+		  </ui-select-choices>
+		</ui-select>
+	    <p class="text-danger" ng-show="lineForm.account.$error.required">Specificare chi ha versato</p>
+      </div>
+      <div class="col-sm-2">
+        <div class="form-group">
+          <label for="amount{{ $index }}" class="sr-only">Importo per la riga {{ $index }}</label>
+          <div class="input-group">
+            <input class="form-control"
+               type="text"
+               name="amount"
+               placeholder="Quanto"
+               ng-model="l.amount"
+               ng-blur="$parent.updateTotalInvoice() || ($last && l.account && $parent.addLine(trans.producers))"
+               gm-currency="2"
+               id="amount{{ $index }}"
+               />
+            <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
+          </div>
+          <p class="text-danger" ng-show="lineForm.amount.$error.number">Inserisci un numero</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.decimals">Troppi decimali</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.required">Specificare l'importo</p>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <input class="form-control"
+               type="text"
+               placeholder="Note"
+               ng-model="l.notes"
+               ng-blur="$last && l.account && $parent.addLine(trans.producers)"
+               />
+
+      </div>
+    </ng:form>
+  </div>
+
+  <div class="row" ng-show="!currencyError && totalInvoice > 0">
+    <div class="col-sm-6">
+      <p class="form-control-static text-info">Totale accrediti:</p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static text-info">{{ totalInvoice | currency : currency[1] }}</p>
+    </div>
+  </div>
+  <div class="row" ng-show="currencyError">
+    <p class="bg-warning">I conti selezionati non sono omogenei per moneta.</p>
+  </div>
+  <div class="row" ng-show="!currencyError && !totalInvoice">
+    <p class="bg-warning">Nessun versamento inserito finora.</p>
+  </div>
+
+  <h4>Chi ha ricevuto il denaro:</h4>
+
+  <div class="row transaction-line">
+    <ui-select theme="bootstrap"
+               name="receiver"
+               ng-model="trans.clients[0].account"
+               gm-required-account
+               on-select="checkCurrencies()"
+               >
+      <ui-select-match placeholder="Chi ha versato">{{ $select.selected.name }}</ui-select-match>
+      <ui-select-choices repeat="accountInfo.acc as accountInfo in autocompletionData | filter: {name: $select.search} track by accountInfo.acc">
+        <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
+      </ui-select-choices>
+    </ui-select>
+    <p class="text-danger" ng-show="deposit.receiver.$error.accountDefined">Specificare chi ha ritirato</p>
+  </div>
+
+  <div class="row">
+    <button class="btn btn-default" ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
+    <button class="btn btn-default" ng-disabled="!csaId || !deposit.$valid || !totalInvoice || !trans.clients[0].account" ng-click="saveCashExchange()">Registra in cassa</button>
+    <button class="btn btn-default" ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione degli accrediti</button>
+    <button class="btn btn-default" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
+  </div>
+
+</form>

@@ -1,0 +1,35 @@
+<!doctype html>
+<html ng-app="gassmanApp" lang="{{LOCALE}}">
+<head>
+ <meta charset="utf-8">
+ <title>GASsMan</title>
+ <link href="{{ static_url('css/app.min.css') }}" rel="stylesheet">
+ <link href="{{ static_url('css/hover.min.css') }}" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+<h1>Benvenuto sul sito della rete dei GAS di Lucca</h1>
+
+<p>In questa pagina potete leggere lo stato cassa, i pagamenti e gli accrediti effettuati.</p>
+
+<p>Per poter accedere è necessario autenticarsi. Utilizza o crea un account Google (ovvero GMail).</p>
+
+<p>Se è la prima volta che visiti questa pagina, dopo l'autenticazione il cassiere dovrà completare
+   la registrazione. Riceverai una mail quando potrai riprovare l'accesso.</p>
+
+<p>Adesso clicca sull'immagine sottostante e segui le istruzioni.</p>
+
+<p class="text-center">
+<a href="/auth/google"><img alt="Autenticazione tramite account Google" src="{{ static_url('images/btn_g+normal.png') }}"></a>
+</p>
+<!--
+<a href=""><img alt="Autenticazione tramite account Facebook" src=""></a>
+<a href=""><img alt="Autenticazione tramite account Twitter" src=""></a>
+-->
+
+<small>Attenzione: questo sito non riceve né memorizza la password che userai per accedere.</small>
+</div>
+
+
+</body>
+</html>
