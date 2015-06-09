@@ -107,9 +107,9 @@ CREATE TABLE csa (
   -- Soglia di default per i nuovi arrivati
   default_account_threshold DECIMAL(15,2) NOT NULL DEFAULT 0,
   -- Conto per le uscite (finché si rimane al modello salvadenaio...)
-  --expenses_id INT NOT NULL,
+  -- expenses_id INT NOT NULL,
   -- Conto per le entrate (finché si rimane al modello salvadenaio, poi scompare)
-  --income_id INT NOT NULL,
+  -- income_id INT NOT NULL,
 
 --  FOREIGN KEY (kitty_id) REFERENCES account(id),
 --  FOREIGN KEY (expenses_id) REFERENCES account(id),
@@ -132,7 +132,6 @@ CREATE TABLE account (
   -- Quanto versano, ogni anno, i partecipanti del gas in cassa comune
   -- TODO: gestire il caso di persone che appartengano a più gas: magari versano in un gas solo? O un po' in tutti?
   membership_fee DECIMAL(15,2) NOT NULL DEFAULT 0,
-  membership_fee DECIMAL(15,2) NOT NULL DEFAULT 0,
 
 --  cassa_id int not null,
 --  saldo CURRENCY not null, -- magari si calcola con una join?
@@ -147,13 +146,13 @@ CREATE TABLE account (
   -- INCOME: versamenti
   -- BANK: sbilancio eur, orfano eur, non li userò più (retaggio gnucash)
   -- in realtà a me un tipo serve: Expenses, Income, Asset e Kitty (Asset)
-  --gc_id CHAR(32),
+  -- gc_id CHAR(32),
   gc_name VARCHAR(255),
-  --gc_desc VARCHAR(255),
+  -- gc_desc VARCHAR(255),
   gc_type VARCHAR(255),
-  --gc_parent CHAR(32),
+  -- gc_parent CHAR(32),
 
-  --UNIQUE (gc_id),
+  -- UNIQUE (gc_id),
   FOREIGN KEY (csa_id) REFERENCES csa(id),
   FOREIGN KEY (currency_id) REFERENCES currency(id),
   PRIMARY KEY (id)
@@ -264,7 +263,7 @@ CREATE TABLE transaction (
   -- Per cancellare una transazione se ne crea una senza line.
   modified_by_id INT,
 
-  --gc_id CHAR(32),
+  -- gc_id CHAR(32),
   -- tipi di transazione:
   -- (g)nucash/generic
   -- (d)eposit
@@ -287,7 +286,7 @@ CREATE TABLE transaction (
   -- devo passare dalla transaction cancellata
   csa_id INT NOT NULL,
 
-  --UNIQUE (gc_id), -- non è unico a causa del rewrite!
+  -- UNIQUE (gc_id), -- non è unico a causa del rewrite!
   FOREIGN KEY (currency_id) REFERENCES currency(id),
   FOREIGN KEY (csa_id) REFERENCES csa(id),
   PRIMARY KEY (id)
@@ -303,9 +302,9 @@ CREATE TABLE transaction_line (
   description VARCHAR(200),
   amount DECIMAL(15,2) NOT NULL, -- currency
 
-  --gc_id CHAR(32),
+  -- gc_id CHAR(32),
 
-  --UNIQUE (gc_id), -- non è unico a causa del rewrite!
+  -- UNIQUE (gc_id), -- non è unico a causa del rewrite!
   FOREIGN KEY (transaction_id) REFERENCES transaction(id),
   FOREIGN KEY (account_id) REFERENCES account(id),
   PRIMARY KEY (id)
