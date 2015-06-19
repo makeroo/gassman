@@ -241,12 +241,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 	};
 
 	this.transactionSave = function (csaId, tData) {
-		var p = $http.post('/transaction/' + csaId + '/save?_xsrf=' + $cookies._xsrf, tData);
-		p.then(function (r) {
-			$rootScope.$broadcast('AmountsChanged');
-			return r;
-		});
-		return p;
+		return $http.post('/transaction/' + csaId + '/save?_xsrf=' + $cookies._xsrf, tData);
 	};
 
 	this.transactionsLog = function (csaId, query, order, start, blockSize) {
