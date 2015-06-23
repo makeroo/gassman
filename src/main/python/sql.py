@@ -6,7 +6,7 @@ Created on 03/mar/2014
 
 P_membership = 1
 P_canCheckAccounts = 2
-P_canAssignAccounts = 3
+P_canAdminPerson = 3 # very low level!
 P_canEnterDeposit = 4
 P_canEnterPayments = 5
 P_canManageTransactions = 6

@@ -34,7 +34,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 	this.permissions = {
 		P_membership: 1,
 		P_canCheckAccounts: 2,
-		//P_canAssignAccounts: 3,
+		P_canAdminPerson: 3,
 		P_canEnterDeposit: 4,
 		P_canEnterPayments: 5,
 		P_canManageTransactions: 6,
@@ -47,6 +47,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 
 	this.E_class = "<class 'Exception'>";
 	this.E_already_modified = 'already modified';
+	this.E_no_csa_found = 'no csa found'
 
 	this.isError = function (rdata, ecode) {
 		return (
@@ -145,7 +146,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 							$localStorage.selectedCsa = x;
 							d.resolve(x);
 						} else {
-							d.reject('noCsaFound');
+							d.reject(gdata.E_no_csa_found);
 						}
 					} else {
 						d.resolve(x);

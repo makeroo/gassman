@@ -57,7 +57,8 @@ function ($scope,   gdata,   $q) {
 		$scope.accId = r[1];
 	}).
 	then (undefined, function (error) {
-		$scope.initError = error;
+		if (error != gdata.E_no_csa_found)
+			$scope.initError = error;
 	});
 }])
 ;
