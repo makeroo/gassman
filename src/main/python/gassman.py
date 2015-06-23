@@ -135,8 +135,8 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/csa/(\d+)/charge_membership_fee$', CsaChargeMembershipFeeHandler),
             #(r'^/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/rss/(.+)$', RssFeedHandler),
-            (r'^/people/(\d+)/profiles$', PeopleProfilesHandler),
-            (r'^/person/(\d+)/save$', PersonSaveHandler),
+            (r'^/people/(null|\d+)/profiles$', PeopleProfilesHandler),
+            (r'^/person/(null|\d+)/save$', PersonSaveHandler),
             (r'^/person/(\d+)/check_email', PersonCheckEmailHandler),
             ]
         #codeHome = os.path.dirname(__file__)
@@ -357,7 +357,6 @@ class GassmanWebApp (tornado.web.Application):
 
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user (self):
-        #return 1
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
@@ -981,29 +980,36 @@ class PeopleProfilesHandler (JsonBaseHandler):
         pids = self.payload['pids']
         u = self.get_logged_user()
         isSelf = len(pids) == 1 and int(pids[0]) == u.id
-        if not self.application.hasPermissionByCsa(cur, sql.P_membership, u.id, csaId):
+        if csaId == 'null':
+            if not isSelf:
+                raise Exception(error_codes.E_permission_denied)
+            csaId = None
+        if not isSelf and not self.application.hasPermissionByCsa(cur, sql.P_membership, u.id, csaId):
             raise Exception(error_codes.E_permission_denied)
         canViewContacts = isSelf or self.application.hasPermissionByCsa(cur, sql.P_canViewContacts, u.id, csaId)
         r = {}
         if len(pids) == 0:
             return r
-        accs, perms, args = self.application.sql.people_profiles2(csaId, pids)
         def record (pid):
             p = r.get(pid, None)
             if p is None:
                 p = { 'accounts':[], 'profile':None, 'permissions':[], 'contacts':[] }
                 r[pid] = p
             return p
-        if isSelf or self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
-            cur.execute(accs, args)
-            for acc in self.application.sql.iter_objects(cur):
-                p = record(acc['person_id'])
-                p['accounts'].append(acc)
-        cur.execute(perms, args)
-        for perm in self.application.sql.iter_objects(cur):
-            p = record(perm['person_id'])
-            if canViewContacts:
-                p['permissions'].append(perm['perm_id'])
+        if csaId is None:
+            r[u.id] = record(u.id)
+        else:
+            accs, perms, args = self.application.sql.people_profiles2(csaId, pids)
+            if isSelf or self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
+                cur.execute(accs, args)
+                for acc in self.application.sql.iter_objects(cur):
+                    p = record(acc['person_id'])
+                    p['accounts'].append(acc)
+            cur.execute(perms, args)
+            for perm in self.application.sql.iter_objects(cur):
+                p = record(perm['person_id'])
+                if canViewContacts:
+                    p['permissions'].append(perm['perm_id'])
         profiles, contacts, args = self.application.sql.people_profiles1(r.keys())
         cur.execute(profiles, args)
         for prof in self.application.sql.iter_objects(cur):
@@ -1023,10 +1029,14 @@ class PersonSaveHandler (JsonBaseHandler):
         p = self.payload
         log_gassman.debug('saving: %s', p)
         profile = p['profile']
-        pid = profile['id']
-        if (
+        pid = int(profile['id'])
+        if csaId == 'null':
+            if pid != u.id:
+                raise Exception(error_codes.E_permission_denied)
+            csaId = None
+        elif (
             (not self.application.hasPermissionByCsa(cur, sql.P_canEditContacts, u.id, csaId) and
-             u.id != int(pid)
+             u.id != pid
              ) or \
             not self.application.hasPermissionByCsa(cur, sql.P_membership, pid, csaId)
             ):
@@ -1056,7 +1066,7 @@ class PersonSaveHandler (JsonBaseHandler):
             aid = cur.lastrowid
             cur.execute(*self.application.sql.linkAddress(pid, aid, i))
         # salva permessi
-        if self.application.hasPermissionByCsa(cur, sql.P_canGrantPermissions, u.id, csaId):
+        if csaId is not None and self.application.hasPermissionByCsa(cur, sql.P_canGrantPermissions, u.id, csaId):
             cur.execute(*self.application.sql.permissionLevel(pid, csaId))
             ulevel = cur.fetchone()[0]
             permissions = p['permissions']
@@ -1066,7 +1076,7 @@ class PersonSaveHandler (JsonBaseHandler):
                     cur.execute(*self.application.sql.grantPermission(pid, p, csaId))
         # TODO: salva indirizzi
         fee = p.get('membership_fee')
-        if fee and self.application.hasPermissionByCsa(cur, sql.P_canEditMembershipFee, u.id, csaId):
+        if csaId is not None and fee and self.application.hasPermissionByCsa(cur, sql.P_canEditMembershipFee, u.id, csaId):
             #accId = fee.get('account')
             amount = fee.get('amount')
             if float(amount) >= 0:

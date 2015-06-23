@@ -103,17 +103,17 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q) {
 	then (function (p) {
 		$scope.profile = p;
 
-		return gdata.selectedCsa();
-	}).
-	then (function (csaId) {
-		$scope.csaId = csaId;
-
-		return gdata.profile(csaId, personId);
+		return gdata.profile(null, personId);
 	}).
 	then (function (prof) {
 		$scope.personProfile = prof;
 		$scope.editable = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditContacts) != -1 ||
 			personId == $scope.profile.logged_user.id;
+
+		return gdata.selectedCsa();
+	}).
+	then (function (csaId) {
+		$scope.csaId = csaId;
 
 		var amounts = [];
 		angular.forEach($scope.personProfile.accounts, function (a) {
