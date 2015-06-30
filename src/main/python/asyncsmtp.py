@@ -6,6 +6,7 @@ Created on 11/giu/2014
 
 import sys
 import logging
+import time
 from functools import partial
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -19,6 +20,9 @@ from threadpool import ThreadPool
 log_email = logging.getLogger('gassman.email')
 
 class Mailer (object):
+    MAX_TRIES = 3
+    DELAY_AFTER_FAILURES = 2
+
     def __init__ (self, smtpServer, smtpPort, numThreads, queueTimeout, ioloop = tornado.ioloop.IOLoop.instance()):
         self.threadpool = ThreadPool(
             poolname='Mailer',
@@ -56,7 +60,7 @@ class Mailer (object):
 
     def _send (self, sender, receivers, subject, body, global_data=None, local_data=None):
         try:
-            for i in range(2):
+            for i in range(self.MAX_TRIES):
                 log_email.debug('sending: try=%d, to=%s, subj=%s', i, receivers, subject)
                 try:
                     smtp = local_data.smtp if hasattr(local_data, 'smtp') else None
@@ -74,11 +78,12 @@ class Mailer (object):
                                   )
                     log_email.debug('mail sent succesfully')
                     return True
-                except smtplib.SMTPServerDisconnected as e:
+                except (smtplib.SMTPServerDisconnected, smtplib.SMTPSenderRefused) as e:
                     if i:
                         raise e
                     #global_data.quit_smtp()
                     local_data.smtp = None
+                    time.sleep(self.DELAY_AFTER_FAILURES)
         except:
             etype, evalue, tb = sys.exc_info()
             log_email.error('can\'t send mail: subject=%s, cause=%s/%s', subject, etype, evalue)
