@@ -1,0 +1,13 @@
+Ehi,
+sembra che ci sia un nuovo gasista!
+
+Nome: {{ profile['first_name'] }} {{ profile['last_name'] }}
+{% if len( [ c for c in contacts if c['kind'] == 'N' ] ) %}
+Soprannomi:{% for c in contacts %}{% if c['kind'] == 'N' %}
+ * {{ c['address'] }}{% end %}{% end %}{% end %}
+
+Contatti:{% for c in contacts %}{% if c['kind'] == 'T' %}
+ * telefono: {{ c['address'] }}{% elif c['kind'] == 'M' %}
+ * cellulare: {{ c['address'] }}{% elif c['kind'] == 'E' %}
+ * email: {{ c['address'] }}{% elif c['kind'] == 'F' %}
+ * fax: {{ c['address'] }}{% end %}{% end %}

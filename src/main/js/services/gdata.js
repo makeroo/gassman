@@ -47,7 +47,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 
 	this.E_class = "<class 'Exception'>";
 	this.E_already_modified = 'already modified';
-	this.E_no_csa_found = 'no csa found'
+	this.E_no_csa_found = 'no csa found';
 
 	this.isError = function (rdata, ecode) {
 		return (
@@ -104,7 +104,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 
 	this.sysVersion = function () {
 		return $http.post('/sys/version?_xsrf=' + $cookies._xsrf);
-	}
+	};
 
 	this.profileInfo = function () {
 		var d = $q.defer();
@@ -125,7 +125,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 		}
 
 		return d.promise;
-	}
+	};
 
 	this.selectedCsa = function (csaId) {
 		var d = $q.defer();
@@ -184,7 +184,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 		this.profileInfo().then(
 			function (pi) {
 				var done = false;
-				for (var i in pi.accounts) {
+				for (var i = 0; i < pi.accounts.length; ++i) {
 					// accDetails è: 0:csaId 1:accId 2:from 3:to
 					var accDetails = pi.accounts[i];
 					if (accDetails[0] == csaId && accDetails[3] == null) {
@@ -207,6 +207,10 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 
 	this.csaInfo = function (csaId) {
 		return $http.post('/csa/' + csaId + '/info?_xsrf=' + $cookies._xsrf);
+	};
+
+	this.csaList = function () {
+		return $http.post('/csa/list?_xsrf=' + $cookies._xsrf);
 	};
 
 	this.chargeMembershipFee = function (csaId, p) {
@@ -271,7 +275,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 			if (o.hasOwnProperty(p))
 				r.push(p);
 		return r;
-	}
+	};
 
 	var instrumentProfile = function (p) {
 		angular.forEach(p.contacts, function (c) {
@@ -346,6 +350,10 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 			'id': pid,
 			'email': email
 		});
+	};
+
+	this.requestMembership = function (csaId) {
+		return $http.post('/csa/' + csaId + '/request_membership?_xsrf=' + $cookies._xsrf);
 	};
 }])
 ;

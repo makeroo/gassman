@@ -9,8 +9,8 @@ angular.module('GassmanApp.controllers.PersonDetail', [
 ])
 
 .controller('PersonDetail', [
-         '$scope', '$filter', '$routeParams', '$location', 'gdata', '$q',
-function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q) {
+         '$scope', '$filter', '$routeParams', '$location', 'gdata', '$q', '$timeout',
+function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $timeout) {
 	$scope.csaId = null;
 	$scope.personProfile = null;
 	$scope.personProfileError = null;
@@ -99,6 +99,22 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q) {
 		$location.path('/account/' + accountId + '/detail');
 	};
 
+	$scope.requestMembership = function (csa) {
+		gdata.requestMembership(csa).
+		then (function (r) {
+			$scope.membershipRequested = true;
+			$timeout(function () {
+				$scope.membershipRequested = false;
+			}, 10000);
+		}).
+		then (undefined, function (error) {
+			$scope.membershipRequestedError = error.data;
+			$timeout(function () {
+				$scope.membershipRequestedError = null;
+			}, 10000);
+		});
+	};
+
 	gdata.profileInfo().
 	then (function (p) {
 		$scope.profile = p;
@@ -109,6 +125,11 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q) {
 		$scope.personProfile = prof;
 		$scope.editable = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditContacts) != -1 ||
 			personId == $scope.profile.logged_user.id;
+
+		return gdata.csaList();
+	}).
+	then (function (r) {
+		$scope.csaList = r.data;
 
 		return gdata.selectedCsa();
 	}).
@@ -140,13 +161,15 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q) {
 
 					$scope.personProfile.membership_fee = {
 						//account: acc.id,
-						amount: parseFloat(acc.membership_fee),
+						amount: parseFloat(acc.membership_fee)
 					};
 			}
 		}
 	}).
 	then (undefined, function (error) {
-		$scope.personProfileError = error.data;
+		if (error != gdata.E_no_csa_found) {
+			$scope.personProfileError = error.data;
+		}
 	});
 }])
 ;

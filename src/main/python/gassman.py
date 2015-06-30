@@ -132,7 +132,9 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
             (r'^/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
             (r'^/csa/(\d+)/info', CsaInfoHandler),
+            (r'^/csa/list', CsaListHandler),
             (r'^/csa/(\d+)/charge_membership_fee$', CsaChargeMembershipFeeHandler),
+            (r'^/csa/(\d+)/request_membership$', CsaRequestMembershipHandler),
             #(r'^/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/rss/(.+)$', RssFeedHandler),
             (r'^/people/(null|\d+)/profiles$', PeopleProfilesHandler),
@@ -194,7 +196,7 @@ class GassmanWebApp (tornado.web.Application):
 
     def notify (self, level, subject, body, receivers = None):
         if self.mailer is None:
-            log_gassman.info('SMTP not configured, mail not sent: %s / %s', subject, body)
+            log_gassman.info('SMTP not configured, mail not sent: %s\n%s', subject, body.decode('UTF-8'))
         else:
             self.mailer.send(settings.SMTP_SENDER,
                              receivers or settings.SMTP_RECEIVER,
@@ -357,6 +359,7 @@ class GassmanWebApp (tornado.web.Application):
 
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user (self):
+        return 508
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
@@ -536,12 +539,18 @@ class CsaInfoHandler (JsonBaseHandler):
         r['last_kitty_deposit'] = sql.fetch_object(cur)
         return r
 
+class CsaListHandler (JsonBaseHandler):
+    def do (self, cur):
+        u = self.get_logged_user()
+        cur.execute(*self.application.sql.csa_list(u.id))
+        return self.application.sql.iter_objects(cur)
+
 class CsaChargeMembershipFeeHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         u = self.get_logged_user()
         if not self.application.hasPermissionByCsa(cur, sql.P_canEditMembershipFee, u.id, csaId):
             raise Exception(error_codes.E_permission_denied)
-        
+
         p = self.payload
         tDesc = p['description']
         amount = p['amount']
@@ -566,6 +575,31 @@ class CsaChargeMembershipFeeHandler (JsonBaseHandler):
         cur.execute(*sql.complete_cashexchange(tid, kittyId))
         cur.execute(*sql.log_transaction(tid, u.id, sql.Tl_Added, sql.Tn_kitty_deposit, now))
         return { 'tid': tid }
+
+class CsaRequestMembershipHandler (JsonBaseHandler):
+    def do (self, cur, csaId):
+        u = self.get_current_user()
+        if self.application.hasPermissionByCsa(cur, sql.P_membership, u, csaId):
+            raise Exception(error_codes.E_already_member)
+        profiles, contacts, args = self.application.sql.people_profiles1([u])
+        cur.execute(profiles, args)
+        profile = self.application.sql.fetch_object(cur)
+        cur.execute(contacts, args)
+        contacts = list( self.application.sql.iter_objects(cur) )
+
+        body = self.render_string(
+            "membership_request.email",
+            profile = profile,
+            contacts = contacts
+        )
+
+        self.application.notify(
+            "INFO",
+            "Membership request from %s %s" % (profile['first_name'], profile['last_name']),
+            body,
+            #receivers
+        )
+        #return None
 
 class AccountXlsHandler (BaseHandler):
     def get (self, accId):

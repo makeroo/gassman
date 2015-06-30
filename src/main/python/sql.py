@@ -294,6 +294,9 @@ SELECT l.log_date, t.id as tid, p.id, p.first_name, p.middle_name, p.last_name
   1,
   ]
 
+def csa_list (pid):
+    return 'select c.id, c.name, c.description, g.id as "belong" from csa c left join permission_grant g on g.person_id=%s where g.csa_id is null or g.csa_id=c.id', [ pid ]
+
 def account_currency (accId, csaId, requiredCurr):
     return 'SELECT count(*) FROM account a WHERE a.id=%s AND a.csa_id=%s AND a.currency_id=%s', [ accId, csaId, requiredCurr ]
 
@@ -533,7 +536,7 @@ def people_profiles1 (pids):
     pp = ', '.join([ '%s' ] * len(pids))
     return (
             'SELECT * FROM person WHERE id IN (%s)' % pp,
-            'SELECT pc.person_id, pc.priority, a.* FROM person_contact pc JOIN contact_address a ON a.id=pc.address_id WHERE pc.person_id IN (%s)' % pp,
+            'SELECT pc.person_id, pc.priority, a.* FROM person_contact pc JOIN contact_address a ON a.id=pc.address_id WHERE pc.person_id IN (%s) ORDER BY pc.priority' % pp,
             list(pids),
             )
 

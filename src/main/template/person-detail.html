@@ -1,10 +1,25 @@
 <form class="form-horizontal" name="personProfileForm">
 
   <div ng-hide="csaId" class="row">
-      <p class="bg-info">
-          Non appartieni ancora ad un GAS.
-          
+    <div class="alert alert-info">
+      <p>Non appartieni ancora ad un GAS.</p>
+      <p ng-if="csaList.length == 1">Richiedi di entrare a far parte del GAS <button class="btn btn-default" ng-click="requestMembership(csaList[0].id)">{{ csaList[0].name }}</button></p>
+      <div  ng-if="csaList.length > 1 && csaList.length <= 3">
+        <p>Richiedi di entrare a far parte di uno dei seguenti GAS:
+        <p>
+        <ul class="list-unstyled list-inline">
+          <li ng-repeat="g in csaList"><button class="btn btn-default" ng-click="requestMembership(g.id)">{{ g.name }}</button></li>
+        </ul>
+      </div>
+      <p ng-if="csaList.length > 3">Seleziona un GAS:
+        <select class="form-control form-control-inline" ng-model="csaMembershipRequestTarget">
+          <option ng-repeat="g in csaList" value="{{ g.id }}">{{ g.name }}</option>
+        </select>
+        e richiedi di entrare a farne parte: <button class="btn btn-default" ng-click="requestMembership(csaMembershipRequestTarget)" ng-disabled="csaMembershipRequestTarget === undefined">Richiedi</button>
       </p>
+    </div>
+    <div class="alert alert-primary" ng-if="membershipRequested">Richiesta effettuata!</div>
+    <div class="alert alert-warning" ng-if="membershipRequestedError">Richiesta non effettuata a causa di problemi del server. Riprova più tardi.</div>
   </div>
 
   <h3>Informazioni personali</h3>
