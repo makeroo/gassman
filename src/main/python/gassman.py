@@ -190,17 +190,17 @@ class GassmanWebApp (tornado.web.Application):
         except:
             etype, evalue, tb = sys.exc_info()
             log_gassman.fatal('db connection failed: cause=%s/%s', etype, evalue)
-            self.notify('FATAL', 'No db connection', 'Connection error: %s/%s.\nTraceback:\n%s' %
+            self.notify('[FATAL] No db connection', 'Connection error: %s/%s.\nTraceback:\n%s' %
                            (etype, evalue, loglib.TracebackFormatter(tb))
                            )
 
-    def notify (self, level, subject, body, receivers = None):
+    def notify (self, subject, body, receivers = None):
         if self.mailer is None:
-            log_gassman.info('SMTP not configured, mail not sent: %s\n%s', subject, body.decode('UTF-8'))
+            log_gassman.info('SMTP not configured, mail not sent: %s\n%s', subject, body)
         else:
             self.mailer.send(settings.SMTP_SENDER,
                              receivers or settings.SMTP_RECEIVER,
-                             '[GASsMan] %s %s' % (level, subject),
+                             '[GASsMan] %s' % subject,
                              body
                              )
 
@@ -233,7 +233,7 @@ class GassmanWebApp (tornado.web.Application):
                 if len(pp) == 1:
                     log_gassman.debug('found profile: credentials=%s, person=%s', authMode, p)
                 if len(pp) > 1:
-                    self.notify('ERROR', 'Multiple auth id for %s' % p, 'Check credentials %s' % authMode)
+                    self.notify('[ERROR] Multiple auth id for %s' % p, 'Check credentials %s' % authMode)
             attrsToComplete = [('email', self.sql.Ck_Email, 'verified'),
                                ('gProfile', self.sql.Ck_GProfile, ''),
                                ('picture', self.sql.Ck_Picture, ''),
@@ -279,7 +279,7 @@ class GassmanWebApp (tornado.web.Application):
                 except:
                     etype, evalue, tb = sys.exc_info()
                     log_gassman.error('profile creation failed: cause=%s/%s\nfull stacktrace:\n%s', etype, evalue, loglib.TracebackFormatter(tb))
-                    self.notify('ERROR', 'User profile creation failed', 'Cause: %s/%s\nAuthId: %s (%s %s)\nTraceback:\n%s' %
+                    self.notify('[ERROR] User profile creation failed', 'Cause: %s/%s\nAuthId: %s (%s %s)\nTraceback:\n%s' %
                                    (etype, evalue, user.userId, user.firstName, user.lastName, loglib.TracebackFormatter(tb))
                                    )
         if p is not None:
@@ -359,7 +359,6 @@ class GassmanWebApp (tornado.web.Application):
 
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user (self):
-        return 508
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
@@ -374,6 +373,21 @@ class BaseHandler (tornado.web.RequestHandler):
         if error:
             raise Exception(error)
         return None
+
+    def notify (self, template, receivers = None, **namespace):
+        subject = self.render_string(
+            "%s.subject.email" % template,
+            **namespace
+        )
+        body = self.render_string(
+            "%s.body.email" % template,
+            **namespace
+        )
+        self.application.notify(
+            subject.decode('UTF-8'),
+            body.decode('UTF-8'),
+            receivers
+        )
 
 class IndexHandler (BaseHandler):
     def get (self):
@@ -454,8 +468,7 @@ class JsonBaseHandler (BaseHandler):
         self.add_header('Content-Type', 'application/json')
         etype, evalue, tb = kwargs.get('exc_info', ('', '', None))
         if self.notifyExceptions:
-            self.application.notify('ERROR',
-                                    'Json API Failed',
+            self.application.notify('[ERROR] Json API Failed',
                                     'Request error:\ncause=%s/%s\nother args: %s\nTraceback:\n%s' %
                                     (etype, evalue, kwargs, loglib.TracebackFormatter(tb))
                                     )
@@ -587,19 +600,11 @@ class CsaRequestMembershipHandler (JsonBaseHandler):
         cur.execute(contacts, args)
         contacts = list( self.application.sql.iter_objects(cur) )
 
-        body = self.render_string(
-            "membership_request.email",
+        self.notify(
+            'membership_request',
             profile = profile,
             contacts = contacts
         )
-
-        self.application.notify(
-            "INFO",
-            "Membership request from %s %s" % (profile['first_name'], profile['last_name']),
-            body,
-            #receivers
-        )
-        #return None
 
 class AccountXlsHandler (BaseHandler):
     def get (self, accId):
@@ -814,7 +819,7 @@ class TransactionSaveHandler (JsonBaseHandler):
             fam = '-' if ttype == self.application.sql.Tt_Withdrawal else ''
             for l in tlines:
                 desc = l['notes']
-                amount = l['amount']
+                amount = str(l['amount'])
                 accId = l['account']
                 if float(amount) <= 0:
                     ttype = self.application.sql.Tt_Error
@@ -911,10 +916,10 @@ class TransactionSaveHandler (JsonBaseHandler):
         if ttype == self.application.sql.Tt_Error:
             raise Exception(tlogDesc)
         else:
-            self.notifyAccountChange(cur, involvedAccounts, tdesc, tdate)
+            self.notifyAccountChange(cur, involvedAccounts, transId, tdesc, tdate)
         return tid
 
-    def notifyAccountChange (self, cur, accountIds, tdesc, tdate):
+    def notifyAccountChange (self, cur, accountIds, transId, tdesc, tdate):
         if not accountIds:
             return
         # FIXME: soglia specifica di csa
@@ -931,7 +936,12 @@ class TransactionSaveHandler (JsonBaseHandler):
             if x is None:
                 x = dict(people=[])
                 accounts[accId] = x
-            x['people'].append([ first_name, middle_name, last_name, email ])
+            x['people'].append(dict(
+                first_name = first_name,
+                middle_name = middle_name,
+                last_name = last_name,
+                email = email
+            ))
         if len(accounts) == 0:
             log_gassman.info('involved accounts has no mail to notify to')
             return
@@ -941,35 +951,18 @@ class TransactionSaveHandler (JsonBaseHandler):
         for accId, accData in accounts.items():
             total, currSym = accData['account']
             people = accData['people']
-            # FIXME: usare tornado template!
-            self.application.notify(
-                'ATTENZIONE' if total < LVL_THRES else 'INFO',
-                'Aggiornamento cassa GAS',
-'''ciao,
-sono stati registrati nuovi movimenti sul conto associato a:
-%s
-
-e il cui saldo è: %s %s
-
-Descrizione del movimento: %s
-Data: %s
-
-Per esaminare il conto vai su: http://www.gassmanager.org/home.html#/account/%s/detail
-
-Se qualcosa non torna, replica a questa mail aggiungendo in copia le altre persone interessate,
-ovvero, nel caso di accredito colui/colei a cui hai dato il denaro, nel caso di un ordine,
-chi ha curato la distribuzione e la raccolta delle ordinazioni.
-
-orz
-''' % (
-       '\n'.join([ ' * %s %s %s' % (first_name or '', middle_name or '', last_name or '')
-                 for first_name, middle_name, last_name, _ in people ]),
-       total, currSym,
-       tdesc, shortDate(tdate),
-       accId
-       ),
-                [ p[-1] for p in people ]
-                )
+            self.notify(
+                'account_update',
+                total = total,
+                currency = currSym,
+                threshold = LVL_THRES,
+                people = people,
+                tdesc = tdesc,
+                tdate = tdate,
+                dateFormatter = shortDate,
+                accId = accId,
+                transId = transId
+            )
 
 class TransactionsEditableHandler (JsonBaseHandler):
     def do (self, cur, csaId, fromIdx, toIdx):

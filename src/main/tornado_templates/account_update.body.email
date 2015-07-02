@@ -1,0 +1,19 @@
+ciao,
+sono stati registrati nuovi movimenti sul conto associato a:
+{% for p in people %}
+ * {{ p['first_name'] }} {{ p['last_name'] }}
+{% end %}
+e il cui saldo è: {{ total }}{{ currency }}
+
+Descrizione del movimento: {{ tdesc }}
+Data: {{ dateFormatter(tdate) }}
+
+Per esaminare il movimento vai su: http://localhost:8180/home.html#/transaction/{{ transId }}
+
+Per esaminare il conto vai su: http://www.gassmanager.org/home.html#/account/{{ accId }}/detail
+
+Se qualcosa non torna, replica a questa mail aggiungendo in copia le altre persone interessate,
+ovvero, nel caso di accredito colui/colei a cui hai dato il denaro, nel caso di un ordine,
+chi ha curato la distribuzione e la raccolta delle ordinazioni.
+
+orz
