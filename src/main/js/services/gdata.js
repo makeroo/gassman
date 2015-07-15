@@ -48,6 +48,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 	this.E_class = "<class 'Exception'>";
 	this.E_already_modified = 'already modified';
 	this.E_no_csa_found = 'no csa found';
+	this.E_person_not_found = 'person not found';
 
 	this.isError = function (rdata, ecode) {
 		return (
@@ -138,11 +139,14 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 					var x = $localStorage.selectedCsa;
 
 					if (x === undefined || !(x in pi.csa)) {
+						x = null;
 						for (var i in pi.csa) {
+							if (!pi.hasOwnProperty(i))
+								continue;
 							x = i;
 							break;
 						}
-						if (x) {
+						if (typeof (x) == 'number') {
 							$localStorage.selectedCsa = x;
 							d.resolve(x);
 						} else {
@@ -317,8 +321,12 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 
 					gdata.peopleProfiles(csaId, pids).
 					then(function (r) {
+						var foundPids = {};
+
 						angular.forEach(r.data, function (e) {
 							var pid = e.profile.id;
+
+							foundPids[pid] = true;
 
 							instrumentProfile(e);
 
@@ -328,6 +336,17 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 
 							angular.forEach(defers, function (d) {
 								d.resolve(e);
+							});
+						});
+
+						angular.forEach(pids, function (p) {
+							if (foundPids.hasOwnProperty(p))
+								return;
+
+							var defers = ptr[p];
+
+							angular.forEach(defers, function (d) {
+								d.reject(gdata.E_person_not_found);
 							});
 						});
 					}).

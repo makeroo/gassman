@@ -1,4 +1,8 @@
-<form class="form-horizontal" name="personProfileForm">
+<div class="row" ng-if="personProfileError">
+    <div class="alert alert-danger">{{ personProfileError }}</div>
+</div>
+
+<form class="form-horizontal" name="personProfileForm" ng-if="!personProfileError">
 
   <div ng-hide="csaId" class="row">
     <div class="alert alert-info">

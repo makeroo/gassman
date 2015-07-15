@@ -21,6 +21,7 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
 
 	var master = null;
 	var personId = $routeParams['personId'];
+	var self = null;
 /*
 	$scope.visibleAddress = function (c) {
 		return c.kind !== 'I';
@@ -31,6 +32,7 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
 			return c.kind == k;
 		}
 	};
+
 	$scope.hasAddressOfKind = function (k) {
 		if (!$scope.personProfile)
 			return false;
@@ -119,22 +121,17 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
 	then (function (p) {
 		$scope.profile = p;
 
-		return gdata.profile(null, personId);
-	}).
-	then (function (prof) {
-		$scope.personProfile = prof;
-		$scope.editable = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditContacts) != -1 ||
-			personId == $scope.profile.logged_user.id;
-
-		return gdata.csaList();
-	}).
-	then (function (r) {
-		$scope.csaList = r.data;
+		self = p.logged_user.id == personId;
 
 		return gdata.selectedCsa();
-	}).
-	then (function (csaId) {
+	}).then (function (csaId) {
 		$scope.csaId = csaId;
+
+		return gdata.profile(csaId, personId);
+	}).then (function (p) {
+		$scope.personProfile = p;
+		$scope.editable = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditContacts) != -1 ||
+			personId == $scope.profile.logged_user.id;
 
 		var amounts = [];
 		angular.forEach($scope.personProfile.accounts, function (a) {
@@ -142,8 +139,7 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
 		});
 
 		return $q.all(amounts);
-	}).
-	then (function (amounts) {
+	}).then (function (amounts) {
 		var l = amounts.length;
 
 		for (var c = 0; c < l; ++c) {
@@ -167,8 +163,21 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
 		}
 	}).
 	then (undefined, function (error) {
-		if (error != gdata.E_no_csa_found) {
-			$scope.personProfileError = error.data;
+		if (error == gdata.E_no_csa_found && self) {
+			$q.all([
+				gdata.profile(null, personId),
+				gdata.csaList()
+			]).then (function (profAndCsaList) {
+				$scope.personProfile = profAndCsaList[0];
+				$scope.editable = true;
+
+				$scope.csaList = profAndCsaList[1].data;
+			}).then (undefined, function (error) {
+				$scope.personProfileError = error.data || error;
+			})
+			;
+		} else {
+			$scope.personProfileError = error.data || error;
 		}
 	});
 }])
