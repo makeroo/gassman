@@ -108,7 +108,7 @@ insert into state (iso3, name) values ('IRN', 'Iran, Islamic Republic of');
 insert into state (iso3, name) values ('IRQ', 'Iraq');
 insert into state (iso3, name) values ('ISL', 'Iceland');
 insert into state (iso3, name) values ('ISR', 'Israel');
-insert into state (iso3, name) values ('ITA', 'Italy');
+insert into state (iso3, name) values ('ITA', 'Italia');
 insert into state (iso3, name) values ('JAM', 'Jamaica');
 insert into state (iso3, name) values ('JEY', 'Jersey');
 insert into state (iso3, name) values ('JOR', 'Jordan');
