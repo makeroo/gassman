@@ -1,7 +1,8 @@
+alter table delivery_place add column csa_id int not null ;
 
-insert into delivery_place (description) values ('Asilo nido Il seme, Sant''Anna');
-insert into delivery_place (description) values ('Tempagnano');
-insert into delivery_place (description) values ('Pieve San Paolo');
+insert into delivery_place (description, csa_id) values ('Asilo nido Il seme, Sant''Anna', 1);
+insert into delivery_place (description, csa_id) values ('Tempagnano', 1);
+insert into delivery_place (description, csa_id) values ('Pieve San Paolo', 1);
 
 
 -- creo il produttore irene e luciana (1)

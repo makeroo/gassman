@@ -82,19 +82,6 @@ CREATE TABLE contact_address (
 
 
 
-CREATE TABLE delivery_place (
-  -- punto di consegna
-
-  id INT NOT NULL AUTO_INCREMENT,
-  address_id INT NOT NULL,
-  description TEXT,
-
-  FOREIGN KEY (address_id) REFERENCES street_address(id),
-  PRIMARY KEY (id)
-);
-
-
-
 CREATE TABLE csa (
   -- Una comunità. Le persone possono partecipare a più comunità.
   -- La partecipazione è indicata dai permessi (membership).
@@ -114,6 +101,21 @@ CREATE TABLE csa (
 --  FOREIGN KEY (kitty_id) REFERENCES account(id),
 --  FOREIGN KEY (expenses_id) REFERENCES account(id),
 --  FOREIGN KEY (income_id) REFERENCES account(id),
+  PRIMARY KEY (id)
+);
+
+
+
+CREATE TABLE delivery_place (
+  -- punto di consegna
+
+  id INT NOT NULL AUTO_INCREMENT,
+  address_id INT NOT NULL,
+  description TEXT,
+  csa_id INT NOT NULL,
+
+  FOREIGN KEY (address_id) REFERENCES street_address(id),
+  FOREIGN KEY (csa_id) REFERENCES csa(id),
   PRIMARY KEY (id)
 );
 
