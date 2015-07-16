@@ -774,7 +774,7 @@ class TransactionEditHandler (JsonBaseHandler):
 class TransactionSaveHandler (JsonBaseHandler):
     notifyExceptions = True
     def do (self, cur, csaId):
-        involvedAccounts = set()
+        #involvedAccounts = dict()
 
         csaId = int(csaId)
         u = self.get_logged_user()
@@ -791,9 +791,10 @@ class TransactionSaveHandler (JsonBaseHandler):
             tdesc = datetime.datetime.utcnow()
         if transId is None:
             oldCc = None
+            oldDesc = None
         else:
             cur.execute(*self.application.sql.transaction_type(transId))
-            oldCc, modifiedBy = cur.fetchone()
+            oldCc, oldDesc, modifiedBy = cur.fetchone()
             if modifiedBy is not None:
                 raise Exception(error_codes.E_already_modified)
         if ttype in (self.application.sql.Tt_Deposit, self.application.sql.Tt_CashExchange, self.application.sql.Tt_Withdrawal):
@@ -810,8 +811,8 @@ class TransactionSaveHandler (JsonBaseHandler):
                 cur.execute(*self.application.sql.account_currency(treceiver, csaId, tcurr))
                 if cur.fetchone()[0] == 0:
                     raise Exception(error_codes.E_illegal_receiver)
-                else:
-                    involvedAccounts.add(treceiver)
+                #else:
+                #    involvedAccounts['unknown_amount'] = treceiver
             cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csaId))
             tid = cur.lastrowid
             if tid == 0:
@@ -826,8 +827,9 @@ class TransactionSaveHandler (JsonBaseHandler):
                     tlogType = self.application.sql.Tl_Error
                     tlogDesc = error_codes.E_negative_amount
                     break
-                cur.execute(*self.application.sql.insert_transaction_line(tid, desc, fam + amount, accId))
-                involvedAccounts.add(accId)
+                realAmount = fam + amount
+                cur.execute(*self.application.sql.insert_transaction_line(tid, desc, realAmount, accId))
+                #involvedAccounts[accId] = realAmount
             if ttype != self.application.sql.Tt_Error:
                 cur.execute(*self.application.sql.check_transaction_coherency(tid))
                 v = list(cur)
@@ -873,7 +875,8 @@ class TransactionSaveHandler (JsonBaseHandler):
                 accId = l['account'] or expenseAccountId # qui assumo che account id non sia zero!
                 cur.execute(*self.application.sql.insert_transaction_line(tid, desc, amount, accId))
                 lastLineId = cur.lastrowid
-                involvedAccounts.add(accId)
+                #lastAccId = accId
+                #involvedAccounts[accId] = amount
             cur.execute(*self.application.sql.check_transaction_coherency(tid))
             v = list(cur)
             if len(v) != 1:
@@ -887,6 +890,7 @@ class TransactionSaveHandler (JsonBaseHandler):
             else:
                 cur.execute(*self.application.sql.transaction_calc_last_line_amount(tid, lastLineId))
                 a = cur.fetchone()[0]
+                #involvedAccounts[lastAccId] = str(a)
                 cur.execute(*self.application.sql.transaction_fix_amount(lastLineId, a))
                 tlogType = self.application.sql.Tl_Added if transId is None else self.application.sql.Tl_Modified
         elif ttype == self.application.sql.Tt_Trashed:
@@ -916,27 +920,65 @@ class TransactionSaveHandler (JsonBaseHandler):
         if ttype == self.application.sql.Tt_Error:
             raise Exception(tlogDesc)
         else:
-            self.notifyAccountChange(cur, involvedAccounts, transId, tdesc, tdate)
+            self.notifyAccountChange(cur, tid, tdesc, tdate, transId, oldDesc)
         return tid
 
-    def notifyAccountChange (self, cur, accountIds, transId, tdesc, tdate):
-        if not accountIds:
+    # Transaction notification types
+    Tnt_new_transaction = 'n'
+    Tnt_amount_changed = 'a'
+    Tnt_notes_changed = 'd'
+    Tnt_transaction_removed = 'r'
+    Tnt_description_changed = 'm'
+
+    def notifyAccountChange (self, cur, transId, tdesc, tdate, modifiedTransId, oldDesc):
+        cur.execute(*sql.transaction_fetch_lines_to_compare(modifiedTransId, transId))
+        oldLines = dict()
+        newLines = dict()
+        diffs = dict()
+        lines = {
+            transId: newLines,
+            modifiedTransId: oldLines,
+        }
+        for trans, accId, amount, lineDesc in cur.fetchall():
+            lines[trans][accId] = (amount, lineDesc)
+        for acc, newp in newLines.items():
+            oldp = oldLines.get(acc)
+            if oldp is None:
+                diffs[accId] = [ self.Tnt_new_transaction ]
+            elif oldp[0] != newp[0]:
+                diffs[accId] = [ self.Tnt_amount_changed, newp[0], oldp[0] ]
+            elif oldp[1] != newp[1]:
+                diffs[accId] = [ self.Tnt_notes_changed, newp[1], oldp[1] ]
+        for acc, oldp in oldLines.items():
+            newp = newLines.get(acc)
+            if newp is None:
+                diffs[accId] = [ self.Tnt_transaction_removed ]
+            #elif oldp[0] != newp[0]:
+            #    diffs[accId] = ... Tnt_amount_changed
+            #elif oldp[1] != newp[1]:
+            #    diffs[accId] = ... Tnt_notes_changed
+        if modifiedTransId is not None and tdesc != oldDesc:
+            for acc in newLines:
+                if acc not in diffs:
+                    diffs[acc] = [ self.Tnt_description_changed, tdesc, oldDesc ]
+        if len(diffs) == 0:
+            log_gassman.debug('nothing to notify for transaction %s modifying transaction %s', transId, modifiedTransId)
             return
         # FIXME: soglia specifica di csa
-        # Localizzazione del messaggio
         LVL_THRES = -40
-        signalledPeople = set()
-        accounts = dict()
-        cur.execute(*sql.account_email_for_notifications(accountIds))
+        #signalledPeople = dict() # da persone (pid) a lista di account ([accountId])
+        accounts = dict() # da account (accountId) a lista di persone ([{first/middle/last_name, email}])
+        # considero solo gli account i cui owner hanno nei settaggi la ricezione di ogni notifica
+        cur.execute(*sql.account_email_for_notifications(diffs.keys()))
         for accId, pid, first_name, middle_name, last_name, email in cur.fetchall():
-            if pid in signalledPeople:
-                continue
-            signalledPeople.add(pid)
-            x = accounts.get(accId, None)
-            if x is None:
-                x = dict(people=[])
-                accounts[accId] = x
-            x['people'].append(dict(
+            #signalledPeople.setdefault(pid, []).append(accId)
+            accounts.setdefault(
+                accId,
+                {}
+            ).setdefault(
+                'people',
+                []
+            ).append(dict(
                 first_name = first_name,
                 middle_name = middle_name,
                 last_name = last_name,
@@ -951,6 +993,8 @@ class TransactionSaveHandler (JsonBaseHandler):
         for accId, accData in accounts.items():
             total, currSym = accData['account']
             people = accData['people']
+            notificationType = diffs[accId]
+            # TODO: Localizzazione del messaggio
             self.notify(
                 'account_update',
                 total = total,
@@ -961,7 +1005,15 @@ class TransactionSaveHandler (JsonBaseHandler):
                 tdate = tdate,
                 dateFormatter = shortDate,
                 accId = accId,
-                transId = transId
+                transId = transId,
+                modifiedTransId = modifiedTransId,
+                oldDesc = oldDesc,
+                notificationType = notificationType,
+                Tnt_new_transaction = self.Tnt_new_transaction,
+                Tnt_amount_changed = self.Tnt_amount_changed,
+                Tnt_notes_changed = self.Tnt_notes_changed,
+                Tnt_transaction_removed = self.Tnt_transaction_removed,
+                Tnt_description_changed = self.Tnt_description_changed,
             )
 
 class TransactionsEditableHandler (JsonBaseHandler):
@@ -1037,17 +1089,18 @@ class PeopleProfilesHandler (JsonBaseHandler):
                 p = record(perm['person_id'])
                 if canViewContacts:
                     p['permissions'].append(perm['perm_id'])
-        profiles, contacts, args = self.application.sql.people_profiles1(r.keys())
-        cur.execute(profiles, args)
-        for prof in self.application.sql.iter_objects(cur):
-            p = record(prof['id'])
-            p['profile'] = prof
-        if canViewContacts:
-            cur.execute(contacts, args)
-            for addr in self.application.sql.iter_objects(cur):
-                p = record(addr['person_id'])
-                p['contacts'].append(addr)
-        # TODO: indirizzi
+        if r.keys():
+            profiles, contacts, args = self.application.sql.people_profiles1(r.keys())
+            cur.execute(profiles, args)
+            for prof in self.application.sql.iter_objects(cur):
+                p = record(prof['id'])
+                p['profile'] = prof
+            if canViewContacts:
+                cur.execute(contacts, args)
+                for addr in self.application.sql.iter_objects(cur):
+                    p = record(addr['person_id'])
+                    p['contacts'].append(addr)
+            # TODO: indirizzi
         return r
 
 class PersonSaveHandler (JsonBaseHandler):

@@ -417,6 +417,11 @@ def transaction_fix_amount (tlineId, amount):
 def finalize_transaction (tid, ttype):
     return 'UPDATE transaction SET cc_type=%s WHERE id=%s', [ ttype, tid ]
 
+def transaction_fetch_lines_to_compare (oldTrans, newTrans):
+    '''Metodo usato per calcolare le differenze introdotte dalla modifica di una transazione.
+    '''
+    return 'SELECT transaction_id, account_id, amount, description FROM transaction_line WHERE transaction_id in (%s, %s)', [ oldTrans, newTrans ]
+
 def transaction_edit (tid):
     return '''
 SELECT t.description, t.transaction_date as date, t.cc_type, c.id as "currency[__cid", c.symbol as "currency[__csym", t.modified_by_id as modified_by, t2.id as "modifies", l.log_date, l.op_type, p.id as operator__pid, p.first_name as operator__first_name, p.middle_name as operator__middle_name, p.last_name as operator__last_name
@@ -440,7 +445,7 @@ def transaction_previuos (transId):
     return 'SELECT id FROM transaction WHERE modified_by_id = %s', [ transId ]
 
 def transaction_type (transId):
-    return 'SELECT cc_type, modified_by_id FROM transaction WHERE id = %s', [ transId ]
+    return 'SELECT cc_type, description, modified_by_id FROM transaction WHERE id = %s', [ transId ]
 
 def update_transaction (oldTid, newTid):
     return 'UPDATE transaction SET modified_by_id = %s WHERE id = %s', [ newTid, oldTid ]

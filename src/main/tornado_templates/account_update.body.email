@@ -1,5 +1,5 @@
 ciao,
-sono stati registrati nuovi movimenti sul conto associato a:
+{% if notificationType[0] == Tnt_new_transaction %}sono stati registrati nuovi movimenti sul conto associato a:
 {% for p in people %}
  * {{ p['first_name'] }} {{ p['last_name'] }}
 {% end %}
@@ -9,7 +9,31 @@ Descrizione del movimento: {{ tdesc }}
 Data: {{ dateFormatter(tdate) }}
 
 Per esaminare il movimento vai su: http://localhost:8180/home.html#/transaction/{{ transId }}
+{% elif notificationType[0] == Tnt_transaction_removed %}è stato cancellato un movimento inserito precedentemente.
 
+Descrizione del movimento rimosso: {{ oldDesc }}
+
+Per esaminare il movimento vai su: http://localhost:8180/home.html#/transaction/{{ modifiedTransId }}
+{% elif notificationType[0] == Tnt_amount_changed %}è stato modificato l'importo di un movimento
+inserito in precedenza.
+
+Descrizione del movimento: {{ tdesc }}
+
+Per esaminare le modifiche effettuate vai su: http://localhost:8180/home.html#/transaction/{{ transId }}
+{‰ elif notificationType[0] == Tnt_notes_changed %}sono state modificate le note
+di un movimento inserito in precedenza. L'importo e quindi il saldo del conto non sono cambiati.
+
+Descrizione del movimento: {{ tdesc }}
+
+Per esaminare il movimento vai su: http://localhost:8180/home.html#/transaction/{{ transId }}
+{% elif notificationType[0] == Tnt_description_changed %}è stata modificata la descrizione
+di un movimento inserito in precedenza.
+
+Vecchia descrizione: {{ oldDesc }}
+Nuova descrizione: {{ tdesc }}
+
+Per esaminare il movimento vai su: http://localhost:8180/home.html#/transaction/{{ transId }}
+{% end %}
 Per esaminare il conto vai su: http://www.gassmanager.org/home.html#/account/{{ accId }}/detail
 
 Se qualcosa non torna, replica a questa mail aggiungendo in copia le altre persone interessate,
