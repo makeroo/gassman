@@ -135,6 +135,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/csa/list', CsaListHandler),
             (r'^/csa/(\d+)/charge_membership_fee$', CsaChargeMembershipFeeHandler),
             (r'^/csa/(\d+)/request_membership$', CsaRequestMembershipHandler),
+            (r'^/csa/(\d+)/delivery_places$', CsaDeliveryPlacesHandler),
             #(r'^/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/rss/(.+)$', RssFeedHandler),
             (r'^/people/(null|\d+)/profiles$', PeopleProfilesHandler),
@@ -605,6 +606,14 @@ class CsaRequestMembershipHandler (JsonBaseHandler):
             profile = profile,
             contacts = contacts
         )
+
+class CsaDeliveryPlacesHandler (JsonBaseHandler):
+    def do (self, cur, csaId):
+        u = self.get_current_user()
+        if not self.application.hasPermissionByCsa(cur, sql.P_membership, u, csaId):
+            raise Exception(error_codes.E_permission_denied)
+        cur.execute(self.application.sql.csa_delivery_places(csaId))
+        return self.application.sql.iter_objects(cur)
 
 class AccountXlsHandler (BaseHandler):
     def get (self, accId):

@@ -297,6 +297,16 @@ SELECT l.log_date, t.id as tid, p.id, p.first_name, p.middle_name, p.last_name
 def csa_list (pid):
     return 'select c.id, c.name, c.description, g.id as "belong" from csa c left join permission_grant g on g.person_id=%s where g.csa_id is null or g.csa_id=c.id', [ pid ]
 
+def csa_delivery_places (csaId):
+    return '''
+SELECT p.id, p.description, a.first_line, a.second_line, a.description,
+       IF(a.zip_code IS NULL, c.zip_code, a.zip_code) as zip_code, c.name, s.name
+ FROM delivery_place p
+ JOIN street_address a ON p.address_id=a.id
+ JOIN city c ON a.city_id=c.id
+ JOIN state s ON c.state_id=s.id
+ WHERE p.csa_id = %s''', [ csaId ]
+
 def account_currency (accId, csaId, requiredCurr):
     return 'SELECT count(*) FROM account a WHERE a.id=%s AND a.csa_id=%s AND a.currency_id=%s', [ accId, csaId, requiredCurr ]
 
