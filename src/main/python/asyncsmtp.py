@@ -60,8 +60,8 @@ class Mailer (object):
 
     def _send (self, sender, receivers, subject, body, global_data=None, local_data=None):
         try:
-            for i in range(self.MAX_TRIES):
-                log_email.debug('sending: try=%d, to=%s, subj=%s', i, receivers, subject)
+            for i in range(self.MAX_TRIES, 0, -1):
+                log_email.debug('sending: try=%d, to=%s, subj=%s', self.MAX_TRIES - i + 1, receivers, subject)
                 try:
                     smtp = local_data.smtp if hasattr(local_data, 'smtp') else None
                     if smtp is None:
@@ -78,8 +78,8 @@ class Mailer (object):
                                   )
                     log_email.debug('mail sent succesfully')
                     return True
-                except (smtplib.SMTPServerDisconnected, smtplib.SMTPSenderRefused) as e:
-                    if i:
+                except smtplib.SMTPException as e:
+                    if i == 1:
                         raise e
                     #global_data.quit_smtp()
                     local_data.smtp = None
