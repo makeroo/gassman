@@ -217,6 +217,10 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 		return $http.post('/csa/list?_xsrf=' + $cookies._xsrf);
 	};
 
+	this.deliveryPlaces = function (csaId) {
+		return $http.post('/csa/' + csaId + '/delivery_places?_xsrf=' + $cookies._xsrf);
+	};
+
 	this.chargeMembershipFee = function (csaId, p) {
 		return $http.post('/csa/' + csaId + '/charge_membership_fee?_xsrf=' + $cookies._xsrf, p);
 	};

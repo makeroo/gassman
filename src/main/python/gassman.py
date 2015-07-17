@@ -612,7 +612,7 @@ class CsaDeliveryPlacesHandler (JsonBaseHandler):
         u = self.get_current_user()
         if not self.application.hasPermissionByCsa(cur, sql.P_membership, u, csaId):
             raise Exception(error_codes.E_permission_denied)
-        cur.execute(self.application.sql.csa_delivery_places(csaId))
+        cur.execute(*self.application.sql.csa_delivery_places(csaId))
         return self.application.sql.iter_objects(cur)
 
 class AccountXlsHandler (BaseHandler):

@@ -123,6 +123,17 @@
   </div>
   -->
 
+  <h3>Punto di consegna</h3>
+
+  <div class="form-group">
+    <label for="nicknames" class="col-sm-2 control-label">Punto di consegna abituale</label>
+    <div class="col-sm-10">
+      <select class="form-control" ng-model="personProfile.profile.default_delivery_place_id" ng-disabled="readOnly" ng-placeholder="seleziona">
+        <option ng-repeat="dp in deliveryPlaces" value="{{ dp.id }}">{{ dp.description }}</option>
+      </select>
+    </div>
+  </div>
+
   <h3>Impostazioni</h3>
 
   <div class="form-group">

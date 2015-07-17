@@ -299,8 +299,8 @@ def csa_list (pid):
 
 def csa_delivery_places (csaId):
     return '''
-SELECT p.id, p.description, a.first_line, a.second_line, a.description,
-       IF(a.zip_code IS NULL, c.zip_code, a.zip_code) as zip_code, c.name, s.name
+SELECT p.id, p.description, a.first_line, a.second_line, a.description as addr_description,
+       IF(a.zip_code IS NULL, c.zip_code, a.zip_code) as zip_code, c.name as city, s.name as state
  FROM delivery_place p
  JOIN street_address a ON p.address_id=a.id
  JOIN city c ON a.city_id=c.id
@@ -556,12 +556,13 @@ def people_profiles1 (pids):
             )
 
 def updateProfile (p):
-    return 'UPDATE person SET first_name = %s, middle_name = %s, last_name = %s, account_notifications = %s, cash_treshold = %s WHERE id = %s', [
+    return 'UPDATE person SET first_name = %s, middle_name = %s, last_name = %s, account_notifications = %s, cash_treshold = %s, default_delivery_place_id = %s WHERE id = %s', [
         p['first_name'],
         p['middle_name'],
         p['last_name'],
         p['account_notifications'],
         p['cash_treshold'],
+        p['default_delivery_place_id'],
         p['id'],
         ]
 

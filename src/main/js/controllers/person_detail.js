@@ -117,8 +117,7 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
 		});
 	};
 
-	gdata.profileInfo().
-	then (function (p) {
+	gdata.profileInfo().then (function (p) {
 		$scope.profile = p;
 
 		self = p.logged_user.id == personId;
@@ -127,7 +126,11 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
 	}).then (function (csaId) {
 		$scope.csaId = csaId;
 
-		return gdata.profile(csaId, personId);
+		return gdata.deliveryPlaces(csaId);
+	}).then (function (r) {
+		$scope.deliveryPlaces = r.data;
+
+		return gdata.profile($scope.csaId, personId);
 	}).then (function (p) {
 		$scope.personProfile = p;
 		$scope.editable = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditContacts) != -1 ||
@@ -161,8 +164,7 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
 					};
 			}
 		}
-	}).
-	then (undefined, function (error) {
+	}).then (undefined, function (error) {
 		if (error == gdata.E_no_csa_found && self) {
 			$q.all([
 				gdata.profile(null, personId),
