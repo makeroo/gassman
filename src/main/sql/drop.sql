@@ -14,3 +14,5 @@ DROP TABLE city;
 DROP TABLE state;
 DROP TABLE currency;
 DROP TABLE transaction_log;
+DROP TABLE producer;
+DROP TABLE producer_person;

@@ -1,4 +1,4 @@
--- version 10
+-- version 11
 
 SET SESSION storage_engine = "MyISAM";
 SET SESSION time_zone = "+0:00";
