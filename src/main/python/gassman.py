@@ -802,6 +802,7 @@ class TransactionSaveHandler (JsonBaseHandler):
             oldCc = None
             oldDesc = None
         else:
+            transId = int(transId)
             cur.execute(*self.application.sql.transaction_type(transId))
             oldCc, oldDesc, modifiedBy = cur.fetchone()
             if modifiedBy is not None:
