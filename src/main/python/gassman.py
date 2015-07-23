@@ -951,16 +951,16 @@ class TransactionSaveHandler (JsonBaseHandler):
         }
         for trans, accId, amount, lineDesc in cur.fetchall():
             lines[trans][accId] = (amount, lineDesc)
-        for acc, newp in newLines.items():
-            oldp = oldLines.get(acc)
+        for accId, newp in newLines.items():
+            oldp = oldLines.get(accId)
             if oldp is None:
                 diffs[accId] = [ self.Tnt_new_transaction ]
             elif oldp[0] != newp[0]:
                 diffs[accId] = [ self.Tnt_amount_changed, newp[0], oldp[0] ]
             elif oldp[1] != newp[1]:
                 diffs[accId] = [ self.Tnt_notes_changed, newp[1], oldp[1] ]
-        for acc, oldp in oldLines.items():
-            newp = newLines.get(acc)
+        for accId, oldp in oldLines.items():
+            newp = newLines.get(accId)
             if newp is None:
                 diffs[accId] = [ self.Tnt_transaction_removed ]
             #elif oldp[0] != newp[0]:
@@ -968,9 +968,9 @@ class TransactionSaveHandler (JsonBaseHandler):
             #elif oldp[1] != newp[1]:
             #    diffs[accId] = ... Tnt_notes_changed
         if modifiedTransId is not None and tdesc != oldDesc:
-            for acc in newLines:
-                if acc not in diffs:
-                    diffs[acc] = [ self.Tnt_description_changed, tdesc, oldDesc ]
+            for accId in newLines:
+                if accId not in diffs:
+                    diffs[accId] = [ self.Tnt_description_changed, tdesc, oldDesc ]
         if len(diffs) == 0:
             log_gassman.debug('nothing to notify for transaction %s modifying transaction %s', transId, modifiedTransId)
             return
