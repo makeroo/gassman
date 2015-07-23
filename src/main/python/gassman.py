@@ -38,6 +38,7 @@ import sql
 import error_codes
 
 log_gassman = logging.getLogger('gassman.application')
+log_gassman_db = logging.getLogger('gassman.application.db')
 
 # TODO: db asincrono
 
@@ -452,8 +453,9 @@ class JsonBaseHandler (BaseHandler):
         with self.application.conn as cur:
             m = cur.execute
             def logging_execute (sql, *args):
-                if not sql.upper().startswith('SELECT'):
-                    log_gassman.debug('SQL: %s / %s', sql, args)
+                stmt = sql.upper().strip()
+                logm = log_gassman_db.debug if stmt.startswith('SELECT') else log_gassman_db.info
+                logm('SQL: %s / %s', sql, args)
                 m(sql, *args)
             cur.execute = logging_execute
             r = self.do(cur, *args)
