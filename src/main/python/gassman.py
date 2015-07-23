@@ -1007,6 +1007,7 @@ class TransactionSaveHandler (JsonBaseHandler):
             # TODO: Localizzazione del messaggio
             self.notify(
                 'account_update',
+                receivers=[ p['email'] for p in people ],
                 total = total,
                 currency = currSym,
                 threshold = LVL_THRES,
