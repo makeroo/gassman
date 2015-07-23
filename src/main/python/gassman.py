@@ -131,7 +131,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/transaction/(\d+)/(\d+)/edit$', TransactionEditHandler),
             (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
             (r'^/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
-            (r'^/csa/(\d+)/info', CsaInfoHandler),
+            (r'^/csa/(\d+)/info$', CsaInfoHandler),
             (r'^/csa/list', CsaListHandler),
             (r'^/csa/(\d+)/charge_membership_fee$', CsaChargeMembershipFeeHandler),
             (r'^/csa/(\d+)/request_membership$', CsaRequestMembershipHandler),
@@ -140,7 +140,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/rss/(.+)$', RssFeedHandler),
             (r'^/people/(null|\d+)/profiles$', PeopleProfilesHandler),
             (r'^/person/(null|\d+)/save$', PersonSaveHandler),
-            (r'^/person/(\d+)/check_email', PersonCheckEmailHandler),
+            (r'^/person/(\d+)/check_email$', PersonCheckEmailHandler),
             ]
         #codeHome = os.path.dirname(__file__)
         sett = dict(
