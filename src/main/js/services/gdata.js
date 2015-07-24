@@ -141,12 +141,12 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 					if (x === undefined || !(x in pi.csa)) {
 						x = null;
 						for (var i in pi.csa) {
-							if (!pi.hasOwnProperty(i))
+							if (!pi.csa.hasOwnProperty(i))
 								continue;
 							x = i;
 							break;
 						}
-						if (typeof (x) == 'number') {
+						if (typeof (x) !== null) {
 							$localStorage.selectedCsa = x;
 							d.resolve(x);
 						} else {
