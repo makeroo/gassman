@@ -421,7 +421,7 @@ class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAu
                 code=self.get_argument('code')
                 )
             token_user = GoogleUser(id_token)
-            _person = yield self.application.checkProfile(self, token_user)
+            yield self.application.checkProfile(self, token_user) # ritorna person ma a me interessa solo la registrazione su db
             self.redirect("/home.html")
         else:
             yield self.authorize_redirect(
