@@ -198,7 +198,7 @@ class GassmanWebApp (tornado.web.Application):
 
     def notify (self, subject, body, receivers = None):
         if self.mailer is None:
-            log_gassman.info('SMTP not configured, mail not sent: %s\n%s', subject, body)
+            log_gassman.info('SMTP not configured, mail not sent: dest=%s, subj=%s\n%s', receivers, subject, body)
         else:
             self.mailer.send(settings.SMTP_SENDER,
                              receivers or settings.SMTP_RECEIVER,
@@ -956,7 +956,7 @@ class TransactionSaveHandler (JsonBaseHandler):
         for accId, newp in newLines.items():
             oldp = oldLines.get(accId)
             if oldp is None:
-                diffs[accId] = [ self.Tnt_new_transaction ]
+                diffs[accId] = [ self.Tnt_new_transaction, newp[0], newp[1] ]
             elif oldp[0] != newp[0]:
                 diffs[accId] = [ self.Tnt_amount_changed, newp[0], oldp[0] ]
             elif oldp[1] != newp[1]:
@@ -981,7 +981,7 @@ class TransactionSaveHandler (JsonBaseHandler):
         #signalledPeople = dict() # da persone (pid) a lista di account ([accountId])
         accounts = dict() # da account (accountId) a lista di persone ([{first/middle/last_name, email}])
         # considero solo gli account i cui owner hanno nei settaggi la ricezione di ogni notifica
-        cur.execute(*sql.account_email_for_notifications(diffs.keys()))
+        cur.execute(*sql.account_owners_with_optional_email_for_notifications(diffs.keys()))
         for accId, pid, first_name, middle_name, last_name, email in cur.fetchall():
             #signalledPeople.setdefault(pid, []).append(accId)
             accounts.setdefault(
@@ -1006,10 +1006,14 @@ class TransactionSaveHandler (JsonBaseHandler):
             total, currSym = accData['account']
             people = accData['people']
             notificationType = diffs[accId]
+            receivers = [ p['email'] for p in people if p['email'] ]
+            if len(receivers) == 0:
+                log_gassman.debug('transaction not notified, people do not have email account: people=%s, tid=%s', people, transId)
+                continue
             # TODO: Localizzazione del messaggio
             self.notify(
                 'account_update',
-                receivers=[ p['email'] for p in people ],
+                receivers=[ p['email'] for p in people if p['email'] ],
                 total = total,
                 currency = currSym,
                 threshold = LVL_THRES,
@@ -1022,6 +1026,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                 modifiedTransId = modifiedTransId,
                 oldDesc = oldDesc,
                 notificationType = notificationType,
+                publishedUrl = settings.PUBLISHED_URL,
                 Tnt_new_transaction = self.Tnt_new_transaction,
                 Tnt_amount_changed = self.Tnt_amount_changed,
                 Tnt_notes_changed = self.Tnt_notes_changed,

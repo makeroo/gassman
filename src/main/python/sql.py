@@ -326,16 +326,16 @@ def account_people (csaId):
 def account_people_addresses (csaId):
     return 'SELECT c.address, p.id, a.id FROM person p JOIN account_person ap ON ap.person_id=p.id JOIN account a ON ap.account_id=a.id JOIN person_contact pc ON p.id=pc.person_id JOIN contact_address c ON pc.address_id=c.id WHERE a.csa_id=%s AND c.kind IN (%s, %s) AND ap.to_date IS NULL', [ csaId, Ck_Email, Ck_Nickname ]
 
-def account_email_for_notifications (accountIds):
+def account_owners_with_optional_email_for_notifications (accountIds):
     return '''
 SELECT ap.account_id, p.id, p.first_name, p.middle_name, p.last_name, c.address
  FROM account_person ap
  JOIN person p ON ap.person_id=p.id
- JOIN person_contact pc ON p.id=pc.person_id
- JOIN contact_address c ON pc.address_id=c.id
+ LEFT JOIN person_contact pc ON p.id=pc.person_id
+ LEFT JOIN contact_address c ON pc.address_id=c.id
  WHERE ap.to_date IS NULL AND
        ap.account_id IN (%s) AND
-       c.kind=%%s AND
+       (c.kind=%%s OR c.kind IS NULL) AND
        p.account_notifications=%%s
  ORDER BY ap.account_id, pc.priority''' % ','.join([ '%s' ] * len(accountIds)), list(accountIds) + [ Ck_Email, An_EveryMovement ]
 

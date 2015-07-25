@@ -6,35 +6,41 @@ ciao,
 e il cui saldo è: {{ total }}{{ currency }}
 
 Descrizione del movimento: {{ tdesc }}
+Importo: {{ notificationType[1] }}{{ currency }}{% if notificationType[2] %}
+Annotazioni: {{ notificationType[2] }}{% end %}
 Data: {{ dateFormatter(tdate) }}
 
-Per esaminare il movimento vai su: http://localhost:8180/home.html#/transaction/{{ transId }}
+Per esaminare il movimento vai su: {{ publishedUrl }}/home.html#/transaction/{{ transId }}
 {% elif notificationType[0] == Tnt_transaction_removed %}è stato cancellato un movimento inserito precedentemente.
 
 Descrizione del movimento rimosso: {{ oldDesc }}
 
-Per esaminare il movimento vai su: http://localhost:8180/home.html#/transaction/{{ modifiedTransId }}
+Per esaminare il movimento vai su: {{ publishedUrl }}/home.html#/transaction/{{ modifiedTransId }}
 {% elif notificationType[0] == Tnt_amount_changed %}è stato modificato l'importo di un movimento
 inserito in precedenza.
 
 Descrizione del movimento: {{ tdesc }}
+Vecchio importo: {{ notificationType[2] }}{{ currency }}
+Nuovo importo: {{ notificationType[1] }}{{ currency }}
 
-Per esaminare le modifiche effettuate vai su: http://localhost:8180/home.html#/transaction/{{ transId }}
-{‰ elif notificationType[0] == Tnt_notes_changed %}sono state modificate le note
+Per esaminare le modifiche effettuate vai su: {{ publishedUrl }}/home.html#/transaction/{{ transId }}
+{% elif notificationType[0] == Tnt_notes_changed %}sono state modificate le note
 di un movimento inserito in precedenza. L'importo e quindi il saldo del conto non sono cambiati.
 
 Descrizione del movimento: {{ tdesc }}
+Vecchie annotazioni: {{ notificationType[2] }}
+Nuove annotazioni: {{ notificationType[1] }}
 
-Per esaminare il movimento vai su: http://localhost:8180/home.html#/transaction/{{ transId }}
+Per esaminare il movimento vai su: {{ publishedUrl }}/home.html#/transaction/{{ transId }}
 {% elif notificationType[0] == Tnt_description_changed %}è stata modificata la descrizione
 di un movimento inserito in precedenza.
 
 Vecchia descrizione: {{ oldDesc }}
 Nuova descrizione: {{ tdesc }}
 
-Per esaminare il movimento vai su: http://localhost:8180/home.html#/transaction/{{ transId }}
+Per esaminare il movimento vai su: {{ publishedUrl }}/home.html#/transaction/{{ transId }}
 {% end %}
-Per esaminare il conto vai su: http://www.gassmanager.org/home.html#/account/{{ accId }}/detail
+Per esaminare il conto vai su: {{ publishedUrl }}/home.html#/account/{{ accId }}/detail
 
 Se qualcosa non torna, replica a questa mail aggiungendo in copia le altre persone interessate,
 ovvero, nel caso di accredito colui/colei a cui hai dato il denaro, nel caso di un ordine,
