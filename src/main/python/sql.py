@@ -153,7 +153,7 @@ def accounts_index (csaId, t, dp, o, fromLine, toLine):
         t, t, t,
     ]
 
-    if dp != -1:
+    if int(dp) != -1:
         q += " AND p.default_delivery_place_id=%s"
         a.append(dp)
 
@@ -521,7 +521,7 @@ SELECT p.id, p.first_name, p.middle_name, p.last_name
        t, t, t,
     ]
 
-    if dp != -1:
+    if int(dp) != -1:
         q += " AND p.default_delivery_place_id=%s"
         a.append(dp)
 
