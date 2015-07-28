@@ -12,12 +12,12 @@ angular.module('GassmanApp.controllers.AccountsIndex', [
 ])
 
 .controller('AccountsIndex', [
-         '$scope', '$filter', '$location', '$localStorage', 'gdata',
-function ($scope,   $filter,   $location,   $localStorage,   gdata) {
+         '$scope', '$filter', '$location', '$localStorage', '$q', 'gdata',
+function ($scope,   $filter,   $location,   $localStorage,   $q,   gdata) {
 	$scope.accounts = [];
 	$scope.accountsError = null;
-	$scope.queryFilter = $localStorage.accountIndex_queryFilter || '';
-	$scope.queryOrder = 0;
+//	$scope.queryFilter = $localStorage.accountIndex_queryFilter || '';
+//	$scope.queryOrder = 0;
 	$scope.profile = null;
 	$scope.profileError = null;
 
@@ -25,15 +25,24 @@ function ($scope,   $filter,   $location,   $localStorage,   gdata) {
 	var blockSize = 25;
 	$scope.concluded = false;
 
-	var lastQuery = $scope.queryFilter;
-	var lastQueryOrder = 0;
+	var lastQuery = {
+		q: $localStorage.accountIndex_queryFilter || '',
+		o: 0,
+		dp: -1
+	};
+//	var lastQuery = ;
+//	var lastQueryOrder = 0;
+//	var lastDeliveryPlace = -1;
+
+	$scope.query = angular.copy(lastQuery);
 
 	$scope.search = function () {
-		if ($scope.queryFilter == lastQuery && $scope.queryOrder == lastQueryOrder)
+		if (currCsa == null || angular.equals($scope.query, lastQuery))
 			return;
-		lastQuery = $scope.queryFilter;
-		lastQueryOrder = $scope.queryOrder;
-		$localStorage.accountIndex_queryFilter = $scope.queryFilter;
+
+		lastQuery = angular.copy($scope.query);
+
+		$localStorage.accountIndex_queryFilter = $scope.query.q;
 
 		reset();
 		$scope.loadMore();
@@ -49,23 +58,39 @@ function ($scope,   $filter,   $location,   $localStorage,   gdata) {
 	var currCsa = null;
     var loading = false;
 
+	$scope.$watch('query.dp', $scope.search);
+
 	$scope.loadMore = function () {
 		if ($scope.concluded || loading) return;
 
         loading = true;
 
-		gdata.accountsIndex(currCsa, lastQuery, lastQueryOrder, start, blockSize).
+		gdata.accountsIndex(
+			currCsa,
+			lastQuery,
+			start, blockSize).
 		then(function (r) {
             loading = false;
 			$scope.concluded = r.data.length < blockSize;
 			start += r.data.length;
 			$scope.accounts = $scope.accounts.concat(r.data);
 
+			var showContacts = $scope.profile.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
+
 			angular.forEach(r.data, function (e) {
 				e.accountData = !!e[4];
+
+				if (!showContacts) {
+					e.person = {};
+					e.person.gadgets = [];
+
+					if (e[5] < 0) { // FIXME: la threshold dovrebbe essere un parametro del csa
+						e.person.gadgets.push(gdata.gadgets.debt)
+					}
+				}
 			});
 
-			if ($scope.profile.permissions.indexOf(gdata.permissions.P_canViewContacts) == -1)
+			if (!showContacts)
 				return;
 
 			angular.forEach(r.data, function (e) {
@@ -75,6 +100,11 @@ function ($scope,   $filter,   $location,   $localStorage,   gdata) {
 				gdata.profile(currCsa, pid).
 				then(function (p) {
 					e.profile = p;
+
+					if (e[5] < 0 && // FIXME: la threshold dovrebbe essere un parametro del csa
+						e.profile.gadgets.indexOf(gdata.gadgets.piggyBank) == -1) {
+						e.profile.gadgets.push(gdata.gadgets.debt)
+					}
 				});
 			});
 		}).
@@ -96,10 +126,14 @@ function ($scope,   $filter,   $location,   $localStorage,   gdata) {
 	gdata.selectedCsa().
 	then (function (csaId) {
 		currCsa = csaId;
-		return gdata.profileInfo();
+		return $q.all([ gdata.profileInfo(), gdata.deliveryPlaces(csaId) ]);
 	}).
-	then (function (pData) {
-		$scope.profile = pData;
+	then (function (resp) {
+		$scope.profile = resp[0];
+		$scope.deliveryPlaces = resp[1].data;
+		if ($scope.deliveryPlaces.length > 1) {
+			$scope.deliveryPlaces.unshift({ id: -1, description: 'Tutti' });
+		}
 		$scope.loadMore();
 	}).
 	then (undefined, function (error) {

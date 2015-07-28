@@ -702,13 +702,15 @@ class ProfileInfoHandler (JsonBaseHandler):
 
 class AccountsIndexHandler (JsonBaseHandler):
     def do (self, cur, csaId, fromIdx, toIdx):
-        q = '%%%s%%' % self.payload['q']
-        o = self.application.sql.accounts_index_order_by[int(self.payload['o'])]
+        p = self.payload
+        q = '%%%s%%' % p['q']
+        dp = p['dp']
+        o = self.application.sql.accounts_index_order_by[int(p['o'])]
         u = self.get_logged_user()
         if self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
-            cur.execute(*self.application.sql.accounts_index(csaId, q, o, int(fromIdx), int(toIdx)))
+            cur.execute(*self.application.sql.accounts_index(csaId, q, dp, o, int(fromIdx), int(toIdx)))
         elif self.application.hasPermissionByCsa(cur, sql.P_canViewContacts, u.id, csaId):
-            cur.execute(*self.application.sql.people_index(csaId, q, o, int(fromIdx), int(toIdx)))
+            cur.execute(*self.application.sql.people_index(csaId, q, dp, o, int(fromIdx), int(toIdx)))
         else:
             raise Exception(error_codes.E_permission_denied)
         return list(cur)

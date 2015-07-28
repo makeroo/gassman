@@ -45,6 +45,11 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 		P_canEditMembershipFee: 12
 	};
 
+	this.gadgets = {
+		piggyBank: 'piggy-bank',
+		debt: 'exclamation-sign'
+	};
+
 	this.E_class = "<class 'Exception'>";
 	this.E_already_modified = 'already modified';
 	this.E_no_csa_found = 'no csa found';
@@ -225,8 +230,11 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 		return $http.post('/csa/' + csaId + '/charge_membership_fee?_xsrf=' + $cookies._xsrf, p);
 	};
 
-	this.accountsIndex = function (csaId, query, order, start, blockSize) {
-		return $http.post('/accounts/' + csaId + '/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf, { q: query, o: order });
+	this.accountsIndex = function (csaId, query, start, blockSize) {
+		return $http.post(
+			'/accounts/' + csaId + '/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf,
+			query
+		);
 	};
 
 	this.accountsNames = function (csaId) {
@@ -295,6 +303,15 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 					p.mainTelephone = c.address;
 			}
 		});
+
+//			angular.forEach(p.accounts, function (a) {
+//				if (a.to_date == null && )
+//			})
+
+		p.gadgets = [];
+		if (p.permissions.indexOf(gdata.permissions.P_canEnterCashExchange) != -1) {
+			p.gadgets.push(gdata.gadgets.piggyBank);
+		}
 	};
 
 	this.profile = function (csaId, pid) {

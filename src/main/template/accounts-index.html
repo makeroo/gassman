@@ -3,11 +3,17 @@
 <form class="form-inline accounts-index-search">
   <div class="form-group">
     <label for="accountsIndexNameFilter">Filtra per nome</label>
-    <input type="text" class="form-control" id="accountsIndexNameFilter" placeholder="Cerca per nome" ng-model="queryFilter" ng-keypress="$event.keyCode == 13 && search()"/>
+    <input type="text" class="form-control" id="accountsIndexNameFilter" placeholder="Cerca per nome" ng-model="query.q" ng-keypress="$event.keyCode == 13 && search()"/>
+  </div>
+  <div class="form-group" ng-if="deliveryPlaces.length > 0">
+    <label for="deliveryPlace">Punto di consegna</label>
+    <select class="form-control" id="deliveryPlace" ng-model="query.dp">
+      <option ng-repeat="p in deliveryPlaces" value="{{ p.id }}">{{ p.description }}</option>
+    </select>
   </div>
   <div class="form-group">
     <label for="accountsIndexOrder">Ordina per</label>
-    <select class="form-control" id="accountsIndexOrder" ng-model="queryOrder" ng-change="search()">
+    <select class="form-control" id="accountsIndexOrder" ng-model="query.o" ng-change="search()">
       <option value="0">nome</option>
       <option value="1">saldo</option>
       <option value="2">attività</option>
@@ -21,6 +27,7 @@
     <tr ng-repeat="a in accounts" class="row" ng-click="showAccount(a[4], a[0])" ng-class="{ fee: a[8] > 0.0 }" style="opacity: {{ a[7] | alphaTimeDiff }}">
 
       <td class="col-md-8">
+          <div class="gadgets"><span ng-repeat="g in a.profile.gadgets" class="glyphicon glyphicon-{{ g }}" aria-hidden="true"></span></div>
         <div class="name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
         <small ng-show="a.profile.mainEmail">{{a.profile.mainEmail}}</small>
         <small ng-show="a.profile.mainTelephone">{{a.profile.mainTelephone}}</small>

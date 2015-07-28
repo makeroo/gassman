@@ -130,8 +130,8 @@ accounts_index_order_by = [ 'p.first_name, p.last_name',
                            'td desc',
                            ]
 
-def accounts_index (csaId, q, o, fromLine, toLine):
-    return '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount) AS ta, c.symbol, MAX(t.transaction_date) AS td, a.membership_fee
+def accounts_index (csaId, t, dp, o, fromLine, toLine):
+    q = '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount) AS ta, c.symbol, MAX(t.transaction_date) AS td, a.membership_fee
  FROM person p
  JOIN permission_grant g ON g.person_id=p.id
  LEFT JOIN account_person ap ON ap.person_id=p.id
@@ -139,25 +139,33 @@ def accounts_index (csaId, q, o, fromLine, toLine):
  JOIN currency c ON a.currency_id=c.id
  LEFT JOIN transaction_line l ON l.account_id=a.id
  LEFT JOIN transaction t ON t.id=l.transaction_id
-
  WHERE
  g.csa_id=%s AND
  g.perm_id=%s AND
  ap.to_date IS NULL AND
  t.modified_by_id IS NULL AND
  (t.cc_type IS NULL OR t.cc_type NOT IN (%s, %s)) AND
- (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s)
+ (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s)'''
+    a = [
+        csaId,
+        P_membership,
+        Tt_Unfinished, Tt_Error,
+        t, t, t,
+    ]
 
- GROUP BY p.id, a.id
+    if dp != -1:
+        q += " AND p.default_delivery_place_id=%s"
+        a.append(dp)
+
+    q += ''' GROUP BY p.id, a.id
  ORDER BY ''' + o + '''
  LIMIT %s OFFSET %s
-''', [ csaId,
-       P_membership,
-       Tt_Unfinished, Tt_Error,
-       q, q, q,
-       toLine - fromLine + 1,
-       fromLine
-       ]
+'''
+    a.extend([
+        toLine - fromLine + 1,
+        fromLine
+    ])
+    return q, a
 
 def check_user (userId, authenticator, kind):
     return 'SELECT p.id, p.first_name, p.middle_name, p.last_name, p.rss_feed_id FROM contact_address c JOIN person_contact pc ON c.id=pc.address_id JOIN person p ON p.id=pc.person_id WHERE c.kind=%s AND c.contact_type=%s AND c.address=%s', [ kind, authenticator, userId ]
@@ -501,23 +509,29 @@ def transactions_by_editor (csaId, operator, q, o, fromLine, toLine):
             fromLine
             ]
 
-def people_index (csaId, q, o, fromLine, toLine):
-    return '''
+def people_index (csaId, t, dp, o, fromLine, toLine):
+    q = '''
 SELECT p.id, p.first_name, p.middle_name, p.last_name
  FROM person p
- JOIN permission_grant g ON p.id=g.person_id
-
- WHERE g.csa_id=%s AND g.perm_id=%s AND
- (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s)
- ORDER BY ''' + o + '''
- LIMIT %s OFFSET %s
- ''', [
+ JOIN permission_grant g ON p.id=g.person_id WHERE g.csa_id=%s AND g.perm_id=%s AND
+ (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s)'''
+    a = [
        csaId,
        P_membership,
-       q, q, q,
+       t, t, t,
+    ]
+
+    if dp != -1:
+        q += " AND p.default_delivery_place_id=%s"
+        a.append(dp)
+
+    q += ''' ORDER BY ''' + o + ''' LIMIT %s OFFSET %s'''
+    a.extend([
        toLine - fromLine + 1,
        fromLine
-       ]
+    ])
+    return q, a
+
 #def people_index (csaId, q, o, fromLine, toLine):
 #    return '''
 #SELECT p.id, p.first_name, p.middle_name, p.last_name, p.rss_feed_id, p.account_notifications,  a.id, a.first_line, a.second_line, a.zip_code, a.description, c.name, s.name, s.iso3
