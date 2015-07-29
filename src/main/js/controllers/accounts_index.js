@@ -81,11 +81,13 @@ function ($scope,   $filter,   $location,   $localStorage,   $q,   gdata) {
 				e.accountData = !!e[4];
 
 				if (!showContacts) {
-					e.person = {};
-					e.person.gadgets = [];
+					e.profile = {};
+					e.profile.gadgets = [];
 
-					if (e[5] < 0) { // FIXME: la threshold dovrebbe essere un parametro del csa
-						e.person.gadgets.push(gdata.gadgets.debt)
+					if (e[5] < 0 &&
+						e.profile.gadgets.indexOf(gdata.gadgets.debt) == -1
+					) { // FIXME: la threshold dovrebbe essere un parametro del csa
+						e.profile.gadgets.push(gdata.gadgets.debt)
 					}
 				}
 			});
@@ -102,7 +104,9 @@ function ($scope,   $filter,   $location,   $localStorage,   $q,   gdata) {
 					e.profile = p;
 
 					if (e[5] < 0 && // FIXME: la threshold dovrebbe essere un parametro del csa
-						e.profile.gadgets.indexOf(gdata.gadgets.piggyBank) == -1) {
+						e.profile.gadgets.indexOf(gdata.gadgets.piggyBank) == -1 &&
+						e.profile.gadgets.indexOf(gdata.gadgets.debt) == -1
+					) {
 						e.profile.gadgets.push(gdata.gadgets.debt)
 					}
 				});
