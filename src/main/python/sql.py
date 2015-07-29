@@ -569,6 +569,16 @@ def people_profiles1 (pids):
             list(pids),
             )
 
+def person_notification_email (pid):
+    return '''
+SELECT c.address
+ FROM person p
+ JOIN person_contact pc ON p.id=pc.person_id
+ JOIN contact_address c ON pc.address_id=c.id
+ WHERE c.kind=%s AND p.id=%s ORDER BY pc.priority LIMIT 1''', [
+        Ck_Email, pid
+    ]
+
 def updateProfile (p):
     return 'UPDATE person SET first_name = %s, middle_name = %s, last_name = %s, account_notifications = %s, cash_treshold = %s, default_delivery_place_id = %s WHERE id = %s', [
         p['first_name'],

@@ -53,12 +53,12 @@ class Mailer (object):
                 log_email.error('can\'t quit smtp: cause=%s/%s', etype, evalue)
                 log_email.debug('full stacktrace:\n%s', loglib.TracebackFormatter(tb))
 
-    def send (self, sender, receivers, subject, body, callback=None):
+    def send (self, sender, receivers, subject, body, reply_to=None, callback=None):
         self.threadpool.add_task(
-            partial(self._send, sender, receivers, subject, body),
+            partial(self._send, sender, receivers, subject, body, reply_to),
             callback)
 
-    def _send (self, sender, receivers, subject, body, global_data=None, local_data=None):
+    def _send (self, sender, receivers, subject, body, reply_to=None, global_data=None, local_data=None):
         try:
             for i in range(self.MAX_TRIES, 0, -1):
                 log_email.debug('sending: try=%d, to=%s, subj=%s', self.MAX_TRIES - i + 1, receivers, subject)
@@ -69,6 +69,8 @@ class Mailer (object):
                         local_data.smtp = smtp
                     msg = MIMEMultipart("alternative")
                     msg["Subject"] = subject
+                    if reply_to is not None:
+                        msg['reply-to'] = reply_to
                     part1 = MIMEText(body, "plain", "utf-8")
                     msg.attach(part1)
 

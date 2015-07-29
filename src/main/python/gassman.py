@@ -196,14 +196,15 @@ class GassmanWebApp (tornado.web.Application):
                            (etype, evalue, loglib.TracebackFormatter(tb))
                            )
 
-    def notify (self, subject, body, receivers = None):
+    def notify (self, subject, body, receivers = None, replyTo=None):
         if self.mailer is None:
             log_gassman.info('SMTP not configured, mail not sent: dest=%s, subj=%s\n%s', receivers, subject, body)
         else:
             self.mailer.send(settings.SMTP_SENDER,
                              receivers or settings.SMTP_RECEIVER,
                              '[GASsMan] %s' % subject,
-                             body
+                             body,
+                             replyTo
                              )
 
     def hasAccount (self, cur, pid, accId):
@@ -374,7 +375,7 @@ class BaseHandler (tornado.web.RequestHandler):
             raise Exception(error)
         return None
 
-    def notify (self, template, receivers = None, **namespace):
+    def notify (self, template, receivers = None, replyTo = None, **namespace):
         subject = self.render_string(
             "%s.subject.email" % template,
             **namespace
@@ -386,7 +387,8 @@ class BaseHandler (tornado.web.RequestHandler):
         self.application.notify(
             subject.decode('UTF-8'),
             body.decode('UTF-8'),
-            receivers
+            receivers,
+            replyTo
         )
 
 class IndexHandler (BaseHandler):
@@ -1010,10 +1012,16 @@ class TransactionSaveHandler (JsonBaseHandler):
             if len(receivers) == 0:
                 log_gassman.debug('transaction not notified, people do not have email account: people=%s, tid=%s', people, transId)
                 continue
+            cur.execute(*self.application.sql.person_notification_email(self.get_logged_user().id))
+            try:
+                replyTo = cur.fetchone()[0]
+            except:
+                replyTo = None
             # TODO: Localizzazione del messaggio
             self.notify(
                 'account_update',
                 receivers=[ p['email'] for p in people if p['email'] ],
+                replyTo=replyTo,
                 total = total,
                 currency = currSym,
                 threshold = LVL_THRES,
