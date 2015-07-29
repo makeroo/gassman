@@ -257,9 +257,10 @@ class GassmanWebApp (tornado.web.Application):
             if contactToDelete:
                 cur.execute(*self.sql.removePersonContact(contactToDelete[0]))
                 cur.execute(*self.sql.removeContactAddress(contactToDelete[1]))
-            if attrsToComplete:
-                try:
-                    yield user.loadFullProfile()
+        if attrsToComplete:
+            try:
+                yield user.loadFullProfile()
+                with self.conn as cur:
                     # non ho trovato niente su db
                     cur.execute(*self.sql.create_contact(user.userId, self.sql.Ck_Id, user.authenticator))
                     contactId = cur.lastrowid
@@ -275,15 +276,12 @@ class GassmanWebApp (tornado.web.Application):
                     cur.execute(*self.sql.assign_contact(contactId, p_id))
                     for attrName, kind, notes in attrsToComplete:
                         self.add_contact(cur, p_id, getattr(user, attrName), kind, notes)
-                    #self.add_contact(cur, p_id, user.email, self.sql.Ck_Email, '')
-                    #self.add_contact(cur, p_id, user.gProfile, self.sql.Ck_GProfile, '')
-                    #self.add_contact(cur, p_id, user.picture, self.sql.Ck_Picture, '')
-                except:
-                    etype, evalue, tb = sys.exc_info()
-                    log_gassman.error('profile creation failed: cause=%s/%s\nfull stacktrace:\n%s', etype, evalue, loglib.TracebackFormatter(tb))
-                    self.notify('[ERROR] User profile creation failed', 'Cause: %s/%s\nAuthId: %s (%s %s)\nTraceback:\n%s' %
-                                   (etype, evalue, user.userId, user.firstName, user.lastName, loglib.TracebackFormatter(tb))
-                                   )
+            except:
+                etype, evalue, tb = sys.exc_info()
+                log_gassman.error('profile creation failed: cause=%s/%s\nfull stacktrace:\n%s', etype, evalue, loglib.TracebackFormatter(tb))
+                self.notify('[ERROR] User profile creation failed', 'Cause: %s/%s\nAuthId: %s (%s %s)\nTraceback:\n%s' %
+                               (etype, evalue, user.userId, user.firstName, user.lastName, loglib.TracebackFormatter(tb))
+                               )
         if p is not None:
             requestHandler.set_secure_cookie("user", tornado.escape.json_encode(p.id))
         return p
