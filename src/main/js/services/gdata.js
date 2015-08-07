@@ -42,7 +42,8 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 		P_canEnterWithdrawal: 8,
 		P_canViewContacts: 9,
 		P_canEditContacts: 10,
-		P_canEditMembershipFee: 12
+		P_canEditMembershipFee: 12,
+		P_csaEditor: 13
 	};
 
 	this.gadgets = {
@@ -220,6 +221,10 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 
 	this.csaList = function () {
 		return $http.post('/csa/list?_xsrf=' + $cookies._xsrf);
+	};
+
+	this.csaUpdate = function (csa) {
+		return $http.post('/csa/update?_xsrf=' + $cookies._xsrf, csa);
 	};
 
 	this.deliveryPlaces = function (csaId) {

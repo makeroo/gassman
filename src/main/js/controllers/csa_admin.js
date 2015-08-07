@@ -4,11 +4,11 @@
 
 'use strict';
 
-angular.module('GassmanApp.controllers.CsaDetail', [
+angular.module('GassmanApp.controllers.CsaAdmin', [
 	'GassmanApp.services.Gdata'
 ])
 
-.controller('CsaDetail', [
+.controller('CsaAdmin', [
          '$scope', '$filter', '$location', '$routeParams', 'gdata', '$q',
 function ($scope,   $filter,   $location,   $routeParams,   gdata,   $q) {
 	var csaId = $routeParams['csaId'];
@@ -16,23 +16,20 @@ function ($scope,   $filter,   $location,   $routeParams,   gdata,   $q) {
 	$scope.profile = null;
 	$scope.csa = null;
 	$scope.loadError = null;
-	$scope.openOrders = null;
-	//$scope.openOrdersError = null;
-	$scope.deliveringOrders = null;
-	//$scope.deliveringOrdersError = null;
 	$scope.draftOrders = null;
-	$scope.movements = null;
 
-	$scope.editCsa = function () {
-		$location.path('/csa/' + csaId + '/admin');
+	$scope.saveCsa = function () {
+		$scope.saveError = null;
+
+		gdata.csaUpdate($scope.csa).then (function (r) {
+			$location.path('/csa/' + csaId + '/detail');
+		}).then (undefined, function (error) {
+			$scope.saveError = error;
+		});
 	};
 
-	$scope.showAccount = function (accountId) {
-		$location.path('/account/' + accountId + '/detail');
-	};
-
-	$scope.showTransaction = function (mov) {
-		$location.path('/transaction/' + mov[4]);
+	$scope.cancel = function () {
+		$location.path('/csa/' + csaId + '/detail');
 	};
 
 	$scope.showChargeMembershipFeeForm = function (v) {
@@ -66,30 +63,18 @@ function ($scope,   $filter,   $location,   $routeParams,   gdata,   $q) {
 		$scope.profile = pData;
 
 		$scope.editableMembershipFee = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
-		$scope.editableCsaInfo = $scope.profile.permissions.indexOf(gdata.permissions.P_csaEditor) != -1;
 
-		return $q.all([ gdata.csaInfo(csaId),
-		                gdata.accountByCsa(csaId)
-		                ]);
+		return gdata.csaInfo(csaId);
 	}).
 	then (function (r) {
-		$scope.csa = r[0].data;
+		$scope.csa = r.data;
 		$scope.csa.kitty.membership_fee = parseFloat($scope.csa.kitty.membership_fee);
-		$scope.accId = r[1];
 
 		// TODO: in realtà degli ordini CPY mi interessano solo le mie ordinazioni!!
-		return $q.all([
-				gdata.accountMovements($scope.accId, 0, 5),
-				gdata.accountAmount($scope.csa.kitty.id),
-				gdata.accountAmount($scope.accId),
-				//gdata.accountMovements($scope.csa.kitty.id, 0, 5),
-				]);
+		return gdata.accountAmount($scope.csa.kitty.id);
 	}).
-	then (function (rr) {
-		$scope.movements = rr[0].data;
-		$scope.csa.kitty.amount = rr[1].data;
-		$scope.personalAmount = rr[2].data;
-		//$scope.csa.kitty.movements = rr[2].data;
+	then (function (r) {
+		$scope.csa.kitty.amount = r.data;
 	}).
 	then (undefined, function (error) {
 		$scope.loadError = error.data;

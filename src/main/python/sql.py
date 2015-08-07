@@ -16,6 +16,7 @@ P_canViewContacts = 9
 P_canEditContacts = 10
 P_canGrantPermissions = 11
 P_canEditMembershipFee = 12
+P_csaEditor = 13
 
 Tt_Generic = 'g'
 Tt_Deposit = 'd'
@@ -269,6 +270,14 @@ def rss_user (rssId):
 
 def csa_info (csaId):
     return 'SELECT * FROM csa WHERE id=%s', [ csaId ]
+
+def csa_update (csa):
+    return '''UPDATE csa SET name=%s, description=%s, default_account_threshold=%s WHERE id=%s''', [
+        csa['name'],
+        csa['description'],
+        csa['default_account_threshold'],
+        csa['id'],
+    ]
 
 def csa_amount (csaId):
     return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND a.gc_type in (%s, %s) AND a.csa_id=%s GROUP BY c.symbol', [ Tt_Unfinished, Tt_Error, At_Asset, At_Kitty, csaId ]

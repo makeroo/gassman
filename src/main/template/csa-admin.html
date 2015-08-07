@@ -1,12 +1,33 @@
-<div ng-if="csa" class="csa-info">
+<for ng-if="csa" class="csa-info">
+<form class="form-horizontal" name="csaAdminForm" ng-if="!loadError">
 
- <p ng-if="csa.description">{{csa.description}}</p>
+  <div class="form-group">
+    <label for="name" class="col-sm-2 control-label">Nome del GAS</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" id="name" placeholder="Nome" ng-model="csa.name" ng-readonly="readOnly">
+    </div>
+  </div>
 
- <div ng-if="editableCsaInfo" class="row last-row-w-separator">
-     <div class="col-md-2">
-         <button class="btn btn-default" ng-click="editCsa()">Amministrazione GAS</button>
-     </div>
- </div>
+  <div class="form-group">
+    <label for="description" class="col-sm-2 control-label">Descrizione</label>
+    <div class="col-sm-10">
+      <textarea class="form-control" id="description" placeholder="Descrizione" ng-model="csa.description" ng-readonly="readOnly"></textarea>
+    </div>
+  </div>
+
+  <div class="row last-row-w-separator">
+      <div class="col-md-2">
+          <button class="btn btn-default" ng-click="saveCsa()">Salva</button>
+      </div>
+      <div class="col-md-2">
+          <button class="btn btn-default" ng-click="cancel()">Annulla</button>
+      </div>
+  </div>
+
+    <div ng-if="saveError" class="alert alert-danger">
+        {{ saveError }}
+    </div>
+</form>
 
  <div class="panel panel-default">
   <div class="panel-heading">
@@ -42,48 +63,6 @@
 
   </div>
  </div>
-
-<!--
-<h2>Ultimi movimenti in cassa comune</h2>
- <div ng-if="csa.kitty.movements" class="movements-syn">
-  <div ng-repeat="mov in csa.kitty.movements" class="mov-row" ng-click="showTransaction(mov)">
-    <div class="mov-data">{{ mov[1] | date:"shortDate" }}</div>
-    <div class="mov-desc">{{ mov[0] }}</div>
-    <div class="mov-amount">{{ mov[3] | currency : mov[5] }}</div>
-  </div>
-  <button ng-click="showAccount(csa.kitty.id)">dettagli</button>
- </div>
- <div ng-if="csa.kitty.movements != null && csa.kitty.movements.length == 0">
- Nessuno
- </div>
--->
-
- <div class="panel panel-default">
-  <div class="panel-heading">
-   <h3 class="panel-title">Ultimi movimenti sul tuo conto</h3>
-  </div>
-  <div class="panel-body">
-
-   <h4 ng-show="personalAmount != null">Saldo personale: {{personalAmount[0] | currency : personalAmount[1] }}</h4>
-
-   <div ng-if="movements" class="movements-syn">
-    <table class="table table-hover">
-     <tbody>
-      <tr ng-repeat="mov in movements" ng-click="showTransaction(mov)">
-       <td class="col-md-2">{{ mov[1] | date:"shortDate" }}</td>
-       <td class="col-md-8">{{ mov[0] }}</td>
-       <td class="col-md-2">{{ mov[3] | currency : mov[5] }}</td>
-      </tr>
-     </tbody>
-    </table>
-    <button class="btn btn-default" ng-click="showAccount(accId)">Elenco completo</button>
-   </div>
-   <div ng-if="movements != null && movements.length == 0">
-    <p>Nessuno</p>
-   </div>
-  </div>
- </div>
-
 
 </div>
 

@@ -133,6 +133,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
             (r'^/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
             (r'^/csa/(\d+)/info$', CsaInfoHandler),
+            (r'^/csa/update$', CsaUpdateHandler),
             (r'^/csa/list', CsaListHandler),
             (r'^/csa/(\d+)/charge_membership_fee$', CsaChargeMembershipFeeHandler),
             (r'^/csa/(\d+)/request_membership$', CsaRequestMembershipHandler),
@@ -554,6 +555,14 @@ class CsaInfoHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.csa_last_kitty_deposit(r['kitty']['id']))
         r['last_kitty_deposit'] = sql.fetch_object(cur)
         return r
+
+class CsaUpdateHandler (JsonBaseHandler):
+    def do (self, cur):
+        u = self.get_logged_user()
+        csa = self.payload
+        if not self.application.hasPermissionByCsa(cur, sql.P_csaEditor, u.id, csa['id']):
+            raise Exception(error_codes.E_permission_denied)
+        cur.execute(*self.application.sql.csa_update(csa))
 
 class CsaListHandler (JsonBaseHandler):
     def do (self, cur):

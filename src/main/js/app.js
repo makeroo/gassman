@@ -11,6 +11,7 @@ angular.module('gassmanApp', [
     'GassmanApp.controllers.HomeSelectorController',
     'GassmanApp.controllers.Navbar',
     'GassmanApp.controllers.CsaDetail',
+	'GassmanApp.controllers.CsaAdmin',
     'GassmanApp.controllers.AccountsIndex',
     'GassmanApp.controllers.AccountDetail',
     'GassmanApp.controllers.PersonDetail',
@@ -48,6 +49,10 @@ function ($routeProvider) {
 	when('/csa/:csaId/detail', {
 		templateUrl: 'template/csa-detail.html',
 		controller: 'CsaDetail'
+	}).
+	when('/csa/:csaId/admin', {
+		templateUrl: 'template/csa-admin.html',
+		controller: 'CsaAdmin'
 	}).
 	when('/person/:personId/detail', {
 		templateUrl: 'template/person-detail.html',
