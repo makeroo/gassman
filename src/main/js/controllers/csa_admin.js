@@ -70,6 +70,8 @@ function ($scope,   $filter,   $location,   $routeParams,   gdata,   $q) {
 		$scope.csa = r.data;
 		$scope.csa.kitty.membership_fee = parseFloat($scope.csa.kitty.membership_fee);
 
+		$scope.csa.default_account_threshold = parseFloat($scope.csa.default_account_threshold);
+
 		// TODO: in realtà degli ordini CPY mi interessano solo le mie ordinazioni!!
 		return gdata.accountAmount($scope.csa.kitty.id);
 	}).
