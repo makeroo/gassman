@@ -266,10 +266,15 @@ CREATE TABLE transaction (
   modified_by_id INT,
 
   -- gc_id CHAR(32),
-  -- tipi di transazione:
-  -- (g)nucash/generic
-  -- (d)eposit
-  -- (p)ayment implica il tipo di form presentato dal sito
+
+  -- tipi di transazione,  implica il tipo di form presentato dal sito:
+  -- (g)nucash/generic (DEPRECATA, transazioni inserite con gnucash)
+  -- (d)eposit (DEPRECATA, quando avevamo il salvadenaio)
+  -- (w)ithdrawal (DEPRECATA, idem come sopra)
+  -- (p)ayment pagamento di merce
+  -- cash e(x)change
+  -- memebership (f)ee
+  -- (b) payment expenses
   -- (t)rashed cestinata, significa che non ha linee
   -- (u)nfinished (ie. draft): è in corso di salvataggio
   -- (e)rror: è stato richiesto il salvataggio di una transazione, ma i dati non sono corretti
