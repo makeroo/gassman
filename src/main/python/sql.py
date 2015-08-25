@@ -7,23 +7,26 @@ Created on 03/mar/2014
 P_membership = 1
 P_canCheckAccounts = 2
 P_canAdminPerson = 3 # very low level!
-P_canEnterDeposit = 4
+P_canEnterDeposit = 4 # deprecated
 P_canEnterPayments = 5
 P_canManageTransactions = 6
 P_canEnterCashExchange = 7
-P_canEnterWithdrawal = 8
+P_canEnterWithdrawal = 8 # deprecated
 P_canViewContacts = 9
 P_canEditContacts = 10
 P_canGrantPermissions = 11
 P_canEditMembershipFee = 12
 P_csaEditor = 13
 
-Tt_Generic = 'g'
-Tt_Deposit = 'd'
-Tt_Payment = 'p'
-Tt_Trashed = 't'
-Tt_CashExchange = 'x'
-Tt_Withdrawal = 'w'
+#
+Tt_Generic = 'g'         # deprecated,       READ ONLY
+Tt_Deposit = 'd'         # deprecated,       READ ONLY
+Tt_Withdrawal = 'w'      # deprecated,       READ ONLY
+Tt_Payment = 'p'         # pagamento merce,  P_canEnterPayments                   # p
+Tt_Trashed = 't'         # cancellata,       P_canManageTransactions or isEditor  # x
+Tt_CashExchange = 'x'    # scambio contante, P_canEnterCashExchange               # x
+Tt_MembershipFee = 'f'   # pagamento quota,  P_canEditMembershipFee               # x
+Tt_PaymentExpenses = 'b' # bonifici, etc.,   P_canEnterPayments                   # x
 Tt_Unfinished = 'u'
 Tt_Error = 'e'
 
@@ -158,14 +161,15 @@ def accounts_index (csaId, t, dp, o, fromLine, toLine):
         q += " AND p.default_delivery_place_id=%s"
         a.append(dp)
 
-    q += ''' GROUP BY p.id, a.id
- ORDER BY ''' + o + '''
- LIMIT %s OFFSET %s
-'''
-    a.extend([
-        toLine - fromLine + 1,
-        fromLine
-    ])
+    q += ''' GROUP BY p.id, a.id ORDER BY ''' + o
+
+    if fromLine != -1:
+        q += ''' LIMIT %s OFFSET %s'''
+        a.extend([
+            toLine - fromLine + 1,
+            fromLine
+        ])
+
     return q, a
 
 def check_user (userId, authenticator, kind):
@@ -534,11 +538,15 @@ SELECT p.id, p.first_name, p.middle_name, p.last_name
         q += " AND p.default_delivery_place_id=%s"
         a.append(dp)
 
-    q += ''' ORDER BY ''' + o + ''' LIMIT %s OFFSET %s'''
-    a.extend([
-       toLine - fromLine + 1,
-       fromLine
-    ])
+    q += ''' ORDER BY ''' + o
+
+    if fromLine != -1:
+        q += ''' LIMIT %s OFFSET %s'''
+        a.extend([
+           toLine - fromLine + 1,
+           fromLine
+        ])
+
     return q, a
 
 #def people_index (csaId, q, o, fromLine, toLine):
