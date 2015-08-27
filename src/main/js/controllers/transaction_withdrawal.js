@@ -28,7 +28,9 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata) {
 		angular.forEach($scope.trans.clients, function (l) {
 			if (l.amount > 0.0) {
 				if (l.account) {
-					data.lines.push(l);
+					var l2 = angular.copy(l);
+					l2.amount = -l2.amount;
+					data.lines.push(l2);
 				}
 			}
 		});
@@ -36,6 +38,12 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata) {
 		if (data.lines.length == 0) {
 			return;
 		}
+
+		data.lines.push({
+			account: 'EXPENSE',
+			amount: +1, // tanto poi viene corretto da backend
+			notes: ''
+		});
 
 		//data = angular.toJson(data) // lo fa già in automatico
 		gdata.transactionSave($scope.csaId, data).

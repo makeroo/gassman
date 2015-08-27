@@ -130,7 +130,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 		$scope.log_date = t.log_date;
 		$scope.operator = t.operator;
 
-		for (var i in t.lines) {
+		for (var i = 0; i < t.lines.length; ++i) {
 			var l = t.lines[i];
 			// il filtro currency digerisce anche le stringhe
 			// mentre input="number" no, devo prima convertire in float
@@ -284,7 +284,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
         } catch (e) {
             return ' ';
         }
-    }
+    };
 
 	$scope.checkCurrencies = function () {
 		$scope.currency = null;

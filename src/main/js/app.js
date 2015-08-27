@@ -22,7 +22,8 @@ angular.module('gassmanApp', [
     'GassmanApp.controllers.TransactionWithdrawal',
     'GassmanApp.controllers.TransactionPayment',
     'GassmanApp.controllers.TransactionGeneric',
-    'GassmanApp.controllers.TransactionTrashed'
+    'GassmanApp.controllers.TransactionTrashed',
+	'GassmanApp.controllers.TransactionMembershipFee'
 ])
 
 /*

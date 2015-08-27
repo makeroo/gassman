@@ -37,6 +37,12 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata) {
 			return;
 		}
 
+		data.lines.push({
+			account: 'INCOME',
+			amount: -1, // tanto poi viene corretto da backend
+			notes: ''
+		});
+
 		//data = angular.toJson(data) // lo fa già in automatico
 		gdata.transactionSave($scope.csaId, data).
 		then (function (r) {

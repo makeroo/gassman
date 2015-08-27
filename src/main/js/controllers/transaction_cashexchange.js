@@ -20,7 +20,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata) {
 			cc_type: 'x',
 			currency: $scope.currency[0],
 			lines: [],
-			receiver: $scope.trans.clients[0].account,
+			//receiver: $scope.trans.clients[0].account,
 			date: $scope.trans.tdate,
 			description: $scope.trans.tdesc
 		};
@@ -36,6 +36,12 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata) {
 		if (data.lines.length == 0) {
 			return;
 		}
+
+		data.lines.push({
+			account: $scope.trans.clients[0].account,
+			amount: -1, // tanto poi viene corretto da backend
+			notes: ''
+		});
 
 		//data = angular.toJson(data) // lo fa già in automatico
 		gdata.transactionSave($scope.csaId, data).

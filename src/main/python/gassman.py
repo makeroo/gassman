@@ -590,7 +590,7 @@ class CsaChargeMembershipFeeHandler (JsonBaseHandler):
         currencyId = acc['currency_id']
         cur.execute(*sql.insert_transaction(tDesc,
                                             now,
-                                            sql.Tt_CashExchange,
+                                            sql.Tt_MembershipFee,
                                             currencyId,
                                             csaId
                                             )
@@ -820,7 +820,14 @@ class TransactionSaveHandler (JsonBaseHandler):
             oldCc, oldDesc, modifiedBy = cur.fetchone()
             if modifiedBy is not None:
                 raise Exception(error_codes.E_already_modified)
-        if ttype in (self.application.sql.Tt_Deposit, self.application.sql.Tt_CashExchange, self.application.sql.Tt_Withdrawal):
+
+        if ttype in (
+                self.application.sql.Tt_Deposit,
+                self.application.sql.Tt_CashExchange,
+                self.application.sql.Tt_Withdrawal,
+                self.application.sql.Tt_MembershipFee,
+                self.application.sql.Tt_Payment
+        ):
             if oldCc is not None and oldCc != ttype:
                 raise Exception(error_codes.E_type_mismatch)
             if len(tlines) == 0:
@@ -829,77 +836,32 @@ class TransactionSaveHandler (JsonBaseHandler):
                 (transId is not None and not self.application.isTransactionEditor(cur, transId, u.id))) and
                 not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId)):
                 raise Exception(error_codes.E_permission_denied)
-            if ttype == sql.Tt_CashExchange:
-                treceiver = tdef['receiver']
-                cur.execute(*self.application.sql.account_currency(treceiver, csaId, tcurr))
-                if cur.fetchone()[0] == 0:
-                    raise Exception(error_codes.E_illegal_receiver)
-                #else:
-                #    involvedAccounts['unknown_amount'] = treceiver
+
             cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csaId))
             tid = cur.lastrowid
             if tid == 0:
                 raise Exception(error_codes.E_illegal_currency)
-            fam = '-' if ttype == self.application.sql.Tt_Withdrawal else ''
-            for l in tlines:
-                desc = l['notes']
-                amount = str(l['amount'])
-                accId = l['account']
-                if float(amount) <= 0:
-                    ttype = self.application.sql.Tt_Error
-                    tlogType = self.application.sql.Tl_Error
-                    tlogDesc = error_codes.E_negative_amount
-                    break
-                realAmount = fam + amount
-                cur.execute(*self.application.sql.insert_transaction_line(tid, desc, realAmount, accId))
-                #involvedAccounts[accId] = realAmount
-            if ttype != self.application.sql.Tt_Error:
-                cur.execute(*self.application.sql.check_transaction_coherency(tid))
-                v = list(cur)
-                if len(v) != 1:
-                    ttype = self.application.sql.Tt_Error
-                    tlogType = self.application.sql.Tl_Error
-                    tlogDesc = error_codes.E_accounts_not_omogeneous_for_currency_and_or_csa
-                elif v[0][1] != csaId:
-                    ttype = self.application.sql.Tt_Error
-                    tlogType = self.application.sql.Tl_Error
-                    tlogDesc = error_codes.E_accounts_do_not_belong_to_csa
-                elif ttype == sql.Tt_CashExchange:
-                    cur.execute(*self.application.sql.complete_cashexchange(tid, treceiver))
-                    tlogType = self.application.sql.Tl_Added if transId is None else self.application.sql.Tl_Modified
-                else:
-                    cur.execute(*self.application.sql.complete_deposit_or_withdrawal(
-                                tid,
-                                csaId,
-                                self.application.sql.At_Income
-                                 if ttype == self.application.sql.Tt_Deposit
-                                 else self.application.sql.At_Expense)
-                                )
-                    tlogType = self.application.sql.Tl_Added if transId is None else self.application.sql.Tl_Modified
-        elif ttype == self.application.sql.Tt_Payment:
-            if oldCc is not None and oldCc != ttype:
-                raise Exception(error_codes.E_illegal_update)
-            if len(tlines) == 0:
-                raise Exception(error_codes.E_no_lines)
-            if ((not self.application.hasPermissionByCsa(cur, sql.transactionPermissions[ttype], u.id, csaId) or
-                (transId is not None and not self.application.isTransactionEditor(cur, transId, u.id))) and
-                not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId)):
-                raise Exception(error_codes.E_permission_denied)
-            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csaId))
-            tid = cur.lastrowid
-            if tid == 0:
-                raise Exception(error_codes.E_illegal_currency)
-            # calcolo il conto spese
-            cur.execute(*self.application.sql.csa_account(csaId, 'EXPENSE', tcurr))
-            expenseAccountId = cur.fetchone()[0]
+
+            customCsaAccounts = dict(
+                EXPENSE=None,
+                INCOME=None,
+                KITTY=None
+            )
             for l in tlines:
                 desc = l['notes']
                 amount = l['amount']
-                accId = l['account'] or expenseAccountId # qui assumo che account id non sia zero!
+                reqAccId = l['account']
+                if reqAccId is customCsaAccounts:
+                    accId = customCsaAccounts[reqAccId]
+                    if accId is None:
+                        cur.execute(*self.application.sql.csa_account(csaId, reqAccId, tcurr))
+                        accId = cur.fetchone()[0]
+                        customCsaAccounts[reqAccId] = accId
+                else:
+                    accId = reqAccId
                 cur.execute(*self.application.sql.insert_transaction_line(tid, desc, amount, accId))
                 lastLineId = cur.lastrowid
-                #lastAccId = accId
-                #involvedAccounts[accId] = amount
+
             cur.execute(*self.application.sql.check_transaction_coherency(tid))
             v = list(cur)
             if len(v) != 1:
@@ -916,9 +878,10 @@ class TransactionSaveHandler (JsonBaseHandler):
                 #involvedAccounts[lastAccId] = str(a)
                 cur.execute(*self.application.sql.transaction_fix_amount(lastLineId, a))
                 tlogType = self.application.sql.Tl_Added if transId is None else self.application.sql.Tl_Modified
+
         elif ttype == self.application.sql.Tt_Trashed:
             if oldCc not in self.application.sql.deletableTransactions:
-                raise Exception(error_codes.E_illegal_update)
+                raise Exception(error_codes.E_illegal_delete)
             if len(tlines) > 0:
                 raise Exception(error_codes.E_trashed_transactions_can_not_have_lines)
             if transId is None:
@@ -933,9 +896,11 @@ class TransactionSaveHandler (JsonBaseHandler):
                 raise Exception(error_codes.E_illegal_currency)
             tlogType = self.application.sql.Tl_Deleted
             #tlogDesc = ''
+
         else:
             log_gassman.error('illegal transaction type: %s', tdef)
             raise Exception(error_codes.E_illegal_transaction_type)
+
         cur.execute(*self.application.sql.finalize_transaction(tid, ttype))
         cur.execute(*self.application.sql.log_transaction(tid, u.id, tlogType, tlogDesc, datetime.datetime.utcnow()))
         if transId is not None and ttype != self.application.sql.Tt_Error:

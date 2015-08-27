@@ -22,6 +22,14 @@
 <ng-include src="'template/transaction_trashed.html'"></ng-include>
 </div>
 
+<div ng-if="autocompletionDataError == null && trans.cc_type == 'f'">
+<ng-include src="'template/transaction_membershipfee.html'"></ng-include>
+</div>
+
+<div ng-if="autocompletionDataError == null && trans.cc_type == 'b'">
+<ng-include src="'template/transaction_paymentexpenses.html'"></ng-include>
+</div>
+
 <div ng-if="autocompletionDataError">
   <div class="row">
     <p class="bg-danger">Caricamento fallito, dati non disponibili. Prova a ricaricare la pagina.</p>
