@@ -221,12 +221,12 @@ class GassmanWebApp (tornado.web.Application):
     @tornado.gen.coroutine
     def checkProfile (self, requestHandler, user):
         with self.conn as cur:
-            authMode = (user.userId, user.authenticator, sql.Ck_Id)
+            authMode = (user.userId, user.authenticator, self.sql.Ck_Id)
             cur.execute(*self.sql.check_user(*authMode))
             pp = list(cur)
             if len(pp) == 0:
                 log_gassman.debug('profile not found: credentials=%s', authMode)
-                authMode = (user.email, 'verified', sql.Ck_Email)
+                authMode = (user.email, 'verified', self.sql.Ck_Email)
                 cur.execute(*self.sql.check_user(*authMode))
                 pp = list(cur)
             if len(pp) == 0:
@@ -245,7 +245,7 @@ class GassmanWebApp (tornado.web.Application):
             contactToDelete = None
             if p is None:
                 pass
-            elif authMode[2] == sql.Ck_Email:
+            elif authMode[2] == self.sql.Ck_Email:
                 cur.execute(*self.sql.fetchAllContacts(p.id))
                 for pcId, aId, kind, contactType in list(cur):
                     if kind == self.sql.Ck_Id and contactType == 'Google':
@@ -508,7 +508,7 @@ class AccountOwnerHandler (JsonBaseHandler):
     def do (self, cur, accId):
         u = self.get_logged_user()
         if (not self.application.hasAccount(cur, u.id, accId) and
-            not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId) and
+            not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCheckAccounts, u.id, accId) and
             not self.application.checkMembershipByKitty(cur, u.id, accId)
             ):
             raise Exception(error_codes.E_permission_denied)
@@ -524,7 +524,7 @@ class AccountMovementsHandler (JsonBaseHandler):
     def do (self, cur, accId, fromIdx, toIdx):
         u = self.get_logged_user()
         if (not self.application.hasAccount(cur, u.id, accId) and
-            not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId) and
+            not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCheckAccounts, u.id, accId) and
             not self.application.checkMembershipByKitty(cur, u.id, accId)
             ):
             raise Exception(error_codes.E_permission_denied)
@@ -535,7 +535,7 @@ class AccountAmountHandler (JsonBaseHandler):
     def do (self, cur, accId):
         u = self.get_logged_user()
         if (not self.application.hasAccount(cur, u.id, accId) and
-            not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId) and
+            not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCheckAccounts, u.id, accId) and
             not self.application.checkMembershipByKitty(cur, u.id, accId)
             ):
             raise Exception(error_codes.E_permission_denied)
@@ -546,21 +546,21 @@ class AccountAmountHandler (JsonBaseHandler):
 class CsaInfoHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         u = self.get_logged_user()
-        if not self.application.hasPermissionByCsa(cur, sql.P_membership, u.id, csaId):
+        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_membership, u.id, csaId):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.csa_info(csaId))
-        r = sql.fetch_object(cur)
+        r = self.application.sql.fetch_object(cur)
         cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty, full=True))
-        r['kitty'] = sql.fetch_object(cur)
+        r['kitty'] = self.application.sql.fetch_object(cur)
         cur.execute(*self.application.sql.csa_last_kitty_deposit(r['kitty']['id']))
-        r['last_kitty_deposit'] = sql.fetch_object(cur)
+        r['last_kitty_deposit'] = self.application.sql.fetch_object(cur)
         return r
 
 class CsaUpdateHandler (JsonBaseHandler):
     def do (self, cur):
         u = self.get_logged_user()
         csa = self.payload
-        if not self.application.hasPermissionByCsa(cur, sql.P_csaEditor, u.id, csa['id']):
+        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_csaEditor, u.id, csa['id']):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.csa_update(csa))
 
@@ -573,7 +573,7 @@ class CsaListHandler (JsonBaseHandler):
 class CsaChargeMembershipFeeHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         u = self.get_logged_user()
-        if not self.application.hasPermissionByCsa(cur, sql.P_canEditMembershipFee, u.id, csaId):
+        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditMembershipFee, u.id, csaId):
             raise Exception(error_codes.E_permission_denied)
 
         p = self.payload
@@ -583,12 +583,12 @@ class CsaChargeMembershipFeeHandler (JsonBaseHandler):
         if amount < 0:
             raise Exception(error_codes.E_illegal_payload)
         now = datetime.datetime.utcnow()
-        cur.execute(*sql.csa_account(csaId, sql.At_Kitty, accId=kittyId, full=True))
-        acc = sql.fetch_object(cur)
+        cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty, accId=kittyId, full=True))
+        acc = self.application.sql.fetch_object(cur)
         if acc is None:
             raise Exception(error_codes.E_illegal_payload)
         currencyId = acc['currency_id']
-        cur.execute(*sql.insert_transaction(tDesc,
+        cur.execute(*self.application.sql.insert_transaction(tDesc,
                                             now,
                                             self.application.sql.Tt_MembershipFee,
                                             currencyId,
@@ -596,7 +596,7 @@ class CsaChargeMembershipFeeHandler (JsonBaseHandler):
                                             )
                     )
         tid = cur.lastrowid
-        cur.execute(*sql.insert_transaction_line_membership_fee(tid, amount, csaId, currencyId))
+        cur.execute(*self.application.sql.insert_transaction_line_membership_fee(tid, amount, csaId, currencyId))
 
         cur.execute(*self.application.sql.insert_transaction_line(tid, '', +1, kittyId))
         lastLineId = cur.lastrowid
@@ -605,13 +605,13 @@ class CsaChargeMembershipFeeHandler (JsonBaseHandler):
         #involvedAccounts[lastAccId] = str(a)
         cur.execute(*self.application.sql.transaction_fix_amount(lastLineId, a))
 
-        cur.execute(*sql.log_transaction(tid, u.id, sql.Tl_Added, sql.Tn_kitty_deposit, now))
+        cur.execute(*self.application.sql.log_transaction(tid, u.id, self.application.sql.Tl_Added, self.application.sql.Tn_kitty_deposit, now))
         return { 'tid': tid }
 
 class CsaRequestMembershipHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         u = self.get_current_user()
-        if self.application.hasPermissionByCsa(cur, sql.P_membership, u, csaId):
+        if self.application.hasPermissionByCsa(cur, self.application.sql.P_membership, u, csaId):
             raise Exception(error_codes.E_already_member)
         profiles, contacts, args = self.application.sql.people_profiles1([u])
         cur.execute(profiles, args)
@@ -628,7 +628,7 @@ class CsaRequestMembershipHandler (JsonBaseHandler):
 class CsaDeliveryPlacesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         u = self.get_current_user()
-        if not self.application.hasPermissionByCsa(cur, sql.P_membership, u, csaId):
+        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_membership, u, csaId):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.csa_delivery_places(csaId))
         return self.application.sql.iter_objects(cur)
@@ -642,7 +642,7 @@ class AccountXlsHandler (BaseHandler):
         self.add_header('Content-Disposition', 'attachment; filename="account-%s.xls"' % accId)
         with self.application.conn as cur:
             if (not self.application.hasAccount(cur, u.id, accId) and
-                not self.application.hasPermissionByAccount(cur, sql.P_canCheckAccounts, u.id, accId) and
+                not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCheckAccounts, u.id, accId) and
                 not self.application.checkMembershipByKitty(cur, u.id, accId)
                 ):
                 raise HTTPError(403)
@@ -723,9 +723,9 @@ class AccountsIndexHandler (JsonBaseHandler):
         dp = p['dp']
         o = self.application.sql.accounts_index_order_by[int(p['o'])]
         u = self.get_logged_user()
-        if self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
+        if self.application.hasPermissionByCsa(cur, self.application.sql.P_canCheckAccounts, u.id, csaId):
             cur.execute(*self.application.sql.accounts_index(csaId, q, dp, o, int(fromIdx), int(toIdx)))
-        elif self.application.hasPermissionByCsa(cur, sql.P_canViewContacts, u.id, csaId):
+        elif self.application.hasPermissionByCsa(cur, self.application.sql.P_canViewContacts, u.id, csaId):
             cur.execute(*self.application.sql.people_index(csaId, q, dp, o, int(fromIdx), int(toIdx)))
         else:
             raise Exception(error_codes.E_permission_denied)
@@ -734,7 +734,7 @@ class AccountsIndexHandler (JsonBaseHandler):
 class AccountsNamesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         u = self.get_logged_user()
-        if not self.application.hasPermissions(cur, sql.editableTransactionPermissions, u.id, csaId):
+        if not self.application.hasPermissions(cur, self.application.sql.editableTransactionPermissions, u.id, csaId):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.account_currencies(csaId))
         accountCurs = list(cur)
@@ -742,7 +742,7 @@ class AccountsNamesHandler (JsonBaseHandler):
         accountPeople = list(cur)
         cur.execute(*self.application.sql.account_people_addresses(csaId))
         accountPeopleAddresses = list(cur)
-        cur.execute(*self.application.sql.csa_account(csaId, sql.At_Kitty))
+        cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty))
         kitty = [ x[0] for x in cur ]
         return dict(
             accountCurrencies = accountCurs,
@@ -754,7 +754,7 @@ class AccountsNamesHandler (JsonBaseHandler):
 class ExpensesNamesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         u = self.get_logged_user()
-        if not self.application.hasPermissionByCsa(cur, sql.P_canEnterPayments, u.id, csaId):
+        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEnterPayments, u.id, csaId):
             raise Exception(error_codes.E_permission_denied)
         r = {}
         cur.execute(*self.application.sql.expenses_accounts(csaId))
@@ -770,7 +770,7 @@ class TransactionEditHandler (JsonBaseHandler):
         u = self.get_logged_user()
         cur.execute(*self.application.sql.transaction_edit(transId))
 
-        r = sql.fetch_struct(cur)
+        r = self.application.sql.fetch_struct(cur)
         r['transId'] = transId
 
         ccType = r['cc_type']
@@ -778,9 +778,9 @@ class TransactionEditHandler (JsonBaseHandler):
         # è D, ho P_canEnterDeposit e l'ho creata io
         # è P, ho P_canEnterPayments e l'ho creata io
         # oppure P_canManageTransactions
-        if (not self.application.hasPermissions(cur, [ sql.P_canManageTransactions, sql.P_canCheckAccounts ], u.id, csaId) and
+        if (not self.application.hasPermissions(cur, [ self.application.sql.P_canManageTransactions, self.application.sql.P_canCheckAccounts ], u.id, csaId) and
             not (ccType in self.application.sql.editableTransactions and
-                 self.application.hasPermissionByCsa(cur, sql.transactionPermissions.get(ccType), u.id, csaId) and
+                 self.application.hasPermissionByCsa(cur, self.application.sql.transactionPermissions.get(ccType), u.id, csaId) and
                  self.application.isTransactionEditor(cur, transId, u.id)
                  ) and
             not self.application.isInvolvedInTransaction(cur, transId, u.id)
@@ -795,7 +795,7 @@ class TransactionEditHandler (JsonBaseHandler):
         for accId, personId in cur.fetchall():
             pp = accountPeopleIndex.setdefault(accId, [])
             pp.append(personId)
-        cur.execute(*self.application.sql.csa_account(csaId, sql.At_Kitty))
+        cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty))
         r['kitty'] = [ x[0] for x in cur ]
 
         return r
@@ -839,9 +839,9 @@ class TransactionSaveHandler (JsonBaseHandler):
                 raise Exception(error_codes.E_type_mismatch)
             if len(tlines) == 0:
                 raise Exception(error_codes.E_no_lines)
-            if ((not self.application.hasPermissionByCsa(cur, sql.transactionPermissions[ttype], u.id, csaId) or
+            if ((not self.application.hasPermissionByCsa(cur, self.application.sql.transactionPermissions[ttype], u.id, csaId) or
                 (transId is not None and not self.application.isTransactionEditor(cur, transId, u.id))) and
-                not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId)):
+                not self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageTransactions, u.id, csaId)):
                 raise Exception(error_codes.E_permission_denied)
 
             cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csaId))
@@ -893,9 +893,9 @@ class TransactionSaveHandler (JsonBaseHandler):
                 raise Exception(error_codes.E_trashed_transactions_can_not_have_lines)
             if transId is None:
                 raise Exception(error_codes.E_missing_trashId_of_transaction_to_be_deleted)
-            if ((not self.application.hasPermissions(cur, sql.editableTransactionPermissions, u.id, csaId) or
+            if ((not self.application.hasPermissions(cur, self.application.sql.editableTransactionPermissions, u.id, csaId) or
                 not self.application.isTransactionEditor(cur, transId, u.id)) and
-                not self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId)):
+                not self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageTransactions, u.id, csaId)):
                 raise Exception(error_codes.E_permission_denied)
             cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csaId))
             tid = cur.lastrowid
@@ -926,7 +926,7 @@ class TransactionSaveHandler (JsonBaseHandler):
     Tnt_description_changed = 'm'
 
     def notifyAccountChange (self, cur, transId, tdesc, tdate, modifiedTransId, oldDesc):
-        cur.execute(*sql.transaction_fetch_lines_to_compare(modifiedTransId, transId))
+        cur.execute(*self.application.sql.transaction_fetch_lines_to_compare(modifiedTransId, transId))
         oldLines = dict()
         newLines = dict()
         diffs = dict()
@@ -964,7 +964,7 @@ class TransactionSaveHandler (JsonBaseHandler):
         #signalledPeople = dict() # da persone (pid) a lista di account ([accountId])
         accounts = dict() # da account (accountId) a lista di persone ([{first/middle/last_name, email}])
         # considero solo gli account i cui owner hanno nei settaggi la ricezione di ogni notifica
-        cur.execute(*sql.account_owners_with_optional_email_for_notifications(diffs.keys()))
+        cur.execute(*self.application.sql.account_owners_with_optional_email_for_notifications(diffs.keys()))
         for accId, pid, first_name, middle_name, last_name, email in cur.fetchall():
             #signalledPeople.setdefault(pid, []).append(accId)
             accounts.setdefault(
@@ -982,7 +982,7 @@ class TransactionSaveHandler (JsonBaseHandler):
         if len(accounts) == 0:
             log_gassman.info('involved accounts has no mail to notify to')
             return
-        cur.execute(*sql.account_total_for_notifications(accounts.keys()))
+        cur.execute(*self.application.sql.account_total_for_notifications(accounts.keys()))
         for accId, total, currSym in cur.fetchall():
             accounts[accId]['account'] = (total, currSym)
         for accId, accData in accounts.items():
@@ -1028,9 +1028,9 @@ class TransactionsEditableHandler (JsonBaseHandler):
         q = '%%%s%%' % self.payload['q']
         o = self.application.sql.transactions_editable_order_by[int(self.payload['o'])]
         u = self.get_logged_user()
-        if self.application.hasPermissionByCsa(cur, sql.P_canManageTransactions, u.id, csaId):
+        if self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageTransactions, u.id, csaId):
             cur.execute(*self.application.sql.transactions_all(csaId, q, o, int(fromIdx), int(toIdx)))
-        elif self.application.hasPermissions(cur, sql.editableTransactionPermissions, u.id, csaId):
+        elif self.application.hasPermissions(cur, self.application.sql.editableTransactionPermissions, u.id, csaId):
             cur.execute(*self.application.sql.transactions_by_editor(csaId, u, q, o, int(fromIdx), int(toIdx)))
         else:
             raise Exception(error_codes.E_permission_denied)
@@ -1070,9 +1070,9 @@ class PeopleProfilesHandler (JsonBaseHandler):
             if not isSelf:
                 raise Exception(error_codes.E_permission_denied)
             csaId = None
-        if not isSelf and not self.application.hasPermissionByCsa(cur, sql.P_membership, u.id, csaId):
+        if not isSelf and not self.application.hasPermissionByCsa(cur, self.application.sql.P_membership, u.id, csaId):
             raise Exception(error_codes.E_permission_denied)
-        canViewContacts = isSelf or self.application.hasPermissionByCsa(cur, sql.P_canViewContacts, u.id, csaId)
+        canViewContacts = isSelf or self.application.hasPermissionByCsa(cur, self.application.sql.P_canViewContacts, u.id, csaId)
         r = {}
         if len(pids) == 0:
             return r
@@ -1086,7 +1086,7 @@ class PeopleProfilesHandler (JsonBaseHandler):
             r[u.id] = record(u.id)
         else:
             accs, perms, args = self.application.sql.people_profiles2(csaId, pids)
-            if isSelf or self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
+            if isSelf or self.application.hasPermissionByCsa(cur, self.application.sql.P_canCheckAccounts, u.id, csaId):
                 cur.execute(accs, args)
                 for acc in self.application.sql.iter_objects(cur):
                     p = record(acc['person_id'])
@@ -1122,10 +1122,10 @@ class PersonSaveHandler (JsonBaseHandler):
                 raise Exception(error_codes.E_permission_denied)
             csaId = None
         elif (
-            (not self.application.hasPermissionByCsa(cur, sql.P_canEditContacts, u.id, csaId) and
+            (not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditContacts, u.id, csaId) and
              u.id != pid
              ) or \
-            not self.application.hasPermissionByCsa(cur, sql.P_membership, pid, csaId)
+            not self.application.hasPermissionByCsa(cur, self.application.sql.P_membership, pid, csaId)
             ):
             raise Exception(error_codes.E_permission_denied)
         # salva profilo
@@ -1153,7 +1153,7 @@ class PersonSaveHandler (JsonBaseHandler):
             aid = cur.lastrowid
             cur.execute(*self.application.sql.linkAddress(pid, aid, i))
         # salva permessi
-        if csaId is not None and self.application.hasPermissionByCsa(cur, sql.P_canGrantPermissions, u.id, csaId):
+        if csaId is not None and self.application.hasPermissionByCsa(cur, self.application.sql.P_canGrantPermissions, u.id, csaId):
             cur.execute(*self.application.sql.permissionLevel(pid, csaId))
             ulevel = cur.fetchone()[0]
             permissions = p['permissions']
@@ -1163,7 +1163,7 @@ class PersonSaveHandler (JsonBaseHandler):
                     cur.execute(*self.application.sql.grantPermission(pid, p, csaId))
         # TODO: salva indirizzi
         fee = p.get('membership_fee')
-        if csaId is not None and fee and self.application.hasPermissionByCsa(cur, sql.P_canEditMembershipFee, u.id, csaId):
+        if csaId is not None and fee and self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditMembershipFee, u.id, csaId):
             #accId = fee.get('account')
             amount = fee.get('amount')
             if float(amount) >= 0:
@@ -1177,10 +1177,10 @@ class PersonCheckEmailHandler (JsonBaseHandler):
         pid = p['id']
         email = p['email']
         if (
-            (not self.application.hasPermissionByCsa(cur, sql.P_canEditContacts, u.id, csaId) and
+            (not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditContacts, u.id, csaId) and
              u.id != int(pid)
              ) or \
-            not self.application.hasPermissionByCsa(cur, sql.P_membership, pid, csaId)
+            not self.application.hasPermissionByCsa(cur, self.application.sql.P_membership, pid, csaId)
             ):
             raise Exception(error_codes.E_permission_denied)
         # verifica unicità
