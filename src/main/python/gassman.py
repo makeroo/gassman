@@ -590,14 +590,21 @@ class CsaChargeMembershipFeeHandler (JsonBaseHandler):
         currencyId = acc['currency_id']
         cur.execute(*sql.insert_transaction(tDesc,
                                             now,
-                                            sql.Tt_MembershipFee,
+                                            self.application.sql.Tt_MembershipFee,
                                             currencyId,
                                             csaId
                                             )
                     )
         tid = cur.lastrowid
         cur.execute(*sql.insert_transaction_line_membership_fee(tid, amount, csaId, currencyId))
-        cur.execute(*sql.complete_cashexchange(tid, kittyId))
+
+        cur.execute(*self.application.sql.insert_transaction_line(tid, '', +1, kittyId))
+        lastLineId = cur.lastrowid
+        cur.execute(*self.application.sql.transaction_calc_last_line_amount(tid, lastLineId))
+        a = cur.fetchone()[0]
+        #involvedAccounts[lastAccId] = str(a)
+        cur.execute(*self.application.sql.transaction_fix_amount(lastLineId, a))
+
         cur.execute(*sql.log_transaction(tid, u.id, sql.Tl_Added, sql.Tn_kitty_deposit, now))
         return { 'tid': tid }
 
