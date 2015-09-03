@@ -35,11 +35,11 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 		P_membership: 1,
 		P_canCheckAccounts: 2,
 		P_canAdminPerson: 3,
-		P_canEnterDeposit: 4,
+		//P_canEnterDeposit: 4,
 		P_canEnterPayments: 5,
 		P_canManageTransactions: 6,
 		P_canEnterCashExchange: 7,
-		P_canEnterWithdrawal: 8,
+		//P_canEnterWithdrawal: 8,
 		P_canViewContacts: 9,
 		P_canEditContacts: 10,
 		P_canEditMembershipFee: 12,
@@ -80,10 +80,10 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 		t: true, // vale il tipo della precedente
 		p: gdata.permissions.P_canEnterPayments,
 		x: gdata.permissions.P_canEnterCashExchange,
-		d: gdata.permissions.P_canEnterDeposit,
-		w: gdata.permissions.P_canEnterWithdrawal,
+		d: true, // non editabile gdata.permissions.P_canEnterDeposit,
+		w: true, // non editabile gdata.permissions.P_canEnterWithdrawal,
 		f: gdata.permissions.P_canEditMembershipFee,
-		b: gdata.permissions.P_canEnterPayments
+		q: true // non editabile gdata.permissions.P_canEnterPayments
 	};
 
 	this.isValidTransactionType = function (v) {
@@ -105,8 +105,8 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 		return (
 			pp.indexOf(gdata.permissions.P_canEnterPayments) != -1 ||
 			pp.indexOf(gdata.permissions.P_canEnterCashExchange) != -1 ||
-			pp.indexOf(gdata.permissions.P_canEnterDeposit) != -1 ||
-			pp.indexOf(gdata.permissions.P_canEnterWithdrawal) != -1 ||
+//			pp.indexOf(gdata.permissions.P_canEnterDeposit) != -1 ||
+//			pp.indexOf(gdata.permissions.P_canEnterWithdrawal) != -1 ||
 			pp.indexOf(gdata.permissions.P_canEditMembershipFee) != -1 ||
 			pp.indexOf(gdata.permissions.P_canManageTransactions) != -1
 			);

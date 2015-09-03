@@ -26,8 +26,12 @@
 <ng-include src="'template/transaction_membershipfee.html'"></ng-include>
 </div>
 
-<div ng-if="autocompletionDataError == null && trans.cc_type == 'b'">
+<div ng-if="autocompletionDataError == null && trans.cc_type == 'q'">
 <ng-include src="'template/transaction_paymentexpenses.html'"></ng-include>
+</div>
+
+<div ng-if="autocompletionDataError == null && trans.cc_type == 'e'">
+Questo movimento è in stato di errore. Contatta l'amministratore.
 </div>
 
 <div ng-if="autocompletionDataError">

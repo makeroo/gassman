@@ -14,8 +14,8 @@ function ($scope,   gdata,   $q) {
     var ttypes = [
         { p:gdata.permissions.P_canEnterCashExchange, f:'#/transaction/x', l:'Inserisci scambio contante' },
         { p:gdata.permissions.P_canEnterPayments, f:'#/transaction/p', l:'Registra pagamenti' },
-        { p:gdata.permissions.P_canEnterDeposit, f:'#/transaction/d', l:'Registra accrediti' },
-        { p:gdata.permissions.P_canEnterWithdrawal, f:'#/transaction/w', l:'Registra prelievi' },
+        //{ p:gdata.permissions.P_canEnterDeposit, f:'#/transaction/d', l:'Registra accrediti' },
+        //{ p:gdata.permissions.P_canEnterWithdrawal, f:'#/transaction/w', l:'Registra prelievi' },
         { e: function (pp) { return gdata.canEditTransactions(null, pp); }, f:'#/transactions/index', l:' Storia dei movimenti inseriti' },
         ];
 /*        //{ p:gdata.permissions.P_membership, f:'#/account/detail', l:'Il tuo conto' },

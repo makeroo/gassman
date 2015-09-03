@@ -7,11 +7,11 @@ Created on 03/mar/2014
 P_membership = 1
 P_canCheckAccounts = 2
 P_canAdminPerson = 3 # very low level!
-P_canEnterDeposit = 4 # deprecated
+#P_canEnterDeposit = 4 # deprecated
 P_canEnterPayments = 5
 P_canManageTransactions = 6
 P_canEnterCashExchange = 7
-P_canEnterWithdrawal = 8 # deprecated
+#P_canEnterWithdrawal = 8 # deprecated
 P_canViewContacts = 9
 P_canEditContacts = 10
 P_canGrantPermissions = 11
@@ -22,11 +22,11 @@ P_csaEditor = 13
 Tt_Generic = 'g'         # deprecated,       READ ONLY
 Tt_Deposit = 'd'         # deprecated,       READ ONLY
 Tt_Withdrawal = 'w'      # deprecated,       READ ONLY
-Tt_Payment = 'p'         # pagamento merce,  P_canEnterPayments                   # p
-Tt_Trashed = 't'         # cancellata,       P_canManageTransactions or isEditor  # x
-Tt_CashExchange = 'x'    # scambio contante, P_canEnterCashExchange               # x
-Tt_MembershipFee = 'f'   # pagamento quota,  P_canEditMembershipFee               # x
-Tt_PaymentExpenses = 'b' # bonifici, etc.,   P_canEnterPayments                   # x
+Tt_PaymentExpenses = 'q' # deprecated,       READ ONLY (conto EXPENSES invece di KITTY per le spese)
+Tt_Payment = 'p'         # pagamento merce,  P_canEnterPayments
+Tt_Trashed = 't'         # cancellata,       P_canManageTransactions or isEditor
+Tt_CashExchange = 'x'    # scambio contante, P_canEnterCashExchange
+Tt_MembershipFee = 'f'   # pagamento quota,  P_canEditMembershipFee
 Tt_Unfinished = 'u'
 Tt_Error = 'e'
 
@@ -51,13 +51,13 @@ Ckk = set([Ck_Telephone,
            ])
 
 transactionPermissions = {
-    Tt_Deposit: P_canEnterDeposit,
+#    Tt_Deposit: READ ONLY P_canEnterDeposit,
     Tt_Payment: P_canEnterPayments,
     Tt_CashExchange: P_canEnterCashExchange,
-    Tt_Withdrawal: P_canEnterWithdrawal,
+#    Tt_Withdrawal: READ ONLY P_canEnterWithdrawal,
     Tt_MembershipFee: P_canEditMembershipFee,
-    Tt_PaymentExpenses: P_canEnterPayments,
-#    Tt_Generic: P_canCheckAccounts
+#    Tt_PaymentExpenses: READ ONLY P_canEnterPayments,
+#    Tt_Generic: READ ONLY P_canCheckAccounts,
     }
 
 editableTransactionPermissions = set(transactionPermissions.values())
@@ -72,14 +72,14 @@ deletableTransactions = set([
     Tt_PaymentExpenses,
     ])
 editableTransactions = set([
-    Tt_Generic,
-    Tt_Deposit,
+#    Tt_Generic,
+#    Tt_Deposit,
     Tt_Payment,
     Tt_CashExchange,
-    Tt_Withdrawal,
-    Tt_Trashed,
+#    Tt_Withdrawal,
+#    Tt_Trashed,
     Tt_MembershipFee,
-    Tt_PaymentExpenses,
+#    Tt_PaymentExpenses,
 #    Tt_Unfinished,
     ])
 
