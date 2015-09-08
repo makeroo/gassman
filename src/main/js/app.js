@@ -17,11 +17,8 @@ angular.module('gassmanApp', [
     'GassmanApp.controllers.PersonDetail',
     'GassmanApp.controllers.TransactionsIndex',
     'GassmanApp.controllers.Transaction',
-    'GassmanApp.controllers.TransactionDeposit',
     'GassmanApp.controllers.TransactionCashExchange',
-    'GassmanApp.controllers.TransactionWithdrawal',
     'GassmanApp.controllers.TransactionPayment',
-    'GassmanApp.controllers.TransactionGeneric',
     'GassmanApp.controllers.TransactionTrashed',
 	'GassmanApp.controllers.TransactionMembershipFee'
 ])
