@@ -128,7 +128,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/profile-info$', ProfileInfoHandler),
             (r'^/accounts/(\d+)/index/(\d+)/(\d+)$', AccountsIndexHandler),
             (r'^/accounts/(\d+)/names$', AccountsNamesHandler),
-            (r'^/expenses/(\d+)/tags$', ExpensesNamesHandler),
+            #(r'^/expenses/(\d+)/tags$', ExpensesNamesHandler),
             (r'^/transaction/(\d+)/(\d+)/edit$', TransactionEditHandler),
             (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
             (r'^/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
@@ -751,19 +751,19 @@ class AccountsNamesHandler (JsonBaseHandler):
             kitty = kitty,
             )
 
-class ExpensesNamesHandler (JsonBaseHandler):
-    def do (self, cur, csaId):
-        u = self.get_logged_user()
-        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEnterPayments, u.id, csaId):
-            raise Exception(error_codes.E_permission_denied)
-        r = {}
-        cur.execute(*self.application.sql.expenses_accounts(csaId))
-        r['accounts'] = list(cur)
-        cur.execute(*self.application.sql.expenses_line_descriptions(csaId))
-        r['tags'] = list(cur)
-        cur.execute(*self.application.sql.expenses_transaction_descriptions(csaId))
-        r['tags'] += [ x[0] for x in cur]
-        return r
+#class ExpensesNamesHandler (JsonBaseHandler):
+#    def do (self, cur, csaId):
+#        u = self.get_logged_user()
+#        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEnterPayments, u.id, csaId):
+#            raise Exception(error_codes.E_permission_denied)
+#        r = {}
+#        cur.execute(*self.application.sql.expenses_accounts(csaId))
+#        r['accounts'] = list(cur)
+#        cur.execute(*self.application.sql.expenses_line_descriptions(csaId))
+#        r['tags'] = list(cur)
+#        cur.execute(*self.application.sql.expenses_transaction_descriptions(csaId))
+#        r['tags'] += [ x[0] for x in cur]
+#        return r
 
 class TransactionEditHandler (JsonBaseHandler):
     def do (self, cur, csaId, transId):

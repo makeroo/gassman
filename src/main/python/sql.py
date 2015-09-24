@@ -390,14 +390,14 @@ UPDATE account a
  SET a.membership_fee = %s
  WHERE ap.person_id = %s AND ap.to_date IS NULL AND a.csa_id = %s''', [ amount, personId, csaId ]
 
-def expenses_accounts (csaId):
-    return 'SELECT id, gc_name, currency_id FROM account where gc_type =%s AND csa_id=%s AND state=%s', [ At_Expense, csaId, As_Open]
+#def expenses_accounts (csaId):
+#    return 'SELECT id, gc_name, currency_id FROM account where gc_type =%s AND csa_id=%s AND state=%s', [ At_Expense, csaId, As_Open]
 
-def expenses_line_descriptions (csaId):
-    return 'SELECT DISTINCT l.description FROM transaction_line l JOIN account a ON l.account_id=a.id WHERE a.gc_type=%s AND a.csa_id=%s AND l.description IS NOT NULL', [ At_Expense, csaId ]
+#def expenses_line_descriptions (csaId):
+#    return 'SELECT DISTINCT l.description FROM transaction_line l JOIN account a ON l.account_id=a.id WHERE a.gc_type=%s AND a.csa_id=%s AND l.description IS NOT NULL', [ At_Expense, csaId ]
 
-def expenses_transaction_descriptions (csaId):
-    return 'SELECT DISTINCT t.description FROM transaction_line l JOIN account a ON l.account_id=a.id JOIN transaction t ON l.transaction_id=t.id WHERE a.gc_type=%s AND a.csa_id=%s AND t.description IS NOT NULL', [ At_Expense, csaId ]
+#def expenses_transaction_descriptions (csaId):
+#    return 'SELECT DISTINCT t.description FROM transaction_line l JOIN account a ON l.account_id=a.id JOIN transaction t ON l.transaction_id=t.id WHERE a.gc_type=%s AND a.csa_id=%s AND t.description IS NOT NULL', [ At_Expense, csaId ]
 
 def insert_transaction (desc, tDate, ccType, currencyId, csaId):
     return 'INSERT INTO transaction (description, transaction_date, cc_type, currency_id, csa_id) SELECT %s, %s, %s, id, %s FROM currency WHERE id=%s', [ desc, tDate, ccType, csaId, currencyId ]

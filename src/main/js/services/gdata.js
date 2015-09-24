@@ -248,11 +248,11 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 	this.accountsNames = function (csaId) {
 		return $http.post('/accounts/' + csaId + '/names?_xsrf=' + $cookies._xsrf);
 	};
-
+/*
 	this.expensesTags = function (csaId) {
 		return $http.post('/expenses/' + csaId + '/tags?_xsrf=' + $cookies._xsrf);
 	};
-
+*/
 	this.accountAmount = function (accId) {
 		return $http.post('/account/' + accId + '/amount?_xsrf=' + $cookies._xsrf);
 	};
