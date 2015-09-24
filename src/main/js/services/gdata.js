@@ -265,8 +265,10 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 		return $http.post('/account/' + accId + '/movements/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies._xsrf); // null, { xsrfCookieName:'_xsrf' })
 	};
 
-	this.transactionForEdit = function (csaId, tid) {
-		return $http.post('/transaction/' + csaId + '/' + tid + '/edit?_xsrf=' + $cookies._xsrf);
+	this.transactionForEdit = function (csaId, tid, fetchKitty) {
+		return $http.post('/transaction/' + csaId + '/' + tid + '/edit?_xsrf=' + $cookies._xsrf, {
+			fetchKitty: fetchKitty
+		});
 	};
 
 	this.transactionSave = function (csaId, tData) {

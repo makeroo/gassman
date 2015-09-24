@@ -551,7 +551,7 @@ class CsaInfoHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.csa_info(csaId))
         r = self.application.sql.fetch_object(cur)
         cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty, full=True))
-        r['kitty'] = self.application.sql.fetch_object(cur)
+        r['kitty'] = self.application.sql.fetch_object(cur) # FIXME: più di uno!
         cur.execute(*self.application.sql.csa_last_kitty_deposit(r['kitty']['id']))
         r['last_kitty_deposit'] = self.application.sql.fetch_object(cur)
         return r
@@ -742,8 +742,8 @@ class AccountsNamesHandler (JsonBaseHandler):
         accountPeople = list(cur)
         cur.execute(*self.application.sql.account_people_addresses(csaId))
         accountPeopleAddresses = list(cur)
-        cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty))
-        kitty = [ x[0] for x in cur ]
+        cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty, full=True))
+        kitty = { x['id']: x for x in self.application.sql.iter_objects(cur) }
         return dict(
             accountCurrencies = accountCurs,
             accountPeople = accountPeople,
@@ -786,6 +786,8 @@ class TransactionEditHandler (JsonBaseHandler):
             not self.application.isInvolvedInTransaction(cur, transId, u.id)
             ):
             raise Exception(error_codes.E_permission_denied)
+
+        p = self.payload
         cur.execute(*self.application.sql.transaction_lines(transId))
         r['lines'] = [ dict(account=l[1], notes=l[2], amount=l[3]) for l in cur]
 
@@ -795,8 +797,9 @@ class TransactionEditHandler (JsonBaseHandler):
         for accId, personId in cur.fetchall():
             pp = accountPeopleIndex.setdefault(accId, [])
             pp.append(personId)
-        cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty))
-        r['kitty'] = [ x[0] for x in cur ]
+        if p.get('fetchKitty'):
+            cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty, full=True))
+            r['kitty'] = { x['id']: x for x in self.application.sql.iter_objects(cur) }
 
         return r
 
