@@ -45,10 +45,10 @@
     </div>
   </div>
 
-  <div class="header" ng-hide="!(trans.expenses | filter:filledLine).length">
+  <div class="header" ng-hide="!(trans.expensesKitty | filter:filledLine).length">
     <h4>Altre spese:</h4>
 
-    <div ng-repeat="l in trans.expenses | filter:filledLine" class="row transaction-line">
+    <div ng-repeat="l in trans.expensesKitty | filter:filledLine" class="row transaction-line">
       <div class="col-sm-6">
         <p class="form-control-static">{{ l.notes }}</p>
       </div>
@@ -58,7 +58,20 @@
     </div>
   </div>
 
-  <div class="row" ng-show="!currencyError && totalAmount > 0 && difference < .01">
+  <div class="header" ng-hide="!(trans.incomesKitty | filter:filledLine).length">
+    <h4>Sconti / donazioni:</h4>
+
+    <div ng-repeat="l in trans.incomesKitty | filter:filledLine" class="row transaction-line">
+      <div class="col-sm-6">
+        <p class="form-control-static">{{ l.notes }}</p>
+      </div>
+      <div class="col-sm-2">
+        <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" ng-show="!currencyError && totalAmount > 0 && difference == .0">
     <div class="col-sm-6">
       <p class="form-control-static text-info">Totale pagamenti:</p>
     </div>
@@ -67,11 +80,11 @@
     </div>
   </div>
 
-  <p class="bg-info">Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
+  <p class="alert alert-info">Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
 
-  <p ng-show="modifies" class="bg-info">Questo inserimento ne modifica uno precedente. <button class="btn btn-info" ng-click="showTransaction(modifies)">Esamina</button></p>
+  <p ng-show="modifies" class="alert alert-info">Questo inserimento ne modifica uno precedente. <button class="btn btn-info" ng-click="showTransaction(modifies)">Esamina</button></p>
 
-  <p class="bg-warning" ng-show="modified_by">
+  <p class="alert alert-warning" ng-show="modified_by">
     <em>Attenzione</em>. Questo inserimento è stato annullato da una successiva modifica. <button class="btn btn-info" ng-click="showTransaction(modified_by)">Esamina</button>
   </p>
 
@@ -151,8 +164,16 @@
       </div>
     </ng:form>
   </div>
+  <div class="row" ng-show="!currencyError && totalAmount > 0">
+    <div class="col-sm-6">
+      <p class="form-control-static text-info">Totale pagato:</p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static text-info">{{ totalAmount | currency : currency[1] }}</p>
+    </div>
+  </div>
 
-  <h4>Produttori:</h4>
+  <h4>Produttori e chi ha sostenuto spese di gestione (ad esempio i bonifici):</h4>
 
   <div ng-repeat="l in trans.producers" class="row transaction-line">
     <ng:form name="lineForm">
@@ -205,46 +226,139 @@
       </div>
     </ng:form>
   </div>
+  <div class="row" ng-show="!currencyError && totalInvoice > 0">
+    <div class="col-sm-6">
+      <p class="form-control-static text-info">Totale versato:</p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static text-info">{{ totalInvoice | currency : currency[1] }}</p>
+    </div>
+  </div>
 
-  <div class="header" ng-hide="!(trans.expenses | filter:filledLine).length">
-    <h4>Altre spese:</h4>
+  <h4>Importi compensati dalla cassa comune (ad esempio per uova rotte):</h4>
 
-    <div ng-repeat="l in trans.expenses | filter:filledLine" class="row transaction-line">
+  <div ng-repeat="l in trans.expensesKitty" class="row transaction-line">
+    <ng:form name="lineForm">
       <div class="col-sm-6">
-        <p class="form-control-static">{{ l.notes }}</p>
+        <label for="expensesKitty{{ $index }}" class="sr-only">Note per la riga {{ $index }}</label>
+        <input id="expensesKitty{{ $index }}"
+               class="form-control"
+               type="text"
+               name="notes"
+               placeholder="Descrizione"
+               ng-model="l.notes"
+               required-if="l.amount"
+               ng-blur="$last && l.notes && $parent.addLine(trans.expensesKitty)"
+               />
+	    <p class="text-danger" ng-show="lineForm.notes.$error.required">Inserire una descrizione</p>
       </div>
       <div class="col-sm-2">
-        <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
+        <div class="form-group">
+          <label for="amountek{{ $index }}" class="sr-only">Importo per la riga {{ $index }}</label>
+          <div class="input-group">
+            <input class="form-control"
+               type="text"
+               name="amount"
+               placeholder="Quanto"
+               ng-model="l.amount"
+               ng-blur="$parent.updateTotalExpensesKitty() || ($last && l.account && $parent.addLine(trans.expensesKitty))"
+               gm-currency="2"
+               id="amountek{{ $index }}"
+               />
+            <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
+          </div>
+          <p class="text-danger" ng-show="lineForm.amount.$error.number">Inserisci un numero</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.decimals">Troppi decimali</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.required">Specificare l'importo</p>
+        </div>
       </div>
+    </ng:form>
+  </div>
+
+  <h4>Sconti / donazioni:</h4>
+
+  <div ng-repeat="l in trans.incomesKitty" class="row transaction-line">
+    <ng:form name="lineForm">
+      <div class="col-sm-6">
+        <label for="incomesKitty{{ $index }}" class="sr-only">Note per la riga {{ $index }}</label>
+        <input id="incomesKitty{{ $index }}"
+               class="form-control"
+               type="text"
+               name="notes"
+               placeholder="Descrizione"
+               ng-model="l.notes"
+               required-if="l.amount"
+               ng-blur="$last && l.notes && $parent.addLine(trans.incomesKitty)"
+               />
+	    <p class="text-danger" ng-show="lineForm.notes.$error.required">Inserire una descrizione</p>
+      </div>
+      <div class="col-sm-2">
+        <div class="form-group">
+          <label for="amountek{{ $index }}" class="sr-only">Importo per la riga {{ $index }}</label>
+          <div class="input-group">
+            <input class="form-control"
+               type="text"
+               name="amount"
+               placeholder="Quanto"
+               ng-model="l.amount"
+               ng-blur="$parent.updateTotalIncomesKitty() || ($last && l.account && $parent.addLine(trans.incomesKitty))"
+               gm-currency="2"
+               id="amountek{{ $index }}"
+               />
+            <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
+          </div>
+          <p class="text-danger" ng-show="lineForm.amount.$error.number">Inserisci un numero</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.decimals">Troppi decimali</p>
+          <p class="text-danger" ng-show="lineForm.amount.$error.required">Specificare l'importo</p>
+        </div>
+      </div>
+    </ng:form>
+  </div>
+  <div class="row" ng-show="!currencyError && totalKitty > 0">
+    <div class="col-sm-6">
+      <p class="form-control-static text-info">La cassa comune cresce di:</p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static text-info">{{ totalKitty | currency : currency[1] }}</p>
+    </div>
+  </div>
+  <div class="row" ng-show="!currencyError && totalKitty < 0">
+    <div class="col-sm-6">
+      <p class="form-control-static text-info">La cassa comune scende di:</p>
+    </div>
+    <div class="col-sm-2">
+      <p class="form-control-static text-info">{{ - totalKitty | currency : currency[1] }}</p>
     </div>
   </div>
 
-  <div class="row" ng-show="!currencyError && totalAmount > 0 && difference < .01">
+  <div class="row alert alert-danger" ng-show="!currencyError && difference > .0">
     <div class="col-sm-6">
-      <p class="form-control-static text-info">Totale pagamenti:</p>
+      <p class="form-control-static">Versamenti non sufficienti, importo mancante:</p>
     </div>
     <div class="col-sm-2">
-      <p class="form-control-static text-info">{{ totalAmount | currency : currency[1] }}</p>
+      <p class="form-control-static">{{ difference | currency: currency[1] }}</p>
     </div>
   </div>
-  <div class="row" ng-show="!currencyError && difference >= .01">
+  <div class="row alert alert-danger" ng-show="!currencyError && difference < .0">
     <div class="col-sm-6">
-      <p class="form-control-static bg-danger">Discrepanza fra contanti versati e pagamenti richiesti:</p>
+      <p class="form-control-static">Versamenti eccessivi, importo in eccesso:</p>
     </div>
     <div class="col-sm-2">
-      <p class="form-control-static bg-danger">{{totalInvoice - totalAmount + totalExpenses | currency: currency[1] }}</p>
+      <p class="form-control-static">{{ - difference | currency: currency[1] }}</p>
     </div>
   </div>
   <div class="row" ng-show="currencyError">
-    <p class="bg-warning">I conti selezionati non sono omogenei per moneta.</p>
+    <p class="alert alert-warning">I conti selezionati non sono omogenei per moneta.</p>
   </div>
   <div class="row" ng-show="!currencyError && !totalAmount">
-    <p class="bg-warning">Nessun dato inserito finora.</p>
+    <p class="alert alert-warning">Nessun dato inserito finora.</p>
   </div>
 
   <div class="row">
     <button class="btn btn-default" ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
-    <button class="btn btn-default" ng-disabled="!csaId || !payment.$valid || !totalAmount || difference >= .01" ng-click="savePayment()">Registra in cassa</button>
+    <button class="btn btn-default" ng-disabled="!csaId || !payment.$valid || !totalAmount || difference > .0" ng-click="savePayment()">Registra in cassa</button>
     <button class="btn btn-default" ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione dei pagamenti</button>
     <button class="btn btn-default" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
   </div>
