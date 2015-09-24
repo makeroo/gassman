@@ -42,11 +42,11 @@
 
   <p class="form-control-static">{{ trans.clients[0].accountName }}</p>
 
-  <p class="bg-info">Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
+  <p class="alert alert-info">Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
 
-  <p ng-show="modifies" class="bg-info">Questo inserimento ne modifica uno precedente. <button class="btn btn-info" ng-click="showTransaction(modifies)">Esamina</button></p>
+  <p ng-show="modifies" class="alert alert-info">Questo inserimento ne modifica uno precedente. <button class="btn btn-info" ng-click="showTransaction(modifies)">Esamina</button></p>
 
-  <p class="bg-warning" ng-show="modified_by">
+  <p class="alert alert-warning" ng-show="modified_by">
     <em>Attenzione</em>. Questo inserimento è stato annullato da una successiva modifica. <button class="btn btn-info" ng-click="showTransaction(modified_by)">Esamina</button>
   </p>
 
@@ -136,10 +136,10 @@
     </div>
   </div>
   <div class="row" ng-show="currencyError">
-    <p class="bg-warning">I conti selezionati non sono omogenei per moneta.</p>
+    <p class="alert alert-warning">I conti selezionati non sono omogenei per moneta.</p>
   </div>
   <div class="row" ng-show="!currencyError && !totalInvoice">
-    <p class="bg-warning">Nessun versamento inserito finora.</p>
+    <p class="alert alert-warning">Nessun versamento inserito finora.</p>
   </div>
 
   <h4>Chi ha ricevuto il denaro:</h4>
