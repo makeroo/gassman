@@ -12,17 +12,17 @@ function () {
 		var accountCurrencies = accountNamesData.accountCurrencies;
 		var accountPeople = accountNamesData.accountPeople;
 		var accountPeopleAddresses = accountNamesData.accountPeopleAddresses;
-		var kitty = accountNamesData.kitty;
+//		var kitty = accountNamesData.kitty;
 
-		var resp = {};
+		var resp = {
+//			kitty: accountNamesData.kitty
+		};
 
-		for (var i in accountCurrencies) {
-			var o = accountCurrencies[i];
+		angular.forEach(accountCurrencies, function (o) {
 			// o è un array a.id, c.id, c.symbol
-			resp[o[0]] = { acc:o[0], cur: [ o[1], o[2] ], people: {}, name:'' };
-		}
-		for (var i in accountPeople) {
-			var o = accountPeople[i];
+			resp[o[0]] = {acc: o[0], cur: [o[1], o[2]], people: {}, name: ''};
+		});
+		angular.forEach(accountPeople, function (o) {
 			// o è un array 0:pid, 1:fname, 2:mname, 3:lname, 4:accId
 			var n = (o[1] || '') + ' ' + (o[2] || '') + ' ' + (o[3] || '');
 			n = n.trim();
@@ -33,9 +33,8 @@ function () {
 			} else {
 				console.log('accountAutocompletion: accountPeople record without currency info:', o);
 			}
-		}
-		for (var i in accountPeopleAddresses) {
-			var o = accountPeopleAddresses[i];
+		});
+		angular.forEach(accountPeopleAddresses, function (o) {
 			// o è un array 0:addr 1:pid 2:accId
 			var aa = resp[o[2]];
 
@@ -48,7 +47,8 @@ function () {
 			} else {
 				console.log('accountAutocompletion: accountPeopleAddresses record without currency info:', o);
 			}
-		}
+		});
+/*
 		for (var i in kitty) {
 			var k = kitty[i];
 
@@ -60,7 +60,7 @@ function () {
 				console.log('accountAutocompletion: kitty account without currency info:', k);
 			}
 		}
-
+*/
 		return resp;
 	};
 
