@@ -63,6 +63,8 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
     var transId = $routeParams['transId'];
     var trans = {};
 
+    var kitties = null;
+
     $scope.trans = trans;
 
     if (gdata.isPk(transId)) {
@@ -133,10 +135,22 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
         return AUTOCOMPLETE_NONE;*/
     };
 
-    var newLine = function () {
+    var newLine = function (account) {
+        if (account == 'KITTY') {
+            for (var x in kitties) {
+                // FIXME: per ora impongo che ce ne sia uno
+                // cioè che i CSA abbiano una sola currency
+                // poi si vedrà
+                if (kitties.hasOwnProperty(x)) {
+                    account = x;
+                    break;
+                }
+            }
+        }
+
         return {
             accountName: '',
-            account: null,
+            account: account,
             amount: '',
             notes: ''
         };
@@ -223,7 +237,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
                     l.accountNames = pp;
                     //l.accountNames = $scope.currencies[l.account].people;
                 }
-            } else if (t.kitty.indexOf(l.account) != -1) {
+            } else if (l.account in kitties) {
                 if (x < 0) {
                     expensesKitty.push(l);
                     l.amount = -x;
@@ -252,8 +266,8 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 
         clients.push(newLine());
         producers.push(newLine());
-        expensesKitty.push(newLine());
-        incomesKitty.push(newLine());
+        expensesKitty.push(newLine('KITTY'));
+        incomesKitty.push(newLine('KITTY'));
 
         autoCompileTotalInvoice = $scope.trans.cc_type != 'p' || t.transId != 'new' ? AUTOCOMPLETE_NONE : AUTOCOMPLETE_PRODUCERS; // FIXME: perché autocompletamento disabilitato in modifica?
 
@@ -437,8 +451,8 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
         });
     };
 
-    $scope.addLine = function (where) {
-        where.push(newLine());
+    $scope.addLine = function (where, account) {
+        where.push(newLine(account));
     };
 /*
     $scope.newTrans = function (tt, desc) {
@@ -517,6 +531,8 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
             $scope.currencies = accountAutocompletion.parse(r.data);
 
             $scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
+
+            kitties = r.data.kitty;
         } else {
             $scope.currencies = [ ];
             $scope.autocompletionData = { };
@@ -558,9 +574,12 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
                 people: {}
                 };
         else
-            return gdata.transactionForEdit($scope.csaId, $scope.trans.transId);
+            return gdata.transactionForEdit($scope.csaId, $scope.trans.transId, kitties == null);
     }).then(function (r) {
         firstTransResp = r;
+
+        if (kitties == null)
+            kitties = r.data.kitty;
 
         var x = [];
         angular.forEach(r.data.people, function (pp) {
@@ -570,7 +589,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
             });
         });
 
-        return gdata.peopleProfiles($scope.csaId, x);
+        return x.length ? gdata.peopleProfiles($scope.csaId, x) : [];
     }).then(function (r) {
         $scope.accountPeopleIndex = r.data;
         return firstTransResp;

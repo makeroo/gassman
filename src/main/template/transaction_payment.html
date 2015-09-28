@@ -248,7 +248,7 @@
                placeholder="Descrizione"
                ng-model="l.notes"
                required-if="l.amount"
-               ng-blur="$last && l.notes && $parent.addLine(trans.expensesKitty)"
+               ng-blur="$last && l.notes && $parent.addLine(trans.expensesKitty, 'KITTY')"
                />
 	    <p class="text-danger" ng-show="lineForm.notes.$error.required">Inserire una descrizione</p>
       </div>
@@ -261,7 +261,7 @@
                name="amount"
                placeholder="Quanto"
                ng-model="l.amount"
-               ng-blur="$parent.updateTotalExpensesKitty() || ($last && l.account && $parent.addLine(trans.expensesKitty))"
+               ng-blur="$parent.updateTotalExpensesKitty() || ($last && l.notes && $parent.addLine(trans.expensesKitty, 'KITTY'))"
                gm-currency="2"
                id="amountek{{ $index }}"
                />
@@ -289,7 +289,7 @@
                placeholder="Descrizione"
                ng-model="l.notes"
                required-if="l.amount"
-               ng-blur="$last && l.notes && $parent.addLine(trans.incomesKitty)"
+               ng-blur="$last && l.notes && $parent.addLine(trans.incomesKitty, 'KITTY')"
                />
 	    <p class="text-danger" ng-show="lineForm.notes.$error.required">Inserire una descrizione</p>
       </div>
@@ -302,7 +302,7 @@
                name="amount"
                placeholder="Quanto"
                ng-model="l.amount"
-               ng-blur="$parent.updateTotalIncomesKitty() || ($last && l.account && $parent.addLine(trans.incomesKitty))"
+               ng-blur="$parent.updateTotalIncomesKitty() || ($last && l.notes && $parent.addLine(trans.incomesKitty, 'KITTY'))"
                gm-currency="2"
                id="amountek{{ $index }}"
                />

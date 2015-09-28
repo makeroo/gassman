@@ -41,8 +41,10 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata) {
 		};
 
 		angular.forEach($scope.trans.clients, cc);
+		angular.forEach($scope.trans.expensesKitty, cc);
 		f = +1;
 		angular.forEach($scope.trans.producers, cc);
+		angular.forEach($scope.trans.incomesKitty, cc);
 		angular.forEach($scope.trans.expenses, function (l) {
 			// a differenza di clienti e produttori, qui non ho il conto:
 			// lo inserisce il server in base a csa e currency
