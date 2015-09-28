@@ -392,6 +392,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 	};
 
 	this.saveProfile = function (csaId, p) {
+		delete peopleProfiles[p.id];
 		return $http.post('/person/' + csaId + '/save?_xsrf=' + $cookies._xsrf, p);
 	};
 
