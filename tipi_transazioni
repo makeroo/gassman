@@ -1,0 +1,26 @@
+a
+b
+c
+d  depositi              obsoleto     readonly
+e  errore                a mano       readonly parziale
+f  quota partecipazione  in uso       r/w
+g  gnucash/generiche     obsoleto     readonly
+h
+i
+j
+k
+l
+m
+n
+o
+p  pagamenti                          r/w
+q  pagamenti su expense  obsoleto     readonly
+r  spese/risarcimenti    TODO         r/w                    TODO!
+s
+t  cancellate            in uso       readonly parziale
+u  unfinished            temporaneo   n/a
+v
+w  prelievi              obsoleto     readonly
+x  scambio contante                   r/w
+y
+z  chiusura conto        TODO         readonly
