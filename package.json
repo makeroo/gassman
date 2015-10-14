@@ -1,6 +1,6 @@
 {
-  "name": "nuvap-app",
-  "version": "0.0.0",
+  "name": "gassman",
+  "version": "0.0.1",
   "devDependencies": {
     "gulp": "^3.8.1",
     "gulp-ignore": "^1.2.0",
