@@ -59,7 +59,7 @@ function ($parse) {
 
                 var f = parseFloat(value.replace(',', '.'));
                 var p = f > 0.0;
-                ctrl.$setValidity('positive', f);
+                ctrl.$setValidity('positive', p);
 
                 if (!p)
                     // non faccio controlli multipli
@@ -70,7 +70,7 @@ function ($parse) {
 
                 ctrl.$setValidity('decimals', d);
 
-                return value;
+                return f;
             });
 /*
             ctrl.$parsers.push(function (value) {
