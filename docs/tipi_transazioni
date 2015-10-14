@@ -2,9 +2,9 @@ a
 b
 c
 d  depositi              obsoleto     readonly
-e  errore                a mano       readonly parziale
+e  errore                a mano       readonly parziale      prodotte in fase di salvataggio e non gestibili ulteriormente da web
 f  quota partecipazione  in uso       r/w
-g  gnucash/generiche     obsoleto     readonly
+g  gnucash/generiche     obsoleto     readonly               tutte quelle inserite con gnucash
 h
 i
 j
@@ -13,14 +13,14 @@ l
 m
 n
 o
-p  pagamenti                          r/w
-q  pagamenti su expense  obsoleto     readonly
+p  pagamenti                          r/w                    sia quelle con le spese su KITTY (ma a parte) sia quelle senza
+q  pagamenti su expense  obsoleto     readonly               erano quelle p che avevano linee su EXPENSE
 r  spese/risarcimenti    TODO         r/w                    TODO!
 s
-t  cancellate            in uso       readonly parziale
+t  cancellate            in uso       readonly parziale      TODO: per ora non sono resuscitabili, poi?
 u  unfinished            temporaneo   n/a
 v
 w  prelievi              obsoleto     readonly
-x  scambio contante                   r/w
+x  scambio contante                   r/w                    ma senza KITTY (tolto da completamento)
 y
 z  chiusura conto        TODO         readonly
