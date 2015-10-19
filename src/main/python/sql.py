@@ -19,16 +19,18 @@ P_canEditMembershipFee = 12
 P_csaEditor = 13
 
 #
-Tt_Generic = 'g'         # deprecated,       READ ONLY
 Tt_Deposit = 'd'         # deprecated,       READ ONLY
-Tt_Withdrawal = 'w'      # deprecated,       READ ONLY
-Tt_PaymentExpenses = 'q' # deprecated,       READ ONLY (conto EXPENSES invece di KITTY per le spese)
-Tt_Payment = 'p'         # pagamento merce,  P_canEnterPayments
-Tt_Trashed = 't'         # cancellata,       P_canManageTransactions or isEditor
-Tt_CashExchange = 'x'    # scambio contante, P_canEnterCashExchange
-Tt_MembershipFee = 'f'   # pagamento quota,  P_canEditMembershipFee
-Tt_Unfinished = 'u'
 Tt_Error = 'e'
+Tt_MembershipFee = 'f'   # pagamento quota,  P_canEditMembershipFee
+Tt_Generic = 'g'         # deprecated,       READ ONLY
+Tt_Payment = 'p'         # pagamento merce,  P_canEnterPayments
+Tt_PaymentExpenses = 'q' # deprecated,       READ ONLY (conto EXPENSES invece di KITTY per le spese)
+# TODO 'r'
+Tt_Trashed = 't'         # cancellata,       P_canManageTransactions or isEditor
+Tt_Unfinished = 'u'
+Tt_Withdrawal = 'w'      # deprecated,       READ ONLY
+Tt_CashExchange = 'x'    # scambio contante, P_canEnterCashExchange
+# TODO 'z'
 
 An_EveryMovement = 'E'
 An_Dayly = 'D'

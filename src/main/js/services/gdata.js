@@ -76,14 +76,18 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 	};
 
 	var transactionTypes = {
-		g: true, // non editabile
-		t: true, // vale il tipo della precedente
-		p: gdata.permissions.P_canEnterPayments,
-		x: gdata.permissions.P_canEnterCashExchange,
 		d: true, // non editabile gdata.permissions.P_canEnterDeposit,
-		w: true, // non editabile gdata.permissions.P_canEnterWithdrawal,
+		// e, errore, solo backend
 		f: gdata.permissions.P_canEditMembershipFee,
-		q: true // non editabile gdata.permissions.P_canEnterPayments
+		g: true, // non editabile
+		p: gdata.permissions.P_canEnterPayments,
+		q: true, // non editabile gdata.permissions.P_canEnterPayments
+		// r TODO
+		t: true, // vale il tipo della precedente
+		// u, unfinished, solo backend
+		w: true, // non editabile gdata.permissions.P_canEnterWithdrawal,
+		x: gdata.permissions.P_canEnterCashExchange
+		// z TODO chiusura conto
 	};
 
 	this.isValidTransactionType = function (v) {
