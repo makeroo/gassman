@@ -11,4 +11,5 @@ INSERT INTO permission (id, name, visibility) VALUES (10, 'canEditContacts', 210
 INSERT INTO permission (id, name, visibility) VALUES (11, 'canGrantPermissions', -8000);
 INSERT INTO permission (id, name, visibility) VALUES (12, 'canEditMembershipFee', 1000);
 INSERT INTO permission (id, name, visibility) VALUES (13, 'csaEditor', 700);
+INSERT INTO permission (id, name, visibility) VALUES (14, 'canCloseAccounts', 700);
 

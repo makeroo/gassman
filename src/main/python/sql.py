@@ -17,8 +17,8 @@ P_canEditContacts = 10
 P_canGrantPermissions = 11
 P_canEditMembershipFee = 12
 P_csaEditor = 13
+P_canCloseAccounts = 14
 
-#
 Tt_Deposit = 'd'         # deprecated,       READ ONLY
 Tt_Error = 'e'
 Tt_MembershipFee = 'f'   # pagamento quota,  P_canEditMembershipFee
@@ -30,7 +30,7 @@ Tt_Trashed = 't'         # cancellata,       P_canManageTransactions or isEditor
 Tt_Unfinished = 'u'
 Tt_Withdrawal = 'w'      # deprecated,       READ ONLY
 Tt_CashExchange = 'x'    # scambio contante, P_canEnterCashExchange
-# TODO 'z'
+Tt_AccountClosed = 'z'   # chiusura conto,   P_canCloseAccounts
 
 An_EveryMovement = 'E'
 An_Dayly = 'D'

@@ -43,7 +43,8 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 		P_canViewContacts: 9,
 		P_canEditContacts: 10,
 		P_canEditMembershipFee: 12,
-		P_csaEditor: 13
+		P_csaEditor: 13,
+		P_canCloseAccounts: 14
 	};
 
 	this.gadgets = {
@@ -86,8 +87,8 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
 		t: true, // vale il tipo della precedente
 		// u, unfinished, solo backend
 		w: true, // non editabile gdata.permissions.P_canEnterWithdrawal,
-		x: gdata.permissions.P_canEnterCashExchange
-		// z TODO chiusura conto
+		x: gdata.permissions.P_canEnterCashExchange,
+		z: gdata.permissions.P_canCloseAccounts
 	};
 
 	this.isValidTransactionType = function (v) {
