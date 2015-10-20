@@ -30,6 +30,10 @@
 <ng-include src="'template/transaction_paymentexpenses.html'"></ng-include>
 </div>
 
+<div ng-if="autocompletionDataError == null && trans.cc_type == 'z'">
+<ng-include src="'template/transaction_accountclosed.html'"></ng-include>
+</div>
+
 <div ng-if="autocompletionDataError == null && trans.cc_type == 'e'">
 Questo movimento è in stato di errore. Contatta l'amministratore.
 </div>
