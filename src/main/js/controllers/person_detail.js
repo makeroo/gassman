@@ -101,6 +101,17 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
 		$location.path('/account/' + accountId + '/detail');
 	};
 
+	$scope.closeAccount = function (accountId) {
+        if (!confirm('Confermi?')) // FIXME: rifare i popup in html
+            return;
+
+		gdata.closeAccount(accountId, personId).then (
+            loadPersonProfileAndAccounts
+        ).then (undefined, function (error) {
+            // TODO: show error
+		});
+	};
+
 	$scope.requestMembership = function (csa) {
 		gdata.requestMembership(csa).
 		then (function (r) {
@@ -117,6 +128,46 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
 		});
 	};
 
+    function loadPersonProfileAndAccounts () {
+		return gdata.profile($scope.csaId, personId).then (function (p) {
+            $scope.personProfile = p;
+            $scope.editable = (
+                $scope.profile.permissions.indexOf(gdata.permissions.P_canEditContacts) != -1 ||
+                personId == $scope.profile.logged_user.id
+            );
+
+            var amounts = [];
+            angular.forEach($scope.personProfile.accounts, function (a) {
+                amounts.push(gdata.accountAmount(a.id));
+            });
+
+            return $q.all(amounts);
+        }).then (function (amounts) {
+            var l = amounts.length;
+
+            for (var c = 0; c < l; ++c) {
+                var acc = $scope.personProfile.accounts[c];
+                var am = amounts[c];
+                acc.amount = am.data[0];
+                acc.csym = am.data[1];
+
+                if (acc.to_date == null) {
+                    // nb: qui assumo una sola moneta per gas... FIXME
+                    //$scope.membership_fee = acc.membership_fee;
+                    //$scope.aka_csym = acc.csym;
+
+                    $scope.canEditMembershipFee = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
+                    $scope.canCloseAccounts = $scope.profile.permissions.indexOf(gdata.permissions.P_canCloseAccounts) != -1;
+
+                    $scope.personProfile.membership_fee = {
+                        //account: acc.id,
+                        amount: parseFloat(acc.membership_fee)
+                    };
+                }
+            }
+        });
+    }
+
 	gdata.profileInfo().then (function (p) {
 		$scope.profile = p;
 
@@ -130,40 +181,7 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
 	}).then (function (r) {
 		$scope.deliveryPlaces = r.data;
 
-		return gdata.profile($scope.csaId, personId);
-	}).then (function (p) {
-		$scope.personProfile = p;
-		$scope.editable = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditContacts) != -1 ||
-			personId == $scope.profile.logged_user.id;
-
-		var amounts = [];
-		angular.forEach($scope.personProfile.accounts, function (a) {
-			amounts.push(gdata.accountAmount(a.id));
-		});
-
-		return $q.all(amounts);
-	}).then (function (amounts) {
-		var l = amounts.length;
-
-		for (var c = 0; c < l; ++c) {
-			var acc = $scope.personProfile.accounts[c];
-			var am = amounts[c];
-			acc.amount = am.data[0];
-			acc.csym = am.data[1];
-
-			if (acc.to_date == null) {
-				// nb: qui assumo una sola moneta per gas... FIXME
-				//$scope.membership_fee = acc.membership_fee;
-				//$scope.aka_csym = acc.csym;
-
-				$scope.canEditMembershipFee = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
-
-					$scope.personProfile.membership_fee = {
-						//account: acc.id,
-						amount: parseFloat(acc.membership_fee)
-					};
-			}
-		}
+		return loadPersonProfileAndAccounts();
 	}).then (undefined, function (error) {
 		if (error == gdata.E_no_csa_found && self) {
 			$q.all([

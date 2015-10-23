@@ -4,6 +4,8 @@ Created on 03/mar/2014
 @author: makeroo
 '''
 
+import datetime
+
 P_membership = 1
 P_canCheckAccounts = 2
 P_canAdminPerson = 3 # very low level!
@@ -30,7 +32,7 @@ Tt_Trashed = 't'         # cancellata,       P_canManageTransactions or isEditor
 Tt_Unfinished = 'u'
 Tt_Withdrawal = 'w'      # deprecated,       READ ONLY
 Tt_CashExchange = 'x'    # scambio contante, P_canEnterCashExchange
-Tt_AccountClosed = 'z'   # chiusura conto,   P_canCloseAccounts
+Tt_AccountClosing = 'z'  # chiusura conto,   P_canCloseAccounts
 
 An_EveryMovement = 'E'
 An_Dayly = 'D'
@@ -114,6 +116,9 @@ At_Kitty = 'KITTY' # kitty
 
 def account_owners (accountId):
     return 'SELECT p.first_name, p.middle_name, p.last_name, p.id, ap.from_date, ap.to_date FROM person p JOIN account_person ap ON ap.person_id=p.id WHERE ap.account_id=%s', [ accountId ]
+
+def account_has_open_owners (accountId):
+    return 'SELECT ap.id FROM account_person ap WHERE ap.account_id=%s AND ap.to_date IS NULL', [ accountId ]
 
 def account_description (accountId):
     return 'SELECT a.gc_name, c.name, c.id FROM account a JOIN csa c ON a.csa_id=c.id WHERE a.id=%s', [ accountId ]
@@ -283,6 +288,9 @@ def rss_user (rssId):
 def csa_info (csaId):
     return 'SELECT * FROM csa WHERE id=%s', [ csaId ]
 
+def csa_by_account (accId):
+    return 'SELECT csa_id FROM account WHERE id=%s', [ accId ]
+
 def csa_update (csa):
     return '''UPDATE csa SET name=%s, description=%s, default_account_threshold=%s WHERE id=%s''', [
         csa['name'],
@@ -293,6 +301,9 @@ def csa_update (csa):
 
 def csa_amount (csaId):
     return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a ON l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND a.gc_type in (%s, %s) AND a.csa_id=%s GROUP BY c.symbol', [ Tt_Unfinished, Tt_Error, At_Asset, At_Kitty, csaId ]
+
+#def csa_account_by_account (referenceAccId, accountType):
+#    return 'SELECT b.id FROM account a JOIN account b ON a.csa_id=b.csa_id WHERE a.id=%s AND b.gc_type=%s', [ referenceAccId, accountType ]
 
 def csa_account (csaId, accountType, currencyId=None, accId=None, full=False):
     q = 'SELECT '
@@ -391,6 +402,9 @@ UPDATE account a
  INNER JOIN account_person ap ON a.id=ap.account_id
  SET a.membership_fee = %s
  WHERE ap.person_id = %s AND ap.to_date IS NULL AND a.csa_id = %s''', [ amount, personId, csaId ]
+
+def account_close (accountId, ownerId):
+    return 'UPDATE account_person SET to_date=%s WHERE person_id=%s AND account_id = %s', [ datetime.datetime.utcnow(), ownerId, accountId ]
 
 #def expenses_accounts (csaId):
 #    return 'SELECT id, gc_name, currency_id FROM account where gc_type =%s AND csa_id=%s AND state=%s', [ At_Expense, csaId, As_Open]

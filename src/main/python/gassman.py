@@ -125,6 +125,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/account/(\d+)/movements/(\d+)/(\d+)$', AccountMovementsHandler),
             (r'^/account/(\d+)/amount$', AccountAmountHandler),
             (r'^/account/(\d+)/xls$', AccountXlsHandler),
+            (r'^/account/(\d+)/close$', AccountCloseHandler),
             (r'^/profile-info$', ProfileInfoHandler),
             (r'^/accounts/(\d+)/index/(\d+)/(\d+)$', AccountsIndexHandler),
             (r'^/accounts/(\d+)/names$', AccountsNamesHandler),
@@ -681,6 +682,62 @@ class AccountXlsHandler (BaseHandler):
                 s.col(4).width = 256 * ldescmaxlength
             w.save(self)
             self.finish()
+
+class AccountCloseHandler (JsonBaseHandler):
+    def do (self, cur, accId):
+        u = self.get_current_user()
+        p = self.payload
+        if not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCloseAccounts, u, accId):
+            raise Exception(error_codes.E_permission_denied)
+        # marca chiuso
+        ownerId = p['owner']
+        tdesc = p.get('tdesc', '')
+        cur.execute(*self.application.sql.account_close(accId, ownerId))
+        affectedRows = cur.rowcount
+        if affectedRows == 0:
+            log_gassman.warning('not owner, can\'t close account: account=%s, owner=%s', accId, ownerId)
+            return { 'error': error_codes.E_not_owner }
+        if affectedRows > 1:
+            log_gassman.error('multiple account assignments: account=%s, owner=%s, rows=%s', accId, ownerId, affectedRows)
+        # calcola saldo
+        cur.execute(*self.application.sql.account_has_open_owners(accId))
+        if cur.fetchone() is not None:
+            log_gassman.info('account still in use, no need for a "z" transaction: account=%s', accId)
+            return { 'info': error_codes.E_account_open }
+        else:
+            cur.execute(*self.application.sql.account_amount(accId))
+            v = cur.fetchone()
+            amount = v[0] or 0.0
+            currencyId = v[1]
+            if amount == 0.0:
+                log_gassman.info('closed account was empty, no "z" transaction needed: account=%s')
+                return { 'info': error_codes.E_empty_account }
+            if amount != 0.0:
+                # crea transazione z
+                now = datetime.datetime.utcnow()
+                cur.execute(*self.application.sql.csa_by_account(accId))
+                csaId = cur.fetchone()[0]
+                cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty, currencyId))
+                kittyId = cur.fetchone()[0]
+
+                cur.execute(*self.application.sql.insert_transaction(
+                    tdesc,
+                    now,
+                    self.application.sql.Tt_AccountClosing,
+                    currencyId,
+                    csaId
+                ))
+                tid = cur.lastrowid
+                cur.execute(*self.application.sql.insert_transaction_line(tid, '', amount, kittyId))
+                cur.execute(*self.application.sql.insert_transaction_line(tid, '', -amount, accId))
+                lastLineId = cur.lastrowid
+                cur.execute(*self.application.sql.transaction_calc_last_line_amount(tid, lastLineId))
+                a = cur.fetchone()[0]
+                #involvedAccounts[lastAccId] = str(a)
+                cur.execute(*self.application.sql.transaction_fix_amount(lastLineId, a))
+
+                cur.execute(*self.application.sql.log_transaction(tid, u.id, self.application.sql.Tl_Added, self.application.sql.Tn_kitty_deposit, now))
+                return { 'tid': tid }
 
 # lo lascio per futura pagina diagnostica: deve comunque ritornare sempre 0.0
 #class CsaAmountHandler (JsonBaseHandler):
