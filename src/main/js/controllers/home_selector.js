@@ -23,7 +23,7 @@ function ($scope,   $location,   gdata) {
 		$location.path('/csa/' + csaId + "/detail");
 	}).
 	then (undefined, function (error) {
-		if (error == gdata.E_no_csa_found) {
+		if (error == gdata.error_codes.E_no_csa_found) {
 			$location.path('/person/' + $scope.profile.logged_user.id + '/detail');
 		} else {
 			$scope.error = error;

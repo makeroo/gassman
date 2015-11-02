@@ -183,7 +183,7 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
 
 		return loadPersonProfileAndAccounts();
 	}).then (undefined, function (error) {
-		if (error == gdata.E_no_csa_found && self) {
+		if (error == gdata.error_codes.E_no_csa_found && self) {
 			$q.all([
 				gdata.profile(null, personId),
 				gdata.csaList()
