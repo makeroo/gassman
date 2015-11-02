@@ -404,7 +404,7 @@ UPDATE account a
  WHERE ap.person_id = %s AND ap.to_date IS NULL AND a.csa_id = %s''', [ amount, personId, csaId ]
 
 def account_close (accountId, ownerId):
-    return 'UPDATE account_person SET to_date=%s WHERE person_id=%s AND account_id = %s', [ datetime.datetime.utcnow(), ownerId, accountId ]
+    return 'UPDATE account_person SET to_date=%s WHERE person_id=%s AND account_id = %s AND to_date IS NULL', [ datetime.datetime.utcnow(), ownerId, accountId ]
 
 #def expenses_accounts (csaId):
 #    return 'SELECT id, gc_name, currency_id FROM account where gc_type =%s AND csa_id=%s AND state=%s', [ At_Expense, csaId, As_Open]
