@@ -19,11 +19,11 @@
     </div>
   </div>
 
-  <p class="bg-info">Cancellazione effettuata da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
+  <p class="alert alert-info">Cancellazione effettuata da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
 
-  <p ng-show="modifies" class="bg-info">Dettagli della transazione cancellata: <button class="btn btn-info" ng-click="showTransaction(modifies)">Esamina</button></p>
+  <p ng-show="modifies" class="alert alert-info">Dettagli della transazione cancellata: <button class="btn btn-info" ng-click="showTransaction(modifies)">Esamina</button></p>
 
-  <p class="bg-warning" ng-show="modified_by">
+  <p class="alert alert-warning" ng-show="modified_by">
     <em>Attenzione</em>. Questo inserimento è stato annullato da una successiva modifica. <button class="btn btn-info" ng-click="showTransaction(modified_by)">Esamina</button>
   </p>
 
