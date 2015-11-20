@@ -13,9 +13,7 @@ angular.module('GassmanApp.controllers.TransactionPayment', [
 function ($scope,   $routeParams,   $location,   $timeout,   gdata) {
 
 	$scope.savePayment = function () {
-		if ($scope.$invalid ||
-			$scope.currencyError ||
-			$scope.difference > .01)
+		if ($scope.$invalid || $scope.currencyError)
 			return;
 
 		var data = {
@@ -29,50 +27,48 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata) {
 
 		var f = -1;
 		var cc = function (l) {
-			if (l.amount > 0.0) {
-				if (l.account) {
-					data.lines.push({
-						amount: l.amount * f,
-						account: l.account,
-						notes: l.notes
-					});
-				}
+			if (l.amount > 0.0 && l.account) {
+                data.lines.push({
+                    amount: l.amount * f,
+                    account: l.account,
+                    notes: l.notes
+                });
 			}
 		};
 
+        var kittyId = $scope.kittyId();
+
 		angular.forEach($scope.trans.clients, cc);
-		angular.forEach($scope.trans.expensesKitty, cc);
+
 		f = +1;
 		angular.forEach($scope.trans.producers, cc);
-		angular.forEach($scope.trans.incomesKitty, cc);
-		angular.forEach($scope.trans.expenses, function (l) {
-			// a differenza di clienti e produttori, qui non ho il conto:
-			// lo inserisce il server in base a csa e currency
-			if (l.amount > 0.0) {
-				data.lines.push({
-					amount: l.amount,
-					notes: l.notes,
-					account: 'EXPENSE'
-				});
-			}
-		});
+
+        data.lines = data.lines.concat($scope.trans.expenses);
+
+		angular.forEach($scope.trans.kittyLines, function (l) {
+            if (l.amount > 0.0 || l.amount < 0.0) { // nb: può essere null
+                if (!l.account || l.account == 'KITTY') {
+                    l.account = kittyId;
+                }
+
+                data.lines.push(l);
+            }
+        });
 
 		if (data.lines.length == 0) {
 			return;
 		}
 
-		//data = angular.toJson(data) // lo fa già in automatico
+        if (! $scope.amountEquals($scope.difference, 0.0)) {
+            data.lines.push({
+                amount: - $scope.difference,
+                account: kittyId,
+                notes: ''
+            });
+        }
+
 		gdata.transactionSave($scope.csaId, data).
 		then (function (r) {
-			//console.log('TransactionPayment: save result:', r);
-			//$scope.savedTransId = r.data;
-			//$scope.transId = 'new';
-			//$scope.lines = [];
-			//$scope.producers = [];
-			//$scope.expenses = [];
-			//$scope.accounts = {};
-			//$scope.tsaveOk = true;
-
 			$scope.showTransaction(r.data);
 		}).
 		then (undefined, function (error) {

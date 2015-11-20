@@ -40,7 +40,7 @@
 
   <h4>Chi ha ricevuto il denaro:</h4>
 
-  <p class="form-control-static">{{ trans.clients[0].accountName }}</p>
+  <p class="form-control-static"><span ng-repeat="p in trans.clients[0].accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + trans.clients[0].account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></p>
 
   <p class="alert alert-info">Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
 

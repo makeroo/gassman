@@ -690,9 +690,10 @@ class AccountCloseHandler (JsonBaseHandler):
         if not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCloseAccounts, u, accId):
             raise Exception(error_codes.E_permission_denied)
         # marca chiuso
+        now = datetime.datetime.utcnow()
         ownerId = p['owner']
         tdesc = p.get('tdesc', '')
-        cur.execute(*self.application.sql.account_close(accId, ownerId))
+        cur.execute(*self.application.sql.account_close(now, accId, ownerId))
         affectedRows = cur.rowcount
         if affectedRows == 0:
             log_gassman.warning('not owner, can\'t close account: account=%s, owner=%s', accId, ownerId)
@@ -705,16 +706,15 @@ class AccountCloseHandler (JsonBaseHandler):
             log_gassman.info('account still in use, no need for a "z" transaction: account=%s', accId)
             return { 'info': error_codes.I_account_open }
         else:
-            cur.execute(*self.application.sql.account_amount(accId))
+            cur.execute(*self.application.sql.account_amount(accId, returnCurrencyId=True))
             v = cur.fetchone()
             amount = v[0] or 0.0
-            currencyId = v[1]
+            currencyId = v[2]
             if amount == 0.0:
                 log_gassman.info('closed account was empty, no "z" transaction needed: account=%s')
                 return { 'info': error_codes.I_empty_account }
             if amount != 0.0:
                 # crea transazione z
-                now = datetime.datetime.utcnow()
                 cur.execute(*self.application.sql.csa_by_account(accId))
                 csaId = cur.fetchone()[0]
                 cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty, currencyId))
@@ -736,7 +736,7 @@ class AccountCloseHandler (JsonBaseHandler):
                 #involvedAccounts[lastAccId] = str(a)
                 cur.execute(*self.application.sql.transaction_fix_amount(lastLineId, a))
 
-                cur.execute(*self.application.sql.log_transaction(tid, u.id, self.application.sql.Tl_Added, self.application.sql.Tn_kitty_deposit, now))
+                cur.execute(*self.application.sql.log_transaction(tid, u, self.application.sql.Tl_Added, self.application.sql.Tn_account_closing, now))
                 return { 'tid': tid }
 
 # lo lascio per futura pagina diagnostica: deve comunque ritornare sempre 0.0
@@ -918,7 +918,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                 desc = l['notes']
                 amount = l['amount']
                 reqAccId = l['account']
-                if reqAccId is customCsaAccounts:
+                if reqAccId in customCsaAccounts:
                     accId = customCsaAccounts[reqAccId]
                     if accId is None:
                         cur.execute(*self.application.sql.csa_account(csaId, reqAccId, tcurr))

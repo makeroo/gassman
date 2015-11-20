@@ -26,6 +26,7 @@ function ($parse) {
 */
 			var decimalsExpr = $parse(attrs.gmCurrency);
             var decimals = decimalsExpr(scope);
+            var negativeAmountAllowed = scope.gmNegativeAmountAllowed == 'true';
 /*
             scope.$watch(function () {
                 return scope.l.account;
@@ -58,7 +59,7 @@ function ($parse) {
                 }
 
                 var f = parseFloat(value.replace(',', '.'));
-                var p = f > 0.0;
+                var p = f > 0.0 || negativeAmountAllowed;
                 ctrl.$setValidity('positive', p);
 
                 if (!p)

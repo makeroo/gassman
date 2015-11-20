@@ -32,8 +32,14 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
         return (a.length == 0 || (a.length == 1 && !a[0].desc && !a[0].amount));
     }
 
-    function amountEquals (a, b) {
+    $scope.amountEquals = function (a, b) {
         return Math.abs(a - b) < 0.00005; // FIXME: .00005 dipende da currency
+    };
+
+    function roundAmount (x, digits) {
+        var up = Math.pow(10, digits);
+
+        return Math.floor( x * up + .5) / up;
     }
 
     function totalAmount (a) {
@@ -56,9 +62,9 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
         );
     }
 */
-    var AUTOCOMPLETE_PRODUCERS = 2;
-    var AUTOCOMPLETE_EXPENSESKITTY = 1;
-    var AUTOCOMPLETE_NONE = 0;
+    //var AUTOCOMPLETE_PRODUCERS = 2;
+    //var AUTOCOMPLETE_EXPENSESKITTY = 1;
+    //var AUTOCOMPLETE_NONE = 0;
 
     var transId = $routeParams['transId'];
     var trans = {};
@@ -86,8 +92,8 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
     $scope.operator = null;
     $scope.totalAmount = null;
     $scope.totalInvoice = null;
-    $scope.totalExpensesKitty = null;
-    $scope.totalIncomesKitty = null;
+    //$scope.totalExpensesKitty = null;
+    //$scope.totalIncomesKitty = null;
     $scope.totalKitty = null;
     $scope.totalExpenses = null;
     $scope.difference = null;
@@ -105,8 +111,11 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
     $scope.canEdit = false;
     $scope.viewableContacts = false;
 
-    var autoCompileTotalInvoice = AUTOCOMPLETE_PRODUCERS;
-
+    $scope.currencyDigits = function () {
+        return 2; // FIXME: recuperarlo da db!
+    };
+//    var autoCompileTotalInvoice = AUTOCOMPLETE_PRODUCERS;
+/*
     var autoCompilingTotalInvoice = function () {
         if (
             !noLineEnteredIn($scope.trans.expensesKitty) &&
@@ -116,7 +125,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
         } else {
             return AUTOCOMPLETE_EXPENSESKITTY;
         }
-/*
+/ *
         if (
             justOneLineEnteredWithTotal($scope.trans.producers, $scope.totalInvoice) &&
 
@@ -132,13 +141,13 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
             justOneLineEnteredWithTotal($scope.trans.expensesKitty, $scope.totalAmount - $scope.totalInvoice)
             )
             return AUTOCOMPLETE_EXPENSESKITTY;
-        return AUTOCOMPLETE_NONE;*/
+        return AUTOCOMPLETE_NONE;* /
     };
-
+*/
     var newLine = function (account) {
+/* TODO: si lascia KITTY come costante da risolvere in fase di save, quando si sa Currency e la kitty non è più ambigua
         if (account == 'KITTY') {
             for (var x in kitties) {
-                // FIXME: per ora impongo che ce ne sia uno
                 // cioè che i CSA abbiano una sola currency
                 // poi si vedrà
                 if (kitties.hasOwnProperty(x)) {
@@ -147,11 +156,11 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
                 }
             }
         }
-
+*/
         return {
             accountName: '',
             account: account,
-            amount: '',
+            amount: account == 'KITTY' ? - $scope.difference : 0.0,
             notes: ''
         };
     };
@@ -162,8 +171,9 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
         var clients = [];
         var producers = [];
         var expenses = [];
-        var expensesKitty = [];
-        var incomesKitty = [];
+        var kittyLines = [];
+//        var expensesKitty = [];
+//        var incomesKitty = [];
 
         if (trans.cc_type == null)
             trans.cc_type = t.cc_type;
@@ -187,8 +197,9 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
         trans.clients = clients;
         trans.producers = producers;
         trans.expenses = expenses;
-        trans.expensesKitty = expensesKitty;
-        trans.incomesKitty = incomesKitty;
+        trans.kittyLines = kittyLines;
+//        trans.expensesKitty = expensesKitty;
+//        trans.incomesKitty = incomesKitty;
         $scope.modified_by = t.modified_by;
         $scope.modifies = t.modifies;
         $scope.log_date = t.log_date;
@@ -196,10 +207,8 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 
         for (var i = 0; i < t.lines.length; ++i) {
             var l = t.lines[i];
-            // il filtro currency digerisce anche le stringhe
-            // mentre input="number" no, devo prima convertire in float
-            // i Decimal su db vengono convertiti in json in stringa
-            var x = parseFloat(l.amount);
+
+            var x = l.amount;
             var owners = t.people[l.account]; //$scope.currencies[l.account];
 
             //console.log(x, typeof(x));
@@ -238,14 +247,20 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
                     //l.accountNames = $scope.currencies[l.account].people;
                 }
             } else if (l.account in kitties) {
-                if (x < 0) {
+                if (l.notes) {
+                    kittyLines.push(l);
+                    l.amount = +x;
+                } else {
+                    console.log('skipped kitty line without description:', l);
+                }
+/*                if (x < 0) {
                     expensesKitty.push(l);
                     l.amount = -x;
                 } else {
                     incomesKitty.push(l);
                     l.amount = +x;
                 }
-
+*/
 /*
                 if (!l.accountName) {
                     l.accountName = 'CASSA COMUNE';
@@ -266,16 +281,13 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 
         clients.push(newLine());
         producers.push(newLine());
-        expensesKitty.push(newLine('KITTY'));
-        incomesKitty.push(newLine('KITTY'));
 
-        autoCompileTotalInvoice = $scope.trans.cc_type != 'p' || t.transId != 'new' ? AUTOCOMPLETE_NONE : AUTOCOMPLETE_PRODUCERS; // FIXME: perché autocompletamento disabilitato in modifica?
+//        autoCompileTotalInvoice = $scope.trans.cc_type != 'p' || t.transId != 'new' ? AUTOCOMPLETE_NONE : AUTOCOMPLETE_PRODUCERS; // FIXME: perché autocompletamento disabilitato in modifica?
 
         $scope.totalExpenses = totalAmount($scope.trans.expenses);
         $scope.updateTotalAmount();
         $scope.updateTotalInvoice();
-        $scope.updateTotalExpensesKitty();
-        $scope.updateTotalIncomesKitty();
+        $scope.updateTotalKittyLines();
         $scope.checkCurrencies();
         $scope.autocompletionDataError = null;
 
@@ -296,10 +308,10 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
     }
 
     $scope.updateTotalAmount = function () {
-        $scope.totalAmount = totalAmount($scope.trans.clients);
+        $scope.totalAmount = roundAmount(totalAmount($scope.trans.clients), $scope.currencyDigits());
 
         updateDifference();
-
+/*
         if (autoCompileTotalInvoice == AUTOCOMPLETE_PRODUCERS) {
             addToLastElement($scope.trans.producers, - $scope.difference);
 
@@ -318,38 +330,57 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
             }
 
             updateDifference();
-        }
+        }*/
     };
 
     function updateDifference () {
-        $scope.difference = (
+        $scope.difference = roundAmount(
             + $scope.totalInvoice
             + $scope.totalExpenses
             - $scope.totalAmount
-            - $scope.totalExpensesKitty
-            + $scope.totalIncomesKitty
+            + $scope.totalKitty
+            //- $scope.totalExpensesKitty
+            //+ $scope.totalIncomesKitty
+            ,
+            $scope.currencyDigits()
         );
 
-        if (amountEquals($scope.difference, 0.0)) {
+        if ($scope.amountEquals($scope.difference, 0.0)) {
             $scope.difference = 0.0;
         }
     }
 
     $scope.updateTotalInvoice = function (f) {
-        var ac = autoCompilingTotalInvoice();
+/*        var ac = autoCompilingTotalInvoice();
+
         if (f !== undefined && ac < autoCompileTotalInvoice) {
             autoCompileTotalInvoice = ac;
         }
-
+*/
         //console.log('update total invoice', f);
 
-        $scope.totalInvoice = totalAmount($scope.trans.producers);
+        $scope.totalInvoice = roundAmount(totalAmount($scope.trans.producers), $scope.currencyDigits());
 
         updateDifference();
     };
 
+    $scope.updateTotalKittyLines = function (f) {
+//        var ac = autoCompilingTotalInvoice();
+
+        //console.log('update total invoice', f);
+
+//        $scope.totalExpensesKitty = totalAmount($scope.trans.expensesKitty);
+        $scope.totalKitty = roundAmount(totalAmount($scope.trans.kittyLines), $scope.currencyDigits()); //$scope.totalIncomesKitty - $scope.totalExpensesKitty;
+
+//        if ($scope.amountEquals($scope.totalKitty, 0.0))
+//            $scope.totalKitty = 0.0;
+
+        updateDifference();
+    };
+/*
     $scope.updateTotalExpensesKitty = function (f) {
         var ac = autoCompilingTotalInvoice();
+// TOD O: rimuovere autocomplete
         if (f !== undefined && ac < autoCompileTotalInvoice) {
             autoCompileTotalInvoice = ac;
         }
@@ -359,7 +390,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
         $scope.totalExpensesKitty = totalAmount($scope.trans.expensesKitty);
         $scope.totalKitty = $scope.totalIncomesKitty - $scope.totalExpensesKitty;
 
-        if (amountEquals($scope.totalKitty, 0.0))
+        if ($scope.amountEquals($scope.totalKitty, 0.0))
             $scope.totalKitty = 0.0;
 
         updateDifference();
@@ -367,6 +398,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 
     $scope.updateTotalIncomesKitty = function (f) {
         var ac = autoCompilingTotalInvoice();
+// TOD O: rimuovere autocomplete
         if (f !== undefined && ac < autoCompileTotalInvoice) {
             autoCompileTotalInvoice = ac;
         }
@@ -376,15 +408,19 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
         $scope.totalIncomesKitty = totalAmount($scope.trans.incomesKitty);
         $scope.totalKitty = $scope.totalIncomesKitty - $scope.totalExpensesKitty;
 
-        if (amountEquals($scope.totalKitty, 0.0))
+        if ($scope.amountEquals($scope.totalKitty, 0.0))
             $scope.totalKitty = 0.0;
 
         updateDifference();
     };
-
+*/
     $scope.accountCurrency = function (a) {
         try {
-            return $scope.currencies[a].cur[1];
+            if (a == 'KITTY') {
+                return $scope.currency[1];
+            } else {
+                return $scope.currencies[a].cur[1];
+            }
         } catch (e) {
             return ' ';
         }
@@ -453,6 +489,10 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
 
     $scope.addLine = function (where, account) {
         where.push(newLine(account));
+
+        if (account == 'KITTY') {
+            $scope.updateTotalKittyLines();
+        }
     };
 /*
     $scope.newTrans = function (tt, desc) {
@@ -474,7 +514,15 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
     };
 */
     $scope.filledLine = function (line) {
-        return line.account != null;
+        return (
+            line.account !== null &&
+            line.account !== undefined &&
+            !isNaN(parseFloat(line.amount))
+        );
+    };
+
+    $scope.filledLineWithDescription = function (line) {
+        return $scope.filledLine(line) && typeof line.notes == 'string' && line.notes.length > 0;
     };
 
     $scope.modifyTransaction = function () {
@@ -494,6 +542,29 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
         $timeout(function () {
             e.focus();
         });
+    };
+
+    $scope.kittyId = function () {
+        if (kitties == null) {
+            throw 'kitties unavailable';
+        }
+
+        if ($scope.currency == null) {
+            throw 'currency not defined for transaction';
+        }
+
+        var kittyId = null;
+        angular.forEach(kitties, function (curr, aid) {
+            if (curr.currency_id == $scope.currency[0]) {
+                kittyId = aid;
+            }
+        });
+
+        if (kittyId === null) {
+            throw 'wtf! kitty not found for trans currency';
+        }
+
+        return kittyId;
     };
 /*
     $scope.focusAmount = function (type) {

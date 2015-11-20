@@ -15,29 +15,38 @@
     </div>
   </div>
 
-  <h4>Chi ha ritirato i prodotti:</h4>
+  <h4 ng-hide="!(trans.clients | filter:filledLine).length">Chi ha ritirato i prodotti:</h4>
 
-  <div ng-repeat="l in trans.clients | filter:filledLine" class="row">
+      <div ng-repeat="l in trans.clients | filter:filledLine" class="row">
     <div class="col-sm-6">
       <p class="form-control-static"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></p>
     </div>
     <div class="col-sm-2">
-      <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
+      <p class="form-control-static text-right">{{ l.amount | currency : currency[1] }}</p>
     </div>
     <div class="col-sm-4">
       <p class="form-control-static">{{ l.notes }}</p>
     </div>
   </div>
 
+  <div class="row" ng-show="!currencyError && totalAmount > 0">
+    <div class="col-sm-6 bg-success">
+      <p class="form-control-static">Totale pagamenti:</p>
+    </div>
+    <div class="col-sm-2 bg-success">
+      <p class="form-control-static text-right">{{totalAmount | currency : currency[1] }}</p>
+    </div>
+  </div>
+
   <div ng-hide="!(trans.producers | filter:filledLine).length">
-    <h4>Produttori:</h4>
+    <h4>Produttori e chi ha sostenuto spese di gestione (ad esempio i bonifici):</h4>
 
     <div ng-repeat="l in trans.producers | filter:filledLine" class="row transaction-line">
       <div class="col-sm-6">
         <p class="form-control-static"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></p>
       </div>
       <div class="col-sm-2">
-        <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
+        <p class="form-control-static text-right">{{ l.amount | currency : currency[1] }}</p>
       </div>
       <div class="col-sm-4">
         <p class="form-control-static">{{ l.notes }}</p>
@@ -45,6 +54,37 @@
     </div>
   </div>
 
+  <div class="row" ng-show="!currencyError && totalInvoice > 0">
+    <div class="col-sm-6 bg-warning">
+      <p class="form-control-static text-info">Totale spesa:</p>
+    </div>
+    <div class="col-sm-2 bg-warning">
+      <p class="form-control-static text-right">{{totalInvoice | currency : currency[1] }}</p>
+    </div>
+  </div>
+
+  <div class="header" ng-hide="!(trans.kittyLines | filter:filledLineWithDescription).length">
+    <h4>Compensazioni con cassa comune:</h4>
+
+    <div ng-repeat="l in trans.kittyLines | filter:filledLineWithDescription" class="row transaction-line">
+      <div class="col-sm-6">
+        <p class="form-control-static">{{ l.notes }}</p>
+      </div>
+      <div class="col-sm-2">
+        <p class="form-control-static text-right">{{ l.amount | currency : currency[1] }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row transaction-line" ng-if="totalKitty - difference != 0.0">
+    <div class="col-sm-6" ng-class="{ 'bg-danger': totalKitty - difference < 0.0, 'bg-success': totalKitty - difference > 0.0 }">
+      <p class="form-control-static">Compensazione in cassa comune:</p>
+    </div>
+    <div class="col-sm-2" ng-class="{ 'bg-danger': totalKitty - difference < 0.0, 'bg-success': totalKitty - difference > 0.0 }">
+      <p class="form-control-static text-right">{{ totalKitty - difference | currency : currency[1] }}</p>
+    </div>
+  </div>
+<!--
   <div class="header" ng-hide="!(trans.expensesKitty | filter:filledLine).length">
     <h4>Altre spese:</h4>
 
@@ -70,15 +110,7 @@
       </div>
     </div>
   </div>
-
-  <div class="row" ng-show="!currencyError && totalAmount > 0 && difference == .0">
-    <div class="col-sm-6">
-      <p class="form-control-static text-info">Totale pagamenti:</p>
-    </div>
-    <div class="col-sm-2">
-      <p class="form-control-static text-info">{{totalAmount | currency : currency[1] }}</p>
-    </div>
-  </div>
+-->
 
   <p class="alert alert-info">Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
 
@@ -121,7 +153,7 @@
                    theme="bootstrap"
                    name="account"
                    ng-model="l.account"
-                   on-select="checkCurrencies() || ($last && l.account && $parent.addLine(trans.clients))"
+                   on-select="checkCurrencies() || ($last && l.account && addLine(trans.clients))"
                    required-if="l.amount"
                    ng-keypress="$event.keyCode == 13 && focusElement('#amountc' + $index)"
                    >
@@ -141,8 +173,8 @@
                name="amount"
                placeholder="Quanto"
                ng-model="l.amount"
-               ng-blur="$parent.updateTotalAmount() || ($last && l.account && $parent.addLine(trans.clients))"
-               gm-currency="2"
+               ng-blur="updateTotalAmount() || ($last && l.account && addLine(trans.clients))"
+               gm-currency="currencyDigits()"
                id="amountc{{ $index }}"
                />
             <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
@@ -158,18 +190,18 @@
                type="text"
                placeholder="Note"
                ng-model="l.notes"
-               ng-blur="$last && l.account && $parent.addLine(trans.clients)"
+               ng-blur="$last && l.account && addLine(trans.clients)"
                />
 
       </div>
     </ng:form>
   </div>
-  <div class="row" ng-show="!currencyError && totalAmount > 0">
-    <div class="col-sm-6">
+  <div class="row" ng-show="!currencyError">
+    <div class="col-sm-6 bg-success">
       <p class="form-control-static text-info">Totale pagato:</p>
     </div>
-    <div class="col-sm-2">
-      <p class="form-control-static text-info">{{ totalAmount | currency : currency[1] }}</p>
+    <div class="col-sm-2 bg-success">
+      <p class="form-control-static text-info text-right">{{ totalAmount | currency : currency[1] }}</p>
     </div>
   </div>
 
@@ -183,7 +215,7 @@
                    theme="bootstrap"
                    name="account"
                    ng-model="l.account"
-                   on-select="checkCurrencies() || ($last && l.account && $parent.addLine(trans.producers))"
+                   on-select="checkCurrencies() || ($last && l.account && addLine(trans.producers))"
                    required-if="l.amount"
                    ng-keypress="$event.keyCode == 13 && focusElement('#amountp' + $index)"
                    >
@@ -203,8 +235,8 @@
                name="amount"
                placeholder="Quanto"
                ng-model="l.amount"
-               ng-blur="$parent.updateTotalInvoice(lineForm) || ($last && l.account && $parent.addLine(trans.producers))"
-               gm-currency="2"
+               ng-blur="updateTotalInvoice(lineForm) || ($last && l.account && addLine(trans.producers))"
+               gm-currency="currencyDigits()"
                id="amountp{{ $index }}"
                />
             <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
@@ -220,50 +252,50 @@
                type="text"
                placeholder="Note"
                ng-model="l.notes"
-               ng-blur="$last && l.account && $parent.addLine(trans.producers)"
+               ng-blur="$last && l.account && addLine(trans.producers)"
                />
 
       </div>
     </ng:form>
   </div>
-  <div class="row" ng-show="!currencyError && totalInvoice > 0">
-    <div class="col-sm-6">
-      <p class="form-control-static text-info">Totale versato:</p>
+  <div class="row" ng-show="!currencyError">
+    <div class="col-sm-6 bg-warning">
+      <p class="form-control-static text-info">Totale da pagare:</p>
     </div>
-    <div class="col-sm-2">
-      <p class="form-control-static text-info">{{ totalInvoice | currency : currency[1] }}</p>
+    <div class="col-sm-2 bg-warning">
+      <p class="form-control-static text-info text-right">{{ totalInvoice | currency : currency[1] }}</p>
     </div>
   </div>
 
-  <h4>Importi compensati dalla cassa comune (ad esempio per uova rotte):</h4>
+  <h4>Compensazioni da cassa comune:</h4>
 
-  <div ng-repeat="l in trans.expensesKitty" class="row transaction-line">
+  <div ng-repeat="l in trans.kittyLines" class="row transaction-line">
     <ng:form name="lineForm">
       <div class="col-sm-6">
-        <label for="expensesKitty{{ $index }}" class="sr-only">Note per la riga {{ $index }}</label>
-        <input id="expensesKitty{{ $index }}"
+        <label for="kittyLine{{ $index }}" class="sr-only">Note per la riga {{ $index }}</label>
+        <input id="kittyLine{{ $index }}"
                class="form-control"
                type="text"
                name="notes"
                placeholder="Descrizione"
                ng-model="l.notes"
                required-if="l.amount"
-               ng-blur="$last && l.notes && $parent.addLine(trans.expensesKitty, 'KITTY')"
                />
 	    <p class="text-danger" ng-show="lineForm.notes.$error.required">Inserire una descrizione</p>
       </div>
       <div class="col-sm-2">
         <div class="form-group">
-          <label for="amountek{{ $index }}" class="sr-only">Importo per la riga {{ $index }}</label>
+          <label for="amountk{{ $index }}" class="sr-only">Importo per la riga {{ $index }}</label>
           <div class="input-group">
             <input class="form-control"
                type="text"
                name="amount"
                placeholder="Quanto"
                ng-model="l.amount"
-               ng-blur="$parent.updateTotalExpensesKitty() || ($last && l.notes && $parent.addLine(trans.expensesKitty, 'KITTY'))"
-               gm-currency="2"
-               id="amountek{{ $index }}"
+               gm-currency="currencyDigits()"
+               gm-negative-amount-allowed="true"
+               id="amountk{{ $index }}"
+               ng-blur="updateTotalKittyLines(lineForm)"
                />
             <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
           </div>
@@ -275,78 +307,15 @@
       </div>
     </ng:form>
   </div>
-
-  <h4>Sconti / donazioni:</h4>
-
-  <div ng-repeat="l in trans.incomesKitty" class="row transaction-line">
-    <ng:form name="lineForm">
-      <div class="col-sm-6">
-        <label for="incomesKitty{{ $index }}" class="sr-only">Note per la riga {{ $index }}</label>
-        <input id="incomesKitty{{ $index }}"
-               class="form-control"
-               type="text"
-               name="notes"
-               placeholder="Descrizione"
-               ng-model="l.notes"
-               required-if="l.amount"
-               ng-blur="$last && l.notes && $parent.addLine(trans.incomesKitty, 'KITTY')"
-               />
-	    <p class="text-danger" ng-show="lineForm.notes.$error.required">Inserire una descrizione</p>
-      </div>
-      <div class="col-sm-2">
-        <div class="form-group">
-          <label for="amountek{{ $index }}" class="sr-only">Importo per la riga {{ $index }}</label>
-          <div class="input-group">
-            <input class="form-control"
-               type="text"
-               name="amount"
-               placeholder="Quanto"
-               ng-model="l.amount"
-               ng-blur="$parent.updateTotalIncomesKitty() || ($last && l.notes && $parent.addLine(trans.incomesKitty, 'KITTY'))"
-               gm-currency="2"
-               id="amountek{{ $index }}"
-               />
-            <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
-          </div>
-          <p class="text-danger" ng-show="lineForm.amount.$error.number">Inserisci un numero</p>
-          <p class="text-danger" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</p>
-          <p class="text-danger" ng-show="lineForm.amount.$error.decimals">Troppi decimali</p>
-          <p class="text-danger" ng-show="lineForm.amount.$error.required">Specificare l'importo</p>
-        </div>
-      </div>
-    </ng:form>
-  </div>
-  <div class="row" ng-show="!currencyError && totalKitty > 0">
-    <div class="col-sm-6">
-      <p class="form-control-static text-info">La cassa comune cresce di:</p>
+  <div class="row" ng-show="!currencyError">
+    <div class="col-sm-6" ng-class="{ 'bg-danger': totalKitty - difference < 0.0, 'bg-success': totalKitty - difference >= 0.0 }">
+      <p class="form-control-static text-info">Totale compensazioni:</p>
     </div>
-    <div class="col-sm-2">
-      <p class="form-control-static text-info">{{ totalKitty | currency : currency[1] }}</p>
+    <div class="col-sm-2" ng-class="{ 'bg-danger': totalKitty - difference < 0.0, 'bg-success': totalKitty - difference >= 0.0 }">
+      <p class="form-control-static text-info text-right">{{ totalKitty - difference | currency : currency[1] }}</p>
     </div>
-  </div>
-  <div class="row" ng-show="!currencyError && totalKitty < 0">
-    <div class="col-sm-6">
-      <p class="form-control-static text-info">La cassa comune scende di:</p>
-    </div>
-    <div class="col-sm-2">
-      <p class="form-control-static text-info">{{ - totalKitty | currency : currency[1] }}</p>
-    </div>
-  </div>
-
-  <div class="row alert alert-danger" ng-show="!currencyError && difference > .0">
-    <div class="col-sm-6">
-      <p class="form-control-static">Versamenti non sufficienti, importo mancante:</p>
-    </div>
-    <div class="col-sm-2">
-      <p class="form-control-static">{{ difference | currency: currency[1] }}</p>
-    </div>
-  </div>
-  <div class="row alert alert-danger" ng-show="!currencyError && difference < .0">
-    <div class="col-sm-6">
-      <p class="form-control-static">Versamenti eccessivi, importo in eccesso:</p>
-    </div>
-    <div class="col-sm-2">
-      <p class="form-control-static">{{ - difference | currency: currency[1] }}</p>
+    <div class="col-sm-4">
+      <button class="btn btn-default" ng-if="difference != 0.0" ng-click="addLine(trans.kittyLines, 'KITTY')">Specifica motivazioni / note</button>
     </div>
   </div>
   <div class="row" ng-show="currencyError">
@@ -358,7 +327,7 @@
 
   <div class="row">
     <button class="btn btn-default" ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
-    <button class="btn btn-default" ng-disabled="!csaId || !payment.$valid || !totalAmount || difference > .0" ng-click="savePayment()">Registra in cassa</button>
+    <button class="btn btn-default" ng-disabled="!csaId || !payment.$valid || !totalAmount" ng-click="savePayment()">Registra in cassa</button>
     <button class="btn btn-default" ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione dei pagamenti</button>
     <button class="btn btn-default" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
   </div>

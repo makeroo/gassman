@@ -105,7 +105,7 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
         if (!confirm('Confermi?')) // FIXME: rifare i popup in html
             return;
 
-		gdata.closeAccount(accountId, personId).then (
+		gdata.closeAccount(accountId, personId, 'Chiusura conto' /*FIXME: localizzare*/).then (
             loadPersonProfileAndAccounts
         ).then (undefined, function (error) {
             // TODO: show error

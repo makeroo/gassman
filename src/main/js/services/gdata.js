@@ -438,9 +438,9 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
         return $http.post('/csa/' + csaId + '/request_membership?_xsrf=' + $cookies._xsrf);
     };
 
-    this.closeAccount = function (accId, ownerId) {
+    this.closeAccount = function (accId, ownerId, reason) {
         delete peopleProfiles[ownerId];
-        return $http.post('/account/' + accId + '/close?_xsrf=' + $cookies._xsrf, { owner: ownerId });
+        return $http.post('/account/' + accId + '/close?_xsrf=' + $cookies._xsrf, { owner: ownerId, tdesc: reason });
     };
 }])
 ;

@@ -108,6 +108,7 @@ Tl_Modified = 'M'
 Tl_Error = 'E'
 
 Tn_kitty_deposit = 'kitty_deposit'
+Tn_account_closing = 'account_closing'
 
 At_Asset = 'ASSET' # persone
 At_Expense = 'EXPENSE' # spese
@@ -138,9 +139,16 @@ SELECT t.description, t.transaction_date, l.description, l.amount, t.id, c.symbo
         a.extend([ toLine - fromLine + 1, fromLine ])
     return q, a
 
-def account_amount (accountDbId):
-    return 'SELECT SUM(l.amount), c.symbol FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id JOIN account a on l.account_id=a.id JOIN currency c ON c.id=a.currency_id WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s', [ Tt_Unfinished, Tt_Error, accountDbId ]
-    #return 'SELECT SUM(l.amount) FROM transaction t JOIN transaction_line l ON l.transaction_id=t.id WHERE t.modified_by_id IS NULL AND l.account_id=%s', [ accountDbId ]
+def account_amount (accountDbId, returnCurrencyId=False):
+    q = 'SELECT SUM(l.amount), c.symbol'
+    if returnCurrencyId:
+        q += ', c.id'
+    q += """ FROM transaction t
+ JOIN transaction_line l ON l.transaction_id=t.id
+ JOIN account a on l.account_id=a.id
+ JOIN currency c ON c.id=a.currency_id
+ WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s"""
+    return q, [ Tt_Unfinished, Tt_Error, accountDbId ]
 
 accounts_index_order_by = [ 'p.first_name, p.last_name',
                            'ta',
@@ -403,8 +411,8 @@ UPDATE account a
  SET a.membership_fee = %s
  WHERE ap.person_id = %s AND ap.to_date IS NULL AND a.csa_id = %s''', [ amount, personId, csaId ]
 
-def account_close (accountId, ownerId):
-    return 'UPDATE account_person SET to_date=%s WHERE person_id=%s AND account_id = %s AND to_date IS NULL', [ datetime.datetime.utcnow(), ownerId, accountId ]
+def account_close (closeDatetime, accountId, ownerId):
+    return 'UPDATE account_person SET to_date=%s WHERE person_id=%s AND account_id = %s AND to_date IS NULL', [ closeDatetime, ownerId, accountId ]
 
 #def expenses_accounts (csaId):
 #    return 'SELECT id, gc_name, currency_id FROM account where gc_type =%s AND csa_id=%s AND state=%s', [ At_Expense, csaId, As_Open]
