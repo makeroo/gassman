@@ -28,6 +28,10 @@ function ($scope,   $filter,   $location,   $routeParams,   gdata,   $q) {
 		});
 	};
 
+	$scope.showAccount = function (accountId) {
+		$location.path('/account/' + accountId + '/detail');
+	};
+
 	$scope.cancel = function () {
 		$location.path('/csa/' + csaId + '/detail');
 	};
