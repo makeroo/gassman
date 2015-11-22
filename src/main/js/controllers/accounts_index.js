@@ -61,7 +61,7 @@ function ($scope,   $filter,   $location,   $localStorage,   $q,   gdata) {
 	$scope.$watch('query.dp', $scope.search);
 
 	$scope.loadMore = function () {
-		if ($scope.concluded || loading) return;
+		if ($scope.concluded || loading || currCsa == null) return;
 
         loading = true;
 
