@@ -29,20 +29,20 @@
     </div>
   </div>
 
-  <div class="row" ng-show="!currencyError && totalAmount > 0">
-    <div class="col-sm-6">
-      <p class="form-control-static text-info">Incasso:</p>
+  <div class="row total-line" ng-show="!currencyError && totalAmount > 0">
+    <div class="col-sm-6 bg-success">
+      <p class="form-control-static">Incasso:</p>
     </div>
-    <div class="col-sm-2">
-      <p class="form-control-static text-info">{{totalAmount | currency : currency[1] }}</p>
+    <div class="col-sm-2 bg-success">
+      <p class="form-control-static">{{totalAmount | currency : currency[1] }}</p>
     </div>
   </div>
 
-  <p class="bg-info">Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
+  <p class="alert alert-info">Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" href="#/person/{{operator.pid}}/detail">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
 
-  <p ng-show="modifies" class="bg-info">Questo inserimento ne modifica uno precedente. <button class="btn btn-info" ng-click="showTransaction(modifies)">Esamina</button></p>
+  <p ng-show="modifies" class="alert alert-info">Questo inserimento ne modifica uno precedente. <button class="btn btn-info" ng-click="showTransaction(modifies)">Esamina</button></p>
 
-  <p class="bg-warning" ng-show="modified_by">
+  <p class="alert alert-warning" ng-show="modified_by">
     <em>Attenzione</em>. Questo inserimento è stato annullato da una successiva modifica. <button class="btn btn-info" ng-click="showTransaction(modified_by)">Esamina</button>
   </p>
 
@@ -122,93 +122,16 @@
       </div>
     </ng:form>
   </div>
-<!--
-  <h4>Produttori:</h4>
 
-  <div ng-repeat="l in trans.producers" class="row transaction-line">
-    <ng:form name="lineForm">
-      <div class="col-sm-6">
-        <label for="accountp{{ $index }}" class="sr-only">Conto per la riga {{ $index }}</label>
-		<ui-select id="accountp{{ $index }}"
-                   theme="bootstrap"
-                   name="account"
-                   ng-model="l.account"
-                   on-select="checkCurrencies() || ($last && l.account && $parent.addLine(trans.producers))"
-                   required-if="l.amount"
-                   ng-keypress="$event.keyCode == 13 && focusElement('#amountp' + $index)"
-                   >
-		  <ui-select-match placeholder="Produttore">{{ $select.selected.name }}</ui-select-match>
-		  <ui-select-choices repeat="accountInfo.acc as accountInfo in autocompletionData | filter: {name: $select.search} track by accountInfo.acc">
-		    <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
-		  </ui-select-choices>
-		</ui-select>
-	    <p class="text-danger" ng-show="lineForm.account.$error.required">Specificare il produttore</p>
-      </div>
-      <div class="col-sm-2">
-        <div class="form-group">
-          <label for="amountp{{ $index }}" class="sr-only">Importo per la riga {{ $index }}</label>
-          <div class="input-group">
-            <input class="form-control"
-               type="text"
-               name="amount"
-               placeholder="Quanto"
-               ng-model="l.amount"
-               ng-blur="$parent.updateTotalInvoice(lineForm) || ($last && l.account && $parent.addLine(trans.producers))"
-               gm-currency="2"
-               id="amountp{{ $index }}"
-               />
-            <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
-          </div>
-          <p class="text-danger" ng-show="lineForm.amount.$error.number">Inserisci un numero</p>
-          <p class="text-danger" ng-show="lineForm.amount.$error.positive">Importo negativo o nullo</p>
-          <p class="text-danger" ng-show="lineForm.amount.$error.decimals">Troppi decimali</p>
-          <p class="text-danger" ng-show="lineForm.amount.$error.required">Specificare l'importo</p>
-        </div>
-      </div>
-      <div class="col-sm-4">
-        <input class="form-control"
-               type="text"
-               placeholder="Note"
-               ng-model="l.notes"
-               ng-blur="$last && l.account && $parent.addLine(trans.producers)"
-               />
-
-      </div>
-    </ng:form>
-  </div>
-
-  <div class="header" ng-hide="!(trans.expenses | filter:filledLine).length">
-    <h4>Altre spese:</h4>
-
-    <div ng-repeat="l in trans.expenses | filter:filledLine" class="row transaction-line">
-      <div class="col-sm-6">
-        <p class="form-control-static">{{ l.notes }}</p>
-      </div>
-      <div class="col-sm-2">
-        <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
-      </div>
+  <div class="row total-line" ng-show="!currencyError && totalAmount > 0">
+    <div class="col-sm-6 bg-success">
+      <p class="form-control-static">Incasso:</p>
+    </div>
+    <div class="col-sm-2 bg-success">
+      <p class="form-control-static">{{ totalAmount | currency : currency[1] }}</p>
     </div>
   </div>
--->
 
-  <div class="row" ng-show="!currencyError && totalAmount > 0">
-    <div class="col-sm-6">
-      <p class="form-control-static text-info">Incasso:</p>
-    </div>
-    <div class="col-sm-2">
-      <p class="form-control-static text-info">{{ totalAmount | currency : currency[1] }}</p>
-    </div>
-  </div>
-<!--
-  <div class="row" ng-show="!currencyError && difference >= .01">
-    <div class="col-sm-6">
-      <p class="form-control-static bg-danger">Discrepanza fra contanti versati e pagamenti richiesti:</p>
-    </div>
-    <div class="col-sm-2">
-      <p class="form-control-static bg-danger">{{totalInvoice - totalAmount + totalExpenses | currency: currency[1] }}</p>
-    </div>
-  </div>
--->
   <div class="row" ng-show="currencyError">
     <p class="alert alert-warning">I conti selezionati non sono omogenei per moneta.</p>
   </div>
