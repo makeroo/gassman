@@ -30,11 +30,11 @@
   </div>
 
   <div class="row">
-    <div class="col-sm-6">
-      <p class="form-control-static text-info">Totale accrediti:</p>
+    <div class="col-sm-6 bg-success">
+      <p class="form-control-static">Totale accrediti:</p>
     </div>
-    <div class="col-sm-2">
-      <p class="form-control-static text-info">{{totalInvoice | currency : currency[1] }}</p>
+    <div class="col-sm-2 bg-success">
+      <p class="form-control-static">{{totalInvoice | currency : currency[1] }}</p>
     </div>
   </div>
 
@@ -128,11 +128,11 @@
   </div>
 
   <div class="row" ng-show="!currencyError && totalInvoice > 0">
-    <div class="col-sm-6">
-      <p class="form-control-static text-info">Totale accrediti:</p>
+    <div class="col-sm-6 bg-success">
+      <p class="form-control-static">Totale accrediti:</p>
     </div>
-    <div class="col-sm-2">
-      <p class="form-control-static text-info">{{ totalInvoice | currency : currency[1] }}</p>
+    <div class="col-sm-2 bg-success">
+      <p class="form-control-static">{{ totalInvoice | currency : currency[1] }}</p>
     </div>
   </div>
   <div class="row" ng-show="currencyError">
