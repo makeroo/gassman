@@ -1,118 +1,74 @@
 <!doctype html>
 <html ng-app="gassmanApp" lang="{{LOCALE}}">
-<head>
- <meta charset="utf-8">
- <title>GASsMan</title>
+    <head>
+        <meta charset="utf-8">
+        <title>GASsMan</title>
+        <link ng-if="profile.logged_user.rssFeedId" rel="alternate" type="application/rss+xml" title="RSS" href="/rss/{{! profile.logged_user.rssFeedId }}" />
+        <link href="{{ static_url('css/app.min.css') }}" rel="stylesheet">
+        <link href="{{ static_url('css/hover.min.css') }}" rel="stylesheet">
+    </head>
+    <body>
 
- <link ng-if="profile.logged_user.rssFeedId" rel="alternate" type="application/rss+xml" title="RSS" href="/rss/{{! profile.logged_user.rssFeedId }}" />
+        <div class="page-content">
 
- <link href="{{ static_url('css/app.min.css') }}" rel="stylesheet">
- <link href="{{ static_url('css/hover.min.css') }}" rel="stylesheet">
-</head>
-<body>
+            <nav class="navbar navbar-default" role="navigation" ng-controller="NavbarController">
+                <div class="container-fluid">
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="#/csa/{{! csaId }}/detail">{{! csa.name }}</a>
+                    </div>
 
-<div class="page-content">
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                        <ul class="nav navbar-nav">
+                            <li ng-if="csa">
+                                <a href="#/accounts/index">Chi siamo</a>
+                            </li>
+                            <li ng-if="transactionTypes.length" class="dropdown">
+                                <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Movimenti <span class="caret"></span></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li ng-repeat="m in transactionTypes"><a href="{{! m.f}}">{{! m.l }}</a></li>
+                                    <!-- <li class="divider"></li> -->
+                                </ul>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li class="dropdown">
+                                <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{! profile.logged_user.firstName }}<span class="caret"></span></a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="#/person/{{! profile.logged_user.id }}/detail">Profilo</a></li>
+                                    <li ng-if="accId"><a href="#/account/{{! accId  }}/detail">Conto</a></li>
+                                </ul>
+                            </li>
+                        </ul>
 
-<nav class="navbar navbar-default" role="navigation" ng-controller="NavbarController">
-  <div class="container-fluid">
-    <!-- Brand and toggle get grouped for better mobile display -->
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <a class="navbar-brand" href="#/csa/{{! csaId }}/detail">{{! csa.name }}</a>
-    </div>
+                    </div>
+                </div>
+            </nav>
 
-    <!-- Collect the nav links, forms, and other content for toggling -->
-    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-      <ul class="nav navbar-nav">
-        <li ng-if="csa">
-          <a href="#/accounts/index">Chi siamo</a>
-        </li>
-
-        <li ng-if="transactionTypes.length" class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Movimenti <span class="caret"></span></a>
-          <ul class="dropdown-menu" role="menu">
-            <li ng-repeat="m in transactionTypes"><a href="{{! m.f}}">{{! m.l }}</a></li>
-            <!-- <li class="divider"></li> -->
-          </ul>
-        </li>
-<!--
-        <li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
-        <li><a href="#">Link</a></li>
--->
-      </ul>
-<!-- per ora nascondo la ricerca, la ripristino dopo
-      <form class="navbar-form navbar-left" role="search">
-        <div class="form-group">
-          <input type="text" class="form-control" placeholder="Search">
+            <div ng-view class="container"></div>
         </div>
-        <button type="submit" class="btn btn-default">Submit</button>
-      </form>
--->
-      <ul class="nav navbar-nav navbar-right">
-        <!--
-        <li><a>{{! profile.logged_user.firstName }}</a></li>
-        -->
-        <li class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{! profile.logged_user.firstName }}<span class="caret"></span></a>
-          <ul class="dropdown-menu" role="menu">
-            <li><a href="#/person/{{! profile.logged_user.id }}/detail">Profilo</a></li>
-            <li ng-if="accId"><a href="#/account/{{! accId  }}/detail">Conto</a></li>
-              <!--
-            <li><a href="#">Something else here</a></li>
-            <li class="divider"></li>
-            <li><a href="#">Separated link</a></li>
 
-            -->
-          </ul>
-        </li>
-      </ul>
+        <div class="footer container">
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3">
+                    <p class="text-center">
+                        <a href="#/faq">FAQ</a>
+                        <a href="#/help">Aiuto</a>
+                        <a href="#/project">Progetto</a>
+                        <a ng-if="profile.logged_user.rssFeedId" href="/rss/{{! profile.logged_user.rssFeedId }}">RSS</a>
+                    </p>
+                </div>
+            </div>
+        </div>
 
-    </div><!-- /.navbar-collapse -->
-  </div><!-- /.container-fluid -->
-</nav>
-
-<!--
- <div class="left-col" ng-controller="MenuController">
-
-  <div class="profile-info" ng-show="profile == profileError">
-   <p>Caricamento in corso...</p>
-  </div>
-  <div class="profile-info" ng-show="profileError">
-   <p>Dati personali non disponibili: {{!profileError}}.</p>
-  </div>
-  <div class="profile-info" ng-show="profile">
-   <p><a href="#/person/{{! profile.logged_user.id }}/detail">{{!profile.logged_user.firstName}} {{! profile.logged_user.middleName}} {{! profile.logged_user.lastName}}</a></p>
-   <p ng-show="amount == amountError">Caricamento in corso...</p>
-   <p ng-show="amountError">Saldo personale non disponible: {{! amountError }}.</p>
-   <p ng-show="amount" class="amount {{! amountClass }}">Saldo: {{! amount | currency : currencySymbol }}</p>
-  </div>
-
--->
-
-
- <div ng-view class="container"></div>
-
-</div>
-
- <div class="footer container">
-  <div class="row">
-   <div class="col-md-6 col-md-offset-3">
-    <p class="text-center">
-     <a href="#/faq">FAQ</a>
-     <a href="#/help">Aiuto</a>
-     <a href="#/project">Progetto</a>
-     <a ng-if="profile.logged_user.rssFeedId" href="/rss/{{! profile.logged_user.rssFeedId }}">RSS</a>
-    </p>
-   </div>
-  </div>
- </div>
-
- <script src="{{ static_url('js/app.min.js') }}"></script>
- <script src="{{ static_url('js/angular-locale_' + LOCALE.lower().replace('_', '-') + '.js') }}"></script>
-</body>
+        <script src="{{ static_url('js/app.min.js') }}"></script>
+        <script src="{{ static_url('js/angular-locale_' + LOCALE.lower().replace('_', '-') + '.js') }}"></script>
+    </body>
 </html>
