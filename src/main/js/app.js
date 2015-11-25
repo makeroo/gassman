@@ -6,7 +6,7 @@ angular.module('gassmanApp', [
     'GassmanApp.directives.WhenScrolled',
     'GassmanApp.controllers.NotFoundController',
 	'GassmanApp.controllers.FaqController',
-	'GassmanApp.controllers.ProjectController',
+    'GassmanApp.controllers.ProjectController',
 	'GassmanApp.controllers.HelpController',
     'GassmanApp.controllers.HomeSelectorController',
     'GassmanApp.controllers.Navbar',
