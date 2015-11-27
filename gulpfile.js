@@ -16,17 +16,20 @@ var config = {
       './bower_components/jquery/dist/jquery.js',
       './bower_components/bootstrap/dist/js/bootstrap.js',
       './bower_components/angular/angular.js',
-      './bower_components/angular-route/angular-route.js',
       './bower_components/angular-cookies/angular-cookies.js',
       './bower_components/angular-sanitize/angular-sanitize.js',
+
+      './bower_components/angular-ui-router/release/angular-ui-router.js',
+
       // bower_components/angular-i18n/angular-locale_it-it.js
       './bower_components/ngstorage/ngStorage.js',
       './bower_components/angular-ui-select/dist/select.js'
-      //'./bower_components/angular-macgyver/lib/macgyver.js'
       //'./bower_components/datejs/build/date.js',
       //'./bower_components/datejs/build/date-it-IT.js'
 //      './bower_components/angular-touch/angular-touch.js',
-//      './bower_components/mobile-angular-ui/dist/js/mobile-angular-ui.js',
+
+//      './bower_components/angular-bootstrap/ui-bootstrap.js',
+//      './bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
     ],
 
     fonts: [

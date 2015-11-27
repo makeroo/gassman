@@ -11,8 +11,8 @@ angular.module('GassmanApp.controllers.Transaction', [
 ])
 
 .controller('Transaction', [
-         '$scope', '$routeParams', '$location', '$timeout', 'gdata', 'accountAutocompletion',
-function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAutocompletion) {
+         '$scope', '$stateParams', '$location', '$timeout', 'gdata', 'accountAutocompletion',
+function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAutocompletion) {
 
     function joinSkippingEmpties () {
         var sep = arguments[0];
@@ -66,7 +66,7 @@ function ($scope,   $routeParams,   $location,   $timeout,   gdata,   accountAut
     //var AUTOCOMPLETE_EXPENSESKITTY = 1;
     //var AUTOCOMPLETE_NONE = 0;
 
-    var transId = $routeParams['transId'];
+    var transId = $stateParams.transId;
     var trans = {};
 
     var kitties = null;

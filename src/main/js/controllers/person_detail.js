@@ -9,8 +9,8 @@ angular.module('GassmanApp.controllers.PersonDetail', [
 ])
 
 .controller('PersonDetail', [
-         '$scope', '$filter', '$routeParams', '$location', 'gdata', '$q', '$timeout',
-function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $timeout) {
+         '$scope', '$filter', '$stateParams', '$location', 'gdata', '$q', '$timeout',
+function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $timeout) {
 	$scope.csaId = null;
 	$scope.personProfile = null;
 	$scope.personProfileError = null;
@@ -20,7 +20,7 @@ function ($scope,   $filter,   $routeParams,   $location,   gdata,   $q,   $time
 	//$scope.membership_fee = null;
 
 	var master = null;
-	var personId = $routeParams['personId'];
+	var personId = $stateParams.personId;
 	var self = null;
 /*
 	$scope.visibleAddress = function (c) {

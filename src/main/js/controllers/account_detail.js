@@ -9,8 +9,8 @@ angular.module('GassmanApp.controllers.AccountDetail', [
 ])
 
 .controller('AccountDetail', [
-        '$scope', '$filter', '$routeParams', '$location', 'gdata',
-function($scope,   $filter,   $routeParams,   $location,   gdata) {
+        '$scope', '$filter', '$stateParams', '$location', 'gdata',
+function($scope,   $filter,   $stateParams,   $location,   gdata) {
 	$scope.movements = [];
 	$scope.movementsError = null;
 	$scope.accountOwner = null;
@@ -24,7 +24,7 @@ function($scope,   $filter,   $routeParams,   $location,   gdata) {
 		$scope.showErrorMessage = ! $scope.showErrorMessage;
 	};
 
-	var accId = $routeParams['accountId'];
+	var accId = $stateParams.accountId;
 	var start = 0;
 	var blockSize = 25;
 	var concluded = false;

@@ -9,8 +9,8 @@ angular.module('GassmanApp.controllers.TransactionCashExchange', [
 ])
 
 .controller('TransactionCashExchange', [
-         '$scope', '$routeParams', '$location', '$timeout', 'gdata',
-function ($scope,   $routeParams,   $location,   $timeout,   gdata) {
+         '$scope', '$location', '$timeout', 'gdata',
+function ($scope,   $location,   $timeout,   gdata) {
 	$scope.saveCashExchange = function () {
 		if ($scope.$invalid || $scope.currencyError)
 			return;

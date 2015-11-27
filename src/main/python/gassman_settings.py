@@ -4,36 +4,36 @@ Created on 03/mar/2014
 @author: makeroo
 '''
 
-DEBUG_MODE=False
+DEBUG_MODE=True
 
 HTTP_PORT=8180
 
 DB_HOST='127.0.0.1'
 DB_PORT=3306
-DB_USER='CREATE YOUR OWN USER'
-DB_PASSWORD=None
-DB_NAME='CREATE YOUR OWN DB'
+DB_USER='gassman'
+DB_PASSWORD='gassman'
+DB_NAME='gassman'
 DB_CHECK_INTERVAL=60*1000 # 1 minuto
 
 COOKIE_SECRET='DEVELOPMENT_XSRF_SECRET'
 COOKIE_MAX_AGE_DAYS=15
 
-TRANSLATIONS_PATH='ABSOLUTE_PATH/translations'
-TEMPLATE_PATH='ABSOLUTE_PATH/templates/'
-STATIC_PATH='ABSOLUTE_PATH/static/'
+TRANSLATIONS_PATH='/Users/makeroo/personale/tmp_gas/gassman/src/main/translations/'
+TEMPLATE_PATH='/Users/makeroo/personale/tmp_gas/gassman/src/main/tornado_templates/'
+STATIC_PATH='/Users/makeroo/personale/tmp_gas/gassman/target/www/static/'
 
-PUBLISHED_URL='http://YOUR_HOST'
+PUBLISHED_URL='http://localhost:8180'
 
-GOOGLE_OAUTH2_CLIENTID='REGISTER APP'
-GOOGLE_OAUTH2_SECRET='REGISTER APP'
-GOOGLE_OAUTH2_REDIRECT='TO BE SETTED'
+GOOGLE_OAUTH2_CLIENTID='989424552810-e69up91er2e3ge8rjvvbqfsq93uclvfk.apps.googleusercontent.com'
+GOOGLE_OAUTH2_SECRET='Rn5vy-PnS8qGseRoE4ss7bRO'
+GOOGLE_OAUTH2_REDIRECT='http://localhost:8180/auth/google'
 
 FB_APP_ID='TODO'
 FB_APP_KEY='TODO'
 
 SMTP_SERVER=None
 SMTP_PORT=25
-SMTP_SENDER='gassman@gassmanager.org'
+SMTP_SENDER=None
 SMTP_RECEIVER=None
 SMTP_NUM_THREADS=2
 SMTP_QUEUE_TIMEOUT=3
@@ -72,18 +72,16 @@ LOG={
     },
     'handlers': {
         'codeHandler': {
-            'class': 'logging.StreamHandler', #'logging.FileHandler',
+            'class': 'logging.StreamHandler',
             'level': 'DEBUG',
             'formatter': 'simpleFormatter',
             'stream': 'ext://sys.stdout',
-            #'filename': '/var/log/tornado/gassman_server.log',
         },
         'accessHandler': {
-            'class': 'logging.StreamHandler', #'logging.FileHandler',
+            'class': 'logging.StreamHandler',
             'level': 'DEBUG',
             'formatter': 'simpleFormatter',
             'stream': 'ext://sys.stdout',
-            #'filename': '/var/log/tornado/gassman_access.log',
         },
     },
     'formatters': {

@@ -1,0 +1,23 @@
+.block-cover {
+  top: 0;
+  left: 0;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.view-cover {
+  .block-cover();
+  position: fixed;
+}
+
+.block-align-middle {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.mask {
+  .block-cover();
+  opacity: .5;
+}

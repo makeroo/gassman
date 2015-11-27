@@ -9,8 +9,8 @@ angular.module('GassmanApp.controllers.TransactionPayment', [
 ])
 
 .controller('TransactionPayment', [
-         '$scope', '$routeParams', '$location', '$timeout', 'gdata',
-function ($scope,   $routeParams,   $location,   $timeout,   gdata) {
+         '$scope', '$location', '$timeout', 'gdata',
+function ($scope,   $location,   $timeout,   gdata) {
 
 	$scope.savePayment = function () {
 		if ($scope.$invalid || $scope.currencyError)
