@@ -55,32 +55,32 @@ function ($stateProvider,   $urlRouterProvider) {
         }).
         state('root.csa', {
             url: '/csa/:csaId/detail',
-            templateUrl: 'template/csa-detail.html',
+            templateUrl: 'template/csa_detail.html',
             controller: 'CsaDetail'
         }).
         state('root.csa_admin', {
             url: '/csa/{csaId:[0-9]+}/admin',
-            templateUrl: 'template/csa-admin.html',
+            templateUrl: 'template/csa_admin.html',
             controller: 'CsaAdmin'
         }).
         state('root.person_detail', {
             url: '/person/:personId/detail',
-            templateUrl: 'template/person-detail.html',
+            templateUrl: 'template/person_detail.html',
             controller: 'PersonDetail'
         }).
         state('root.self_detail', {
             url: '/account/self/detail',
-            templateUrl: 'template/account-detail.html',
+            templateUrl: 'template/account_detail.html',
             controller: 'AccountDetail'
         }).
         state('root.account_detail', {
             url: '/account/:accountId/detail',
-            templateUrl: 'template/account-detail.html',
+            templateUrl: 'template/account_detail.html',
             controller: 'AccountDetail'
         }).
         state('root.account_list', {
             url: '/accounts/index',
-            templateUrl: 'template/accounts-index.html',
+            templateUrl: 'template/accounts_index.html',
             controller: 'AccountsIndex'
         }).
         state('root.transaction_detail', {
