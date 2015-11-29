@@ -9,11 +9,11 @@ angular.module('GassmanApp.controllers.CsaDetail', [
 ])
 
 .controller('CsaDetail', [
-         '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q',
-function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
+		 'loggedUser', '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q',
+function (loggedUser,   $scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
 	var csaId = $stateParams.csaId;
 
-	$scope.profile = null;
+	$scope.profile = loggedUser;
 	$scope.csa = null;
 	$scope.loadError = null;
 	$scope.openOrders = null;
@@ -61,17 +61,13 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
 		}
 	};
 
-	gdata.profileInfo().
-	then (function (pData) {
-		$scope.profile = pData;
+	$scope.editableMembershipFee = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
+	$scope.editableCsaInfo = $scope.profile.permissions.indexOf(gdata.permissions.P_csaEditor) != -1;
 
-		$scope.editableMembershipFee = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
-		$scope.editableCsaInfo = $scope.profile.permissions.indexOf(gdata.permissions.P_csaEditor) != -1;
-
-		return $q.all([ gdata.csaInfo(csaId),
-		                gdata.accountByCsa(csaId)
-		                ]);
-	}).
+	$q.all([
+		gdata.csaInfo(csaId),
+		gdata.accountByCsa(csaId)
+	]).
 	then (function (r) {
 		$scope.csa = r[0].data;
 		$scope.csa.kitty.membership_fee = parseFloat($scope.csa.kitty.membership_fee);
@@ -79,11 +75,11 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
 
 		// TODO: in realtà degli ordini CPY mi interessano solo le mie ordinazioni!!
 		return $q.all([
-				gdata.accountMovements($scope.accId, 0, 5),
-				gdata.accountAmount($scope.csa.kitty.id),
-				gdata.accountAmount($scope.accId),
-				//gdata.accountMovements($scope.csa.kitty.id, 0, 5),
-				]);
+            gdata.accountMovements($scope.accId, 0, 5),
+            gdata.accountAmount($scope.csa.kitty.id),
+            gdata.accountAmount($scope.accId),
+            //gdata.accountMovements($scope.csa.kitty.id, 0, 5),
+        ]);
 	}).
 	then (function (rr) {
 		$scope.movements = rr[0].data;

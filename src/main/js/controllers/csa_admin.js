@@ -9,11 +9,11 @@ angular.module('GassmanApp.controllers.CsaAdmin', [
 ])
 
 .controller('CsaAdmin', [
-         '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q',
-function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
+		 'loggedUser', '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q',
+function (loggedUser,   $scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
 	var csaId = $stateParams.csaId;
 
-	$scope.profile = null;
+	$scope.profile = loggedUser;
 	$scope.csa = null;
 	$scope.loadError = null;
 	$scope.draftOrders = null;
@@ -62,14 +62,9 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
 		}
 	};
 
-	gdata.profileInfo().
-	then (function (pData) {
-		$scope.profile = pData;
+	$scope.editableMembershipFee = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
 
-		$scope.editableMembershipFee = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
-
-		return gdata.csaInfo(csaId);
-	}).
+	gdata.csaInfo(csaId).
 	then (function (r) {
 		$scope.csa = r.data;
 		$scope.csa.kitty.membership_fee = parseFloat($scope.csa.kitty.membership_fee);

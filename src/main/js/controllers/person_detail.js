@@ -9,9 +9,10 @@ angular.module('GassmanApp.controllers.PersonDetail', [
 ])
 
 .controller('PersonDetail', [
-         '$scope', '$filter', '$stateParams', '$location', 'gdata', '$q', '$timeout',
-function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $timeout) {
-	$scope.csaId = null;
+		 'loggedUser', 'csa', '$scope', '$filter', '$stateParams', '$location', 'gdata', '$q', '$timeout',
+function (loggedUser,   csa,   $scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $timeout) {
+	$scope.profile = loggedUser;
+	$scope.csaId = csa;
 	$scope.personProfile = null;
 	$scope.personProfileError = null;
 	$scope.readOnly = true;
@@ -21,7 +22,7 @@ function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $time
 
 	var master = null;
 	var personId = $stateParams.personId;
-	var self = null;
+	var self = $scope.profile.logged_user.id == personId;
 /*
 	$scope.visibleAddress = function (c) {
 		return c.kind !== 'I';
@@ -102,13 +103,13 @@ function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $time
 	};
 
 	$scope.closeAccount = function (accountId) {
-        if (!confirm('Confermi?')) // FIXME: rifare i popup in html
-            return;
+		if (!confirm('Confermi?')) // FIXME: rifare i popup in html
+			return;
 
 		gdata.closeAccount(accountId, personId, 'Chiusura conto' /*FIXME: localizzare*/).then (
-            loadPersonProfileAndAccounts
-        ).then (undefined, function (error) {
-            // TODO: show error
+			loadPersonProfileAndAccounts
+		).then (undefined, function (error) {
+			// TODO: show error
 		});
 	};
 
@@ -128,57 +129,48 @@ function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $time
 		});
 	};
 
-    function loadPersonProfileAndAccounts () {
+	function loadPersonProfileAndAccounts () {
 		return gdata.profile($scope.csaId, personId).then (function (p) {
-            $scope.personProfile = p;
-            $scope.editable = (
-                $scope.profile.permissions.indexOf(gdata.permissions.P_canEditContacts) != -1 ||
-                personId == $scope.profile.logged_user.id
-            );
+			$scope.personProfile = p;
+			$scope.editable = (
+				$scope.profile.permissions.indexOf(gdata.permissions.P_canEditContacts) != -1 ||
+				personId == $scope.profile.logged_user.id
+			);
 
-            var amounts = [];
-            angular.forEach($scope.personProfile.accounts, function (a) {
-                amounts.push(gdata.accountAmount(a.id));
-            });
+			var amounts = [];
+			angular.forEach($scope.personProfile.accounts, function (a) {
+				amounts.push(gdata.accountAmount(a.id));
+			});
 
-            return $q.all(amounts);
-        }).then (function (amounts) {
-            var l = amounts.length;
+			return $q.all(amounts);
+		}).then (function (amounts) {
+			var l = amounts.length;
 
-            for (var c = 0; c < l; ++c) {
-                var acc = $scope.personProfile.accounts[c];
-                var am = amounts[c];
-                acc.amount = am.data[0];
-                acc.csym = am.data[1];
+			for (var c = 0; c < l; ++c) {
+				var acc = $scope.personProfile.accounts[c];
+				var am = amounts[c];
+				acc.amount = am.data[0];
+				acc.csym = am.data[1];
 
-                if (acc.to_date == null) {
-                    // nb: qui assumo una sola moneta per gas... FIXME
-                    //$scope.membership_fee = acc.membership_fee;
-                    //$scope.aka_csym = acc.csym;
+				if (acc.to_date == null) {
+					// nb: qui assumo una sola moneta per gas... FIXME
+					//$scope.membership_fee = acc.membership_fee;
+					//$scope.aka_csym = acc.csym;
 
-                    $scope.canEditMembershipFee = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
-                    $scope.canCloseAccounts = $scope.profile.permissions.indexOf(gdata.permissions.P_canCloseAccounts) != -1;
+					$scope.canEditMembershipFee = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
+					$scope.canCloseAccounts = $scope.profile.permissions.indexOf(gdata.permissions.P_canCloseAccounts) != -1;
 
-                    $scope.personProfile.membership_fee = {
-                        //account: acc.id,
-                        amount: parseFloat(acc.membership_fee)
-                    };
-                }
-            }
-        });
-    }
+					$scope.personProfile.membership_fee = {
+						//account: acc.id,
+						amount: parseFloat(acc.membership_fee)
+					};
+				}
+			}
+		});
+	}
 
-	gdata.profileInfo().then (function (p) {
-		$scope.profile = p;
-
-		self = p.logged_user.id == personId;
-
-		return gdata.selectedCsa();
-	}).then (function (csaId) {
-		$scope.csaId = csaId;
-
-		return gdata.deliveryPlaces(csaId);
-	}).then (function (r) {
+	gdata.deliveryPlaces(csa)
+	.then (function (r) {
 		$scope.deliveryPlaces = r.data;
 
 		return loadPersonProfileAndAccounts();

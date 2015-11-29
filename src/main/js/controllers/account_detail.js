@@ -9,8 +9,8 @@ angular.module('GassmanApp.controllers.AccountDetail', [
 ])
 
 .controller('AccountDetail', [
-        '$scope', '$filter', '$stateParams', '$location', 'gdata',
-function($scope,   $filter,   $stateParams,   $location,   gdata) {
+        'loggedUser', 'csa', '$scope', '$filter', '$stateParams', '$location', 'gdata',
+function(loggedUser,   csa,   $scope,   $filter,   $stateParams,   $location,   gdata) {
 	$scope.movements = [];
 	$scope.movementsError = null;
 	$scope.accountOwner = null;
@@ -43,34 +43,10 @@ function($scope,   $filter,   $stateParams,   $location,   gdata) {
 		});
 	};
 
-	gdata.profileInfo().
-	then (function (pData) {
-		$scope.profile = pData;
-		$scope.viewableContacts = $scope.profile.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
+	$scope.profile = loggedUser;
+	$scope.viewableContacts = $scope.profile.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
 
-		return gdata.selectedCsa();
-	}).
-	then (function (csaId) {
-		$scope.csaId = csaId;
-
-		return accId || gdata.accountByCsa(csaId);
-	}).
-	then (function (accId) {
-		showOwner(accId);
-		$scope.loadMore();
-
-		return gdata.accountAmount(accId);
-	}).
-	then (function (r) {
-		$scope.amount = r.data;
-	}).
-	then (undefined, function (error) {
-		$scope.accountOwnerError = error.data;
-	});
-
-	$scope.showTransaction = function (mov) {
-		$location.path('/transaction/' + mov[4]);
-	};
+	$scope.csaId = csa;
 
     var loading = false;
 
@@ -96,6 +72,33 @@ function($scope,   $filter,   $stateParams,   $location,   gdata) {
 			$scope.movementsError = error.data;
 			//console.log('error', data, status, headers, config);
 		});
+	};
+
+	if (accId) {
+		x(accId);
+	} else {
+		gdata.accountByCsa(csa)
+		.then(x)
+		.then(undefined, function (error) {
+			$scope.accountOwnerError = error.data;
+		});
+	}
+
+	function x (accId) {
+		showOwner(accId);
+		$scope.loadMore();
+
+		gdata.accountAmount(accId)
+		.then(function (r) {
+			$scope.amount = r.data;
+		})
+		.then(undefined, function (error) {
+			$scope.accountOwnerError = error.data;
+		});
+	}
+
+	$scope.showTransaction = function (mov) {
+		$location.path('/transaction/' + mov[4]);
 	};
 }])
 ;

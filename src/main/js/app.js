@@ -45,7 +45,20 @@ gassmanApp.filter('noFractionCurrency',
 .config([
          '$stateProvider', '$urlRouterProvider',
 function ($stateProvider,   $urlRouterProvider) {
-	$urlRouterProvider.otherwise('/notfound');
+	$urlRouterProvider.otherwise('/not_found');
+
+    var loggedUser = [
+                 'gdata',
+        function (gdata) {
+            return gdata.profileInfo();
+        }
+    ];
+    var csa = [
+                 'gdata',
+        function (gdata) {
+            return gdata.selectedCsa();
+        }
+    ];
 
 	$stateProvider.
         state('root', {
@@ -55,26 +68,44 @@ function ($stateProvider,   $urlRouterProvider) {
         }).
         state('root.csa', {
             url: '/csa/:csaId/detail',
+            resolve: {
+                loggedUser: loggedUser
+            },
             templateUrl: 'template/csa_detail.html',
             controller: 'CsaDetail'
         }).
         state('root.csa_admin', {
             url: '/csa/{csaId:[0-9]+}/admin',
+            resolve: {
+                loggedUser: loggedUser
+            },
             templateUrl: 'template/csa_admin.html',
             controller: 'CsaAdmin'
         }).
         state('root.person_detail', {
             url: '/person/:personId/detail',
+            resolve: {
+                loggedUser: loggedUser,
+                csa: csa
+            },
             templateUrl: 'template/person_detail.html',
             controller: 'PersonDetail'
         }).
         state('root.self_detail', {
             url: '/account/self/detail',
+            resolve: {
+                loggedUser: loggedUser,
+                csa: csa
+            },
             templateUrl: 'template/account_detail.html',
             controller: 'AccountDetail'
         }).
         state('root.account_detail', {
             url: '/account/:accountId/detail',
+            resolve: {
+                loggedUser: loggedUser,
+                csa: csa
+            },
             templateUrl: 'template/account_detail.html',
             controller: 'AccountDetail'
         }).
@@ -90,6 +121,9 @@ function ($stateProvider,   $urlRouterProvider) {
         }).
         state('root.transaction_list', {
             url: '/transactions/index',
+            resolve: {
+                csa: csa
+            },
             templateUrl: 'template/transactions_index.html',
             controller: 'TransactionsIndex'
         }).
