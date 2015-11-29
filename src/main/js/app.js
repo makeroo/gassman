@@ -6,10 +6,6 @@ angular.module('gassmanApp', [
 
     'GassmanApp.directives.WhenScrolled',
 
-    'GassmanApp.controllers.NotFoundController',
-	'GassmanApp.controllers.FaqController',
-    'GassmanApp.controllers.ProjectController',
-	'GassmanApp.controllers.HelpController',
     'GassmanApp.controllers.HomeSelectorController',
     'GassmanApp.controllers.Navbar',
     'GassmanApp.controllers.CsaDetail',
@@ -129,23 +125,19 @@ function ($stateProvider,   $urlRouterProvider) {
         }).
         state('root.help', {
             url: '/help',
-            templateUrl: 'template/help.html',
-            controller: 'HelpController'
+            templateUrl: 'template/help.html'
         }).
         state('root.faq', {
             url: '/faq',
-            templateUrl: 'template/faq.html',
-            controller: 'FaqController'
+            templateUrl: 'template/faq.html'
         }).
         state('root.project', {
             url: '/project',
-            templateUrl: 'template/project.html',
-            controller: 'ProjectController'
+            templateUrl: 'template/project.html'
         }).
         state('root.not_found', {
             url: '/not_found',
-            templateUrl: 'template/not_found.html',
-            controller: 'NotFoundController'
+            templateUrl: 'template/not_found.html'
         }).
         state('root.start', {
             url: '/',
