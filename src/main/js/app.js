@@ -1,15 +1,17 @@
 'use strict';
 
 angular.module('gassmanApp', [
-	'ui.router',
+    'ui.router',
     'ngSanitize',
+
+    'GassmanApp.services.Gstorage',
 
     'GassmanApp.directives.WhenScrolled',
 
     'GassmanApp.controllers.HomeSelectorController',
     'GassmanApp.controllers.Navbar',
     'GassmanApp.controllers.CsaDetail',
-	'GassmanApp.controllers.CsaAdmin',
+    'GassmanApp.controllers.CsaAdmin',
     'GassmanApp.controllers.AccountsIndex',
     'GassmanApp.controllers.AccountDetail',
     'GassmanApp.controllers.PersonDetail',
@@ -18,30 +20,30 @@ angular.module('gassmanApp', [
     'GassmanApp.controllers.TransactionCashExchange',
     'GassmanApp.controllers.TransactionPayment',
     'GassmanApp.controllers.TransactionTrashed',
-	'GassmanApp.controllers.TransactionMembershipFee'
+    'GassmanApp.controllers.TransactionMembershipFee'
 ])
 
 /*
 gassmanApp.filter('noFractionCurrency',
-		  [ '$filter', '$locale',
-		  function(filter, locale) {
-			var currencyFilter = filter('currency');
-			var formats = locale.NUMBER_FORMATS;
-			return function(amount, currencySymbol) {
-			  var value = currencyFilter(amount, currencySymbol);
-			  var sep = value.indexOf(formats.DECIMAL_SEP);
-			  if(amount >= 0) { 
-				return value.substring(0, sep);
-			  }
-			  return value.substring(0, sep) + ')';
-			};
-		  } ]);
+          [ '$filter', '$locale',
+          function(filter, locale) {
+            var currencyFilter = filter('currency');
+            var formats = locale.NUMBER_FORMATS;
+            return function(amount, currencySymbol) {
+              var value = currencyFilter(amount, currencySymbol);
+              var sep = value.indexOf(formats.DECIMAL_SEP);
+              if(amount >= 0) {
+                return value.substring(0, sep);
+              }
+              return value.substring(0, sep) + ')';
+            };
+          } ]);
 */
 
 .config([
          '$stateProvider', '$urlRouterProvider',
 function ($stateProvider,   $urlRouterProvider) {
-	$urlRouterProvider.otherwise('/not_found');
+    $urlRouterProvider.otherwise('/not_found');
 
     var loggedUser = [
                  'gdata',
@@ -56,7 +58,7 @@ function ($stateProvider,   $urlRouterProvider) {
         }
     ];
 
-	$stateProvider.
+    $stateProvider.
         state('root', {
             abstract: true,
             templateUrl: 'template/master.html'
@@ -137,33 +139,68 @@ function ($stateProvider,   $urlRouterProvider) {
         }).
         state('root.not_found', {
             url: '/not_found',
-            templateUrl: 'template/not_found.html'
+            templateUrl: 'template/not_found.html',
+
+            do_not_save: true
         }).
         state('root.start', {
             url: '/',
             templateUrl: 'template/home.html',
-            controller: 'HomeSelectorController'
+            controller: 'HomeSelectorController',
+
+            do_not_save: true
         }).
         state('root.start2', {
             url: '',
             templateUrl: 'template/home.html',
-            controller: 'HomeSelectorController'
+            controller: 'HomeSelectorController',
+
+            do_not_save: true
+        }).
+        state('root.login', {
+            url: '/login',
+            templateUrl: 'template/login.html',
+
+            do_not_save: true
+        }).
+        state('root.error', {
+            templateUrl: 'template/error.html',
+            params: { 'error': null },
+
+            do_not_save: true
         })
+
 /*		.state('start', {
-			url: '',
-			views: {
-				main: {
-					templateUrl: 'template/start.html',
-					controller: 'StartController'
-				}
-			}
-		})*/
-	;
+            url: '',
+            views: {
+                main: {
+                    templateUrl: 'template/start.html',
+                    controller: 'StartController'
+                }
+            }
+        })*/
+    ;
 }])
 
 .run([
-         '$rootScope',
-function ($rootScope) {
+         '$rootScope', 'gdata', 'gstorage', '$state',
+function ($rootScope,   gdata,   gstorage,   $state) {
+    $rootScope.$on('$stateChangeError', function (event, toState, toParams, fromState, fromParams, error) {
+        if (error && error[0] == gdata.error_codes.E_not_authenticated) {
+            if (!toState.do_not_save) {
+                var req = window.location.hash.slice(1); // hash returns #/... but $location.path requires /...
+
+                gstorage.saveRequestedUrl(req);
+            }
+
+            $state.go('root.login');
+        } else {
+            console.log('azz', arguments);
+
+            $state.go('root.error', { error: error })
+        }
+    });
+
     $rootScope.appLoaded = true;
 }])
 

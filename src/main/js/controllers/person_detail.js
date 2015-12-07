@@ -175,7 +175,7 @@ function (loggedUser,   csa,   $scope,   $filter,   $stateParams,   $location,  
 
 		return loadPersonProfileAndAccounts();
 	}).then (undefined, function (error) {
-		if (error == gdata.error_codes.E_no_csa_found && self) {
+		if (error[0] == gdata.error_codes.E_no_csa_found && self) {
 			$q.all([
 				gdata.profile(null, personId),
 				gdata.csaList()

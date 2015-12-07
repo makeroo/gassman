@@ -9,8 +9,8 @@ angular.module('GassmanApp.controllers.TransactionMembershipFee', [
 ])
 
 .controller('TransactionMembershipFee', [
-         '$scope', '$location', '$timeout', 'gdata',
-function ($scope,   $location,   $timeout,   gdata) {
+         '$scope', 'gdata',
+function ($scope,   gdata) {
 
 	$scope.savePayment = function () {
 		if ($scope.$invalid ||

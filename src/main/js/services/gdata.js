@@ -154,14 +154,13 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
             d.resolve(profileInfo);
         } else {
             $http.post('/profile-info?_xsrf=' + $cookies.get('_xsrf')).
-            success(function (data) {
-                profileInfo = data;
+            then(function (r) {
+                profileInfo = r.data;
                 d.resolve(profileInfo);
                 $rootScope.profile = profileInfo;
             }).
-            error(function (data) {
-                d.reject(data);
-                $rootScope.profile = null;
+            then(undefined, function (error) {
+                d.reject(error.data);
             });
         }
 
@@ -190,7 +189,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
                             $localStorage.selectedCsa = x;
                             d.resolve(x);
                         } else {
-                            d.reject(gdata.error_codes.E_no_csa_found);
+                            d.reject([ gdata.error_codes.E_no_csa_found ]);
                         }
                     } else {
                         d.resolve(x);
@@ -408,7 +407,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
                             var defers = ptr[p];
 
                             angular.forEach(defers, function (d) {
-                                d.reject(gdata.error_codes.E_person_not_found);
+                                d.reject([ gdata.error_codes.E_person_not_found ]);
                             });
                         });
                     }).
