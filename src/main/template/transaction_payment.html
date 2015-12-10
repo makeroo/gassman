@@ -300,7 +300,7 @@
                 <p class="form-control-static text-info text-right">{{ totalKitty - difference | currency : currency[1] }}</p>
             </div>
             <div class="col-sm-4">
-                <button type="button" class="btn btn-xs btn-default" ng-if="difference != 0.0" ng-click="addLine(trans.kittyLines, 'KITTY')">Specifica motivazioni / note</button>
+                <button type="button" class="btn btn-xs btn-link" ng-if="difference != 0.0" ng-click="addLine(trans.kittyLines, 'KITTY')">Specifica motivazioni / note</button>
             </div>
         </div>
         <div class="row" ng-show="currencyError">
@@ -313,10 +313,10 @@
 
     <div class="container">
         <div class="row">
-            <button type="button" class="btn btn-default" ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
-            <button type="button" class="btn btn-default" ng-disabled="!csaId || !payment.$valid || !totalAmount" ng-click="savePayment()">Registra in cassa</button>
-            <button type="button" class="btn btn-default" ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione dei pagamenti</button>
-            <button type="button" class="btn btn-default" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
+            <button type="button" class="btn btn-danger" ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
+            <button type="button" class="btn btn-primary" ng-disabled="!csaId || !payment.$valid || !totalAmount" ng-click="savePayment()">Registra in cassa</button>
+            <button type="button" class="btn btn-danger" ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione dei pagamenti</button>
+            <button type="button" class="btn btn-danger" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
         </div>
     </div>
 

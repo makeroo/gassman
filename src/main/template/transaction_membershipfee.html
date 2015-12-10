@@ -140,10 +140,10 @@
   </div>
 
   <div class="row">
-    <button class="btn btn-default" ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
-    <button class="btn btn-default" ng-disabled="!csaId || !payment.$valid || !totalAmount" ng-click="savePayment()">Registra in cassa</button>
-    <button class="btn btn-default" ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione dei pagamenti</button>
-    <button class="btn btn-default" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
+    <button class="btn btn-danger" ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
+    <button class="btn btn-primary" ng-disabled="!csaId || !payment.$valid || !totalAmount" ng-click="savePayment()">Registra in cassa</button>
+    <button class="btn btn-danger" ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione dei pagamenti</button>
+    <button class="btn btn-danger" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
   </div>
 
  <div ng-show="tsaveError" class="deposit-post-save">

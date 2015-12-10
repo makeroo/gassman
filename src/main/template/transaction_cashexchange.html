@@ -160,10 +160,10 @@
   </div>
 
   <div class="row">
-    <button class="btn btn-default" ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
-    <button class="btn btn-default" ng-disabled="!csaId || !deposit.$valid || !totalInvoice || !trans.clients[0].account" ng-click="saveCashExchange()">Registra in cassa</button>
-    <button class="btn btn-default" ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione degli accrediti</button>
-    <button class="btn btn-default" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
+    <button class="btn btn-danger" ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
+    <button class="btn btn-primary" ng-disabled="!csaId || !deposit.$valid || !totalInvoice || !trans.clients[0].account" ng-click="saveCashExchange()">Registra in cassa</button>
+    <button class="btn btn-danger" ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione degli accrediti</button>
+    <button class="btn btn-danger" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
   </div>
 
 </form>
