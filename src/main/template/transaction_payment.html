@@ -43,7 +43,7 @@
     </div>
 
     <div class="container transaction-section" ng-if="(trans.producers | filter:filledLine).length">
-        <h4>Produttori e chi ha sostenuto spese di gestione (ad esempio i bonifici):</h4>
+        <h4>Produttori e chi ha sostenuto spese di gestione:</h4>
 
         <div ng-repeat="l in trans.producers | filter:filledLine" class="row">
             <div class="col-sm-6">
@@ -188,7 +188,8 @@
     </div>
 
     <div class="container transaction-section">
-        <h4>Produttori e chi ha sostenuto spese di gestione (ad esempio i bonifici):</h4>
+        <h4>Produttori e chi ha sostenuto spese di gestione:</h4>
+        <small>Esempio di spesa di gestione: il solo costo della commissione bancaria per il bonifico.</small>
 
         <div ng-repeat="l in trans.producers" class="row">
             <ng:form name="lineForm">
