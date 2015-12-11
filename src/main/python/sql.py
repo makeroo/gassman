@@ -45,6 +45,8 @@ Ck_Email = 'E'
 Ck_Fax = 'F'
 Ck_Id = 'I'
 Ck_Nickname = 'N'
+Ck_GooglePlusProfile = '+'
+Ck_Photo = 'P'
 
 Ckk = set([Ck_Telephone,
            Ck_Mobile,
@@ -52,6 +54,8 @@ Ckk = set([Ck_Telephone,
            Ck_Fax,
            Ck_Id,
            Ck_Nickname,
+           Ck_GooglePlusProfile,
+           Ck_Photo,
            ])
 
 transactionPermissions = {
