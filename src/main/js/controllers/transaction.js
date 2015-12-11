@@ -53,15 +53,7 @@ function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAut
 
         return t;
     }
-/*
-    function justOneLineEnteredWithTotal (a, t) {
-        return (
-            a.length < 3 &&
-            (a.length == 1 || (!a[1].desc && !a[1].amount)) &&
-            amountEquals(a[0].amount, t)
-        );
-    }
-*/
+
     //var AUTOCOMPLETE_PRODUCERS = 2;
     //var AUTOCOMPLETE_EXPENSESKITTY = 1;
     //var AUTOCOMPLETE_NONE = 0;
@@ -145,18 +137,8 @@ function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAut
     };
 */
     var newLine = function (account) {
-/* TODO: si lascia KITTY come costante da risolvere in fase di save, quando si sa Currency e la kitty non è più ambigua
-        if (account == 'KITTY') {
-            for (var x in kitties) {
-                // cioè che i CSA abbiano una sola currency
-                // poi si vedrà
-                if (kitties.hasOwnProperty(x)) {
-                    account = x;
-                    break;
-                }
-            }
-        }
-*/
+        // NB: si lascia KITTY come costante da risolvere in fase di save, quando si sa Currency e la kitty non è più ambigua
+
         return {
             accountName: '',
             account: account,
@@ -172,8 +154,6 @@ function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAut
         var producers = [];
         var expenses = [];
         var kittyLines = [];
-//        var expensesKitty = [];
-//        var incomesKitty = [];
 
         if (trans.cc_type == null)
             trans.cc_type = t.cc_type;
@@ -198,8 +178,7 @@ function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAut
         trans.producers = producers;
         trans.expenses = expenses;
         trans.kittyLines = kittyLines;
-//        trans.expensesKitty = expensesKitty;
-//        trans.incomesKitty = incomesKitty;
+
         $scope.modified_by = t.modified_by;
         $scope.modifies = t.modifies;
         $scope.log_date = t.log_date;
@@ -253,26 +232,6 @@ function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAut
                 } else {
                     console.log('skipped kitty line without description:', l);
                 }
-/*                if (x < 0) {
-                    expensesKitty.push(l);
-                    l.amount = -x;
-                } else {
-                    incomesKitty.push(l);
-                    l.amount = +x;
-                }
-*/
-/*
-                if (!l.accountName) {
-                    l.accountName = 'CASSA COMUNE';
-                    l.readonly = false;
-                }
-
-                l.accountNames = [{
-                    //pid: null,
-                    name: 'CASSA COMUNE',
-                    refs:[]
-                }];
-*/
             } else {
                 expenses.push(l);
                 l.amount = +x;
@@ -377,43 +336,7 @@ function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAut
 
         updateDifference();
     };
-/*
-    $scope.updateTotalExpensesKitty = function (f) {
-        var ac = autoCompilingTotalInvoice();
-// TOD O: rimuovere autocomplete
-        if (f !== undefined && ac < autoCompileTotalInvoice) {
-            autoCompileTotalInvoice = ac;
-        }
 
-        //console.log('update total invoice', f);
-
-        $scope.totalExpensesKitty = totalAmount($scope.trans.expensesKitty);
-        $scope.totalKitty = $scope.totalIncomesKitty - $scope.totalExpensesKitty;
-
-        if ($scope.amountEquals($scope.totalKitty, 0.0))
-            $scope.totalKitty = 0.0;
-
-        updateDifference();
-    };
-
-    $scope.updateTotalIncomesKitty = function (f) {
-        var ac = autoCompilingTotalInvoice();
-// TOD O: rimuovere autocomplete
-        if (f !== undefined && ac < autoCompileTotalInvoice) {
-            autoCompileTotalInvoice = ac;
-        }
-
-        //console.log('update total invoice', f);
-
-        $scope.totalIncomesKitty = totalAmount($scope.trans.incomesKitty);
-        $scope.totalKitty = $scope.totalIncomesKitty - $scope.totalExpensesKitty;
-
-        if ($scope.amountEquals($scope.totalKitty, 0.0))
-            $scope.totalKitty = 0.0;
-
-        updateDifference();
-    };
-*/
     $scope.accountCurrency = function (a) {
         try {
             if (a == 'KITTY') {
@@ -494,25 +417,7 @@ function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAut
             $scope.updateTotalKittyLines();
         }
     };
-/*
-    $scope.newTrans = function (tt, desc) {
-        $scope.transId = 'new';
-        $scope.cc_type = tt;
-        $scope.trans = {
-            tdate: new Date(),
-            tdesc: desc,
-            clients: [ newLine() ],
-            producers: [ newLine() ],
-            expenses: [ newLine() ],
-        };
-        $scope.totalAmount = 0.0;
-        $scope.totalInvoice = 0.0;
-        $scope.totalExpenses = 0.0;
-        $scope.confirmDelete = false;
-        $scope.currency = null;
-        $scope.tsaveOk = null;
-    };
-*/
+
     $scope.filledLine = function (line) {
         return (
             line.account !== null &&
