@@ -12,13 +12,13 @@ angular.module('GassmanApp.controllers.AccountsIndex', [
 ])
 
 .controller('AccountsIndex', [
-         '$scope', '$filter', '$location', '$localStorage', '$q', 'gdata',
-function ($scope,   $filter,   $location,   $localStorage,   $q,   gdata) {
+         'csa', 'loggedUser', '$scope', '$filter', '$location', '$localStorage', '$q', 'gdata',
+function (csa,   loggedUser,   $scope,   $filter,   $location,   $localStorage,   $q,   gdata) {
+	$scope.profile = loggedUser;
 	$scope.accounts = [];
 	$scope.accountsError = null;
 //	$scope.queryFilter = $localStorage.accountIndex_queryFilter || '';
 //	$scope.queryOrder = 0;
-	$scope.profile = null;
 	$scope.profileError = null;
 
 	var start = 0;
@@ -37,7 +37,7 @@ function ($scope,   $filter,   $location,   $localStorage,   $q,   gdata) {
 	$scope.query = angular.copy(lastQuery);
 
 	$scope.search = function () {
-		if (currCsa == null || angular.equals($scope.query, lastQuery))
+		if (angular.equals($scope.query, lastQuery))
 			return;
 
 		lastQuery = angular.copy($scope.query);
@@ -55,18 +55,17 @@ function ($scope,   $filter,   $location,   $localStorage,   $q,   gdata) {
 		$scope.concluded = false;
 	};
 
-	var currCsa = null;
     var loading = false;
 
 	$scope.$watch('query.dp', $scope.search);
 
 	$scope.loadMore = function () {
-		if ($scope.concluded || loading || currCsa == null) return;
+		if ($scope.concluded || loading) return;
 
         loading = true;
 
 		gdata.accountsIndex(
-			currCsa,
+			csa,
 			lastQuery,
 			start, blockSize).
 		then(function (r) {
@@ -99,7 +98,7 @@ function ($scope,   $filter,   $location,   $localStorage,   $q,   gdata) {
 				if (e.profile)
 					return;
 				var pid = e[0];
-				gdata.profile(currCsa, pid).
+				gdata.profile(csa, pid).
 				then(function (p) {
 					e.profile = p;
 
@@ -127,14 +126,9 @@ function ($scope,   $filter,   $location,   $localStorage,   $q,   gdata) {
 		}
 	};
 
-	gdata.selectedCsa().
-	then (function (csaId) {
-		currCsa = csaId;
-		return $q.all([ gdata.profileInfo(), gdata.deliveryPlaces(csaId) ]);
-	}).
+	gdata.deliveryPlaces(csa).
 	then (function (resp) {
-		$scope.profile = resp[0];
-		$scope.deliveryPlaces = resp[1].data;
+		$scope.deliveryPlaces = resp.data;
 		if ($scope.deliveryPlaces.length > 1) {
 			$scope.deliveryPlaces.unshift({ id: -1, description: 'Tutti' });
 		}

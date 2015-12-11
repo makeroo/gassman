@@ -108,6 +108,10 @@ function ($stateProvider,   $urlRouterProvider) {
         }).
         state('root.account_list', {
             url: '/accounts/index',
+            resolve: {
+                loggedUser: loggedUser,
+                csa: csa
+            },
             templateUrl: 'template/accounts_index.html',
             controller: 'AccountsIndex'
         }).
