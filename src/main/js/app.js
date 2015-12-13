@@ -19,7 +19,8 @@ angular.module('gassmanApp', [
     'GassmanApp.controllers.Transaction',
     'GassmanApp.controllers.TransactionCashExchange',
     'GassmanApp.controllers.TransactionPayment',
-    'GassmanApp.controllers.TransactionMembershipFee'
+    'GassmanApp.controllers.TransactionMembershipFee',
+    'GassmanApp.controllers.ProjectController'
 ])
 
 /*
@@ -138,7 +139,8 @@ function ($stateProvider,   $urlRouterProvider) {
         }).
         state('root.project', {
             url: '/project',
-            templateUrl: 'template/project.html'
+            templateUrl: 'template/project.html',
+            controller: 'ProjectController'
         }).
         state('root.not_found', {
             url: '/not_found',
