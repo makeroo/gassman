@@ -78,7 +78,6 @@ class GoogleUser (object):
 class Session (object):
     def __init__ (self, app):
         self.application = app
-        #self.logged_user = None
         self.created = datetime.datetime.utcnow()
         self.registrationNotificationSent = False
 
@@ -117,8 +116,7 @@ class Person (object):
 class GassmanWebApp (tornado.web.Application):
     def __init__ (self, sql, mailer, connArgs):
         handlers = [
-            #(r'^/$', IndexHandler),
-            #(r'^/login.html$', LoginHandler),
+            (r'^/$', IndexHandler),
             (r'^/home.html$', HomeHandler),
             (r'^/auth/google$', GoogleAuthLoginHandler),
             (r'^/sys/version$', SysVersionHandler),
@@ -304,18 +302,6 @@ class GassmanWebApp (tornado.web.Application):
         if s is None:
             s = Session(self)
             self.sessions[xt] = s
-            #pid = requestHandler.current_user
-            #if pid:
-            #    with self.conn as cur:
-            #        cur.execute(*self.sql.find_person(pid))
-            #        pdata = cur.fetchone()
-            #        if pdata:
-            #            s.logged_user = Person(*pdata)
-            #            log_gassman.info('created session: user=%s, agent=%s, from=%s', s.logged_user, requestHandler.request.headers['User-Agent'], requestHandler.request.headers.get('X-Forwarded-For', 'NA'))
-            #        else:
-            #            log_gassman.warning('created session, user not found: pid=%s, agent=%s, from=%s', pid, requestHandler.request.headers['User-Agent'], requestHandler.request.headers.get('X-Forwarded-For', 'NA'))
-            #else:
-            #    log_gassman.info('created session: agent=%s, from=%s', requestHandler.request.headers['User-Agent'], requestHandler.request.headers.get('X-Forwarded-For', 'NA'))
         return s
 
     def checkMembershipByKitty (self, cur, personId, accId):
@@ -345,11 +331,11 @@ class GassmanWebApp (tornado.web.Application):
         return r
 
     def isTransactionEditor (self, cur, transId, personId):
-        '''
+        """
         Una transazione può essere creata/modificata da chi ha canEnterXX
         o da chi ha manageTrans.
         Per verificare devo risalire la catena delle sovrascritture.
-        '''
+        """
         while transId is not None:
             cur.execute(*self.sql.log_transaction_check_operator(personId, transId))
             if cur.fetchone()[0] > 0:
@@ -374,18 +360,6 @@ class BaseHandler (tornado.web.RequestHandler):
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
-#    def get_logged_user (self, session=None, error=error_codes.E_not_authenticated):
-#        uid = self.get_current_user()
-#        if uid is not None:
-#            if session is None:
-#                session = self.application.session(self)
-#            p = session.logged_user
-#            if p is not None and p.id == uid:
-#                return p
-#        if error:
-#            raise Exception(error)
-#        return None
-
     def notify (self, template, receivers = None, replyTo = None, **namespace):
         subject = self.render_string(
             "%s.subject.email" % template,
@@ -402,16 +376,9 @@ class BaseHandler (tornado.web.RequestHandler):
             replyTo
         )
 
-#class IndexHandler (BaseHandler):
-#    def get (self):
-#        p = self.get_logged_user(None, None)
-#        log_gassman.debug('index: lu=%s', p)
-#        if p is None:
-#            self.redirect("/login.html")
-#        else: #if self.application.hasAccounts(p.id):
-#            self.redirect("/home.html")
-##        else:
-##            self.redirect("/incomplete_profile.html")
+class IndexHandler (BaseHandler):
+    def get (self):
+        self.redirect("/home.html")
 
 #class LoginHandler (BaseHandler):
 #    def get (self):
@@ -447,13 +414,8 @@ class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAu
 # TODO: twitter login
 
 class HomeHandler (BaseHandler):
-#    @tornado.web.authenticated
     def get (self):
         self.application.session(self)
-#        p = self.get_logged_user(None, None)
-#        if p is None:
-#            self.redirect('/login.html')
-#        else: #if self.application.hasAccounts(p.id):
         self.render('home.html',
                     LOCALE=self.locale.code,
                     )
@@ -823,20 +785,6 @@ class AccountsNamesHandler (JsonBaseHandler):
             accountPeopleAddresses = accountPeopleAddresses,
             kitty = kitty,
             )
-
-#class ExpensesNamesHandler (JsonBaseHandler):
-#    def do (self, cur, csaId):
-#        u = self.get_logged_user()
-#        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEnterPayments, u.id, csaId):
-#            raise Exception(error_codes.E_permission_denied)
-#        r = {}
-#        cur.execute(*self.application.sql.expenses_accounts(csaId))
-#        r['accounts'] = list(cur)
-#        cur.execute(*self.application.sql.expenses_line_descriptions(csaId))
-#        r['tags'] = list(cur)
-#        cur.execute(*self.application.sql.expenses_transaction_descriptions(csaId))
-#        r['tags'] += [ x[0] for x in cur]
-#        return r
 
 class TransactionEditHandler (JsonBaseHandler):
     def do (self, cur, csaId, transId):
