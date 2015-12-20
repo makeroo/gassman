@@ -16,7 +16,7 @@ function ($scope,   gdata,   $q) {
         { p:gdata.permissions.P_canEnterPayments, f:'#/transaction/p', l:'Registra pagamenti' },
         //{ p:gdata.permissions.P_canEnterDeposit, f:'#/transaction/d', l:'Registra accrediti' },
         //{ p:gdata.permissions.P_canEnterWithdrawal, f:'#/transaction/w', l:'Registra prelievi' },
-        { e: function (pp) { return gdata.canEditTransactions(null, pp); }, f:'#/transactions/index', l:' Storia dei movimenti inseriti' },
+        { e: function (u) { return gdata.canEditTransactions(u); }, f:'#/transactions/index', l:' Storia dei movimenti inseriti' }
         ];
 /*        //{ p:gdata.permissions.P_membership, f:'#/account/detail', l:'Il tuo conto' },
         { e:function (pp) {
@@ -36,7 +36,7 @@ function ($scope,   gdata,   $q) {
 
         angular.forEach(ttypes, function (f) {
             if (('p' in f && (!pData || pData.permissions.indexOf(f.p) == -1)) ||
-                ('e' in f && !f.e(pData ? pData.permissions : null))
+                ('e' in f && !f.e(pData))
                 )
                 return;
 

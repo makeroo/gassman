@@ -131,12 +131,11 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
             return false;
     };
 
-    this.canEditTransactions = function (u, pp) {
+    this.canEditTransactions = function (u) {
         if (!u)
             return false;
 
-        if (!pp)
-            pp = u.permissions;
+        var pp = u.permissions || [];
 
         return (
             pp.indexOf(gdata.permissions.P_canEnterPayments) != -1 ||
