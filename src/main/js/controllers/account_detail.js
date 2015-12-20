@@ -5,12 +5,12 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.AccountDetail', [
-	'GassmanApp.services.Gdata',
+	'GassmanApp.services.Gdata'
 ])
 
 .controller('AccountDetail', [
-        'loggedUser', 'csa', '$scope', '$filter', '$stateParams', '$location', 'gdata',
-function(loggedUser,   csa,   $scope,   $filter,   $stateParams,   $location,   gdata) {
+        'csa', '$scope', '$filter', '$stateParams', '$location', 'gdata',
+function(csa,   $scope,   $filter,   $stateParams,   $location,   gdata) {
 	$scope.movements = [];
 	$scope.movementsError = null;
 	$scope.accountOwner = null;
@@ -43,8 +43,7 @@ function(loggedUser,   csa,   $scope,   $filter,   $stateParams,   $location,   
 		});
 	};
 
-	$scope.profile = loggedUser;
-	$scope.viewableContacts = $scope.profile.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
+	$scope.viewableContacts = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
 
 	$scope.csaId = csa;
 

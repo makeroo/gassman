@@ -9,11 +9,10 @@ angular.module('GassmanApp.controllers.CsaDetail', [
 ])
 
 .controller('CsaDetail', [
-		 'loggedUser', '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q',
-function (loggedUser,   $scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
+		 '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q',
+function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
 	var csaId = $stateParams.csaId;
 
-	$scope.profile = loggedUser;
 	$scope.csa = null;
 	$scope.loadError = null;
 	$scope.openOrders = null;
@@ -61,8 +60,8 @@ function (loggedUser,   $scope,   $filter,   $location,   $stateParams,   gdata,
 		}
 	};
 
-	$scope.editableMembershipFee = $scope.profile.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
-	$scope.editableCsaInfo = $scope.profile.permissions.indexOf(gdata.permissions.P_csaEditor) != -1;
+	$scope.editableMembershipFee = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
+	$scope.editableCsaInfo = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_csaEditor) != -1;
 
 	$q.all([
 		gdata.csaInfo(csaId),

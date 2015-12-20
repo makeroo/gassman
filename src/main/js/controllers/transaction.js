@@ -11,8 +11,8 @@ angular.module('GassmanApp.controllers.Transaction', [
 ])
 
 .controller('Transaction', [
-         'loggedUser', 'csa', '$scope', '$stateParams', '$location', '$timeout', 'gdata', 'accountAutocompletion',
-function (loggedUser,   csa,   $scope,   $stateParams,   $location,   $timeout,   gdata,   accountAutocompletion) {
+         'csa', '$scope', '$stateParams', '$location', '$timeout', 'gdata', 'accountAutocompletion',
+function (csa,   $scope,   $stateParams,   $location,   $timeout,   gdata,   accountAutocompletion) {
 
     function joinSkippingEmpties () {
         var sep = arguments[0];
@@ -163,7 +163,7 @@ function (loggedUser,   csa,   $scope,   $stateParams,   $location,   $timeout, 
             // il template mostri errore
             throw "illegal transaction type";
 
-        $scope.canEdit = gdata.isTransactionTypeEditableByUser(trans.cc_type, $scope.profile);
+        $scope.canEdit = gdata.isTransactionTypeEditableByUser(trans.cc_type, $scope.gassman.loggedUser);
         $scope.readonly = t.transId != 'new';
 
         if (!$scope.canEdit && !$scope.readonly) {
@@ -485,10 +485,9 @@ function (loggedUser,   csa,   $scope,   $stateParams,   $location,   $timeout, 
 
     var firstTransResp = null;
 
-    $scope.profile = loggedUser;
-    $scope.isTransactionEditor = gdata.canEditTransactions($scope.profile);
-    $scope.viewableContacts = $scope.profile.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
-    $scope.viewableContactsOrAccounts = $scope.viewableContacts || $scope.profile.permissions.indexOf(gdata.permissions.P_canCheckAccounts) != -1;
+    $scope.isTransactionEditor = gdata.canEditTransactions($scope.gassman.loggedUser);
+    $scope.viewableContacts = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
+    $scope.viewableContactsOrAccounts = $scope.viewableContacts || $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canCheckAccounts) != -1;
 
     $scope.csaId = csa;
 
