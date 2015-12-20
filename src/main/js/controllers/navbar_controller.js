@@ -5,7 +5,7 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.Navbar', [
-	'GassmanApp.services.Gdata'
+    'GassmanApp.services.Gdata'
 ])
 
 .controller('NavbarController', [
@@ -27,38 +27,43 @@ function ($scope,   gdata,   $q) {
         { e: function (pp) { return gdata.canEditTransactions(null, pp) }, l:'Movimentazione contante', 'class': "grouptitle" },
         ];
 */
-	$scope.transactionTypes = [];
+    $scope.transactionTypes = [];
 
-	gdata.profileInfo().
-	then (function (pData) {
-		$scope.profile = pData;
-		$scope.csaId = null;
-    	$scope.initError = null;
+    $scope.$watch('gassman.loggedUser', function (pData) {
+        $scope.profile = pData;
+        //$scope.csaId = null;
+        $scope.initError = null;
 
-		angular.forEach(ttypes, function (f) {
-			if (('p' in f && pData.permissions.indexOf(f.p) == -1) ||
-				('e' in f && !f.e(pData.permissions))
-				)
-				return;
+        angular.forEach(ttypes, function (f) {
+            if (('p' in f && (!pData || pData.permissions.indexOf(f.p) == -1)) ||
+                ('e' in f && !f.e(pData ? pData.permissions : null))
+                )
+                return;
 
-			$scope.transactionTypes.push(f);
-		});
+            $scope.transactionTypes.push(f);
+        });
+    });
 
-		return gdata.selectedCsa();
-	}).
-	then (function (csaId) {
-		$scope.csaId = csaId;
-		return $q.all([ gdata.csaInfo(csaId),
-		                gdata.accountByCsa(csaId)
-		                ]);
-	}).
-	then (function (r) {
-		$scope.csa = r[0].data;
-		$scope.accId = r[1];
-	}).
-	then (undefined, function (error) {
-		if (error[0] != gdata.error_codes.E_no_csa_found)
-			$scope.initError = error;
-	});
+    $scope.$watch('gassman.selectedCsa', function (csaId) {
+        $scope.csaId = csaId;
+
+        if (csaId === null) {
+            $scope.csa = null;
+            $scope.accId = null;
+        } else {
+            $q.all([
+                gdata.csaInfo(csaId),
+                gdata.accountByCsa(csaId)
+            ])
+            .then (function (r) {
+                $scope.csa = r[0].data;
+                $scope.accId = r[1];
+            }).
+            then (undefined, function (error) {
+                if (error[0] != gdata.error_codes.E_no_csa_found)
+                    $scope.initError = error;
+            });
+        }
+    });
 }])
 ;

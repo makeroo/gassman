@@ -45,24 +45,52 @@ gassmanApp.filter('noFractionCurrency',
 function ($stateProvider,   $urlRouterProvider) {
     $urlRouterProvider.otherwise('/not_found');
 
+    var appStarted = [
+                 '$rootScope',
+        function ($rootScope) {
+            return $rootScope.gassman.appStarted;
+        }
+    ];
     var loggedUser = [
-                 'gdata',
-        function (gdata) {
-            return gdata.profileInfo();
+                 '$rootScope', 'gdata', '$q',
+        function ($rootScope,   gdata,   $q) {
+            var d = $q.defer();
+
+            $rootScope.gassman.appStarted.then(function () {
+                if ($rootScope.gassman.loggedUser) {
+                    d.resolve($rootScope.gassman.loggedUser);
+                } else {
+                    d.reject([gdata.error_codes.E_not_authenticated]);
+                }
+            });
+
+            return d.promise;
         }
     ];
     var csa = [
-                 'gdata',
-        function (gdata) {
-            return gdata.selectedCsa();
+                 '$rootScope', 'gdata', '$q',
+        function ($rootScope,   gdata,   $q) {
+            var d = $q.defer();
+
+            $rootScope.gassman.appStarted.then(function () {
+                if ($rootScope.gassman.loggedUser) {
+                    d.resolve($rootScope.gassman.selectedCsa);
+                } else {
+                    d.reject([gdata.error_codes.E_no_csa_found]);
+                }
+            });
+
+            return d.promise;
         }
     ];
 
     $stateProvider.
         state('root', {
             abstract: true,
+            resolve: {
+                appStarted: appStarted
+            },
             templateUrl: 'template/master.html'
-            //controller: 'MasterController'
         }).
         state('root.csa', {
             url: '/csa/:csaId/detail',
@@ -118,6 +146,10 @@ function ($stateProvider,   $urlRouterProvider) {
         }).
         state('root.transaction_detail', {
             url: '/transaction/:transId',
+            resolve: {
+                loggedUser: loggedUser,
+                csa: csa
+            },
             templateUrl: 'template/transaction.html',
             controller: 'Transaction'
         }).
@@ -188,8 +220,29 @@ function ($stateProvider,   $urlRouterProvider) {
 }])
 
 .run([
-         '$rootScope', 'gdata', 'gstorage', '$state',
-function ($rootScope,   gdata,   gstorage,   $state) {
+         '$rootScope', 'gdata', 'gstorage', '$state', '$q',
+function ($rootScope,   gdata,   gstorage,   $state,   $q) {
+    var appStartedDefer = $q.defer();
+
+    $rootScope.gassman = {
+        loggedUser: null,
+        selectedCsa: null,
+        appStarted: appStartedDefer.promise
+    };
+
+    gdata.profileInfo()
+    .then(function (r) {
+        $rootScope.gassman.loggedUser = r.data;
+
+        return gstorage.selectedCsa();
+    }).
+    then (function (csaId) {
+        $rootScope.gassman.selectedCsa = csaId;
+    }).
+    finally(function () {
+        appStartedDefer.resolve(true);
+    });
+
     $rootScope.$on('$stateChangeError', function (event, toState, toParams, fromState, fromParams, error) {
         if (error && error[0] == gdata.error_codes.E_not_authenticated) {
             if (!toState.do_not_save) {

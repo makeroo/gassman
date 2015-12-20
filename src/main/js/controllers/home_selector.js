@@ -14,25 +14,26 @@ angular.module('GassmanApp.controllers.HomeSelectorController', [
 function ($scope,   $location,   gdata,   gstorage) {
     $scope.error = null;
 
-    gdata.profileInfo().
-    then (function (profile) {
-        $scope.profile = profile;
+    if (!$scope.gassman.loggedUser) {
+        $location.path('/login');
 
-        return gdata.selectedCsa();
-    }).
-    then (function (csaId) {
-        var u = gstorage.popRequestedUrl();
+        return;
+    }
 
-        $location.path(u || '/csa/' + csaId + "/detail");
-    }).
-    then (undefined, function (error) {
-        if (error[0] == gdata.error_codes.E_not_authenticated) {
-            $location.path('/login');
-        } else if (error[0] == gdata.error_codes.E_no_csa_found) {
-            $location.path('/person/' + $scope.profile.logged_user.id + '/detail');
-        } else {
-            $scope.error = error;
-        }
-    });
+    var u = gstorage.popRequestedUrl();
+
+    if (u) {
+        $location.path(u);
+
+        return;
+    }
+
+    if ($scope.gassman.selectedCsa) {
+        $location.path('/csa/' + $scope.gassman.selectedCsa + "/detail");
+
+        return;
+    }
+
+    $location.path('/person/' + $scope.gassman.loggedUser.id + '/detail');
 }])
 ;

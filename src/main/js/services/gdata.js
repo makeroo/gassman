@@ -28,7 +28,7 @@ gassmanServices.config(function ($httpProvider) {
          '$http', '$q', '$localStorage', '$cookies', '$rootScope', '$timeout',
 function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
     var gdata = this;
-    var profileInfo = null;
+    //var profileInfo = null;
     var peopleProfiles = {};
 
     this.permissions = {
@@ -58,6 +58,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
         // locali
         E_no_csa_found: 'no csa found', // non è presente alcun csa nel local storage
         E_person_not_found: 'person not found', // personId non trovato, generato localmente perché il server in questo caso restituisce lista vuota
+        E_no_account:  'no account', // una persona non ha il conto per un dato csa
 
         // server
         E_ok: '',
@@ -131,8 +132,12 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
     };
 
     this.canEditTransactions = function (u, pp) {
+        if (!u)
+            return false;
+
         if (!pp)
             pp = u.permissions;
+
         return (
             pp.indexOf(gdata.permissions.P_canEnterPayments) != -1 ||
             pp.indexOf(gdata.permissions.P_canEnterCashExchange) != -1 ||
@@ -148,12 +153,13 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
     };
 
     this.profileInfo = function () {
-        var d = $q.defer();
+//        var d = $q.defer();
 
-        if (profileInfo) {
-            d.resolve(profileInfo);
-        } else {
-            $http.post('/profile-info?_xsrf=' + $cookies.get('_xsrf')).
+//        if (profileInfo) {
+//            d.resolve(profileInfo);
+//        } else {
+        return $http.post('/profile-info?_xsrf=' + $cookies.get('_xsrf'));
+        /*.
             then(function (r) {
                 profileInfo = r.data;
                 d.resolve(profileInfo);
@@ -161,89 +167,36 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
             }).
             then(undefined, function (error) {
                 d.reject(error.data);
-            });
-        }
+            });*/
+//        }
 
-        return d.promise;
-    };
-
-    this.selectedCsa = function (csaId) {
-        var d = $q.defer();
-
-        if (csaId === undefined) {
-            // restituisce il csa selezionato
-
-            gdata.profileInfo().then(
-                function (pi) {
-                    var x = $localStorage.selectedCsa;
-
-                    if (x === undefined || !(x in pi.csa)) {
-                        x = null;
-                        for (var i in pi.csa) {
-                            if (!pi.csa.hasOwnProperty(i))
-                                continue;
-                            x = i;
-                            break;
-                        }
-                        if (x !== null) {
-                            $localStorage.selectedCsa = x;
-                            d.resolve(x);
-                        } else {
-                            d.reject([ gdata.error_codes.E_no_csa_found ]);
-                        }
-                    } else {
-                        d.resolve(x);
-                    }
-                },
-                function (error) {
-                    d.reject(error);
-                }
-            );
-        } else {
-            // imposta il csa selezionato
-
-            gdata.profileInfo().then(
-                function (pi) {
-                    if (accId in pi.csa) {
-                        $localStorage.selectedCsa = csaId;
-                        d.resolve(csaId);
-                    } else {
-                        d.reject('notMember');
-                    }
-                },
-                function (error) {
-                    d.reject(error);
-                }
-            );
-        }
-
-        return d.promise;
+//        return d.promise;
     };
 
     this.accountByCsa = function (csaId) {
         // restituisci l'account dell'utente loggato in base al csa indicato
         var d = $q.defer();
 
-        gdata.profileInfo().then(
-            function (pi) {
-                var done = false;
-                for (var i = 0; i < pi.accounts.length; ++i) {
-                    // accDetails è: 0:csaId 1:accId 2:from 3:to
-                    var accDetails = pi.accounts[i];
-                    if (accDetails[0] == csaId && accDetails[3] == null) {
-                        d.resolve(accDetails[1]);
-                        done = true;
-                        break;
-                    }
-                }
+        var pi = $rootScope.gassman.loggedUser;
 
-                if (!done)
-                    d.reject('noAccount');
-            },
-            function (error) {
-                d.reject(error);
+        if (!pi) {
+            d.reject(gdata.error_codes.E_not_authenticated);
+        } else {
+            var done = false;
+            for (var i = 0; i < pi.accounts.length; ++i) {
+                // accDetails è: 0:csaId 1:accId 2:from 3:to
+                var accDetails = pi.accounts[i];
+                if (accDetails[0] == csaId && accDetails[3] == null) {
+                    d.resolve(accDetails[1]);
+                    done = true;
+                    break;
+                }
             }
-        );
+
+            if (!done) {
+                d.reject(gdata.error_codes.E_no_account);
+            }
+        }
 
         return d.promise;
     };

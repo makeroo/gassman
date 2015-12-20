@@ -47,5 +47,49 @@ function ($localStorage,   $rootScope) {
 
         return r;
     };
+
+    this.selectedCsa = function (csaId) {
+        var pi = $rootScope.gassman.loggedUser;
+
+        if (!pi) {
+            return null;
+        }
+
+        if (csaId === undefined) {
+            // restituisce il csa selezionato
+
+            var x = $localStorage.selectedCsa;
+
+            if (x === undefined || !(x in pi.csa)) {
+                x = null;
+                for (var i in pi.csa) {
+                    if (!pi.csa.hasOwnProperty(i)) {
+                        continue;
+                    }
+                    x = i;
+                    break;
+                }
+
+                if (x !== null) {
+                    $localStorage.selectedCsa = x;
+                    return x;
+                } else {
+                    return null;
+                }
+            } else {
+                return x;
+            }
+        } else {
+            // imposta il csa selezionato
+
+            if (csaId in pi.csa) {
+                $localStorage.selectedCsa = csaId;
+
+                return csaId;
+            } else {
+                return null;
+            }
+        }
+    };
 }])
 ;

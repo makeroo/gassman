@@ -11,8 +11,8 @@ angular.module('GassmanApp.controllers.Transaction', [
 ])
 
 .controller('Transaction', [
-         '$scope', '$stateParams', '$location', '$timeout', 'gdata', 'accountAutocompletion',
-function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAutocompletion) {
+         'loggedUser', 'csa', '$scope', '$stateParams', '$location', '$timeout', 'gdata', 'accountAutocompletion',
+function (loggedUser,   csa,   $scope,   $stateParams,   $location,   $timeout,   gdata,   accountAutocompletion) {
 
     function joinSkippingEmpties () {
         var sep = arguments[0];
@@ -485,73 +485,53 @@ function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAut
 
     var firstTransResp = null;
 
-    gdata.profileInfo().
-    then (function (profile) {
-        $scope.profile = profile;
-        $scope.isTransactionEditor = gdata.canEditTransactions($scope.profile);
-        $scope.viewableContacts = $scope.profile.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
-        $scope.viewableContactsOrAccounts = $scope.viewableContacts || $scope.profile.permissions.indexOf(gdata.permissions.P_canCheckAccounts) != -1;
+    $scope.profile = loggedUser;
+    $scope.isTransactionEditor = gdata.canEditTransactions($scope.profile);
+    $scope.viewableContacts = $scope.profile.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
+    $scope.viewableContactsOrAccounts = $scope.viewableContacts || $scope.profile.permissions.indexOf(gdata.permissions.P_canCheckAccounts) != -1;
 
-        return gdata.selectedCsa();
-    }).then (function (csaId) {
-        $scope.csaId = csaId;
+    $scope.csaId = csa;
 
-        if ($scope.isTransactionEditor)
-            return gdata.accountsNames($scope.csaId);
-        else
-            return null;
-    }).then (function (r) {
-        // trasforma data in autocompletionData
+    var p = null;
 
-        if (r) {
-            $scope.currencies = accountAutocompletion.parse(r.data);
+    if ($scope.isTransactionEditor) {
+        p = gdata.accountsNames($scope.csaId)
+        .then (function (r) {
+            // trasforma data in autocompletionData
 
-            $scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
+            if (r) {
+                $scope.currencies = accountAutocompletion.parse(r.data);
 
-            kitties = r.data.kitty;
-        } else {
-            $scope.currencies = [ ];
-            $scope.autocompletionData = { };
-        }
-/*
-        if ($scope.isTransactionEditor)
-            return gdata.expensesTags($scope.csaId);
-        else
-            return null;
-    }).then(function (r) {
-        if (r) {
-            var expensesAccounts = r.data.accounts;
-            var expensesTags = r.data.tags;
+                $scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
 
-            angular.forEach(expensesAccounts, function (account) {
-                // 0:id, 1:gc_name, 3:currency_id
-                $scope.autocompletionExpenses.push(account[1]);
-            });
+                kitties = r.data.kitty;
+            }
 
-            angular.forEach(expensesTags, function (tag) {
-                $scope.autocompletionExpenses.push(tag);
-            });
-        } else {
-            $scope.autocompletionExpenses = [ ];
-        }
-*/
-        if ($scope.trans.transId == 'new')
-            return {
-                data: {
-                    transId: 'new',
-                    description: '',
-                    date: new Date(),
-                    cc_type: $scope.trans.cc_type,
-                    currency: null,
-                    lines: [],
-                    modified_by: null,
-                    modifies: null
+            if ($scope.trans.transId == 'new')
+                return {
+                    data: {
+                        transId: 'new',
+                        description: '',
+                        date: new Date(),
+                        cc_type: $scope.trans.cc_type,
+                        currency: null,
+                        lines: [],
+                        modified_by: null,
+                        modifies: null
                     },
-                people: {}
+                    people: {}
                 };
-        else
-            return gdata.transactionForEdit($scope.csaId, $scope.trans.transId, kitties == null);
-    }).then(function (r) {
+            else
+                return gdata.transactionForEdit($scope.csaId, $scope.trans.transId, kitties == null);
+        });
+    } else {
+        $scope.currencies = [ ];
+        $scope.autocompletionData = { };
+
+        p = gdata.transactionForEdit($scope.csaId, $scope.trans.transId, kitties == null);
+    }
+
+    p.then(function (r) {
         firstTransResp = r;
 
         if (kitties == null)
