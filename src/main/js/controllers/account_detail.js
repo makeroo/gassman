@@ -5,99 +5,99 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.AccountDetail', [
-	'GassmanApp.services.Gdata'
+    'GassmanApp.services.Gdata'
 ])
 
 .controller('AccountDetail', [
         'csa', '$scope', '$filter', '$stateParams', '$location', 'gdata',
 function(csa,   $scope,   $filter,   $stateParams,   $location,   gdata) {
-	$scope.movements = [];
-	$scope.movementsError = null;
-	$scope.accountOwner = null;
-	$scope.accountDesc = null;
-	$scope.accountOwnerError = null;
-	$scope.amount = null;
-	$scope.viewableContacts = false;
+    $scope.movements = [];
+    $scope.movementsError = null;
+    $scope.accountOwner = null;
+    $scope.accountDesc = null;
+    $scope.accountOwnerError = null;
+    $scope.amount = null;
+    $scope.viewableContacts = false;
 //	$scope.selectedMovement = null;
 
-	$scope.toggleErrorMessage = function () {
-		$scope.showErrorMessage = ! $scope.showErrorMessage;
-	};
+    $scope.toggleErrorMessage = function () {
+        $scope.showErrorMessage = ! $scope.showErrorMessage;
+    };
 
-	var accId = $stateParams.accountId;
-	var start = 0;
-	var blockSize = 25;
-	var concluded = false;
+    var accId = $stateParams.accountId;
+    var start = 0;
+    var blockSize = 25;
+    var concluded = false;
 
-	var showOwner = function (accId) {
-		$scope.accId = accId;
-		gdata.accountOwner(accId).
-		then (function (r) {
-			if (r.data.people)
-				$scope.accountOwner = r.data.people;
-			else
-				$scope.accountDesc = r.data.desc;
-		}).
-		then (undefined, function (error) {
-			$scope.accountOwnerError = error.data;
-		});
-	};
+    var showOwner = function (accId) {
+        $scope.accId = accId;
+        gdata.accountOwner(accId).
+        then (function (r) {
+            if (r.data.people)
+                $scope.accountOwner = r.data.people;
+            else
+                $scope.accountDesc = r.data.desc;
+        }).
+        then (undefined, function (error) {
+            $scope.accountOwnerError = error.data;
+        });
+    };
 
-	$scope.viewableContacts = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
+    $scope.viewableContacts = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
 
-	$scope.csaId = csa;
+    $scope.csaId = csa;
 
     var loading = false;
 
-	$scope.loadMore = function () {
-		if (concluded || loading) return;
+    $scope.loadMore = function () {
+        if (concluded || loading) return;
 
         loading = true;
 
-		gdata.accountMovements($scope.accId, start, blockSize).
-		then (function (r) {
+        gdata.accountMovements($scope.accId, start, blockSize).
+        then (function (r) {
             loading = false;
-			concluded = r.data.length < blockSize;
-			start += r.data.length;
-			$scope.movements = $scope.movements.concat(r.data);
-		}).
-		then (undefined, function (error) {
+            concluded = r.data.length < blockSize;
+            start += r.data.length;
+            $scope.movements = $scope.movements.concat(r.data);
+        }).
+        then (undefined, function (error) {
             loading = false;
-			concluded = true;
-			// TODO: FIXME: qui ho 2 errori...
-			$scope.serverError = error.data[1];
-			console.log('AccountDetail: movements error:', error.data)
-			$scope.showErrorMessage = false;
-			$scope.movementsError = error.data;
-			//console.log('error', data, status, headers, config);
-		});
-	};
+            concluded = true;
+            // TODO: FIXME: qui ho 2 errori...
+            $scope.serverError = error.data[1];
+            console.log('AccountDetail: movements error:', error.data)
+            $scope.showErrorMessage = false;
+            $scope.movementsError = error.data;
+            //console.log('error', data, status, headers, config);
+        });
+    };
 
-	if (accId) {
-		x(accId);
-	} else {
-		gdata.accountByCsa(csa)
-		.then(x)
-		.then(undefined, function (error) {
-			$scope.accountOwnerError = error.data;
-		});
-	}
+    if (accId) {
+        x(accId);
+    } else {
+        gdata.accountByCsa(csa)
+        .then(x)
+        .then(undefined, function (error) {
+            $scope.accountOwnerError = error.data;
+        });
+    }
 
-	function x (accId) {
-		showOwner(accId);
-		$scope.loadMore();
+    function x (accId) {
+        showOwner(accId);
+        $scope.loadMore();
 
-		gdata.accountAmount(accId)
-		.then(function (r) {
-			$scope.amount = r.data;
-		})
-		.then(undefined, function (error) {
-			$scope.accountOwnerError = error.data;
-		});
-	}
+        gdata.accountAmount(accId)
+        .then(function (r) {
+            $scope.amount = r.data;
+        })
+        .then(undefined, function (error) {
+            $scope.accountOwnerError = error.data;
+        });
+    }
 
-	$scope.showTransaction = function (mov) {
-		$location.path('/transaction/' + mov[4]);
-	};
+    $scope.showTransaction = function (mov) {
+        $location.path('/transaction/' + mov[4]);
+    };
 }])
 ;
