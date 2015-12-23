@@ -51,7 +51,7 @@ function ($stateProvider,   $urlRouterProvider) {
             return $rootScope.gassman.appStarted;
         }
     ];
-    var loggedUser = [
+    var checkLoggedUser = [
                  '$rootScope', 'gdata', '$q',
         function ($rootScope,   gdata,   $q) {
             var d = $q.defer();
@@ -67,7 +67,7 @@ function ($stateProvider,   $urlRouterProvider) {
             return d.promise;
         }
     ];
-    var csa = [
+    var checkSelectedCsa = [
                  '$rootScope', 'gdata', '$q',
         function ($rootScope,   gdata,   $q) {
             var d = $q.defer();
@@ -95,7 +95,7 @@ function ($stateProvider,   $urlRouterProvider) {
         state('root.csa', {
             url: '/csa/:csaId/detail',
             resolve: {
-                loggedUser: loggedUser
+                userAuthenticated: checkLoggedUser
             },
             templateUrl: 'template/csa_detail.html',
             controller: 'CsaDetail'
@@ -103,7 +103,7 @@ function ($stateProvider,   $urlRouterProvider) {
         state('root.csa_admin', {
             url: '/csa/{csaId:[0-9]+}/admin',
             resolve: {
-                loggedUser: loggedUser
+                userAuthenticated: checkLoggedUser
             },
             templateUrl: 'template/csa_admin.html',
             controller: 'CsaAdmin'
@@ -111,8 +111,8 @@ function ($stateProvider,   $urlRouterProvider) {
         state('root.person_detail', {
             url: '/person/:personId/detail',
             resolve: {
-                loggedUser: loggedUser,
-                csa: csa
+                userAuthenticated: checkLoggedUser,
+                csaSelected: checkSelectedCsa
             },
             templateUrl: 'template/person_detail.html',
             controller: 'PersonDetail'
@@ -120,8 +120,8 @@ function ($stateProvider,   $urlRouterProvider) {
         state('root.self_detail', {
             url: '/account/self/detail',
             resolve: {
-                loggedUser: loggedUser,
-                csa: csa
+                userAuthenticated: checkLoggedUser,
+                csaSelected: checkSelectedCsa
             },
             templateUrl: 'template/account_detail.html',
             controller: 'AccountDetail'
@@ -129,8 +129,8 @@ function ($stateProvider,   $urlRouterProvider) {
         state('root.account_detail', {
             url: '/account/:accountId/detail',
             resolve: {
-                loggedUser: loggedUser,
-                csa: csa
+                userAuthenticated: checkLoggedUser,
+                csaSelected: checkSelectedCsa
             },
             templateUrl: 'template/account_detail.html',
             controller: 'AccountDetail'
@@ -138,8 +138,8 @@ function ($stateProvider,   $urlRouterProvider) {
         state('root.account_list', {
             url: '/accounts/index',
             resolve: {
-                loggedUser: loggedUser,
-                csa: csa
+                userAuthenticated: checkLoggedUser,
+                csaSelected: checkSelectedCsa
             },
             templateUrl: 'template/accounts_index.html',
             controller: 'AccountsIndex'
@@ -147,8 +147,8 @@ function ($stateProvider,   $urlRouterProvider) {
         state('root.transaction_detail', {
             url: '/transaction/:transId',
             resolve: {
-                loggedUser: loggedUser,
-                csa: csa
+                userAuthenticated: checkLoggedUser,
+                csaSelected: checkSelectedCsa
             },
             templateUrl: 'template/transaction.html',
             controller: 'Transaction'
@@ -156,7 +156,7 @@ function ($stateProvider,   $urlRouterProvider) {
         state('root.transaction_list', {
             url: '/transactions/index',
             resolve: {
-                csa: csa
+                csaSelected: checkSelectedCsa
             },
             templateUrl: 'template/transactions_index.html',
             controller: 'TransactionsIndex'

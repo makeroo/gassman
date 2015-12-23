@@ -9,9 +9,8 @@ angular.module('GassmanApp.controllers.PersonDetail', [
 ])
 
 .controller('PersonDetail', [
-         'csa', '$scope', '$filter', '$stateParams', '$location', 'gdata', '$q', '$timeout',
-function (csa,   $scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $timeout) {
-    $scope.csaId = csa;
+         '$scope', '$filter', '$stateParams', '$location', 'gdata', '$q', '$timeout',
+function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $timeout) {
     $scope.personProfile = null;
     $scope.personProfileError = null;
     $scope.readOnly = true;
@@ -44,7 +43,7 @@ function (csa,   $scope,   $filter,   $stateParams,   $location,   gdata,   $q, 
     };
 
     $scope.visibleAccount = function (a) {
-        return a.csa_id == $scope.csaId;
+        return a.csa_id == $scope.gassman.selectedCsa;
     };
 
     $scope.modify = function () {
@@ -66,7 +65,7 @@ function (csa,   $scope,   $filter,   $stateParams,   $location,   gdata,   $q, 
             return !!c.address;
         });
 
-        gdata.saveProfile($scope.csaId, $scope.personProfile).
+        gdata.saveProfile($scope.gassman.selectedCsa, $scope.personProfile).
         then (function (r) {
             $scope.readOnly = true;
             //if ($scope.personProfile.membership_fee)
@@ -128,7 +127,7 @@ function (csa,   $scope,   $filter,   $stateParams,   $location,   gdata,   $q, 
     };
 
     function loadPersonProfileAndAccounts () {
-        return gdata.profile($scope.csaId, personId).then (function (p) {
+        return gdata.profile($scope.gassman.selectedCsa, personId).then (function (p) {
             $scope.personProfile = p;
             if ($scope.personProfile.profile.default_delivery_place_id != null) {
                 $scope.personProfile.profile.default_delivery_place_id = '' + $scope.personProfile.profile.default_delivery_place_id;
@@ -170,7 +169,7 @@ function (csa,   $scope,   $filter,   $stateParams,   $location,   gdata,   $q, 
         });
     }
 
-    gdata.deliveryPlaces(csa)
+    gdata.deliveryPlaces($scope.gassman.selectedCsa)
     .then (function (r) {
         $scope.deliveryPlaces = r.data;
 

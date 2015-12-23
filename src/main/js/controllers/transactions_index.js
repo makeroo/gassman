@@ -9,8 +9,8 @@ angular.module('GassmanApp.controllers.TransactionsIndex', [
 ])
 
 .controller('TransactionsIndex', [
-         '$scope', '$location', 'gdata', 'csa',
-function ($scope,   $location,   gdata,   csa) {
+         '$scope', '$location', 'gdata',
+function ($scope,   $location,   gdata) {
 	$scope.transactions = null;
 	$scope.transactionsError = null;
 	$scope.queryFilter = '';
@@ -42,14 +42,12 @@ function ($scope,   $location,   gdata,   csa) {
 		$scope.concluded = false;
 	};
 
-	$scope.csaId = csa;
-
     var loading = false;
 
 	$scope.loadMore = function () {
 		if (loading || $scope.concluded) return;
 
-		gdata.transactionsLog($scope.csaId, lastQuery, lastQueryOrder, start, blockSize).
+		gdata.transactionsLog($scope.gassman.selectedCsa, lastQuery, lastQueryOrder, start, blockSize).
 		then (function (r) {
             loading = false;
 			$scope.concluded = r.data.length < blockSize;

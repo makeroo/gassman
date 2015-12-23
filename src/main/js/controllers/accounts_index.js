@@ -12,8 +12,8 @@ angular.module('GassmanApp.controllers.AccountsIndex', [
 ])
 
 .controller('AccountsIndex', [
-         'csa', '$scope', '$filter', '$location', '$localStorage', '$q', 'gdata',
-function (csa,   $scope,   $filter,   $location,   $localStorage,   $q,   gdata) {
+         '$scope', '$filter', '$location', '$localStorage', '$q', 'gdata',
+function ($scope,   $filter,   $location,   $localStorage,   $q,   gdata) {
     $scope.accounts = [];
     $scope.accountsError = null;
 //	$scope.queryFilter = $localStorage.accountIndex_queryFilter || '';
@@ -63,7 +63,7 @@ function (csa,   $scope,   $filter,   $location,   $localStorage,   $q,   gdata)
         loading = true;
 
         gdata.accountsIndex(
-            csa,
+            $scope.gassman.selectedCsa,
             lastQuery,
             start, blockSize).
         then(function (r) {
@@ -96,7 +96,7 @@ function (csa,   $scope,   $filter,   $location,   $localStorage,   $q,   gdata)
                 if (e.profile)
                     return;
                 var pid = e[0];
-                gdata.profile(csa, pid).
+                gdata.profile($scope.gassman.selectedCsa, pid).
                 then(function (p) {
                     e.profile = p;
 
@@ -124,7 +124,7 @@ function (csa,   $scope,   $filter,   $location,   $localStorage,   $q,   gdata)
         }
     };
 
-    gdata.deliveryPlaces(csa).
+    gdata.deliveryPlaces($scope.gassman.selectedCsa).
     then (function (resp) {
         $scope.deliveryPlaces = resp.data;
         if ($scope.deliveryPlaces.length > 1) {

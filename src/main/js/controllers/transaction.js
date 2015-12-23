@@ -11,8 +11,8 @@ angular.module('GassmanApp.controllers.Transaction', [
 ])
 
 .controller('Transaction', [
-         'csa', '$scope', '$stateParams', '$location', '$timeout', 'gdata', 'accountAutocompletion',
-function (csa,   $scope,   $stateParams,   $location,   $timeout,   gdata,   accountAutocompletion) {
+         '$scope', '$stateParams', '$location', '$timeout', 'gdata', 'accountAutocompletion',
+function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAutocompletion) {
 
     function joinSkippingEmpties () {
         var sep = arguments[0];
@@ -96,7 +96,6 @@ function (csa,   $scope,   $stateParams,   $location,   $timeout,   gdata,   acc
     $scope.autocompletionData = [];
     //$scope.autocompletionExpenses = [];
     $scope.autocompletionDataError = null;
-    $scope.csaId = null;
     $scope.tsaveOk = null;
     $scope.tsaveError = null;
     $scope.readonly = true;
@@ -395,7 +394,7 @@ function (csa,   $scope,   $stateParams,   $location,   $timeout,   gdata,   acc
                 description: $scope.trans.tdesc
             };
 
-        gdata.transactionSave($scope.csaId, data).
+        gdata.transactionSave($scope.gassman.selectedCsa, data).
         then (function (r) {
             //console.log('Transaction: transactionSave/delete result:', r);
             //$scope.savedTransId = r.data;
@@ -435,7 +434,7 @@ function (csa,   $scope,   $stateParams,   $location,   $timeout,   gdata,   acc
     };
 
     $scope.reloadForm = function () {
-        gdata.transactionForEdit($scope.csaId, $scope.trans.transId).
+        gdata.transactionForEdit($scope.gassman.selectedCsa, $scope.trans.transId).
         then(setupTransaction).
         then(undefined, function (error) {
             $scope.autocompletionDataError = error.data;
@@ -489,12 +488,10 @@ function (csa,   $scope,   $stateParams,   $location,   $timeout,   gdata,   acc
     $scope.viewableContacts = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
     $scope.viewableContactsOrAccounts = $scope.viewableContacts || $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canCheckAccounts) != -1;
 
-    $scope.csaId = csa;
-
     var p = null;
 
     if ($scope.isTransactionEditor) {
-        p = gdata.accountsNames($scope.csaId)
+        p = gdata.accountsNames($scope.gassman.selectedCsa)
         .then (function (r) {
             // trasforma data in autocompletionData
 
@@ -521,13 +518,13 @@ function (csa,   $scope,   $stateParams,   $location,   $timeout,   gdata,   acc
                     people: {}
                 };
             else
-                return gdata.transactionForEdit($scope.csaId, $scope.trans.transId, kitties == null);
+                return gdata.transactionForEdit($scope.gassman.selectedCsa, $scope.trans.transId, kitties == null);
         });
     } else {
         $scope.currencies = [ ];
         $scope.autocompletionData = { };
 
-        p = gdata.transactionForEdit($scope.csaId, $scope.trans.transId, kitties == null);
+        p = gdata.transactionForEdit($scope.gassman.selectedCsa, $scope.trans.transId, kitties == null);
     }
 
     p.then(function (r) {
@@ -544,7 +541,7 @@ function (csa,   $scope,   $stateParams,   $location,   $timeout,   gdata,   acc
             });
         });
 
-        return x.length ? gdata.peopleProfiles($scope.csaId, x) : [];
+        return x.length ? gdata.peopleProfiles($scope.gassman.selectedCsa, x) : [];
     }).then(function (r) {
         $scope.accountPeopleIndex = r.data;
         return firstTransResp;

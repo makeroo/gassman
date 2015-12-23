@@ -44,7 +44,7 @@ function ($scope,   gdata) {
 		});
 
 		//data = angular.toJson(data) // lo fa già in automatico
-		gdata.transactionSave($scope.csaId, data).
+		gdata.transactionSave($scope.gassman.selectedCsa, data).
 		then (function (r) {
 			//console.log('TransactionCashExchange: save result:', r);
 

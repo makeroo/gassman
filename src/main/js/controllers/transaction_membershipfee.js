@@ -9,7 +9,7 @@ angular.module('GassmanApp.controllers.TransactionMembershipFee', [
 ])
 
 .controller('TransactionMembershipFee', [
-         '$scope', 'gdata',
+		 '$scope', 'gdata',
 function ($scope,   gdata) {
 
 	$scope.savePayment = function () {
@@ -49,7 +49,7 @@ function ($scope,   gdata) {
 		});
 
 		//data = angular.toJson(data) // lo fa già in automatico
-		gdata.transactionSave($scope.csaId, data).
+		gdata.transactionSave($scope.gassman.selectedCsa, data).
 		then (function (r) {
 			$scope.showTransaction(r.data);
 		}).

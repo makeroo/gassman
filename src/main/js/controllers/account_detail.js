@@ -9,8 +9,8 @@ angular.module('GassmanApp.controllers.AccountDetail', [
 ])
 
 .controller('AccountDetail', [
-        'csa', '$scope', '$filter', '$stateParams', '$location', 'gdata',
-function(csa,   $scope,   $filter,   $stateParams,   $location,   gdata) {
+        '$scope', '$filter', '$stateParams', '$location', 'gdata',
+function($scope,   $filter,   $stateParams,   $location,   gdata) {
     $scope.movements = [];
     $scope.movementsError = null;
     $scope.accountOwner = null;
@@ -45,8 +45,6 @@ function(csa,   $scope,   $filter,   $stateParams,   $location,   gdata) {
 
     $scope.viewableContacts = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
 
-    $scope.csaId = csa;
-
     var loading = false;
 
     $scope.loadMore = function () {
@@ -76,7 +74,7 @@ function(csa,   $scope,   $filter,   $stateParams,   $location,   gdata) {
     if (accId) {
         x(accId);
     } else {
-        gdata.accountByCsa(csa)
+        gdata.accountByCsa($scope.gassman.selectedCsa)
         .then(x)
         .then(undefined, function (error) {
             $scope.accountOwnerError = error.data;

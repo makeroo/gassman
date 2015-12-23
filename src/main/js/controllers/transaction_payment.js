@@ -67,7 +67,7 @@ function ($scope,   gdata) {
             });
         }
 
-		gdata.transactionSave($scope.csaId, data).
+		gdata.transactionSave($scope.gassman.selectedCsa, data).
 		then (function (r) {
 			$scope.showTransaction(r.data);
 		}).
