@@ -438,7 +438,11 @@ def insert_transaction_line_membership_fee (tid, amount, csaId, currencyId):
 INSERT INTO transaction_line (transaction_id, account_id, description, amount)
  SELECT %s, a.id, %s, - a.membership_fee * %s
   FROM account a
-  WHERE a.csa_id = %s AND a.currency_id = %s AND a.gc_type = %s AND a.membership_fee > 0''', [ tid, '', amount, csaId, currencyId, At_Asset ]
+  JOIN account_person ap on ap.account_id=a.id
+  WHERE a.csa_id = %s AND a.currency_id = %s AND a.gc_type = %s AND a.membership_fee > 0
+    AND ap.to_date IS NULL
+  GROUP BY a.id
+  ''', [ tid, '', amount, csaId, currencyId, At_Asset ]
 
 def check_transaction_coherency (tid):
     return 'SELECT DISTINCT a.currency_id, a.csa_id FROM transaction_line l JOIN account a ON a.id=l.account_id WHERE l.transaction_id = %s', [ tid ]
