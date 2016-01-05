@@ -76,6 +76,7 @@
       <div class="col-sm-6">
         <label for="accountc{{ $index }}" class="sr-only">Conto per la riga {{ $index }}</label>
 		<ui-select id="accountc{{ $index }}"
+                   ng-if="!l.readonly"
                    theme="bootstrap"
                    name="account"
                    ng-model="l.account"
@@ -88,6 +89,13 @@
 		    <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
 		  </ui-select-choices>
 		</ui-select>
+        <select id="accountc{{ $index }}"
+                ng-if="l.readonly"
+                class="form-control"
+                disabled
+                >
+            <option selected>{{ formatNamesForOption(l.accountNames) }}</option>
+        </select>
 	    <p class="text-danger" ng-show="lineForm.account.$error.required">Specificare chi ha pagato</p>
       </div>
       <div class="col-sm-2">
@@ -102,6 +110,7 @@
                ng-blur="$parent.updateTotalAmount() || ($last && l.account && $parent.addLine(trans.clients))"
                gm-currency="2"
                id="amountc{{ $index }}"
+               ng-readonly="l.readonly"
                />
             <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
           </div>
@@ -117,6 +126,7 @@
                placeholder="Note"
                ng-model="l.notes"
                ng-blur="$last && l.account && $parent.addLine(trans.clients)"
+               ng-readonly="l.readonly"
                />
 
       </div>
