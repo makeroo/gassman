@@ -50,7 +50,11 @@
     <em>Attenzione</em>. Questo inserimento è stato annullato da una successiva modifica. <button class="btn btn-info" ng-click="showTransaction(modified_by)">Esamina</button>
   </p>
 
-  <button class="btn btn-primary" ng-show="canEdit && !modified_by" ng-click="modifyTransaction()">Modifica o cancella</button>
+  <button class="btn btn-primary" ng-show="canEdit && !modified_by && !trans.clients[0].readonly" ng-click="modifyTransaction()">Modifica o cancella</button>
+
+  <p class="alert alert-warning" ng-show="trans.clients[0].readonly">
+    <em>Attenzione</em>. Questo movimento non può essere modificato perché il conto del ricevente è stato chiuso.
+  </p>
 
 </div>
 
@@ -80,6 +84,7 @@
       <div class="col-sm-6">
         <label for="account{{ $index }}" class="sr-only">Conto per la riga {{ $index }}</label>
 		<ui-select id="account{{ $index }}"
+                   ng-if="!l.readonly"
                    theme="bootstrap"
                    name="account"
                    ng-model="l.account"
@@ -92,6 +97,13 @@
 		    <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
 		  </ui-select-choices>
 		</ui-select>
+		<select id="account{{ $index }}"
+                   ng-if="l.readonly"
+                   class="form-control"
+                   disabled
+                   >
+            <option selected>{{ formatNamesForOption(l.accountNames) }}</option>
+		</select>
 	    <p class="text-danger" ng-show="lineForm.account.$error.required">Specificare chi ha versato</p>
       </div>
       <div class="col-sm-2">
@@ -106,6 +118,7 @@
                ng-blur="$parent.updateTotalInvoice() || ($last && l.account && $parent.addLine(trans.producers))"
                gm-currency="2"
                id="amount{{ $index }}"
+               ng-readonly="l.readonly"
                />
             <div class="input-group-addon">{{ accountCurrency(l.account) }}</div>
           </div>
@@ -121,6 +134,7 @@
                placeholder="Note"
                ng-model="l.notes"
                ng-blur="$last && l.account && $parent.addLine(trans.producers)"
+               ng-readonly="l.readonly"
                />
 
       </div>

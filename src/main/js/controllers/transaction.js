@@ -204,7 +204,7 @@ function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAut
 
                     if (ac) {
                         l.accountName = ac.name;
-                        l.readonly = false;
+                        l.readonly = !ac.name;
                     } else {
                         l.readonly = true;
                     }
@@ -480,6 +480,21 @@ function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAut
 */
     $scope.showTransaction = function (tid) {
         $location.path('/transaction/' + tid);
+    };
+
+    $scope.formatNamesForOption = function (nn) {
+        var r = '';
+
+        angular.forEach(nn, function (n) {
+            r += n.name;
+            r += ', ';
+        });
+
+        if (r.length) {
+            r = r.slice(0, r.length - 2);
+        }
+
+        return r;
     };
 
     var firstTransResp = null;
