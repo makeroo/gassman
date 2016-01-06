@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
-'''
+"""
 Created on 01/mar/2014
 
 @author: makeroo
-'''
+"""
 
 import datetime
 import hashlib
 import logging.config
-import os.path
 import sys
 import json
 
@@ -116,33 +115,33 @@ class Person (object):
 class GassmanWebApp (tornado.web.Application):
     def __init__ (self, sql, mailer, connArgs):
         handlers = [
-            (r'^/$', IndexHandler),
+            #(r'^/$', IndexHandler),
             (r'^/home.html$', HomeHandler),
-            (r'^/auth/google$', GoogleAuthLoginHandler),
-            (r'^/sys/version$', SysVersionHandler),
-            (r'^/account/(\d+)/owner$', AccountOwnerHandler),
-            (r'^/account/(\d+)/movements/(\d+)/(\d+)$', AccountMovementsHandler),
-            (r'^/account/(\d+)/amount$', AccountAmountHandler),
-            (r'^/account/(\d+)/xls$', AccountXlsHandler),
-            (r'^/account/(\d+)/close$', AccountCloseHandler),
-            (r'^/profile-info$', ProfileInfoHandler),
-            (r'^/accounts/(\d+)/index/(\d+)/(\d+)$', AccountsIndexHandler),
-            (r'^/accounts/(\d+)/names$', AccountsNamesHandler),
-            #(r'^/expenses/(\d+)/tags$', ExpensesNamesHandler),
-            (r'^/transaction/(\d+)/(\d+)/edit$', TransactionEditHandler),
-            (r'^/transaction/(\d+)/save$', TransactionSaveHandler),
-            (r'^/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
-            (r'^/csa/(\d+)/info$', CsaInfoHandler),
-            (r'^/csa/update$', CsaUpdateHandler),
-            (r'^/csa/list', CsaListHandler),
-            (r'^/csa/(\d+)/charge_membership_fee$', CsaChargeMembershipFeeHandler),
-            (r'^/csa/(\d+)/request_membership$', CsaRequestMembershipHandler),
-            (r'^/csa/(\d+)/delivery_places$', CsaDeliveryPlacesHandler),
-            #(r'^/csa/(\d+)/total_amount$', CsaAmountHandler),
-            (r'^/rss/(.+)$', RssFeedHandler),
-            (r'^/people/(null|\d+)/profiles$', PeopleProfilesHandler),
-            (r'^/person/(null|\d+)/save$', PersonSaveHandler),
-            (r'^/person/(\d+)/check_email$', PersonCheckEmailHandler),
+            (r'^/gm/auth/google$', GoogleAuthLoginHandler),
+            (r'^/gm/sys/version$', SysVersionHandler),
+            (r'^/gm/account/(\d+)/owner$', AccountOwnerHandler),
+            (r'^/gm/account/(\d+)/movements/(\d+)/(\d+)$', AccountMovementsHandler),
+            (r'^/gm/account/(\d+)/amount$', AccountAmountHandler),
+            (r'^/gm/account/(\d+)/xls$', AccountXlsHandler),
+            (r'^/gm/account/(\d+)/close$', AccountCloseHandler),
+            (r'^/gm/profile-info$', ProfileInfoHandler),
+            (r'^/gm/accounts/(\d+)/index/(\d+)/(\d+)$', AccountsIndexHandler),
+            (r'^/gm/accounts/(\d+)/names$', AccountsNamesHandler),
+            #(r'^/gm/expenses/(\d+)/tags$', ExpensesNamesHandler),
+            (r'^/gm/transaction/(\d+)/(\d+)/edit$', TransactionEditHandler),
+            (r'^/gm/transaction/(\d+)/save$', TransactionSaveHandler),
+            (r'^/gm/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
+            (r'^/gm/csa/(\d+)/info$', CsaInfoHandler),
+            (r'^/gm/csa/update$', CsaUpdateHandler),
+            (r'^/gm/csa/list', CsaListHandler),
+            (r'^/gm/csa/(\d+)/charge_membership_fee$', CsaChargeMembershipFeeHandler),
+            (r'^/gm/csa/(\d+)/request_membership$', CsaRequestMembershipHandler),
+            (r'^/gm/csa/(\d+)/delivery_places$', CsaDeliveryPlacesHandler),
+            #(r'^/gm/csa/(\d+)/total_amount$', CsaAmountHandler),
+            (r'^/gm/rss/(.+)$', RssFeedHandler),
+            (r'^/gm/people/(null|\d+)/profiles$', PeopleProfilesHandler),
+            (r'^/gm/person/(null|\d+)/save$', PersonSaveHandler),
+            (r'^/gm/person/(\d+)/check_email$', PersonCheckEmailHandler),
             ]
         #codeHome = os.path.dirname(__file__)
         sett = dict(
@@ -376,9 +375,9 @@ class BaseHandler (tornado.web.RequestHandler):
             replyTo
         )
 
-class IndexHandler (BaseHandler):
-    def get (self):
-        self.redirect("/home.html")
+#class IndexHandler (BaseHandler):
+#    def get (self):
+#        self.redirect("/home.html")
 
 #class LoginHandler (BaseHandler):
 #    def get (self):
