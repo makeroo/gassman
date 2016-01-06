@@ -243,7 +243,7 @@ def find_user_accounts (personId):
 
 def check_membership_by_kitty (personId, accId):
     return '''
-SELECT a.csa_id
+SELECT count(a.csa_id)
  FROM account a
  JOIN permission_grant g ON g.csa_id = a.csa_id
  WHERE a.id = %s AND a.gc_type = %s AND g.person_id = %s AND g.perm_id = %s
@@ -554,7 +554,7 @@ def transactions_by_editor (csaId, operator, q, o, fromLine, toLine):
 
      ORDER BY ''' + o + ''' LIMIT %s OFFSET %s''', [
             csaId,
-            operator.id,
+            operator,
             'A', 'M', 'D',
             q,
             toLine - fromLine + 1,
