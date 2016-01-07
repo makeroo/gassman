@@ -333,7 +333,7 @@
     <div class="container">
         <div class="row">
             <button type="button" class="btn btn-danger" ng-if="trans.transId != 'new'" ng-click="reloadForm()">Annulla</button>
-            <button type="button" class="btn btn-primary" ng-disabled="!payment.$valid || !totalAmount" ng-click="savePayment()">Registra in cassa</button>
+            <button type="button" class="btn btn-primary" ng-disabled="!payment.$valid || (!totalAmount && !totalInvoice)" ng-click="savePayment()">Registra in cassa</button>
             <button type="button" class="btn btn-danger" ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina la registrazione dei pagamenti</button>
             <button type="button" class="btn btn-danger" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
         </div>
