@@ -34,7 +34,7 @@
                         <ul class="dropdown-menu" role="menu">
                             <li><a href="#/person/{{ profile.logged_user.id }}/detail">Profilo</a></li>
                             <li ng-if="accId"><a href="#/account/{{ accId  }}/detail">Conto</a></li>
-                            <li><a href="https://www.google.com/accounts/Logout">Esci</a></li>
+                            <li><a ng-click="logout()">Esci</a></li>
                         </ul>
                     </li>
                 </ul>

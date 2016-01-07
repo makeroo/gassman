@@ -220,8 +220,8 @@ function ($stateProvider,   $urlRouterProvider) {
 }])
 
 .run([
-         '$rootScope', 'gdata', 'gstorage', '$state', '$q',
-function ($rootScope,   gdata,   gstorage,   $state,   $q) {
+         '$rootScope', 'gdata', 'gstorage', '$state', '$q', '$cookies', '$timeout',
+function ($rootScope,   gdata,   gstorage,   $state,   $q,   $cookies,   $timeout) {
     var appStartedDefer = $q.defer();
 
     $rootScope.gassman = {
@@ -242,6 +242,16 @@ function ($rootScope,   gdata,   gstorage,   $state,   $q) {
     finally(function () {
         appStartedDefer.resolve(true);
     });
+
+    $rootScope.logout = function () {
+        $cookies.remove('user');
+        $rootScope.gassman.loggedUser = null;
+        $rootScope.gassman.selectedCsa = null;
+
+        $timeout(function () {
+            window.location.assign('https://www.google.com/accounts/Logout');
+        }, 500);
+    };
 
     $rootScope.$on('$stateChangeError', function (event, toState, toParams, fromState, fromParams, error) {
         if (error && error[0] == gdata.error_codes.E_not_authenticated) {
