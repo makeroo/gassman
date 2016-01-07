@@ -1,10 +1,9 @@
-'''
+"""
 Created on 03/mar/2014
 
 @author: makeroo
-'''
+"""
 
-import datetime
 
 P_membership = 1
 P_canCheckAccounts = 2
