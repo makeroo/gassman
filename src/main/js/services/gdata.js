@@ -28,7 +28,6 @@ gassmanServices.config(function ($httpProvider) {
          '$http', '$q', '$localStorage', '$cookies', '$rootScope', '$timeout',
 function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
     var gdata = this;
-    //var profileInfo = null;
     var peopleProfiles = {};
 
     this.permissions = {
@@ -140,8 +139,6 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
         return (
             pp.indexOf(gdata.permissions.P_canEnterPayments) != -1 ||
             pp.indexOf(gdata.permissions.P_canEnterCashExchange) != -1 ||
-//            pp.indexOf(gdata.permissions.P_canEnterDeposit) != -1 ||
-//            pp.indexOf(gdata.permissions.P_canEnterWithdrawal) != -1 ||
             pp.indexOf(gdata.permissions.P_canEditMembershipFee) != -1 ||
             pp.indexOf(gdata.permissions.P_canManageTransactions) != -1
             );
@@ -152,24 +149,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
     };
 
     this.profileInfo = function () {
-//        var d = $q.defer();
-
-//        if (profileInfo) {
-//            d.resolve(profileInfo);
-//        } else {
         return $http.post('/gm/profile-info?_xsrf=' + $cookies.get('_xsrf'));
-        /*.
-            then(function (r) {
-                profileInfo = r.data;
-                d.resolve(profileInfo);
-                $rootScope.profile = profileInfo;
-            }).
-            then(undefined, function (error) {
-                d.reject(error.data);
-            });*/
-//        }
-
-//        return d.promise;
     };
 
     this.accountByCsa = function (csaId) {
@@ -230,11 +210,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
     this.accountsNames = function (csaId) {
         return $http.post('/gm/accounts/' + csaId + '/names?_xsrf=' + $cookies.get('_xsrf'));
     };
-/*
-    this.expensesTags = function (csaId) {
-        return $http.post('/gm/expenses/' + csaId + '/tags?_xsrf=' + $cookies.get('_xsrf'));
-    };
-*/
+
     this.accountAmount = function (accId) {
         return $http.post('/gm/account/' + accId + '/amount?_xsrf=' + $cookies.get('_xsrf'));
     };
@@ -295,10 +271,6 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
                     p.mainTelephone = c.address;
             }
         });
-
-//            angular.forEach(p.accounts, function (a) {
-//                if (a.to_date == null && )
-//            })
 
         p.gadgets = [];
         if (p.permissions.indexOf(gdata.permissions.P_canEnterCashExchange) != -1) {
