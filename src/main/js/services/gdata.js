@@ -31,7 +31,7 @@ function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
     var peopleProfiles = {};
 
     this.permissions = {
-        P_membership: 1,
+        //P_membership: 1,
         P_canCheckAccounts: 2,
         P_canAdminPerson: 3,
         //P_canEnterDeposit: 4,

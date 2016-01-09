@@ -5,7 +5,7 @@ Created on 03/mar/2014
 """
 
 
-P_membership = 1
+#P_membership = 1
 P_canCheckAccounts = 2
 P_canAdminPerson = 3 # very low level!
 #P_canEnterDeposit = 4 # deprecated
@@ -161,22 +161,19 @@ accounts_index_order_by = [ 'p.first_name, p.last_name',
 def accounts_index (csaId, t, dp, o, fromLine, toLine):
     q = '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount) AS ta, c.symbol, MAX(t.transaction_date) AS td, a.membership_fee
  FROM person p
- JOIN permission_grant g ON g.person_id=p.id
- LEFT JOIN account_person ap ON ap.person_id=p.id
+ JOIN account_person ap ON ap.person_id=p.id
  JOIN account a on ap.account_id=a.id
  JOIN currency c ON a.currency_id=c.id
  LEFT JOIN transaction_line l ON l.account_id=a.id
  LEFT JOIN transaction t ON t.id=l.transaction_id
  WHERE
- g.csa_id=%s AND
- g.perm_id=%s AND
+ a.csa_id=%s AND
  ap.to_date IS NULL AND
  t.modified_by_id IS NULL AND
  (t.cc_type IS NULL OR t.cc_type NOT IN (%s, %s)) AND
  (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s)'''
     a = [
         csaId,
-        P_membership,
         Tt_Unfinished, Tt_Error,
         t, t, t,
     ]
@@ -231,7 +228,7 @@ def find_user_permissions (personId):
     #return 'SELECT p.id FROM person u JOIN permission_grant g ON g.person_id=u.id JOIN permission p ON g.perm_id=p.id WHERE u.id=%s', [ personId ]
 
 def find_user_csa (personId):
-    return 'SELECT c.id, c.name FROM csa c JOIN permission_grant g ON c.id=g.csa_id WHERE g.person_id=%s AND g.perm_id=%s', [ personId, P_membership ]
+    return 'SELECT c.id, c.name, ap.to_date IS NULL AS "active_member" FROM account_person ap JOIN account a ON a.id=ap.account_id JOIN csa c ON c.id=a.csa_id WHERE ap.person_id=%s', [ personId ]
 
 def find_user_accounts (personId):
     return 'SELECT a.csa_id, a.id, ap.from_date, ap.to_date FROM account_person ap JOIN account a ON ap.account_id = a.id WHERE ap.person_id = %s ORDER BY a.csa_id, ap.from_date', [ personId ]
@@ -241,12 +238,14 @@ def find_user_accounts (personId):
 #    return 'SELECT id, first_name, middle_name, last_name FROM person WHERE current_account_id IS NULL'
 
 def check_membership_by_kitty (personId, accId):
-    return '''
-SELECT count(a.csa_id)
- FROM account a
- JOIN permission_grant g ON g.csa_id = a.csa_id
- WHERE a.id = %s AND a.gc_type = %s AND g.person_id = %s AND g.perm_id = %s
-''', [ accId, At_Kitty, personId, P_membership ]
+    return 'SELECT COUNT(*) FROM account a JOIN account a2 ON a2.csa_id=a.csa_id JOIN account_person ap ON ap.account_id=a2.id WHERE a.id=%s AND ap.person_id=%s', [ accId, personId ]
+
+def is_user_member_of_csa (personId, csaId, stillMember):
+    q = 'SELECT COUNT(*) FROM account_person ap JOIN account a ON a.id=ap.account_id WHERE a.csa_id=%s AND ap.person_id=%s'
+    a = [ csaId, personId ]
+    if stillMember:
+        q += ' AND ap.to_date IS NULL'
+    return q, a
 
 def has_permission_by_account (perm, personId, accId):
     '''Uso accId solo per determinare la CSA, non verifico che personId abbia intestato accId, anzi in generale non è vero.
@@ -564,11 +563,13 @@ def people_index (csaId, t, dp, o, fromLine, toLine):
     q = '''
 SELECT p.id, p.first_name, p.middle_name, p.last_name
  FROM person p
- JOIN permission_grant g ON p.id=g.person_id WHERE g.csa_id=%s AND g.perm_id=%s AND
+ JOIN account_person ap ON ap.person_id=p.id
+ JOIN account a ON a.id=ap.account_id
+ WHERE a.csa_id=%s AND
+       ap.to_date IS NULL AND
  (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s)'''
     a = [
        csaId,
-       P_membership,
        t, t, t,
     ]
 

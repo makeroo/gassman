@@ -315,6 +315,12 @@ class GassmanWebApp (tornado.web.Application):
         log_gassman.debug('has permission: user=%s, perm=%s, r=%s', personId, perm, r)
         return r
 
+    def isUserMemberOfCsa (self, cur, personId, csaId, stillMember):
+        cur.execute(*self.sql.is_user_member_of_csa(personId, csaId, stillMember))
+        r = int(cur.fetchone()[0]) > 0
+        log_gassman.debug('is member: user=%s, csa=%s, still=%s, r=%s', personId, csaId, stillMember, r)
+        return r
+
     def hasPermissionByCsa (self, cur, perm, personId, csaId):
         if perm is None:
             return False
@@ -522,7 +528,7 @@ class AccountAmountHandler (JsonBaseHandler):
 class CsaInfoHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         uid = self.current_user
-        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_membership, uid, csaId):
+        if not self.application.isUserMemberOfCsa(cur, uid, csaId, True):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.csa_info(csaId))
         r = self.application.sql.fetch_object(cur)
@@ -587,7 +593,7 @@ class CsaChargeMembershipFeeHandler (JsonBaseHandler):
 class CsaRequestMembershipHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         uid = self.current_user
-        if self.application.hasPermissionByCsa(cur, self.application.sql.P_membership, uid, csaId):
+        if self.application.isUserMemberOfCsa(cur, uid, csaId, True):
             raise GDataException(error_codes.E_already_member)
         profiles, contacts, args = self.application.sql.people_profiles1([uid])
         cur.execute(profiles, args)
@@ -604,7 +610,7 @@ class CsaRequestMembershipHandler (JsonBaseHandler):
 class CsaDeliveryPlacesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         uid = self.current_user
-        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_membership, uid, csaId):
+        if not self.application.isUserMemberOfCsa(cur, uid, csaId, True):
             raise GDataException(error_codes.E_permission_denied, 403)
         cur.execute(*self.application.sql.csa_delivery_places(csaId))
         return self.application.sql.iter_objects(cur)
@@ -740,7 +746,7 @@ class ProfileInfoHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.find_user_permissions(uid))
         pp = [ p[0] for p in cur ]
         cur.execute(*self.application.sql.find_user_csa(uid))
-        csa = dict(cur)
+        csa = { id: { 'name': name, 'member': member } for id, name, member in cur.fetchall() }
         cur.execute(*self.application.sql.find_user_accounts(uid))
         accs = list(cur)
         return dict(
@@ -1093,7 +1099,7 @@ class PeopleProfilesHandler (JsonBaseHandler):
             if not isSelf:
                 raise GDataException(error_codes.E_permission_denied, 403)
             csaId = None
-        if not isSelf and not self.application.hasPermissionByCsa(cur, self.application.sql.P_membership, uid, csaId):
+        if not isSelf and not self.application.isUserMemberOfCsa(cur, uid, csaId, True):
             raise GDataException(error_codes.E_permission_denied, 403)
         canViewContacts = isSelf or self.application.hasPermissionByCsa(cur, self.application.sql.P_canViewContacts, uid, csaId)
         r = {}
@@ -1145,10 +1151,8 @@ class PersonSaveHandler (JsonBaseHandler):
                 raise GDataException(error_codes.E_permission_denied, 403)
             csaId = None
         elif (
-            (not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditContacts, uid, csaId) and
-             uid != pid
-             ) or
-            not self.application.hasPermissionByCsa(cur, self.application.sql.P_membership, pid, csaId)
+            not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditContacts, uid, csaId) and
+            uid != pid
             ):
             raise GDataException(error_codes.E_permission_denied, 403)
         # salva profilo
@@ -1200,10 +1204,8 @@ class PersonCheckEmailHandler (JsonBaseHandler):
         pid = p['id']
         email = p['email']
         if (
-            (not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditContacts, uid, csaId) and
-             uid != int(pid)
-             ) or
-            not self.application.hasPermissionByCsa(cur, self.application.sql.P_membership, pid, csaId)
+            not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditContacts, uid, csaId) and
+            uid != int(pid)
             ):
             raise GDataException(error_codes.E_permission_denied, 403)
         # verifica unicità

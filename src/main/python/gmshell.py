@@ -143,7 +143,7 @@ class GMShell (cmd.Cmd):
                          pid
                          ])
             print('created person', pid)
-            cur.execute('insert into permission_grant (csa_id, person_id, perm_id) values (%s, %s, %s)', [ self.selectedCsa, pid, sql.P_membership ])
+            #cur.execute('insert into permission_grant (csa_id, person_id, perm_id) values (%s, %s, %s)', [ self.selectedCsa, pid, sql.P_membership ])
             cur.execute('select id, symbol from currency')
             for r in list(cur):
                 cid = r[0]
