@@ -39,11 +39,14 @@ import error_codes
 log_gassman = logging.getLogger('gassman.application')
 log_gassman_db = logging.getLogger('gassman.application.db')
 
+
 def rss_feed_id (pid):
     return hashlib.sha256((settings.COOKIE_SECRET + str(pid)).encode('utf-8')).hexdigest()
 
+
 class GDataException (Exception):
     pass
+
 
 class GoogleUser (object):
     authenticator = 'Google2'
@@ -70,9 +73,6 @@ class GoogleUser (object):
         self.picture = profile.get('picture')
         # altri attributi: id, email, gender, locale
 
-#    def __getattr__ (self, name):
-#        if 'name' in ['firstName', 'middleName', 'lastName', 'gProfile', 'picture']:
-#            pass
 
 class Session (object):
     def __init__ (self, app):
@@ -80,22 +80,6 @@ class Session (object):
         self.created = datetime.datetime.utcnow()
         self.registrationNotificationSent = False
 
-#    def get_logged_user (self, error='not authenticated'):
-#        if not self.logged_user:
-#            if error:
-#                raise Exception(error)
-#            else:
-#                return None
-##        if self.logged_user.account is None:
-##            # controllo per vedere se è avvenuta la registrazione
-##            with self.application.conn as cur:
-##                cur.execute(*self.application.sql.find_current_account(self.logged_user.id))
-##                try:
-##                    self.logged_user.account = int(cur.fetchone()[0])
-##                except:
-##                    etype, evalue, _ = sys.exc_info()
-##                    log_gassman.debug('account not found: user=%s, cause=%s/%s', self.logged_user.id, etype, evalue)
-#        return self.logged_user
 
 class Person (object):
     class DoesNotExist (Exception):
@@ -111,6 +95,7 @@ class Person (object):
 
     def __str__ (self):
         return '%s (%s %s)' % (self.id, self.firstName, self.lastName)
+
 
 class GassmanWebApp (tornado.web.Application):
     def __init__ (self, sql, mailer, connArgs):
@@ -360,6 +345,7 @@ class GassmanWebApp (tornado.web.Application):
             transId = l[0] if l is not None else None
         return False
 
+
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user (self):
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
@@ -381,19 +367,6 @@ class BaseHandler (tornado.web.RequestHandler):
             replyTo
         )
 
-#class IndexHandler (BaseHandler):
-#    def get (self):
-#        self.redirect("/home.html")
-
-#class LoginHandler (BaseHandler):
-#    def get (self):
-#        p = self.get_logged_user(None, None)
-#        if p is None:
-#            self.render('login.html',
-#                        LOCALE=self.locale.code,
-#                        )
-#        else: #if self.application.hasAccounts(p.id):
-#            self.redirect("/home.html")
 
 class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
     @tornado.gen.coroutine
@@ -414,9 +387,12 @@ class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAu
                 response_type='code',
                 extra_params={'approval_prompt': 'auto'})
 
+
 # TODO: facebook login
 
+
 # TODO: twitter login
+
 
 class HomeHandler (BaseHandler):
     def get (self):
@@ -424,6 +400,7 @@ class HomeHandler (BaseHandler):
         self.render('home.html',
                     LOCALE=self.locale.code,
                     )
+
 
 class JsonBaseHandler (BaseHandler):
     notifyExceptions = False
@@ -481,10 +458,12 @@ class JsonBaseHandler (BaseHandler):
                 raise GDataException(error_codes.E_illegal_payload)
         return self._payload
 
+
 class SysVersionHandler (JsonBaseHandler):
     def post (self):
         data = [ gassman_version.version ]
         self.write_response(data)
+
 
 class AccountOwnerHandler (JsonBaseHandler):
     def do (self, cur, accId):
@@ -502,6 +481,7 @@ class AccountOwnerHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.account_description(accId))
         return dict(desc=cur.fetchone())
 
+
 class AccountMovementsHandler (JsonBaseHandler):
     def do (self, cur, accId, fromIdx, toIdx):
         uid = self.current_user
@@ -512,6 +492,7 @@ class AccountMovementsHandler (JsonBaseHandler):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.account_movements(accId, int(fromIdx), int(toIdx)))
         return list(cur)
+
 
 class AccountAmountHandler (JsonBaseHandler):
     def do (self, cur, accId):
@@ -524,6 +505,7 @@ class AccountAmountHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.account_amount(accId))
         v = cur.fetchone()
         return v[0] or 0.0, v[1]
+
 
 class CsaInfoHandler (JsonBaseHandler):
     def do (self, cur, csaId):
@@ -538,6 +520,7 @@ class CsaInfoHandler (JsonBaseHandler):
         r['last_kitty_deposit'] = self.application.sql.fetch_object(cur)
         return r
 
+
 class CsaUpdateHandler (JsonBaseHandler):
     def do (self, cur):
         uid = self.current_user
@@ -546,11 +529,13 @@ class CsaUpdateHandler (JsonBaseHandler):
             raise GDataException(error_codes.E_permission_denied, 403)
         cur.execute(*self.application.sql.csa_update(csa))
 
+
 class CsaListHandler (JsonBaseHandler):
     def do (self, cur):
         uid = self.current_user
         cur.execute(*self.application.sql.csa_list(uid))
         return self.application.sql.iter_objects(cur)
+
 
 class CsaChargeMembershipFeeHandler (JsonBaseHandler):
     def do (self, cur, csaId):
@@ -590,6 +575,7 @@ class CsaChargeMembershipFeeHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.log_transaction(tid, uid, self.application.sql.Tl_Added, self.application.sql.Tn_kitty_deposit, now))
         return { 'tid': tid }
 
+
 class CsaRequestMembershipHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         uid = self.current_user
@@ -607,6 +593,7 @@ class CsaRequestMembershipHandler (JsonBaseHandler):
             contacts = contacts
         )
 
+
 class CsaDeliveryPlacesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         uid = self.current_user
@@ -614,6 +601,7 @@ class CsaDeliveryPlacesHandler (JsonBaseHandler):
             raise GDataException(error_codes.E_permission_denied, 403)
         cur.execute(*self.application.sql.csa_delivery_places(csaId))
         return self.application.sql.iter_objects(cur)
+
 
 class AccountXlsHandler (BaseHandler):
     def get (self, accId):
@@ -663,6 +651,7 @@ class AccountXlsHandler (BaseHandler):
                 s.col(4).width = 256 * ldescmaxlength
             w.save(self)
             self.finish()
+
 
 class AccountCloseHandler (JsonBaseHandler):
     def do (self, cur, accId):
@@ -720,6 +709,7 @@ class AccountCloseHandler (JsonBaseHandler):
                 cur.execute(*self.application.sql.log_transaction(tid, uid, self.application.sql.Tl_Added, self.application.sql.Tn_account_closing, now))
                 return { 'tid': tid }
 
+
 # lo lascio per futura pagina diagnostica: deve comunque ritornare sempre 0.0
 #class CsaAmountHandler (JsonBaseHandler):
 #    def do (self, cur, csaId):
@@ -729,6 +719,7 @@ class AccountCloseHandler (JsonBaseHandler):
 #        cur.execute(*self.application.sql.csa_amount(csaId))
 #        return cur.fetchone()
 
+
 # TODO: riprisitnare quando si edita il profilo utente
 #class PermissionsHandler (JsonBaseHandler):
 #    '''Restituisce tutti i permessi visibili dall'utente loggato.
@@ -737,6 +728,7 @@ class AccountCloseHandler (JsonBaseHandler):
 #        u = self.application.session(self).get_logged_user('not authenticated')
 #        cur.execute(*self.application.sql.find_visible_permissions(u.id))
 #        return list(cur)
+
 
 class ProfileInfoHandler (JsonBaseHandler):
     def do (self, cur):
@@ -756,6 +748,7 @@ class ProfileInfoHandler (JsonBaseHandler):
                 accounts = accs
                 )
 
+
 class AccountsIndexHandler (JsonBaseHandler):
     def do (self, cur, csaId, fromIdx, toIdx):
         p = self.payload
@@ -770,6 +763,7 @@ class AccountsIndexHandler (JsonBaseHandler):
         else:
             raise GDataException(error_codes.E_permission_denied, 403)
         return list(cur)
+
 
 class AccountsNamesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
@@ -790,6 +784,7 @@ class AccountsNamesHandler (JsonBaseHandler):
             accountPeopleAddresses = accountPeopleAddresses,
             kitty = kitty,
             )
+
 
 class TransactionEditHandler (JsonBaseHandler):
     def do (self, cur, csaId, transId):
@@ -828,6 +823,7 @@ class TransactionEditHandler (JsonBaseHandler):
             r['kitty'] = { x['id']: x for x in self.application.sql.iter_objects(cur) }
 
         return r
+
 
 class TransactionSaveHandler (JsonBaseHandler):
     notifyExceptions = True
@@ -1052,6 +1048,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                 Tnt_description_changed = self.Tnt_description_changed,
             )
 
+
 class TransactionsEditableHandler (JsonBaseHandler):
     def do (self, cur, csaId, fromIdx, toIdx):
         q = '%%%s%%' % self.payload['q']
@@ -1065,14 +1062,18 @@ class TransactionsEditableHandler (JsonBaseHandler):
             raise GDataException(error_codes.E_permission_denied, 403)
         return list(cur)
 
+
 def shortDate (d):
     return d.strftime('%Y/%m/%d') # FIXME il formato dipende dal locale dell'utente
+
 
 def pubDate (d):
     return d.strftime('%a, %d %b %Y %H:%M:%S GMT')
 
+
 def currency (v, sym):
     return '%s%s' % (v, sym)
+
 
 class RssFeedHandler (tornado.web.RequestHandler):
     def get (self, rssId):
@@ -1089,6 +1090,7 @@ class RssFeedHandler (tornado.web.RequestHandler):
                         pubDate=pubDate,
                         currency=currency,
                         )
+
 
 class PeopleProfilesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
@@ -1138,6 +1140,7 @@ class PeopleProfilesHandler (JsonBaseHandler):
                     p['contacts'].append(addr)
             # TODO: indirizzi
         return r
+
 
 class PersonSaveHandler (JsonBaseHandler):
     def do (self, cur, csaId):
@@ -1197,6 +1200,7 @@ class PersonSaveHandler (JsonBaseHandler):
             if float(amount) >= 0:
                 cur.execute(*self.application.sql.account_updateMembershipFee(csaId, pid, amount))
 
+
 class PersonCheckEmailHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         uid = self.current_user
@@ -1212,6 +1216,7 @@ class PersonCheckEmailHandler (JsonBaseHandler):
         # verifica unicità
         cur.execute(*self.application.sql.isUniqueEmail(pid, email))
         return cur.fetchone()[0]
+
 
 if __name__ == '__main__':
     io_loop = tornado.ioloop.IOLoop.instance()
