@@ -220,8 +220,8 @@ def has_accounts (pid):
 def has_account (pid, accId):
     return 'SELECT count(*) FROM account_person WHERE person_id=%s AND account_id=%s AND to_date IS NULL', [ pid, accId ]
 
-def find_visible_permissions (personId):
-    return 'SELECT id, name, description, visibility FROM permission p WHERE visibility <= (SELECT MAX(p.visibility) FROM permission p JOIN permission_grant g ON p.id=g.perm_id JOIN person u ON g.person_id=u.id WHERE u.id=%s) ORDER BY visibility, ord, name', [ personId ]
+#def find_visible_permissions (personId):
+#    return 'SELECT id, name, description FROM permission p WHERE visibility <= (SELECT MAX(p.visibility) FROM permission p JOIN permission_grant g ON p.id=g.perm_id JOIN person u ON g.person_id=u.id WHERE u.id=%s) ORDER BY visibility, ord, name', [ personId ]
 
 def find_user_permissions (personId):
     return 'SELECT g.perm_id FROM person u JOIN permission_grant g ON g.person_id=u.id WHERE u.id=%s', [ personId ]
@@ -680,20 +680,20 @@ def fetchContacts (pid):
 def fetchAllContacts (pid):
     return 'SELECT pc.id, a.id, a.kind, a.contact_type FROM person_contact pc JOIN contact_address a ON pc.address_id=a.id WHERE pc.person_id=%s', [ pid ]
 
-def revokePermissions (pid, csaId, level):
+def revokePermissions (pid, csaId, pp):
     return (
 '''DELETE permission_grant g FROM permission_grant g,
           (SELECT g.id
            FROM permission_grant g
            JOIN permission p ON g.perm_id=p.id
-           WHERE g.person_id=%s AND g.csa_id=%s AND p.visibility < %s) t
-    WHERE g.id = t.id''', [ pid, csaId, level ])
+           WHERE g.person_id=%s AND g.csa_id=%s AND p.id in %s) t
+    WHERE g.id = t.id''', [ pid, csaId, pp ])
 
 def grantPermission (pid, perm, csaId):
     return '''INSERT INTO permission_grant (person_id, perm_id, csa_id) VALUES (%s, %s, %s)''', [ pid, perm, csaId ]
 
-def permissionLevel (pid, csaId):
-    return '''SELECT MAX(p.visibility) FROM permission p JOIN permission_grant g ON p.id=g.perm_id WHERE g.person_id=%s AND g.csa_id=%s''', [ pid, csaId ]
+#def permissionLevel (pid, csaId):
+#    return '''SELECT MAX(p.visibility) FROM permission p JOIN permission_grant g ON p.id=g.perm_id WHERE g.person_id=%s AND g.csa_id=%s''', [ pid, csaId ]
 
 def isUniqueEmail (pid, email):
     return '''SELECT COUNT(a.id) FROM contact_address a JOIN person_contact pc ON pc.address_id=a.id WHERE pc.person_id != %s AND a.address = %s AND a.kind = %s''', [ pid, email, Ck_Email ]

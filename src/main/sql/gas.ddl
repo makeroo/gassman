@@ -218,7 +218,6 @@ CREATE TABLE permission (
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(32) NOT NULL,
   description TEXT,
-  visibility INT NOT NULL DEFAULT 0,
   ord INT NOT NULL DEFAULT 0,
   PRIMARY KEY (id)
 );

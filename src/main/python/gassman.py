@@ -1180,14 +1180,15 @@ class PersonSaveHandler (JsonBaseHandler):
             aid = cur.lastrowid
             cur.execute(*self.application.sql.linkAddress(pid, aid, i))
         # salva permessi
-        if csaId is not None and self.application.hasPermissionByCsa(cur, self.application.sql.P_canGrantPermissions, uid, csaId):
-            cur.execute(*self.application.sql.permissionLevel(pid, csaId))
-            ulevel = cur.fetchone()[0]
-            permissions = p['permissions']
-            cur.execute(*self.application.sql.revokePermissions(pid, csaId, ulevel))
-            for p in permissions:
-                if p < ulevel:
-                    cur.execute(*self.application.sql.grantPermission(pid, p, csaId))
+        permissions = p.get('permissions')
+        if permissions is not None and \
+           csaId is not None and \
+           self.application.hasPermissionByCsa(cur, self.application.sql.P_canGrantPermissions, uid, csaId):
+            cur.execute(*self.application.sql.find_user_permissions(uid))
+            assignable_perms = set([ row[0] for row in cur.fetchall() ])
+            cur.execute(*self.application.sql.revokePermissions(pid, csaId, assignable_perms))
+            for p in set(permissions) & assignable_perms:
+                cur.execute(*self.application.sql.grantPermission(pid, p, csaId))
         # TODO: salva indirizzi
         fee = p.get('membership_fee')
         if csaId is not None and fee and self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditMembershipFee, uid, csaId):
