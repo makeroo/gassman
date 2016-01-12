@@ -754,12 +754,13 @@ class AccountsIndexHandler (JsonBaseHandler):
         p = self.payload
         q = '%%%s%%' % p['q']
         dp = p['dp']
+        ex = p.get('ex', False)
         o = self.application.sql.accounts_index_order_by[int(p['o'])]
         uid = self.current_user
         if self.application.hasPermissionByCsa(cur, self.application.sql.P_canCheckAccounts, uid, csaId):
-            cur.execute(*self.application.sql.accounts_index(csaId, q, dp, o, int(fromIdx), int(toIdx)))
+            cur.execute(*self.application.sql.accounts_index(csaId, q, dp, o, ex, int(fromIdx), int(toIdx)))
         elif self.application.hasPermissionByCsa(cur, self.application.sql.P_canViewContacts, uid, csaId):
-            cur.execute(*self.application.sql.people_index(csaId, q, dp, o, int(fromIdx), int(toIdx)))
+            cur.execute(*self.application.sql.people_index(csaId, q, dp, o, ex, int(fromIdx), int(toIdx)))
         else:
             raise GDataException(error_codes.E_permission_denied, 403)
         return list(cur)
