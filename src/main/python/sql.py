@@ -160,7 +160,12 @@ accounts_index_order_by = [ 'p.first_name, p.last_name',
 
 def accounts_index (csaId, t, dp, o, fromLine, toLine):
     q = '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount) AS ta, c.symbol, MAX(t.transaction_date) AS td, a.membership_fee
- FROM person p
+ FROM
+  (SELECT p.*, group_concat(ca.address, ', ') AS contacts
+   FROM person p
+   LEFT JOIN person_contact pc ON pc.person_id=p.id
+   LEFT JOIN contact_address ca ON ca.id=pc.address_id
+   GROUP BY p.id) p
  JOIN account_person ap ON ap.person_id=p.id
  JOIN account a on ap.account_id=a.id
  JOIN currency c ON a.currency_id=c.id
@@ -171,11 +176,11 @@ def accounts_index (csaId, t, dp, o, fromLine, toLine):
  ap.to_date IS NULL AND
  t.modified_by_id IS NULL AND
  (t.cc_type IS NULL OR t.cc_type NOT IN (%s, %s)) AND
- (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s)'''
+ (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s OR p.contacts LIKE %s)'''
     a = [
         csaId,
         Tt_Unfinished, Tt_Error,
-        t, t, t,
+        t, t, t, t,
     ]
 
     if int(dp) != -1:
@@ -562,15 +567,20 @@ def transactions_by_editor (csaId, operator, q, o, fromLine, toLine):
 def people_index (csaId, t, dp, o, fromLine, toLine):
     q = '''
 SELECT p.id, p.first_name, p.middle_name, p.last_name
- FROM person p
+ FROM
+  (SELECT p.*, group_concat(ca.address, ', ') AS contacts
+   FROM person p
+   LEFT JOIN person_contact pc ON pc.person_id=p.id
+   LEFT JOIN contact_address ca ON ca.id=pc.address_id
+   GROUP BY p.id) p
  JOIN account_person ap ON ap.person_id=p.id
  JOIN account a ON a.id=ap.account_id
  WHERE a.csa_id=%s AND
        ap.to_date IS NULL AND
- (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s)'''
+ (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s OR p.contacts LIKE %s)'''
     a = [
        csaId,
-       t, t, t,
+       t, t, t, t,
     ]
 
     if int(dp) != -1:

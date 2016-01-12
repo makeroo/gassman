@@ -1117,10 +1117,11 @@ class PeopleProfilesHandler (JsonBaseHandler):
             r[uid] = record(self.application.find_person_by_id(uid))
         else:
             accs, perms, args = self.application.sql.people_profiles2(csaId, pids)
-            if isSelf or self.application.hasPermissionByCsa(cur, self.application.sql.P_canCheckAccounts, uid, csaId):
-                cur.execute(accs, args)
-                for acc in self.application.sql.iter_objects(cur):
-                    p = record(acc['person_id'])
+            canViewAccounts = isSelf or self.application.hasPermissionByCsa(cur, self.application.sql.P_canCheckAccounts, uid, csaId)
+            cur.execute(accs, args)
+            for acc in self.application.sql.iter_objects(cur):
+                p = record(acc['person_id'])
+                if canViewAccounts:
                     p['accounts'].append(acc)
             cur.execute(perms, args)
             for perm in self.application.sql.iter_objects(cur):
