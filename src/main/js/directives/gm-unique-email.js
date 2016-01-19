@@ -17,8 +17,8 @@ function (gdata) {
 		link: function (scope, elem, attrs, ctrl) {
 			ctrl.$parsers.push(function (value) {
 //				scope.$parent.validEmail(value).
-				var csaId = scope.$parent.csaId;
-				var pid = scope.$parent.personProfile.profile.id;
+				var csaId = scope.gassman.selectedCsa;
+				var pid = scope.personProfile.profile.id;
 
 				if (ctrl.$error.email) {
 					ctrl.$setValidity('unique', true);
