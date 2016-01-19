@@ -19,16 +19,15 @@
   },
   "devDependencies": {
     "angular": "1.4.x",
-    "angular-i18n": "1.4.x",
-    "jquery": "2.1.x",
-    "bootstrap": "3.3.x",
-    "ngstorage": "0.3.0",
-    "angular-sanitize": "1.4.x",
+    "angular-bootstrap": "~1.0.3",
     "angular-cookies": "1.4.x",
-    "angular-ui-bootstrap": "0.14.x",
+    "angular-i18n": "1.4.x",
+    "angular-sanitize": "1.4.x",
+    "angular-ui-router": "0.2.15",
     "angular-ui-select": "0.13.2",
-    "bootstrap-datepicker": "~1.4.0",
-    "angular-ui-router": "0.2.15"
+    "bootstrap": "3.3.x",
+    "jquery": "2.1.x",
+    "ngstorage": "0.3.0"
   },
   "resolutions": {
     "angular": "1.4.8",

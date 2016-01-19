@@ -4,6 +4,8 @@ angular.module('gassmanApp', [
     'ui.router',
     'ngSanitize',
 
+    'ui.bootstrap',
+
     'GassmanApp.services.Gstorage',
 
     'GassmanApp.directives.WhenScrolled',

@@ -752,7 +752,9 @@ class ProfileInfoHandler (JsonBaseHandler):
 class AccountsIndexHandler (JsonBaseHandler):
     def do (self, cur, csaId, fromIdx, toIdx):
         p = self.payload
-        q = '%%%s%%' % p['q']
+        q = p.get('q')
+        if q:
+            q = '%%%s%%' % q
         dp = p['dp']
         ex = p.get('ex', False)
         o = self.application.sql.accounts_index_order_by[int(p['o'])]
@@ -763,7 +765,13 @@ class AccountsIndexHandler (JsonBaseHandler):
             cur.execute(*self.application.sql.people_index(csaId, q, dp, o, ex, int(fromIdx), int(toIdx)))
         else:
             raise GDataException(error_codes.E_permission_denied, 403)
-        return list(cur)
+        r = { 'items': list(cur) }
+        if len(r['items']):
+            cur.execute(*self.application.sql.count_people(csaId, q, dp, ex))
+            r['count'] = cur.fetchone()[0]
+        else:
+            r['count'] = 0
+        return r
 
 
 class AccountsNamesHandler (JsonBaseHandler):

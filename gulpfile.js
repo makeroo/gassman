@@ -23,7 +23,8 @@ var config = {
 
       // bower_components/angular-i18n/angular-locale_it-it.js
       './bower_components/ngstorage/ngStorage.js',
-      './bower_components/angular-ui-select/dist/select.js'
+      './bower_components/angular-ui-select/dist/select.js',
+      './bower_components/angular-bootstrap/ui-bootstrap-tpls.js'
       //'./bower_components/datejs/build/date.js',
       //'./bower_components/datejs/build/date-it-IT.js'
 //      './bower_components/angular-touch/angular-touch.js',

@@ -1,48 +1,69 @@
 <h1>Membri del GAS</h1>
 
 <form class="form-inline accounts-index-search">
-  <div class="form-group">
-    <label for="accountsIndexNameFilter">Filtra per nome</label>
-    <input type="text" class="form-control" id="accountsIndexNameFilter" placeholder="Cerca per nome" ng-model="query.q" ng-keypress="$event.keyCode == 13 && search()"/>
-  </div>
-  <div class="form-group" ng-if="deliveryPlaces.length > 0">
-    <label for="deliveryPlace">Punto di consegna</label>
-    <select class="form-control" id="deliveryPlace" ng-model="query.dp">
-      <option ng-repeat="p in deliveryPlaces" value="{{ p.id }}">{{ p.description }}</option>
-    </select>
-  </div>
-  <div class="form-group">
-    <label for="accountsIndexOrder">Ordina per</label>
-    <select class="form-control" id="accountsIndexOrder" ng-model="query.o" ng-change="search()">
-      <option value="0">nome</option>
-      <option value="1">saldo</option>
-      <option value="2">attività</option>
-    </select>
-  </div>
+    <div class="form-group">
+        <label for="accountsIndexNameFilter">Filtra per nome</label>
+        <input type="text" class="form-control" id="accountsIndexNameFilter" placeholder="Cerca per nome" ng-model="pagination.filterBy.q"/>
+    </div>
+    <div class="form-group" ng-if="deliveryPlaces.length > 0">
+        <label for="deliveryPlace">Punto di consegna</label>
+        <select class="form-control" id="deliveryPlace" ng-model="pagination.filterBy.dp">
+            <option ng-repeat="p in deliveryPlaces" value="{{ p.id }}">{{ p.description }}</option>
+        </select>
+    </div>
+    <div class="form-group" ng-if="orderBy">
+        <label for="accountsIndexOrder">Ordina per</label>
+        <select class="form-control" id="accountsIndexOrder" ng-model="pagination.filterBy.o">
+            <option ng-repeat="o in orderBy" value="{{ o.value }}">{{ o.label }}</option>
+        </select>
+    </div>
 </form>
 
-<table class="table accounts-index" when-scrolled="loadMore()">
-  <tbody>
+<table class="table accounts-index">
+    <tbody>
 
-    <tr ng-repeat="a in accounts" class="row" ng-click="showAccount(a[4], a[0])" ng-class="{ fee: a[8] > 0.0 }" style="opacity: {{ a[7] | alphaTimeDiff }}">
+        <tr ng-repeat="a in items" class="row" ng-click="showAccount(a[4], a[0])" ng-class="{ fee: a[8] > 0.0 }" style="opacity: {{ a[7] | alphaTimeDiff }}">
 
-      <td class="col-md-8">
-          <div class="gadgets"><span ng-repeat="g in a.profile.gadgets" class="glyphicon glyphicon-{{ g }}" aria-hidden="true"></span></div>
-        <div class="name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
-        <small ng-show="a.profile.mainEmail">{{a.profile.mainEmail}}</small>
-        <small ng-show="a.profile.mainTelephone">{{a.profile.mainTelephone}}</small>
-      </td>
-      <td ng-show="a.accountData" class="col-md-4 text-right">
-        <div>Saldo {{ a[5] | currency : a[6] }}</div>
-	    <small ng-show="a.accountData && a[7]">Ultimo movimento: {{ a[7] | humanTimeDiff }} (il  {{ a[7] | date }})</small>
-        <small ng-hide="!a.accountData || a[7]">Ancora nessun movimento effettuato.</small>
-      </td>
+            <td ng-class="{ 'col-md-8': a.accountData, 'col-md-12': !a.accountData }">
+                <div class="gadgets"><span ng-repeat="g in a.profile.gadgets" class="glyphicon glyphicon-{{ g }}" aria-hidden="true"></span></div>
+                <div class="name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
+                <small ng-show="a.profile.mainEmail">{{a.profile.mainEmail}}</small>
+                <small ng-show="a.profile.mainTelephone">{{a.profile.mainTelephone}}</small>
+            </td>
+            <td ng-show="a.accountData" class="col-md-4 text-right">
+                <div ng-if="a.accountData && a[7]">Saldo {{ a[5] | currency : a[6] }}</div>
+                <small ng-show="a.accountData && a[7]">Ultimo movimento: {{ a[7] | humanTimeDiff }} (il  {{ a[7] | date }})</small>
+                <small ng-hide="!a.accountData || a[7]">Ancora nessun movimento effettuato.</small>
+            </td>
 
-    </tr>
+        </tr>
 
-  </tbody>
+    </tbody>
 </table>
 
-<div ng-show="accountsError">Errore nel caricamento dei dati: {{accountsError}}.</div>
-<div ng-show="!accountsError && !concluded" ng-click="loadMore()">Carica altri conti</div>
-<div ng-show="!accountsError && concluded">Nessun conto ulteriore</div>
+<div class="row-fluid pagination-section">
+    <div class="col-xs-8">
+        <uib-pagination total-items="pagination.totalItems"
+                        items-per-page="pagination.pageSize"
+                        ng-model="pagination.page"
+                        max-size="6"
+                        class="pagination-sm"
+                        boundary-links="true"
+                        previous-text="<"
+                        next-text=">"
+                        first-text="<<"
+                        last-text=">>"></uib-pagination>
+        <span class="pagination-count">Trovati: {{ count }}</span>
+    </div>
+
+    <div class="col-xs-4 text-right">
+        <form class="form-inline">
+            <div class="form-group pagination">
+                <label for="pageSize">Righe per pagina:</label>
+                <select class="form-control" id="pageSize" ng-model="pagination.pageSize">
+                    <option ng-repeat="sz in pagination.pageSizes">{{ sz }}</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>

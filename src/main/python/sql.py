@@ -160,38 +160,50 @@ accounts_index_order_by = [ 'p.first_name, p.last_name',
 
 def accounts_index (csaId, t, dp, o, ex, fromLine, toLine):
     q = '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount) AS ta, c.symbol, MAX(t.transaction_date) AS td, a.membership_fee
- FROM
+ FROM '''
+
+    if t:
+        q += '''
   (SELECT p.*, group_concat(ca.address, ', ') AS contacts
    FROM person p
    LEFT JOIN person_contact pc ON pc.person_id=p.id
    LEFT JOIN contact_address ca ON ca.id=pc.address_id
-   GROUP BY p.id) p
+   GROUP BY p.id) p'''
+    else:
+        q += 'person p'
+
+    q += '''
  JOIN account_person ap ON ap.person_id=p.id
  JOIN account a on ap.account_id=a.id
  JOIN currency c ON a.currency_id=c.id
  LEFT JOIN transaction_line l ON l.account_id=a.id
  LEFT JOIN transaction t ON t.id=l.transaction_id
  WHERE
- a.csa_id=%s AND'''
+ a.csa_id=%s'''
+    a = [ csaId ]
 
     if not ex:
-        q += 'ap.to_date IS NULL AND'
+        q += ' AND ap.to_date IS NULL'
 
-    q += '''
- t.modified_by_id IS NULL AND
- (t.cc_type IS NULL OR t.cc_type NOT IN (%s, %s)) AND
- (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s OR p.contacts LIKE %s)'''
-    a = [
-        csaId,
-        Tt_Unfinished, Tt_Error,
-        t, t, t, t,
-    ]
+    q += ''' AND t.modified_by_id IS NULL AND
+ (t.cc_type IS NULL OR t.cc_type NOT IN (%s, %s))'''
+    a.extend([ Tt_Unfinished, Tt_Error ])
 
-    if int(dp) != -1:
+    if t:
+        q += ' AND (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s OR p.contacts LIKE %s)'
+        a.extend([ t, t, t, t ])
+
+    dp = int(dp)
+    if dp == -2:
+        q += " AND p.default_delivery_place_id IS NULL"
+    elif dp != -1:
         q += " AND p.default_delivery_place_id=%s"
         a.append(dp)
 
-    q += ''' GROUP BY p.id, a.id ORDER BY ''' + o
+    q += ' GROUP BY p.id, a.id'
+
+    if o:
+        q += ' ORDER BY ' + o
 
     if fromLine != -1:
         q += ''' LIMIT %s OFFSET %s'''
@@ -454,37 +466,6 @@ INSERT INTO transaction_line (transaction_id, account_id, description, amount)
 def check_transaction_coherency (tid):
     return 'SELECT DISTINCT a.currency_id, a.csa_id FROM transaction_line l JOIN account a ON a.id=l.account_id WHERE l.transaction_id = %s', [ tid ]
 
-#def complete_deposit_or_withdrawal (tid, csaId, atype):
-#    return '''
-#INSERT INTO transaction_line (transaction_id, account_id, amount)
-# SELECT t.id, ca.id, - SUM(l.amount)
-#  FROM account ca,
-#
-#  transaction_line l
-#  JOIN transaction t ON l.transaction_id=t.id
-#
-#  WHERE ca.csa_id=%s AND ca.gc_type=%s AND ca.currency_id=t.currency_id AND t.id=%s''', [ csaId, atype, tid ]
-
-#def complete_cashexchange (tid, receiverId):
-#    return '''
-#INSERT INTO transaction_line (transaction_id, account_id, amount)
-# SELECT t.id, %s, - SUM(l.amount)
-#  FROM transaction_line l
-#  JOIN transaction t ON l.transaction_id=t.id
-#   WHERE t.id=%s''', [ receiverId, tid ]
-
-#def complete_withdrawal2 (tid, csaId, receiverId):
-#    '''Qui in un colpo solo verifico l'esistenza e la coerenza (per csa e moneta) di chi ritira i soldi
-#    e calcolo il totale del ritiro.
-#    '''
-#INSERT INTO transaction_line (transaction_id, account_id, amount)
-#    return '''
-# SELECT t.id, a.id, - SUM(l.amount)
-#  FROM transaction_line l
-#  JOIN transaction t ON l.transaction_id=t.id,
-#  account a
-#   WHERE t.id=%s AND a.id=%s AND a.csa_id=%s AND a.currency_id=t.currency_id''', [ tid, receiverId, csaId ]
-
 def transaction_calc_last_line_amount (tid, tlineId):
     return 'SELECT - SUM(amount) FROM transaction_line WHERE transaction_id = %s AND id != %s', [ tid, tlineId ]
 
@@ -568,34 +549,77 @@ def transactions_by_editor (csaId, operator, q, o, fromLine, toLine):
             fromLine
             ]
 
-def people_index (csaId, t, dp, o, ex, fromLine, toLine):
-    q = '''
-SELECT p.id, p.first_name, p.middle_name, p.last_name
- FROM
+def count_people (csaId, t, dp, ex):
+    q = 'SELECT count(p.id) FROM '
+
+    if t:
+        q += '''
   (SELECT p.*, group_concat(ca.address, ', ') AS contacts
    FROM person p
    LEFT JOIN person_contact pc ON pc.person_id=p.id
    LEFT JOIN contact_address ca ON ca.id=pc.address_id
-   GROUP BY p.id) p
- JOIN account_person ap ON ap.person_id=p.id
- JOIN account a ON a.id=ap.account_id
- WHERE a.csa_id=%s AND'''
-
-    if not ex:
-       q += 'ap.to_date IS NULL AND'
+   GROUP BY p.id) p'''
+    else:
+        q += 'person p'
 
     q += '''
- (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s OR p.contacts LIKE %s)'''
-    a = [
-       csaId,
-       t, t, t, t,
-    ]
+ JOIN account_person ap ON ap.person_id=p.id
+ JOIN account a ON a.id=ap.account_id
+ WHERE a.csa_id=%s'''
+    a = [ csaId ]
 
-    if int(dp) != -1:
+    if not ex:
+       q += ' AND ap.to_date IS NULL'
+
+    if t:
+        q += ' AND (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s OR p.contacts LIKE %s)'
+        a.extend([ t, t, t, t ])
+
+    dp = int(dp)
+    if dp == -2:
+        q += " AND p.default_delivery_place_id IS NULL"
+    elif dp != -1:
         q += " AND p.default_delivery_place_id=%s"
         a.append(dp)
 
-    q += ''' ORDER BY ''' + o
+    return q, a
+
+
+def people_index (csaId, t, dp, o, ex, fromLine, toLine):
+    q = 'SELECT p.id, p.first_name, p.middle_name, p.last_name FROM '
+
+    if t:
+        q += '''
+  (SELECT p.*, group_concat(ca.address, ', ') AS contacts
+   FROM person p
+   LEFT JOIN person_contact pc ON pc.person_id=p.id
+   LEFT JOIN contact_address ca ON ca.id=pc.address_id
+   GROUP BY p.id) p'''
+    else:
+        q += 'person p'
+
+    q += '''
+ JOIN account_person ap ON ap.person_id=p.id
+ JOIN account a ON a.id=ap.account_id
+ WHERE a.csa_id=%s'''
+    a = [ csaId ]
+
+    if not ex:
+       q += ' AND ap.to_date IS NULL'
+
+    if t:
+        q += ' AND (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s OR p.contacts LIKE %s)'
+        a.extend([ t, t, t, t ])
+
+    dp = int(dp)
+    if dp == -2:
+        q += " AND p.default_delivery_place_id IS NULL"
+    elif dp != -1:
+        q += " AND p.default_delivery_place_id=%s"
+        a.append(dp)
+
+    if o:
+        q += ''' ORDER BY ''' + o
 
     if fromLine != -1:
         q += ''' LIMIT %s OFFSET %s'''
@@ -605,27 +629,6 @@ SELECT p.id, p.first_name, p.middle_name, p.last_name
         ])
 
     return q, a
-
-#def people_index (csaId, q, o, fromLine, toLine):
-#    return '''
-#SELECT p.id, p.first_name, p.middle_name, p.last_name, p.rss_feed_id, p.account_notifications,  a.id, a.first_line, a.second_line, a.zip_code, a.description, c.name, s.name, s.iso3
-# FROM person p
-# JOIN permission_grant g ON p.id=g.person_id
-# LEFT JOIN street_address a ON p.address_id=a.id
-# LEFT JOIN city c ON a.city_id=c.id
-# LEFT JOIN state s ON c.state_id=s.id
-#
-# WHERE g.csa_id=%s AND g.perm_id=%s AND
-# (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s)
-# ORDER BY ''' + o + '''
-# LIMIT %s OFFSET %s
-# ''', [
-#       csaId,
-#       P_membership,
-#       q, q, q,
-#       toLine - fromLine + 1,
-#       fromLine
-#       ]
 
 def people_profiles2 (csaId, pids):
     pp = ', '.join([ '%s' ] * len(pids))
