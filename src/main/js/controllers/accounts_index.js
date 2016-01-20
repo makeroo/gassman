@@ -17,13 +17,17 @@ function () {
 	this.setupScope = function ($scope, dataService, options) {
         options = options || {};
 
-		$scope.pagination = {
-			totalItems: 0,
-			page: options.firstPage || 1,
-			pageSize: (+options.pageSize || 15).toString(),
-			filterBy: options.filterBy,
-			pageSizes: options.pageSizes || [ 15, 30, 60, 100 ]
-		};
+        if (options.storage)
+            $scope.pagination = options.storage[options.storageKey];
+
+        if (!$scope.pagination)
+            $scope.pagination = {
+                totalItems: 0,
+                page: options.firstPage || 1,
+                pageSize: (+options.pageSize || 15).toString(),
+                filterBy: options.filterBy,
+                pageSizes: options.pageSizes || [ 15, 30, 60, 100 ]
+            };
 
 		$scope.items = null;
 		$scope.initError = null;
@@ -44,7 +48,9 @@ function () {
 
 		$scope.$watch('pagination.filterBy', function (n, o) {
             //questo serve a evitare il doppio ricaricamento della pagina in caso di filtro e pagina corrente != dalla prima
-            if ($scope.pagination.page != 1) {
+            if (n == o) {
+                return;
+            } else if ($scope.pagination.page != 1) {
                 $scope.pagination.page = 1;
             } else {
                 $scope.loadPage(1);
@@ -52,6 +58,10 @@ function () {
 		}, true);
 
 		$scope.loadPage = function (p) {
+            if (options.storage) {
+                options.storage[options.storageKey] = angular.copy($scope.pagination);
+            }
+
 			$scope.pagination.page = p;
 
             var sz = +$scope.pagination.pageSize;
@@ -61,7 +71,6 @@ function () {
 			then (function (r) {
                 $scope.pagination.totalItems = r.data.count;
 				$scope.items = r.data.items;
-                $scope.count = r.data.count;
 
 				if (options) {
                     try {
@@ -76,15 +85,15 @@ function () {
 			});
 		};
 
-        if (options.loadFirstPage) {
+        if (options.loadFirstPage !== false) {
             $scope.loadPage($scope.pagination.page);
         }
 	};
 }])
 
 .controller('AccountsIndex', [
-         '$scope', '$state', '$location', 'gdata', 'listController',
-function ($scope,   $state,   $location,   gdata,   listController) {
+         '$scope', '$state', '$location', 'gdata', '$localStorage', 'listController',
+function ($scope,   $state,   $location,   gdata,   $localStorage,   listController) {
     var showContacts = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
 
 	listController.setupScope(
@@ -139,7 +148,9 @@ function ($scope,   $state,   $location,   gdata,   listController) {
                 o: '0',
                 dp: '-1',
                 ex: false
-            }
+            },
+            storage: $localStorage,
+            storageKey: 'accounts_index'
         }
     );
 
@@ -176,7 +187,7 @@ function ($scope,   $state,   $location,   gdata,   listController) {
 /*
 .controller('AccountsIndex', [
          '$scope', '$filter', '$localStorage', '$q', 'gdata',
-function ($scope,   $filter,   $location,   $localStorage,   $q,   gdata) {
+function ($scope,   $filter,   $location,   ,   $q,   gdata) {
     $scope.accounts = [];
     $scope.accountsError = null;
 //	$scope.queryFilter = $localStorage.accountIndex_queryFilter || '';
