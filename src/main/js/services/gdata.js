@@ -25,8 +25,8 @@ gassmanServices.config(function ($httpProvider) {
 */
 
 .service('gdata', [
-         '$http', '$q', '$localStorage', '$cookies', '$rootScope', '$timeout',
-function ($http,   $q,   $localStorage,   $cookies,   $rootScope,   $timeout) {
+         '$http', '$q', '$cookies', '$rootScope', '$timeout',
+function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
     var gdata = this;
     var peopleProfiles = {};
 
