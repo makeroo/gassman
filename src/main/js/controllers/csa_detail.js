@@ -81,7 +81,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
         ]);
 	}).
 	then (function (rr) {
-		$scope.movements = rr[0].data;
+		$scope.movements = rr[0].data.items;
 		$scope.csa.kitty.amount = rr[1].data;
 		$scope.personalAmount = rr[2].data;
 		//$scope.csa.kitty.movements = rr[2].data;
