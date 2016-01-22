@@ -69,7 +69,7 @@ function () {
                 $scope.pagination.totalItems = r.data.count;
 				$scope.items = r.data.items;
 
-				if (options) {
+				if (options && options.pageLoadedHook) {
                     try {
                         options.pageLoadedHook();
                     } catch (e) {

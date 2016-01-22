@@ -4,14 +4,14 @@
 <h4 ng-show="amount != null">Saldo: {{amount[0] | currency : amount[1] }}</h4>
 <div ng-show="accountOwnerError">Informazioni sul titolare del conto non disponibili: {{ accountOwnerError }}.</div>
 
-<table class="table" when-scrolled="loadMore()">
+<table class="table">
   <thead>
       <th>Data</th>
       <th>Descrizione</th>
       <th>Importo</th>
   </thead>
   <tbody>
-    <tr ng-repeat="mov in movements" class="mov-row" ng-click="showTransaction(mov)">
+    <tr ng-repeat="mov in items" class="mov-row" ng-click="showTransaction(mov)">
       <td>{{ mov[1] | date:"shortDate" }}</td>
       <td ng-class="mov[2] ? 'desc2' : ''">{{ mov[0] }}<br/><small>{{ mov[2] }}</small></td>
       <td>{{ mov[3] | currency : mov[5] }}</td>
@@ -20,7 +20,34 @@
   </tbody>
 </table>
 
-<div ng-show="movements == null && movementsError == null">
+<div class="row-fluid pagination-section">
+    <div class="col-xs-8">
+        <uib-pagination total-items="pagination.totalItems"
+                        items-per-page="pagination.pageSize"
+                        ng-model="pagination.page"
+                        max-size="6"
+                        class="pagination-sm"
+                        boundary-links="true"
+                        previous-text="<"
+                        next-text=">"
+                        first-text="<<"
+                        last-text=">>"></uib-pagination>
+        <span class="pagination-count">Movimenti: {{ pagination.totalItems }}</span>
+    </div>
+
+    <div class="col-xs-4 text-right">
+        <form class="form-inline">
+            <div class="form-group pagination">
+                <label for="pageSize">Righe per pagina:</label>
+                <select class="form-control" id="pageSize" ng-model="pagination.pageSize">
+                    <option ng-repeat="sz in pagination.pageSizes">{{ sz }}</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div ng-show="items == null && pageError == null">
   <div class="message">Sto caricando i dati, un attimo di pazienza.</div>
 </div>
 

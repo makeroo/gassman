@@ -5,29 +5,26 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.AccountDetail', [
-    'GassmanApp.services.Gdata'
+    'GassmanApp.services.Gdata',
+    'GassmanApp.services.listController',
+    'ngStorage'
 ])
 
 .controller('AccountDetail', [
-        '$scope', '$filter', '$stateParams', '$location', 'gdata',
-function($scope,   $filter,   $stateParams,   $location,   gdata) {
-    $scope.movements = [];
-    $scope.movementsError = null;
-    $scope.accountOwner = null;
-    $scope.accountDesc = null;
-    $scope.accountOwnerError = null;
-    $scope.amount = null;
-    $scope.viewableContacts = false;
-//	$scope.selectedMovement = null;
-
-    $scope.toggleErrorMessage = function () {
-        $scope.showErrorMessage = ! $scope.showErrorMessage;
-    };
+        '$scope', '$filter', '$stateParams', '$location', 'gdata', '$localStorage', 'listController',
+function($scope,   $filter,   $stateParams,   $location,   gdata,   $localStorage,   listController) {
 
     var accId = $stateParams.accountId;
-    var start = 0;
-    var blockSize = 25;
-    var concluded = false;
+
+    $scope.viewableContacts = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
+    $scope.accountOwnerError = null;
+    $scope.accountOwner = null;
+    $scope.accountDesc = null;
+    $scope.amount = null;
+
+    $scope.showTransaction = function (mov) {
+        $location.path('/transaction/' + mov[4]);
+    };
 
     var showOwner = function (accId) {
         $scope.accId = accId;
@@ -43,34 +40,6 @@ function($scope,   $filter,   $stateParams,   $location,   gdata) {
         });
     };
 
-    $scope.viewableContacts = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
-
-    var loading = false;
-
-    $scope.loadMore = function () {
-        if (concluded || loading) return;
-
-        loading = true;
-
-        gdata.accountMovements($scope.accId, start, blockSize).
-        then (function (r) {
-            loading = false;
-            concluded = r.data.length < blockSize;
-            start += r.data.length;
-            $scope.movements = $scope.movements.concat(r.data);
-        }).
-        then (undefined, function (error) {
-            loading = false;
-            concluded = true;
-            // TODO: FIXME: qui ho 2 errori...
-            $scope.serverError = error.data[1];
-            console.log('AccountDetail: movements error:', error.data)
-            $scope.showErrorMessage = false;
-            $scope.movementsError = error.data;
-            //console.log('error', data, status, headers, config);
-        });
-    };
-
     if (accId) {
         x(accId);
     } else {
@@ -83,7 +52,6 @@ function($scope,   $filter,   $stateParams,   $location,   gdata) {
 
     function x (accId) {
         showOwner(accId);
-        $scope.loadMore();
 
         gdata.accountAmount(accId)
         .then(function (r) {
@@ -92,10 +60,19 @@ function($scope,   $filter,   $stateParams,   $location,   gdata) {
         .then(undefined, function (error) {
             $scope.accountOwnerError = error.data;
         });
-    }
 
-    $scope.showTransaction = function (mov) {
-        $location.path('/transaction/' + mov[4]);
-    };
+        listController.setupScope(
+            $scope,
+            // data service
+            function (from, pageSize, filterBy) {
+                return gdata.accountMovements($scope.accId, from, pageSize);
+            },
+            // options
+            {
+                storage: $localStorage,
+                storageKey: 'account_detail_' + $scope.accId
+            }
+        );
+    }
 }])
 ;

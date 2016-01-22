@@ -491,7 +491,12 @@ class AccountMovementsHandler (JsonBaseHandler):
             ):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.account_movements(accId, int(fromIdx), int(toIdx)))
-        return list(cur)
+        r = {
+            'items': list(cur.fetchall())
+        }
+        cur.execute(*self.application.sql.count_account_movements(accId))
+        r['count'] = cur.fetchone()[0]
+        return r
 
 
 class AccountAmountHandler (JsonBaseHandler):
