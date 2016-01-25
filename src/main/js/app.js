@@ -8,8 +8,6 @@ angular.module('gassmanApp', [
 
     'GassmanApp.services.Gstorage',
 
-    'GassmanApp.directives.WhenScrolled',
-
     'GassmanApp.controllers.HomeSelectorController',
     'GassmanApp.controllers.Navbar',
     'GassmanApp.controllers.CsaDetail',
