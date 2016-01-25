@@ -525,6 +525,20 @@ transactions_editable_order_by = [ 'l.log_date DESC',
                            't.description'
                            ]
 
+def transactions_count_all (csaId, q):
+    return '''SELECT count(l.id)
+     FROM transaction_log l
+     JOIN transaction t ON t.id=l.transaction_id
+     JOIN person p ON l.operator_id= p.id
+
+     WHERE t.csa_id=%s AND l.op_type IN (%s, %s, %s) AND
+      (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s OR t.description LIKE %s)
+      ''', [
+            csaId,
+            'A', 'M', 'D',
+            q, q, q, q,
+            ]
+
 def transactions_all (csaId, q, o, fromLine, toLine):
     return '''SELECT l.id, l.log_date, l.op_type, t.id, t.description, t.transaction_date, t.modified_by_id, t.cc_type, p.id, p.first_name, p.middle_name, p.last_name
      FROM transaction_log l
@@ -540,6 +554,20 @@ def transactions_all (csaId, q, o, fromLine, toLine):
             q, q, q, q,
             toLine - fromLine + 1,
             fromLine
+            ]
+
+def transactions_count_by_editor (csaId, operator, q):
+    return '''SELECT count(l.id)
+     FROM transaction_log l
+     JOIN transaction t ON t.id=l.transaction_id
+     JOIN person p ON l.operator_id= p.id
+
+     WHERE t.csa_id=%s AND l.operator_id=%s AND l.op_type IN (%s, %s, %s) AND
+      (t.description LIKE %s)''', [
+            csaId,
+            operator,
+            'A', 'M', 'D',
+            q,
             ]
 
 def transactions_by_editor (csaId, operator, q, o, fromLine, toLine):

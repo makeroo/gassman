@@ -1070,11 +1070,19 @@ class TransactionsEditableHandler (JsonBaseHandler):
         uid = self.current_user
         if self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageTransactions, uid, csaId):
             cur.execute(*self.application.sql.transactions_all(csaId, q, o, int(fromIdx), int(toIdx)))
+            q, a = self.application.sql.transactions_count_all(csaId, q)
         elif self.application.hasPermissions(cur, self.application.sql.editableTransactionPermissions, uid, csaId):
             cur.execute(*self.application.sql.transactions_by_editor(csaId, uid, q, o, int(fromIdx), int(toIdx)))
+            q, a = self.application.sql.transactions_count_by_editor(csaId, uid, q)
         else:
             raise GDataException(error_codes.E_permission_denied, 403)
-        return list(cur)
+        r = { 'items': list(cur.fetchall()) }
+        if len(r['items']):
+            cur.execute(q, a)
+            r['count'] = cur.fetchone()[0]
+        else:
+            r['count'] = 0
+        return r
 
 
 def shortDate (d):

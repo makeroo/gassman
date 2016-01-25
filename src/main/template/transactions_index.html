@@ -27,7 +27,7 @@
 
   <tbody>
 
-    <tr ng-repeat="tl in transactions" ng-class="tl[6] ? 'acc-row mod' : 'acc-row'" ng-click="showTransaction(tl)">
+    <tr ng-repeat="tl in items" ng-class="tl[6] ? 'acc-row mod' : 'acc-row'" ng-click="showTransaction(tl)">
       <!-- 0:l.id, 1:l.log_date, 2:l.op_type, 3:t.id, 4:t.description, 5:t.transaction_date, 6:t.modified_by_id, 7:t.cc_type, 8:p.id, 9:p.first_name, 10:p.middle_name, 11:p.last_name -->
       <td class="mov-odate">{{ tl[1] | date:"shortDate" }}</td>
       <td class="mov-tdesc"><span class="tdesc">{{ tl[4] }}</span><span class="otype">{{ tl[2] == 'A' ? 'aggiunta' : tl[2] == 'M' ? 'modifica' : tl[2] == 'D' ? 'cancellazione' : tl[2] }}</span></td>
@@ -38,15 +38,39 @@
   </tbody>
 </table>
 
-<div ng-show="transactions == null && !transactionsError">
+<div ng-show="items == null && !pageError">
   <div class="message">Sto caricando i dati, un attimo di pazienza.</div>
 </div>
 
-<div ng-show="!transactionsError && !concluded" ng-click="loadMore()">Carica altri conti</div>
-<div ng-show="!transactionsError && concluded">Nessun conto ulteriore</div>
-
-<div ng-show="transactionsError">
+<div ng-show="pageError">
   <div class="server-error">
     <p>Qualcosa è andato storto: {{ serverError }}</p>
   </div>
+</div>
+
+<div class="row-fluid pagination-section">
+    <div class="col-xs-8">
+        <uib-pagination total-items="pagination.totalItems"
+                        items-per-page="pagination.pageSize"
+                        ng-model="pagination.page"
+                        max-size="6"
+                        class="pagination-sm"
+                        boundary-links="true"
+                        previous-text="<"
+                        next-text=">"
+                        first-text="<<"
+                        last-text=">>"></uib-pagination>
+        <span class="pagination-count">Trovati: {{ pagination.totalItems }}</span>
+    </div>
+
+    <div class="col-xs-4 text-right">
+        <form class="form-inline">
+            <div class="form-group pagination">
+                <label for="pageSize">Righe per pagina:</label>
+                <select class="form-control" id="pageSize" ng-model="pagination.pageSize">
+                    <option ng-repeat="sz in pagination.pageSizes">{{ sz }}</option>
+                </select>
+            </div>
+        </form>
+    </div>
 </div>
