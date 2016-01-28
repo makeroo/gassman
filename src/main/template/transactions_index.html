@@ -3,11 +3,11 @@
 <form class="form-inline transactions-index-search">
   <div class="form-group">
     <label for="transactionsIndexDescFilter">Filtra per descrizione</label>
-    <input type="text" class="form-control" id="transactionsIndexDescFilter" placeholder="Cerca per descrizione o operatore" ng-model="queryFilter" ng-keypress="$event.keyCode == 13 && search()"/>
+    <input type="text" class="form-control" id="transactionsIndexDescFilter" placeholder="Cerca per descrizione o operatore" ng-model="pagination.filterBy.queryFilter"/>
   </div>
   <div class="form-group">
     <label for="transactionsIndexOrder">Ordina per</label>
-    <select class="form-control" id="transactionsIndexOrder" ng-model="queryOrder" ng-change="search()">
+    <select class="form-control" id="transactionsIndexOrder" ng-model="pagination.filterBy.queryOrder">
       <option value="0">data operazione</option>
       <option value="1">data movimento</option>
       <option value="2">operatore</option>
