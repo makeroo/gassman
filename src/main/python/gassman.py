@@ -490,11 +490,15 @@ class AccountMovementsHandler (JsonBaseHandler):
             not self.application.checkMembershipByKitty(cur, uid, accId)
             ):
             raise Exception(error_codes.E_permission_denied)
-        cur.execute(*self.application.sql.account_movements(accId, int(fromIdx), int(toIdx)))
+        p = self.payload
+        f = p.get('filter')
+        if f:
+            f = '%%%s%%' % f
+        cur.execute(*self.application.sql.account_movements(accId, f, int(fromIdx), int(toIdx)))
         r = {
             'items': list(cur.fetchall())
         }
-        cur.execute(*self.application.sql.count_account_movements(accId))
+        cur.execute(*self.application.sql.count_account_movements(accId, f))
         r['count'] = cur.fetchone()[0]
         return r
 

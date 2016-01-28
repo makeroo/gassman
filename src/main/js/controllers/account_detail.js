@@ -65,10 +65,11 @@ function($scope,   $filter,   $stateParams,   $location,   gdata,   $localStorag
             $scope,
             // data service
             function (from, pageSize, filterBy) {
-                return gdata.accountMovements($scope.accId, from, pageSize);
+                return gdata.accountMovements($scope.accId, filterBy, from, pageSize);
             },
             // options
             {
+                filterBy: '',
                 storage: $localStorage,
                 storageKey: 'account_detail_' + $scope.accId
             }

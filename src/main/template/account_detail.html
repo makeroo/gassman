@@ -4,6 +4,13 @@
 <h4 ng-show="amount != null">Saldo: {{amount[0] | currency : amount[1] }}</h4>
 <div ng-show="accountOwnerError">Informazioni sul titolare del conto non disponibili: {{ accountOwnerError }}.</div>
 
+<form class="form-inline account-detail-search">
+  <div class="form-group">
+    <label for="transactionsDescFilter">Filtra per descrizione</label>
+    <input type="text" class="form-control" id="transactionsDescFilter" placeholder="Cerca per descrizione" ng-model="pagination.filterBy"/>
+  </div>
+</form>
+
 <table class="table">
   <thead>
       <th>Data</th>

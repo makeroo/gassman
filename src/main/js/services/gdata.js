@@ -219,8 +219,10 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         return $http.post('/gm/account/' + accId + '/owner?_xsrf=' + $cookies.get('_xsrf'));
     };
 
-    this.accountMovements = function (accId, start, blockSize) {
-        return $http.post('/gm/account/' + accId + '/movements/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies.get('_xsrf')); // null, { xsrfCookieName:'_xsrf' })
+    this.accountMovements = function (accId, filterBy, start, blockSize) {
+        return $http.post('/gm/account/' + accId + '/movements/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies.get('_xsrf'), {
+            filter: filterBy
+        });
     };
 
     this.transactionForEdit = function (csaId, tid, fetchKitty) {

@@ -127,7 +127,7 @@ def account_has_open_owners (accountId):
 def account_description (accountId):
     return 'SELECT a.gc_name, c.name, c.id FROM account a JOIN csa c ON a.csa_id=c.id WHERE a.id=%s', [ accountId ]
 
-def count_account_movements (accountDbId):
+def count_account_movements (accountDbId, filterBy):
     q = '''
 SELECT count(*)
  FROM transaction t
@@ -136,18 +136,24 @@ SELECT count(*)
  WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s
  '''
     a = [ Tt_Unfinished, Tt_Error, accountDbId ]
+    if filterBy:
+        q += ' AND (l.description LIKE %s OR t.description LIKE %s)'
+        a.extend([ filterBy, filterBy ])
     return q, a
 
-def account_movements (accountDbId, fromLine, toLine):
+def account_movements (accountDbId, filterBy, fromLine, toLine):
     q = '''
 SELECT t.description, t.transaction_date, l.description, l.amount, t.id, c.symbol, t.cc_type
  FROM transaction t
  JOIN transaction_line l ON l.transaction_id=t.id
  JOIN currency c ON c.id=t.currency_id
  WHERE t.modified_by_id IS NULL AND t.cc_type NOT IN (%s, %s) AND l.account_id=%s
- ORDER BY t.transaction_date DESC
  '''
     a = [ Tt_Unfinished, Tt_Error, accountDbId ]
+    if filterBy:
+        q += ' AND (l.description LIKE %s OR t.description LIKE %s)'
+        a.extend([ filterBy, filterBy ])
+    q += ' ORDER BY t.transaction_date DESC'
     if fromLine is not None:
         q += ' LIMIT %s OFFSET %s'
         a.extend([ toLine - fromLine + 1, fromLine ])
