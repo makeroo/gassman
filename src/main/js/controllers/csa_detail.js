@@ -74,9 +74,9 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
 
 		// TODO: in realtà degli ordini CPY mi interessano solo le mie ordinazioni!!
 		return $q.all([
-            gdata.accountMovements($scope.accId, 0, 5),
+            gdata.accountMovements($scope.accId, null, 0, 5),
             gdata.accountAmount($scope.csa.kitty.id),
-            gdata.accountAmount($scope.accId),
+            gdata.accountAmount($scope.accId)
             //gdata.accountMovements($scope.csa.kitty.id, 0, 5),
         ]);
 	}).
