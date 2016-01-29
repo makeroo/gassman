@@ -275,6 +275,12 @@ def find_user_accounts (personId):
 #def find_users_without_account ():
 #    return 'SELECT id, first_name, middle_name, last_name FROM person WHERE current_account_id IS NULL'
 
+def update_last_login (personId, loginTime):
+    return 'UPDATE person SET last_login=%s WHERE id=%s', [ loginTime, personId ]
+
+def update_last_visit (personId, visitTime):
+    return 'UPDATE person SET last_visit=%s WHERE id=%s', [ visitTime, personId ]
+
 def check_membership_by_kitty (personId, accId):
     return 'SELECT COUNT(*) FROM account a JOIN account a2 ON a2.csa_id=a.csa_id JOIN account_person ap ON ap.account_id=a2.id WHERE a.id=%s AND ap.person_id=%s', [ accId, personId ]
 

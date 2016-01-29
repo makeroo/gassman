@@ -174,6 +174,9 @@ CREATE TABLE person (
 
   account_notifications CHAR(1) NOT NULL DEFAULT 'E', -- Every movement, Dayly, Weekly, Never
 
+  last_login DATETIME,
+  last_visit DATETIME,
+
   FOREIGN KEY (address_id) REFERENCES street_address(id),
   PRIMARY KEY (id)
 );

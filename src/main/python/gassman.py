@@ -278,6 +278,8 @@ class GassmanWebApp (tornado.web.Application):
                                )
         if p is not None:
             requestHandler.set_secure_cookie("user", tornado.escape.json_encode(p.id))
+            # qui registro chi si è autenticato
+            cur.execute(*self.sql.update_last_login(p.id, datetime.datetime.utcnow()))
         return p
 
     def session (self, requestHandler):
@@ -396,6 +398,10 @@ class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAu
 
 class HomeHandler (BaseHandler):
     def get (self):
+        u = self.current_user
+        if u is not None:
+            with self.application.conn as cur:
+                cur.execute(*self.application.sql.update_last_visit(u, datetime.datetime.utcnow()))
         self.application.session(self)
         self.render('home.html',
                     LOCALE=self.locale.code,
