@@ -756,12 +756,19 @@ class ProfileInfoHandler (JsonBaseHandler):
         csa = { id: { 'name': name, 'member': member } for id, name, member in cur.fetchall() }
         cur.execute(*self.application.sql.find_user_accounts(uid))
         accs = list(cur)
+        _, q, a = self.application.sql.people_profiles1([uid])
+        cur.execute(q, a)
+        contacts = self.application.sql.iter_objects(cur)
+        for c in contacts:
+            c.pop('person_id')
+            c.pop('priority')
         return dict(
-                logged_user = self.application.find_person_by_id(uid),
-                permissions = pp,
-                csa = csa,
-                accounts = accs
-                )
+            logged_user = self.application.find_person_by_id(uid),
+            permissions = pp,
+            csa = csa,
+            accounts = accs,
+            contacts=contacts
+        )
 
 
 class AccountsIndexHandler (JsonBaseHandler):
