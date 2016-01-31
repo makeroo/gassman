@@ -175,17 +175,20 @@ accounts_index_order_by = [ 'p.first_name, p.last_name',
                            'td desc',
                            ]
 
-def accounts_index (csaId, t, dp, o, ex, fromLine, toLine):
+def accounts_index (csaId, t, dp, o, ex, fromLine, toLine, search_contact_kinds):
     q = '''SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id, sum(l.amount) AS ta, c.symbol, MAX(t.transaction_date) AS td, a.membership_fee
  FROM '''
+    a = []
 
-    if t:
+    if t and search_contact_kinds:
         q += '''
   (SELECT p.*, group_concat(ca.address, ', ') AS contacts
    FROM person p
    LEFT JOIN person_contact pc ON pc.person_id=p.id
    LEFT JOIN contact_address ca ON ca.id=pc.address_id
+   WHERE ca.kind in %s
    GROUP BY p.id) p'''
+        a.append(set(search_contact_kinds))
     else:
         q += 'person p'
 
@@ -197,7 +200,7 @@ def accounts_index (csaId, t, dp, o, ex, fromLine, toLine):
  LEFT JOIN transaction t ON t.id=l.transaction_id
  WHERE
  a.csa_id=%s'''
-    a = [ csaId ]
+    a.append(csaId)
 
     if not ex:
         q += ' AND ap.to_date IS NULL'
@@ -207,8 +210,13 @@ def accounts_index (csaId, t, dp, o, ex, fromLine, toLine):
     a.extend([ Tt_Unfinished, Tt_Error ])
 
     if t:
-        q += ' AND (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s OR p.contacts LIKE %s)'
-        a.extend([ t, t, t, t ])
+        q += ' AND (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s'
+        a.extend([ t, t, t ])
+        if search_contact_kinds:
+            q += ' OR p.contacts LIKE %s)'
+            a.append(t)
+        else:
+            q += ')'
 
     dp = int(dp)
     if dp == -2:
@@ -245,12 +253,6 @@ def assign_rss_feed_id (personId, rss_feed_id):
 
 def assign_contact (contact, person):
     return 'INSERT INTO person_contact (person_id, address_id) VALUES (%s, %s)', [ person, contact ]
-
-#def find_person (pid):
-#    return 'SELECT id, first_name, middle_name, last_name, rss_feed_id FROM person WHERE id=%s', [ pid ]
-
-#def find_current_account (pid):
-#    return 'SELECT current_account_id FROM person WHERE id=%s', [ pid ]
 
 def has_accounts (pid):
     return 'SELECT count(*) FROM account_person WHERE person_id=%s AND to_date IS NULL', [ pid ]
@@ -302,7 +304,7 @@ def has_permission_by_csa (perm, personId, csaId):
     return 'SELECT count(*) FROM permission_grant WHERE perm_id=%s AND person_id=%s AND csa_id=%s', [ perm, personId, csaId ]
 
 def has_permissions (perms, personId, csaId):
-    return 'SELECT count(*) FROM permission_grant WHERE perm_id in (%s) AND person_id=%%s AND csa_id=%%s' % ', '.join(['%s'] * len(perms)), list(perms) + [ personId, csaId ]
+    return 'SELECT count(*) FROM permission_grant WHERE perm_id in %s AND person_id=%s AND csa_id=%s', [ set(perms), personId, csaId ]
 
 def transaction_lines (tid):
     return 'SELECT id, account_id, description, amount FROM transaction_line WHERE transaction_id=%s ORDER BY id', [ tid ]
@@ -390,7 +392,7 @@ SELECT l.log_date, t.id as tid, p.id, p.first_name, p.middle_name, p.last_name
   ]
 
 def csa_list (pid):
-    return 'select c.id, c.name, c.description, g.id as "belong" from csa c left join permission_grant g on g.person_id=%s where g.csa_id is null or g.csa_id=c.id', [ pid ]
+    return 'SELECT c.id, c.name, c.description, g.id AS "belong" FROM csa c LEFT JOIN permission_grant g ON g.person_id=%s WHERE g.csa_id IS NULL OR g.csa_id=c.id', [ pid ]
 
 def csa_delivery_places (csaId):
     return '''
@@ -429,10 +431,10 @@ SELECT ap.account_id, p.id, p.first_name, p.middle_name, p.last_name, c.address
  LEFT JOIN person_contact pc ON p.id=pc.person_id
  LEFT JOIN contact_address c ON pc.address_id=c.id
  WHERE ap.to_date IS NULL AND
-       ap.account_id IN (%s) AND
-       (c.kind=%%s OR c.kind IS NULL) AND
-       p.account_notifications=%%s
- ORDER BY ap.account_id, pc.priority''' % ','.join([ '%s' ] * len(accountIds)), list(accountIds) + [ Ck_Email, An_EveryMovement ]
+       ap.account_id IN %s AND
+       (c.kind=%s OR c.kind IS NULL) AND
+       p.account_notifications=%s
+ ORDER BY ap.account_id, pc.priority''', [ set(accountIds), Ck_Email, An_EveryMovement ]
 
 def account_total_for_notifications (accountIds):
     return '''
@@ -444,11 +446,11 @@ SELECT a.id, sum(l.amount), c.symbol
 
  WHERE
  t.modified_by_id IS NULL AND
- t.cc_type NOT IN (%%s, %%s) AND
- a.id IN (%s)
+ t.cc_type NOT IN (%s, %s) AND
+ a.id IN %s
 
  GROUP BY a.id
-''' % (','.join(['%s'] * len(accountIds))), [ Tt_Unfinished, Tt_Error ] + list(accountIds)
+''', [ Tt_Unfinished, Tt_Error, set(accountIds) ]
 
 def account_updateMembershipFee (csaId, personId, amount):
     return '''
@@ -600,16 +602,19 @@ def transactions_by_editor (csaId, operator, q, o, fromLine, toLine):
             fromLine
             ]
 
-def count_people (csaId, t, dp, ex):
+def count_people (csaId, t, dp, ex, search_contact_kinds):
     q = 'SELECT count(p.id) FROM '
+    a = []
 
-    if t:
+    if t and search_contact_kinds:
         q += '''
   (SELECT p.*, group_concat(ca.address, ', ') AS contacts
    FROM person p
    LEFT JOIN person_contact pc ON pc.person_id=p.id
    LEFT JOIN contact_address ca ON ca.id=pc.address_id
+   WHERE ca.kind in %s
    GROUP BY p.id) p'''
+        a.append(set(search_contact_kinds))
     else:
         q += 'person p'
 
@@ -617,14 +622,19 @@ def count_people (csaId, t, dp, ex):
  JOIN account_person ap ON ap.person_id=p.id
  JOIN account a ON a.id=ap.account_id
  WHERE a.csa_id=%s'''
-    a = [ csaId ]
+    a.append(csaId)
 
     if not ex:
        q += ' AND ap.to_date IS NULL'
 
     if t:
-        q += ' AND (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s OR p.contacts LIKE %s)'
-        a.extend([ t, t, t, t ])
+        q += ' AND (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s'
+        a.extend([ t, t, t ])
+        if search_contact_kinds:
+            q += ' OR p.contacts LIKE %s)'
+            a.append(t)
+        else:
+            q += ')'
 
     dp = int(dp)
     if dp == -2:
@@ -636,16 +646,19 @@ def count_people (csaId, t, dp, ex):
     return q, a
 
 
-def people_index (csaId, t, dp, o, ex, fromLine, toLine):
+def people_index (csaId, t, dp, o, ex, fromLine, toLine, search_contact_kinds):
     q = 'SELECT p.id, p.first_name, p.middle_name, p.last_name FROM '
+    a = []
 
-    if t:
+    if t and search_contact_kinds:
         q += '''
   (SELECT p.*, group_concat(ca.address, ', ') AS contacts
    FROM person p
    LEFT JOIN person_contact pc ON pc.person_id=p.id
    LEFT JOIN contact_address ca ON ca.id=pc.address_id
+   WHERE ca.kind IN %s
    GROUP BY p.id) p'''
+        a.append(set(search_contact_kinds))
     else:
         q += 'person p'
 
@@ -653,14 +666,19 @@ def people_index (csaId, t, dp, o, ex, fromLine, toLine):
  JOIN account_person ap ON ap.person_id=p.id
  JOIN account a ON a.id=ap.account_id
  WHERE a.csa_id=%s'''
-    a = [ csaId ]
+    a.append(csaId)
 
     if not ex:
        q += ' AND ap.to_date IS NULL'
 
     if t:
-        q += ' AND (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s OR p.contacts LIKE %s)'
-        a.extend([ t, t, t, t ])
+        q += ' AND (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s'
+        a.extend([ t, t, t ])
+        if search_contact_kinds:
+            q += ' OR p.contacts LIKE %s)'
+            a.append(t)
+        else:
+            q += ')'
 
     dp = int(dp)
     if dp == -2:
@@ -682,19 +700,17 @@ def people_index (csaId, t, dp, o, ex, fromLine, toLine):
     return q, a
 
 def people_profiles2 (csaId, pids):
-    pp = ', '.join([ '%s' ] * len(pids))
     return (
-            'SELECT ap.from_date, ap.to_date, ap.person_id, a.* FROM account_person ap JOIN account a ON ap.account_id=a.id WHERE ap.person_id in (%s) AND a.csa_id=%%s' % pp,
-            'SELECT csa_id, person_id, perm_id FROM permission_grant WHERE person_id IN (%s) AND csa_id=%%s' % pp,
-            pids + [ csaId ],
+            'SELECT ap.from_date, ap.to_date, ap.person_id, a.* FROM account_person ap JOIN account a ON ap.account_id=a.id WHERE ap.person_id in %s AND a.csa_id=%s',
+            'SELECT csa_id, person_id, perm_id FROM permission_grant WHERE person_id IN %s AND csa_id=%s',
+            [ set(pids), csaId ],
             )
 
 def people_profiles1 (pids):
-    pp = ', '.join([ '%s' ] * len(pids))
     return (
-            'SELECT * FROM person WHERE id IN (%s)' % pp,
-            'SELECT pc.person_id, pc.priority, a.* FROM person_contact pc JOIN contact_address a ON a.id=pc.address_id WHERE pc.person_id IN (%s) ORDER BY pc.priority' % pp,
-            list(pids),
+            'SELECT * FROM person WHERE id IN %s',
+            'SELECT pc.person_id, pc.priority, a.* FROM person_contact pc JOIN contact_address a ON a.id=pc.address_id WHERE pc.person_id IN %s ORDER BY pc.priority',
+            [ set(pids) ],
             )
 
 def person_notification_email (pid):
@@ -725,10 +741,10 @@ def removePersonContact (pcId):
     return 'DELETE FROM person_contact WHERE id=%s', [ pcId ]
 
 def removeContactAddresses (aids):
-    return 'DELETE FROM contact_address WHERE id in (%s)' % ','.join([ '%s' ] * len(aids)), aids
+    return 'DELETE FROM contact_address WHERE id in %s', [ set(aids) ]
 
 def removePersonContacts (aids):
-    return 'DELETE FROM person_contact WHERE address_id in (%s)' % ','.join([ '%s' ] * len(aids)), aids
+    return 'DELETE FROM person_contact WHERE address_id in %s', [ set(aids) ]
 #    # cfr. http://stackoverflow.com/a/4429409
 #    return (
 #'''DELETE person_contact p FROM person_contact p,

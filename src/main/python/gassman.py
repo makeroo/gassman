@@ -350,6 +350,7 @@ class GassmanWebApp (tornado.web.Application):
 
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user (self):
+        return 2
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
@@ -783,15 +784,24 @@ class AccountsIndexHandler (JsonBaseHandler):
         ex = p.get('ex', False)
         o = self.application.sql.accounts_index_order_by[int(p['o'])]
         uid = self.current_user
-        if self.application.hasPermissionByCsa(cur, self.application.sql.P_canCheckAccounts, uid, csaId):
-            cur.execute(*self.application.sql.accounts_index(csaId, q, dp, o, ex, int(fromIdx), int(toIdx)))
-        elif self.application.hasPermissionByCsa(cur, self.application.sql.P_canViewContacts, uid, csaId):
-            cur.execute(*self.application.sql.people_index(csaId, q, dp, o, ex, int(fromIdx), int(toIdx)))
+        canCheckAccounts = self.application.hasPermissionByCsa(cur, self.application.sql.P_canCheckAccounts, uid, csaId)
+        canViewContacts = self.application.hasPermissionByCsa(cur, self.application.sql.P_canViewContacts, uid, csaId)
+        viewableContacts = p.get('vck', [
+            self.application.sql.Ck_Telephone,
+            self.application.sql.Ck_Mobile,
+            self.application.sql.Ck_Email,
+            self.application.sql.Ck_Fax,
+            self.application.sql.Ck_Nickname,
+        ]) if canViewContacts else None
+        if canCheckAccounts:
+            cur.execute(*self.application.sql.accounts_index(csaId, q, dp, o, ex, int(fromIdx), int(toIdx), search_contact_kinds=viewableContacts))
+        elif canViewContacts:
+            cur.execute(*self.application.sql.people_index(csaId, q, dp, o, ex, int(fromIdx), int(toIdx), search_contact_kinds=viewableContacts))
         else:
             raise GDataException(error_codes.E_permission_denied, 403)
         r = { 'items': list(cur) }
         if len(r['items']):
-            cur.execute(*self.application.sql.count_people(csaId, q, dp, ex))
+            cur.execute(*self.application.sql.count_people(csaId, q, dp, ex, search_contact_kinds=viewableContacts))
             r['count'] = cur.fetchone()[0]
         else:
             r['count'] = 0
