@@ -58,7 +58,7 @@
  </div>
 -->
 
- <div class="panel panel-default">
+ <div ng-if="movements" class="panel panel-default">
   <div class="panel-heading">
    <h3 class="panel-title">Ultimi movimenti sul tuo conto</h3>
   </div>
@@ -76,7 +76,7 @@
       </tr>
      </tbody>
     </table>
-    <button class="btn btn-default" ng-click="showAccount(accId)">Elenco completo</button>
+    <button class="btn btn-default" ng-click="showAccount(gassman.selectedAccount)">Elenco completo</button>
    </div>
    <div ng-if="movements != null && movements.length == 0">
     <p>Nessuno</p>

@@ -5,89 +5,99 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.CsaDetail', [
-	'GassmanApp.services.Gdata'
+    'GassmanApp.services.Gdata'
 ])
 
 .controller('CsaDetail', [
-		 '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q',
+         '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q',
 function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
-	var csaId = $stateParams.csaId;
+    var csaId = $stateParams.csaId;
 
-	$scope.csa = null;
-	$scope.loadError = null;
-	$scope.openOrders = null;
-	//$scope.openOrdersError = null;
-	$scope.deliveringOrders = null;
-	//$scope.deliveringOrdersError = null;
-	$scope.draftOrders = null;
-	$scope.movements = null;
+    $scope.csa = null;
+    $scope.loadError = null;
+    $scope.openOrders = null;
+    //$scope.openOrdersError = null;
+    $scope.deliveringOrders = null;
+    //$scope.deliveringOrdersError = null;
+    $scope.draftOrders = null;
+    $scope.movements = null;
 
-	$scope.editCsa = function () {
-		$location.path('/csa/' + csaId + '/admin');
-	};
+    $scope.editCsa = function () {
+        $location.path('/csa/' + csaId + '/admin');
+    };
 
-	$scope.showAccount = function (accountId) {
-		$location.path('/account/' + accountId + '/detail');
-	};
+    $scope.showAccount = function (accountId) {
+        $location.path('/account/' + accountId + '/detail');
+    };
 
-	$scope.showTransaction = function (mov) {
-		$location.path('/transaction/' + mov[4]);
-	};
+    $scope.showTransaction = function (mov) {
+        $location.path('/transaction/' + mov[4]);
+    };
 
-	$scope.showChargeMembershipFeeForm = function (v) {
-		$scope.viewChargeMembershipForm = v;
-	};
+    $scope.showChargeMembershipFeeForm = function (v) {
+        $scope.viewChargeMembershipForm = v;
+    };
 
-	$scope.chargeMembershipFee = function () {
-		$scope.membershipFeeError = null;
+    $scope.chargeMembershipFee = function () {
+        $scope.membershipFeeError = null;
 
-		var v = $scope.csa.kitty.membership_fee;
+        var v = $scope.csa.kitty.membership_fee;
 
-		if (v > 0) {
-			gdata.chargeMembershipFee(csaId, {
-				amount: v,
-				kitty: $scope.csa.kitty.id,
-				description: $scope.csa.kitty.charge_description
-			}).
-			then (function (r) {
-				$location.path('/transaction/' + r.data.tid);
-			}).
-			then (undefined, function (error) {
-				$scope.membershipFeeError = error.data;
-			});
-		} else {
-			$scope.membershipFeeError = 'negative';
-		}
-	};
+        if (v > 0) {
+            gdata.chargeMembershipFee(csaId, {
+                amount: v,
+                kitty: $scope.csa.kitty.id,
+                description: $scope.csa.kitty.charge_description
+            }).
+            then (function (r) {
+                $location.path('/transaction/' + r.data.tid);
+            }).
+            then (undefined, function (error) {
+                $scope.membershipFeeError = error.data;
+            });
+        } else {
+            $scope.membershipFeeError = 'negative';
+        }
+    };
 
-	$scope.editableMembershipFee = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
-	$scope.editableCsaInfo = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_csaEditor) != -1;
+    $scope.editableMembershipFee = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
+    $scope.editableCsaInfo = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_csaEditor) != -1;
 
-	$q.all([
-		gdata.csaInfo(csaId),
-		gdata.accountByCsa(csaId)
-	]).
-	then (function (r) {
-		$scope.csa = r[0].data;
-		$scope.csa.kitty.membership_fee = parseFloat($scope.csa.kitty.membership_fee);
-		$scope.accId = r[1];
+    $scope.$watch('gassman.selectedAccount', function (accId) {
+        if (accId) {
+            $q.all([
+                    gdata.accountMovements($scope.gassman.selectedAccount, null, 0, 5),
+                    gdata.accountAmount($scope.gassman.selectedAccount)
+                ])
+                .then(function (rr) {
+                    $scope.movements = rr[0].data.items;
+                    $scope.personalAmount = rr[1].data;
+                }).then(undefined, function (error) {
+                $scope.loadError = error.data;
+            });
+        } else {
+            $scope.movements = null;
+            $scope.personalAmount = null;
+        }
+    });
 
-		// TODO: in realtà degli ordini CPY mi interessano solo le mie ordinazioni!!
-		return $q.all([
-            gdata.accountMovements($scope.accId, null, 0, 5),
+    gdata.csaInfo(csaId)
+    .then (function (r) {
+        $scope.csa = r.data;
+        $scope.csa.kitty.membership_fee = parseFloat($scope.csa.kitty.membership_fee);
+
+        // TODO: in realtà degli ordini CPY mi interessano solo le mie ordinazioni!!
+        return $q.all([
             gdata.accountAmount($scope.csa.kitty.id),
-            gdata.accountAmount($scope.accId)
             //gdata.accountMovements($scope.csa.kitty.id, 0, 5),
         ]);
-	}).
-	then (function (rr) {
-		$scope.movements = rr[0].data.items;
-		$scope.csa.kitty.amount = rr[1].data;
-		$scope.personalAmount = rr[2].data;
-		//$scope.csa.kitty.movements = rr[2].data;
-	}).
-	then (undefined, function (error) {
-		$scope.loadError = error.data;
-	});
+    }).
+    then (function (rr) {
+        $scope.csa.kitty.amount = rr[0].data;
+        //$scope.csa.kitty.movements = rr[1].data;
+    }).
+    then (undefined, function (error) {
+        $scope.loadError = error.data;
+    });
 }])
 ;

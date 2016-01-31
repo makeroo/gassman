@@ -227,20 +227,35 @@ function ($rootScope,   gdata,   gstorage,   $state,   $q,   $cookies,   $timeou
     $rootScope.gassman = {
         loggedUser: null,
         selectedCsa: null,
+        selectedAccount: null,
         appStarted: appStartedDefer.promise
     };
 
-    gdata.profileInfo()
-    .then(function (r) {
-        $rootScope.gassman.loggedUser = r.data;
+    $rootScope.$watch('gassman.selectedCsa', function (v) {
+        gdata.profileInfo(v)
+        .then(function (r) {
+            $rootScope.gassman.loggedUser = r.data;
 
-        return gstorage.selectedCsa();
-    }).
-    then (function (csaId) {
-        $rootScope.gassman.selectedCsa = csaId;
-    }).
-    finally(function () {
-        appStartedDefer.resolve(true);
+            return gstorage.selectedCsa();
+        }).
+        then (function (csaId) {
+            $rootScope.gassman.selectedCsa = csaId;
+
+            if (csaId !== null) {
+                gdata.accountByCsa(csaId)
+                .then(function (accId) {
+                    $rootScope.gassman.selectedAccount = accId;
+                })
+                .then(undefined, function (error) {
+                    $rootScope.gassman.selectedAccount = null;
+                });
+            } else {
+                $rootScope.gassman.selectedAccount = null;
+            }
+        }).
+        finally(function () {
+            appStartedDefer.resolve(true);
+        });
     });
 
     $rootScope.logout = function () {
