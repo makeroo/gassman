@@ -154,6 +154,7 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
             var p = null;
             angular.forEach(r.data, function (o) {
                 p = o;
+                instrumentProfile(p);
             });
             r.data = p;
             return r;
@@ -162,30 +163,23 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
 
     this.accountByCsa = function (csaId) {
         // restituisci l'account dell'utente loggato in base al csa indicato
-        var d = $q.defer();
 
         var pi = $rootScope.gassman.loggedUser;
 
-        if (!pi) {
-            d.reject(gdata.error_codes.E_not_authenticated);
-        } else {
-            var done = false;
+        if (pi) {
             for (var i = 0; i < pi.accounts.length; ++i) {
                 // accDetails è: 0:csaId 1:accId 2:from 3:to
                 var accDetails = pi.accounts[i];
+
                 if (accDetails.csa_id == csaId && accDetails.to_date == null) {
-                    d.resolve(accDetails.id);
-                    done = true;
-                    break;
+                    return accDetails.id;
                 }
             }
 
-            if (!done) {
-                d.reject(gdata.error_codes.E_no_account);
-            }
+            return null;
+        } else {
+            throw gdata.error_codes.E_not_authenticated;
         }
-
-        return d.promise;
     };
 
     this.csaInfo = function (csaId) {

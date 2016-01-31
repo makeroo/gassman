@@ -83,6 +83,12 @@ function ($stateProvider,   $urlRouterProvider) {
             return d.promise;
         }
     ];
+    var checkUserLoading = [
+                 '$rootScope', '$q',
+        function ($rootScope,   $q) {
+            return $q.when($rootScope.gassman.userLoading);
+        }
+    ];
 
     $stateProvider.
         state('root', {
@@ -139,7 +145,8 @@ function ($stateProvider,   $urlRouterProvider) {
             url: '/accounts/index',
             resolve: {
                 userAuthenticated: checkLoggedUser,
-                csaSelected: checkSelectedCsa
+                csaSelected: checkSelectedCsa,
+                userLoaded: checkUserLoading
             },
             templateUrl: 'template/accounts_index.html',
             controller: 'AccountsIndex'
@@ -228,33 +235,48 @@ function ($rootScope,   gdata,   gstorage,   $state,   $q,   $cookies,   $timeou
         loggedUser: null,
         selectedCsa: null,
         selectedAccount: null,
-        appStarted: appStartedDefer.promise
+        appStarted: appStartedDefer.promise,
+        userLoading: false
     };
 
+    var userLoading = null;
+
     $rootScope.$watch('gassman.selectedCsa', function (v) {
+
+        if (userLoading == null) {
+            userLoading = $q.defer();
+
+            $rootScope.gassman.userLoading = userLoading.promise;
+        }
+
+        // quando cambia csa devo ricaricare il profilo perché
+        // cambiano conti e permessi
+
         gdata.profileInfo(v)
         .then(function (r) {
             $rootScope.gassman.loggedUser = r.data;
 
             return gstorage.selectedCsa();
-        }).
-        then (function (csaId) {
+        })
+        .then (function (csaId) {
+            // solo la prima volta assegno diverso, le successive
+            // invece riassegno lo stesso valore
             $rootScope.gassman.selectedCsa = csaId;
 
             if (csaId !== null) {
-                gdata.accountByCsa(csaId)
-                .then(function (accId) {
-                    $rootScope.gassman.selectedAccount = accId;
-                })
-                .then(undefined, function (error) {
-                    $rootScope.gassman.selectedAccount = null;
-                });
-            } else {
-                $rootScope.gassman.selectedAccount = null;
+                $rootScope.gassman.selectedAccount = gdata.accountByCsa(csaId);
             }
-        }).
-        finally(function () {
+        })
+        .then(undefined, function (error) {
+            // TODO: che fine fa loggedUser? e selectedCsa?
+        })
+        .finally(function () {
             appStartedDefer.resolve(true);
+            if ($rootScope.gassman.selectedAccount != null || $rootScope.gassman.selectedCsa == null) {
+                userLoading.resolve(false);
+
+                userLoading = null;
+            }
         });
     });
 
