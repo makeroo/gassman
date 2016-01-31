@@ -31,7 +31,7 @@
                 <ul class="nav navbar-nav navbar-right">
                     <li class="dropdown" ng-if="gassman.loggedUser">
 
-                        <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ gassman.loggedUser.profile.first_name }}<span class="caret"></span></a>
+                        <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><img class="avatar" ng-if="gassman.loggedUser.picture" ng-src="{{ gassman.loggedUser.picture }}">{{ gassman.loggedUser.profile.first_name }}<span class="caret"></span></a>
                         <ul class="dropdown-menu" role="menu">
                             <li><a href="#/person/{{ gassman.loggedUser.profile.id }}/detail">Profilo</a></li>
                             <li ng-if="gassman.selectedAccount"><a href="#/account/{{ gassman.selectedAccount  }}/detail">Conto</a></li>
