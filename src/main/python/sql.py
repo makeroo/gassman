@@ -246,8 +246,8 @@ def assign_rss_feed_id (personId, rss_feed_id):
 def assign_contact (contact, person):
     return 'INSERT INTO person_contact (person_id, address_id) VALUES (%s, %s)', [ person, contact ]
 
-def find_person (pid):
-    return 'SELECT id, first_name, middle_name, last_name, rss_feed_id FROM person WHERE id=%s', [ pid ]
+#def find_person (pid):
+#    return 'SELECT id, first_name, middle_name, last_name, rss_feed_id FROM person WHERE id=%s', [ pid ]
 
 #def find_current_account (pid):
 #    return 'SELECT current_account_id FROM person WHERE id=%s', [ pid ]
@@ -261,15 +261,15 @@ def has_account (pid, accId):
 #def find_visible_permissions (personId):
 #    return 'SELECT id, name, description FROM permission p WHERE visibility <= (SELECT MAX(p.visibility) FROM permission p JOIN permission_grant g ON p.id=g.perm_id JOIN person u ON g.person_id=u.id WHERE u.id=%s) ORDER BY visibility, ord, name', [ personId ]
 
-def find_user_permissions (personId):
-    return 'SELECT g.perm_id FROM person u JOIN permission_grant g ON g.person_id=u.id WHERE u.id=%s', [ personId ]
+def find_user_permissions (personId, csaId):
+    return 'SELECT g.perm_id FROM person u JOIN permission_grant g ON g.person_id=u.id WHERE u.id=%s AND g.csa_id=%s', [ personId, csaId ]
     #return 'SELECT p.id FROM person u JOIN permission_grant g ON g.person_id=u.id JOIN permission p ON g.perm_id=p.id WHERE u.id=%s', [ personId ]
 
 def find_user_csa (personId):
     return 'SELECT c.id, c.name, ap.to_date IS NULL AS "active_member" FROM account_person ap JOIN account a ON a.id=ap.account_id JOIN csa c ON c.id=a.csa_id WHERE ap.person_id=%s', [ personId ]
 
-def find_user_accounts (personId):
-    return 'SELECT a.csa_id, a.id, ap.from_date, ap.to_date FROM account_person ap JOIN account a ON ap.account_id = a.id WHERE ap.person_id = %s ORDER BY a.csa_id, ap.from_date', [ personId ]
+#def find_user_accounts (personId):
+#    return 'SELECT a.csa_id, a.id, ap.from_date, ap.to_date FROM account_person ap JOIN account a ON ap.account_id = a.id WHERE ap.person_id = %s ORDER BY a.csa_id, ap.from_date', [ personId ]
 
 # TODO: si ripristina se si fa la pagina di associazione conto...
 #def find_users_without_account ():

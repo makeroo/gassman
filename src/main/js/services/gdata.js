@@ -148,8 +148,16 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         return $http.post('/gm/sys/version?_xsrf=' + $cookies.get('_xsrf'));
     };
 
-    this.profileInfo = function () {
-        return $http.post('/gm/profile-info?_xsrf=' + $cookies.get('_xsrf'));
+    this.profileInfo = function (csaId) {
+        //return $http.post('/gm/profile-info?_xsrf=' + $cookies.get('_xsrf'));
+        return $http.post('/gm/people/' + csaId + '/profiles?_xsrf=' + $cookies.get('_xsrf'), { pids: ['me'] }).then(function (r) {
+            var p = null;
+            angular.forEach(r.data, function (o) {
+                p = o;
+            });
+            r.data = p;
+            return r;
+        });
     };
 
     this.accountByCsa = function (csaId) {
@@ -165,8 +173,8 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
             for (var i = 0; i < pi.accounts.length; ++i) {
                 // accDetails è: 0:csaId 1:accId 2:from 3:to
                 var accDetails = pi.accounts[i];
-                if (accDetails[0] == csaId && accDetails[3] == null) {
-                    d.resolve(accDetails[1]);
+                if (accDetails.csa_id == csaId && accDetails.to_date == null) {
+                    d.resolve(accDetails.id);
                     done = true;
                     break;
                 }
@@ -271,6 +279,9 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
             } else if (c.kind == 'T') {
                 if (!p.mainTelephone)
                     p.mainTelephone = c.address;
+            } else if (c.kind == 'P') {
+                if (!p.picture)
+                    p.picture = c.address;
             }
         });
 

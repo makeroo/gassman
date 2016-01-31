@@ -20,7 +20,7 @@ function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $time
 
     var master = null;
     var personId = $stateParams.personId;
-    var self = $scope.gassman.loggedUser.logged_user.id == personId;
+    var self = $scope.gassman.loggedUser.profile.id == personId;
 /*
     $scope.visibleAddress = function (c) {
         return c.kind !== 'I';

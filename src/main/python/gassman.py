@@ -109,7 +109,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/account/(\d+)/amount$', AccountAmountHandler),
             (r'^/gm/account/(\d+)/xls$', AccountXlsHandler),
             (r'^/gm/account/(\d+)/close$', AccountCloseHandler),
-            (r'^/gm/profile-info$', ProfileInfoHandler),
+            #(r'^/gm/profile-info$', ProfileInfoHandler),
             (r'^/gm/accounts/(\d+)/index/(\d+)/(\d+)$', AccountsIndexHandler),
             (r'^/gm/accounts/(\d+)/names$', AccountsNamesHandler),
             #(r'^/gm/expenses/(\d+)/tags$', ExpensesNamesHandler),
@@ -192,13 +192,13 @@ class GassmanWebApp (tornado.web.Application):
                              replyTo
                              )
 
-    def find_person_by_id (self, pid):
-        with self.conn as cur:
-            cur.execute(*self.sql.find_person(pid))
-            pdata = cur.fetchone()
-            if pdata:
-                return Person(*pdata)
-        return None
+    #def find_person_by_id (self, pid):
+    #    with self.conn as cur:
+    #        cur.execute(*self.sql.find_person(pid))
+    #        pdata = cur.fetchone()
+    #        if pdata:
+    #            return Person(*pdata)
+    #    return None
 
     def hasAccount (self, cur, pid, accId):
         cur.execute(*self.sql.has_account(pid, accId))
@@ -745,30 +745,32 @@ class AccountCloseHandler (JsonBaseHandler):
 #        return list(cur)
 
 
-class ProfileInfoHandler (JsonBaseHandler):
-    def do (self, cur):
-        uid = self.current_user
-        if uid is None:
-            raise GDataException(error_codes.E_not_authenticated, 401)
-        cur.execute(*self.application.sql.find_user_permissions(uid))
-        pp = [ p[0] for p in cur ]
-        cur.execute(*self.application.sql.find_user_csa(uid))
-        csa = { id: { 'name': name, 'member': member } for id, name, member in cur.fetchall() }
-        cur.execute(*self.application.sql.find_user_accounts(uid))
-        accs = list(cur)
-        _, q, a = self.application.sql.people_profiles1([uid])
-        cur.execute(q, a)
-        contacts = self.application.sql.iter_objects(cur)
-        for c in contacts:
-            c.pop('person_id')
-            c.pop('priority')
-        return dict(
-            logged_user = self.application.find_person_by_id(uid),
-            permissions = pp,
-            csa = csa,
-            accounts = accs,
-            contacts=contacts
-        )
+#class ProfileInfoHandler (JsonBaseHandler):
+#    def do (self, cur):
+#        uid = self.current_user
+#        if uid is None:
+#            raise GDataException(error_codes.E_not_authenticated, 401)
+#        cur.execute(*self.application.sql.find_user_permissions(uid))
+#        pp = [ p[0] for p in cur ]
+#        cur.execute(*self.application.sql.find_user_csa(uid))
+#        csa = { id: { 'name': name, 'member': member } for id, name, member in cur.fetchall() }
+#        cur.execute(*self.application.sql.find_user_accounts(uid))
+#        accs = list(cur)
+#        pq, cq, a = self.application.sql.people_profiles1([uid])
+#        cur.execute(pq, a)
+#        profile = self.application.sql.fetch_object(cur)
+#        cur.execute(cq, a)
+#        contacts = self.application.sql.iter_objects(cur)
+#        for c in contacts:
+#            c.pop('person_id')
+#            c.pop('priority')
+#        return dict(
+#            profile = profile,
+#            permissions = pp,
+#            csa = csa,
+#            accounts = accs,
+#            contacts=contacts
+#        )
 
 
 class AccountsIndexHandler (JsonBaseHandler):
@@ -1135,11 +1137,13 @@ class PeopleProfilesHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         pids = self.payload['pids']
         uid = self.current_user
-        isSelf = len(pids) == 1 and int(pids[0]) == uid
-        if csaId == 'null':
-            if not isSelf:
-                raise GDataException(error_codes.E_permission_denied, 403)
-            csaId = None
+        isSelf = len(pids) == 1 and (pids[0] == 'me' or int(pids[0]) == uid)
+        if isSelf:
+            pids = [ uid ]
+        #if csaId == 'null':
+        #    if not isSelf:
+        #        raise GDataException(error_codes.E_permission_denied, 403)
+        #    csaId = None
         if not isSelf and not self.application.isUserMemberOfCsa(cur, uid, csaId, True):
             raise GDataException(error_codes.E_permission_denied, 403)
         canViewContacts = isSelf or self.application.hasPermissionByCsa(cur, self.application.sql.P_canViewContacts, uid, csaId)
@@ -1152,8 +1156,9 @@ class PeopleProfilesHandler (JsonBaseHandler):
                 p = { 'accounts':[], 'profile':None, 'permissions':[], 'contacts':[] }
                 r[pid] = p
             return p
-        if csaId is None:
-            r[uid] = record(self.application.find_person_by_id(uid))
+        if csaId == 'null':
+            record(uid)
+            #p['profile'] = self.application.find_person_by_id(uid)
         else:
             accs, perms, args = self.application.sql.people_profiles2(csaId, pids)
             canViewAccounts = isSelf or self.application.hasPermissionByCsa(cur, self.application.sql.P_canCheckAccounts, uid, csaId)
@@ -1179,6 +1184,10 @@ class PeopleProfilesHandler (JsonBaseHandler):
                     p = record(addr['person_id'])
                     p['contacts'].append(addr)
             # TODO: indirizzi
+        if isSelf:
+            cur.execute(*self.application.sql.find_user_csa(uid))
+            p = record(uid)
+            p['csa'] = { id: { 'name': name, 'member': member } for id, name, member in cur.fetchall() }
         return r
 
 
@@ -1227,7 +1236,7 @@ class PersonSaveHandler (JsonBaseHandler):
         if permissions is not None and \
            csaId is not None and \
            self.application.hasPermissionByCsa(cur, self.application.sql.P_canGrantPermissions, uid, csaId):
-            cur.execute(*self.application.sql.find_user_permissions(uid))
+            cur.execute(*self.application.sql.find_user_permissions(uid, csaId))
             assignable_perms = set([ row[0] for row in cur.fetchall() ])
             cur.execute(*self.application.sql.revokePermissions(pid, csaId, assignable_perms))
             for p in set(permissions) & assignable_perms:

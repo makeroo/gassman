@@ -10,7 +10,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a ng-if="csa" class="navbar-brand" href="#/csa/{{ csaId }}/detail">{{ csa.name }}</a>
+                <a ng-if="csa" class="navbar-brand" href="#/csa/{{ gassman.selectedCsa }}/detail">{{ csa.name }}</a>
                 <a ng-if="!csa" class="navbar-brand" href="#/">GAS Manager</a>
             </div>
 
@@ -29,11 +29,12 @@
                     </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li class="dropdown" ng-if="profile">
-                        <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ profile.logged_user.firstName }}<span class="caret"></span></a>
+                    <li class="dropdown" ng-if="gassman.loggedUser">
+
+                        <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ gassman.loggedUser.profile.first_name }}<span class="caret"></span></a>
                         <ul class="dropdown-menu" role="menu">
-                            <li><a href="#/person/{{ profile.logged_user.id }}/detail">Profilo</a></li>
-                            <li ng-if="accId"><a href="#/account/{{ accId  }}/detail">Conto</a></li>
+                            <li><a href="#/person/{{ gassman.loggedUser.profile.id }}/detail">Profilo</a></li>
+                            <li ng-if="gassman.selectedAccount"><a href="#/account/{{ gassman.selectedAccount  }}/detail">Conto</a></li>
                             <li><a ng-click="logout()">Esci</a></li>
                         </ul>
                     </li>
@@ -53,7 +54,7 @@
                 <a href="#/faq">FAQ</a>
                 <a href="#/help">Aiuto</a>
                 <a href="#/project">Progetto</a>
-                <a ng-if="gassman.loggedUser.logged_user.rssFeedId" href="/gm/rss/{{ gassman.loggedUser.logged_user.rssFeedId }}">RSS</a>
+                <a ng-if="gassman.loggedUser.profile.rss_feed_id" href="/gm/rss/{{ gassman.loggedUser.profile.rss_feed_id }}">RSS</a>
             </p>
         </div>
     </div>

@@ -30,7 +30,7 @@ function ($scope,   gdata,   $q) {
     $scope.transactionTypes = [];
 
     $scope.$watch('gassman.loggedUser', function (pData) {
-        $scope.profile = pData;
+        //$scope.profile = pData;
         //$scope.csaId = null;
         $scope.initError = null;
 
@@ -45,19 +45,14 @@ function ($scope,   gdata,   $q) {
     });
 
     $scope.$watch('gassman.selectedCsa', function (csaId) {
-        $scope.csaId = csaId;
+        //$scope.csaId = csaId;
 
         if (csaId === null) {
             $scope.csa = null;
-            $scope.accId = null;
         } else {
-            $q.all([
-                gdata.csaInfo(csaId),
-                gdata.accountByCsa(csaId)
-            ])
+            gdata.csaInfo(csaId)
             .then (function (r) {
-                $scope.csa = r[0].data;
-                $scope.accId = r[1];
+                $scope.csa = r.data;
             }).
             then (undefined, function (error) {
                 if (error[0] != gdata.error_codes.E_no_csa_found)

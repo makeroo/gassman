@@ -34,6 +34,6 @@ function ($scope,   $location,   gdata,   gstorage) {
         return;
     }
 
-    $location.path('/person/' + $scope.gassman.loggedUser.id + '/detail');
+    $location.path('/person/' + $scope.gassman.loggedUser.profile.id + '/detail');
 }])
 ;
