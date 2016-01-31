@@ -26,54 +26,39 @@ function($scope,   $filter,   $stateParams,   $location,   gdata,   $localStorag
         $location.path('/transaction/' + mov[4]);
     };
 
-    var showOwner = function (accId) {
-        $scope.accId = accId;
-        gdata.accountOwner(accId).
-        then (function (r) {
-            if (r.data.people)
-                $scope.accountOwner = r.data.people;
-            else
-                $scope.accountDesc = r.data.desc;
-        }).
-        then (undefined, function (error) {
-            $scope.accountOwnerError = error.data;
-        });
-    };
+    $scope.accId = accId;
 
-    if (accId) {
-        x(accId);
-    } else {
-        gdata.accountByCsa($scope.gassman.selectedCsa)
-        .then(x)
-        .then(undefined, function (error) {
-            $scope.accountOwnerError = error.data;
-        });
-    }
+    gdata.accountOwner(accId).
+    then (function (r) {
+        if (r.data.people)
+            $scope.accountOwner = r.data.people;
+        else
+            $scope.accountDesc = r.data.desc;
+    }).
+    then (undefined, function (error) {
+        $scope.accountOwnerError = error.data;
+    });
 
-    function x (accId) {
-        showOwner(accId);
+    gdata.accountAmount(accId)
+    .then(function (r) {
+        $scope.amount = r.data;
+    })
+    .then(undefined, function (error) {
+        $scope.accountOwnerError = error.data;
+    });
 
-        gdata.accountAmount(accId)
-        .then(function (r) {
-            $scope.amount = r.data;
-        })
-        .then(undefined, function (error) {
-            $scope.accountOwnerError = error.data;
-        });
-
-        listController.setupScope(
-            $scope,
-            // data service
-            function (from, pageSize, filterBy) {
-                return gdata.accountMovements($scope.accId, filterBy, from, pageSize);
-            },
-            // options
-            {
-                filterBy: '',
-                storage: $localStorage,
-                storageKey: 'account_detail_' + $scope.accId
-            }
-        );
-    }
+    listController.setupScope(
+        $scope,
+        // data service
+        function (from, pageSize, filterBy) {
+            return gdata.accountMovements($scope.accId, filterBy, from, pageSize);
+        },
+        // options
+        {
+            filterBy: '',
+            storage: $localStorage,
+            storageKey: 'account_detail_' + $scope.accId
+        }
+    );
 }])
 ;
