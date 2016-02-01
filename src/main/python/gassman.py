@@ -74,11 +74,11 @@ class GoogleUser (object):
         # altri attributi: id, email, gender, locale
 
 
-class Session (object):
-    def __init__ (self, app):
-        self.application = app
-        self.created = datetime.datetime.utcnow()
-        self.registrationNotificationSent = False
+#class Session (object):
+#    def __init__ (self, app):
+#        self.application = app
+#        self.created = datetime.datetime.utcnow()
+#        self.registrationNotificationSent = False
 
 
 class Person (object):
@@ -148,7 +148,7 @@ class GassmanWebApp (tornado.web.Application):
         self.connArgs = connArgs
         self.conn = None
         self.sql = sql
-        self.sessions = dict()
+        #self.sessions = dict()
         self.connect()
         tornado.ioloop.PeriodicCallback(self.checkConn, settings.DB_CHECK_INTERVAL).start()
 
@@ -282,13 +282,13 @@ class GassmanWebApp (tornado.web.Application):
             cur.execute(*self.sql.update_last_login(p.id, datetime.datetime.utcnow()))
         return p
 
-    def session (self, requestHandler):
-        xt = requestHandler.xsrf_token
-        s = self.sessions.get(xt, None)
-        if s is None:
-            s = Session(self)
-            self.sessions[xt] = s
-        return s
+#    def session (self, requestHandler):
+#        xt = requestHandler.xsrf_token
+#        s = self.sessions.get(xt, None)
+#        if s is None:
+#            s = Session(self)
+#            self.sessions[xt] = s
+#        return s
 
     def checkMembershipByKitty (self, cur, personId, accId):
         cur.execute(*self.sql.check_membership_by_kitty(personId, accId))
@@ -403,7 +403,7 @@ class HomeHandler (BaseHandler):
         if u is not None:
             with self.application.conn as cur:
                 cur.execute(*self.application.sql.update_last_visit(u, datetime.datetime.utcnow()))
-        self.application.session(self)
+        self.xsrf_token # leggere il cookie => generarlo
         self.render('home.html',
                     LOCALE=self.locale.code,
                     )
