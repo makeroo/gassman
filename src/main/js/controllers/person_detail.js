@@ -169,28 +169,26 @@ function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $time
         });
     }
 
-    gdata.deliveryPlaces($scope.gassman.selectedCsa)
-    .then (function (r) {
-        $scope.deliveryPlaces = r.data;
+    if ($scope.gassman.selectedCsa) {
+        gdata.deliveryPlaces($scope.gassman.selectedCsa)
+        .then(function (r) {
+            $scope.deliveryPlaces = r ? r.data : [];
 
-        return loadPersonProfileAndAccounts();
-    }).then (undefined, function (error) {
-        if (error[0] == gdata.error_codes.E_no_csa_found && self) {
-            $q.all([
-                gdata.profile(null, personId),
-                gdata.csaList()
-            ]).then (function (profAndCsaList) {
-                $scope.personProfile = profAndCsaList[0];
-                $scope.editable = true;
-
-                $scope.csaList = profAndCsaList[1].data;
-            }).then (undefined, function (error) {
-                $scope.personProfileError = error.data || error;
-            })
-            ;
-        } else {
+            return loadPersonProfileAndAccounts();
+        }).then(undefined, function (error) {
             $scope.personProfileError = error.data || error;
-        }
-    });
+        });
+    } else {
+        $scope.personProfile = angular.copy($scope.gassman.loggedUser);
+
+        gdata.csaList()
+        .then(function (csaList) {
+            $scope.editable = true;
+
+            $scope.csaList = csaList.data;
+        }).then(undefined, function (error) {
+            $scope.personProfileError = error.data || error;
+        });
+    }
 }])
 ;
