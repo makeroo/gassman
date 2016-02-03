@@ -284,7 +284,13 @@ def update_last_visit (personId, visitTime):
     return 'UPDATE person SET last_visit=%s WHERE id=%s', [ visitTime, personId ]
 
 def check_membership_by_kitty (personId, accId):
-    return 'SELECT COUNT(*) FROM account a JOIN account a2 ON a2.csa_id=a.csa_id JOIN account_person ap ON ap.account_id=a2.id WHERE a.id=%s AND ap.person_id=%s', [ accId, personId ]
+    return '''
+SELECT COUNT(*)
+  FROM account kitty
+  JOIN account useraccount ON kitty.csa_id=useraccount.csa_id
+  JOIN account_person ap   ON ap.account_id=useraccount.id
+ WHERE kitty.id=%s AND ap.person_id=%s AND kitty.gc_type=%s and ap.to_date IS NULL
+''', [ accId, personId, At_Kitty ]
 
 def is_user_member_of_csa (personId, csaId, stillMember):
     q = 'SELECT COUNT(*) FROM account_person ap JOIN account a ON a.id=ap.account_id WHERE a.csa_id=%s AND ap.person_id=%s'
