@@ -32,7 +32,6 @@ function ($scope,   gdata,   $q) {
     $scope.$watch('gassman.loggedUser', function (pData) {
         //$scope.profile = pData;
         //$scope.csaId = null;
-        $scope.initError = null;
 
         angular.forEach(ttypes, function (f) {
             if (('p' in f && (!pData || pData.permissions.indexOf(f.p) == -1)) ||
@@ -42,9 +41,15 @@ function ($scope,   gdata,   $q) {
 
             $scope.transactionTypes.push(f);
         });
+
+        $scope.membersVisible = (
+            pData.permissions.indexOf(gdata.permissions.P_canCheckAccounts) != -1 ||
+            pData.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1
+        );
     });
 
     $scope.$watch('gassman.selectedCsa', function (csaId) {
+        $scope.initError = null;
         //$scope.csaId = csaId;
 
         if (csaId === null) {
