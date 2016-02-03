@@ -2,55 +2,57 @@
 <h3 ng-show="accountOwner">Conto di <span ng-repeat="o in accountOwner">{{$last ? ' e ' : $first ? '' : ', '}}<span ng-if="!viewableContacts" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</span><a ng-if="viewableContacts" href="#/person/{{o[3]}}/detail" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</a></span> (<a href="/account/{{accId}}/xls">xls</a>)</h3>
 <div ng-show="accountDesc">{{ accountDesc[0] }} di {{ accountDesc[1] }} (<a href="/account/{{accId}}/xls">xls</a>)</div>
 <h4 ng-show="amount != null">Saldo: {{amount[0] | currency : amount[1] }}</h4>
-<div ng-show="accountOwnerError">Informazioni sul titolare del conto non disponibili: {{ accountOwnerError }}.</div>
+<div ng-show="accountOwnerError">Informazioni sul titolare del conto non disponibili: <span ng-repeat="msg in accountOwnerError">{{ msg }}</span>.</div>
 
-<form class="form-inline account-detail-search">
-  <div class="form-group">
-    <label for="transactionsDescFilter">Filtra per descrizione</label>
-    <input type="text" class="form-control" id="transactionsDescFilter" placeholder="Cerca per descrizione" ng-model="pagination.filterBy"/>
-  </div>
-</form>
+<div ng-hide="pageError">
 
-<table class="table">
-  <thead>
-      <th>Data</th>
-      <th>Descrizione</th>
-      <th>Importo</th>
-  </thead>
-  <tbody>
-    <tr ng-repeat="mov in items" class="mov-row" ng-click="showTransaction(mov)">
-      <td>{{ mov[1] | date:"shortDate" }}</td>
-      <td ng-class="mov[2] ? 'desc2' : ''">{{ mov[0] }}<br/><small>{{ mov[2] }}</small></td>
-      <td>{{ mov[3] | currency : mov[5] }}</td>
-    </tr>
+    <form class="form-inline account-detail-search">
+        <div class="form-group">
+            <label for="transactionsDescFilter">Filtra per descrizione</label>
+            <input type="text" class="form-control" id="transactionsDescFilter" placeholder="Cerca per descrizione" ng-model="pagination.filterBy"/>
+        </div>
+    </form>
 
-  </tbody>
-</table>
+    <table class="table">
+      <thead>
+          <th>Data</th>
+          <th>Descrizione</th>
+          <th>Importo</th>
+      </thead>
+      <tbody>
+        <tr ng-repeat="mov in items" class="mov-row" ng-click="showTransaction(mov)">
+          <td>{{ mov[1] | date:"shortDate" }}</td>
+          <td ng-class="mov[2] ? 'desc2' : ''">{{ mov[0] }}<br/><small>{{ mov[2] }}</small></td>
+          <td>{{ mov[3] | currency : mov[5] }}</td>
+        </tr>
+      </tbody>
+    </table>
 
-<div class="row-fluid pagination-section">
-    <div class="col-xs-8">
-        <uib-pagination total-items="pagination.totalItems"
-                        items-per-page="pagination.pageSize"
-                        ng-model="pagination.page"
-                        max-size="6"
-                        class="pagination-sm"
-                        boundary-links="true"
-                        previous-text="<"
-                        next-text=">"
-                        first-text="<<"
-                        last-text=">>"></uib-pagination>
-        <span class="pagination-count">Movimenti: {{ pagination.totalItems }}</span>
-    </div>
+    <div class="row-fluid pagination-section">
+        <div class="col-xs-8">
+            <uib-pagination total-items="pagination.totalItems"
+                            items-per-page="pagination.pageSize"
+                            ng-model="pagination.page"
+                            max-size="6"
+                            class="pagination-sm"
+                            boundary-links="true"
+                            previous-text="<"
+                            next-text=">"
+                            first-text="<<"
+                            last-text=">>"></uib-pagination>
+            <span class="pagination-count">Movimenti: {{ pagination.totalItems }}</span>
+        </div>
 
-    <div class="col-xs-4 text-right">
-        <form class="form-inline">
-            <div class="form-group pagination">
-                <label for="pageSize">Righe per pagina:</label>
-                <select class="form-control" id="pageSize" ng-model="pagination.pageSize">
-                    <option ng-repeat="sz in pagination.pageSizes">{{ sz }}</option>
-                </select>
-            </div>
-        </form>
+        <div class="col-xs-4 text-right">
+            <form class="form-inline">
+                <div class="form-group pagination">
+                    <label for="pageSize">Righe per pagina:</label>
+                    <select class="form-control" id="pageSize" ng-model="pagination.pageSize">
+                        <option ng-repeat="sz in pagination.pageSizes">{{ sz }}</option>
+                    </select>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -58,12 +60,8 @@
   <div class="message">Sto caricando i dati, un attimo di pazienza.</div>
 </div>
 
-<div ng-show="movementsError">
+<div ng-show="pageError">
   <div class="server-error">
-    <p>Qualcosa è andato storto, <a href="" ng-click="toggleErrorMessage()">clicca per saperne di più</a>.</p>
-    <p ng-show="showErrorMessage" class="message">{{ serverError }}</p> <!-- TODO: serverError è html... -->
-    <p>Se il messaggio non ti dice niente prova a ricaricare la pagina.
-       Dopo qualche tentativo fallito, contatta il cassiere direttamente o sulla mailing list.
-    </p>
+    <p>Qualcosa è andato storto: <span ng-repeat="msg in pageError">{{ msg }}</span>.
   </div>
 </div>
