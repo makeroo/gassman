@@ -2,7 +2,32 @@
   accesso
   richiesta
 
+  select * from person where id not in (select person_id from account_person) limit 1;
+
 - utente che appartiene a csa e basta
+
+  conto aperto:
+  select * from person p join account_person ap on ap.person_id=p.id where ap.to_date is null and p.id not in (select person_id from permission_grant) limit 1;
+
+  con conto singolo intestato
+  con conto cointestato
+
+  select ap.account_id, count(ap.person_id)
+    from account_person ap
+   where ap.person_id in (select p.id
+                            from person p
+                            join account_person ap on ap.person_id=p.id
+                           where ap.to_date is null and
+                                 p.id not in (select person_id from permission_grant) )
+                        group by ap.account_id;
+
+  accesso transazione a caso
+  accesso conto a caso
+  -- deve sparire chi siamo
+  -- nel dettaglio conto owner non linkabile
+
+  conto chiuso:
+  select * from person p join account_person ap on ap.person_id=p.id where ap.to_date is not null and p.id not in (select person_id from permission_grant) limit 1;
 
 - can check accounts
   navigazione membri
