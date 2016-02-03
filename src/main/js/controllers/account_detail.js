@@ -30,10 +30,18 @@ function($scope,   $filter,   $stateParams,   $location,   gdata,   $localStorag
 
     gdata.accountOwner(accId).
     then (function (r) {
-        if (r.data.people)
+        if (r.data.people) {
+            for (var i = r.data.people.length; --i >= 0; ) {
+                if (r.data.people[i][3] == $scope.gassman.loggedUser.profile.id) {
+                    $scope.viewableContacts = true;
+                    break;
+                }
+            }
+
             $scope.accountOwner = r.data.people;
-        else
+        } else {
             $scope.accountDesc = r.data.desc;
+        }
     }).
     then (undefined, function (error) {
         $scope.accountOwnerError = error.data;
