@@ -1,5 +1,5 @@
 <div class="row" ng-if="personProfileError">
-    <div class="alert alert-danger">{{ personProfileError }}</div>
+    <div class="alert alert-danger"><span ng-repeat="msg in personProfileError">{{ msg }}</span>.</div>
 </div>
 
 <form class="form-horizontal" name="personProfileForm" ng-if="!personProfileError">
