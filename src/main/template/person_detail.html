@@ -4,7 +4,7 @@
 
 <form class="form-horizontal" name="personProfileForm" ng-if="!personProfileError">
 
-  <div ng-hide="gassman.selectedCsa" class="row">
+  <div ng-hide="gassman.selectedCsa && !accountClose" class="row">
     <div class="alert alert-info">
       <p>Non appartieni ancora ad un GAS.</p>
       <p ng-if="csaList.length == 1">Richiedi di entrare a far parte del GAS <button class="btn btn-default" ng-click="requestMembership(csaList[0].id)">{{ csaList[0].name }}</button></p>

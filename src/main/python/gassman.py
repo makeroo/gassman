@@ -200,8 +200,8 @@ class GassmanWebApp (tornado.web.Application):
     #            return Person(*pdata)
     #    return None
 
-    def hasAccount (self, cur, pid, accId):
-        cur.execute(*self.sql.has_account(pid, accId))
+    def hasOrHadAccount (self, cur, pid, accId):
+        cur.execute(*self.sql.has_or_had_account(pid, accId))
         return cur.fetchone()[0] > 0
 
     def add_contact (self, cur, pid, addr, kind, notes):
@@ -350,7 +350,6 @@ class GassmanWebApp (tornado.web.Application):
 
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user (self):
-        return 2
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
@@ -475,7 +474,7 @@ class SysVersionHandler (JsonBaseHandler):
 class AccountOwnerHandler (JsonBaseHandler):
     def do (self, cur, accId):
         uid = self.current_user
-        if (not self.application.hasAccount(cur, uid, accId) and
+        if (not self.application.hasOrHadAccount(cur, uid, accId) and
             not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCheckAccounts, uid, accId) and
             not self.application.checkMembershipByKitty(cur, uid, accId)
             ):
@@ -492,11 +491,11 @@ class AccountOwnerHandler (JsonBaseHandler):
 class AccountMovementsHandler (JsonBaseHandler):
     def do (self, cur, accId, fromIdx, toIdx):
         uid = self.current_user
-        if (not self.application.hasAccount(cur, uid, accId) and
+        if (not self.application.hasOrHadAccount(cur, uid, accId) and
             not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCheckAccounts, uid, accId) and
             not self.application.checkMembershipByKitty(cur, uid, accId)
             ):
-            raise Exception(error_codes.E_permission_denied)
+            raise GDataException(error_codes.E_permission_denied, 403)
         p = self.payload
         f = p.get('filter')
         if f:
@@ -513,11 +512,11 @@ class AccountMovementsHandler (JsonBaseHandler):
 class AccountAmountHandler (JsonBaseHandler):
     def do (self, cur, accId):
         uid = self.current_user
-        if (not self.application.hasAccount(cur, uid, accId) and
+        if (not self.application.hasOrHadAccount(cur, uid, accId) and
             not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCheckAccounts, uid, accId) and
             not self.application.checkMembershipByKitty(cur, uid, accId)
             ):
-            raise Exception(error_codes.E_permission_denied)
+            raise GDataException(error_codes.E_permission_denied, 403)
         cur.execute(*self.application.sql.account_amount(accId))
         v = cur.fetchone()
         return v[0] or 0.0, v[1]
@@ -526,7 +525,7 @@ class AccountAmountHandler (JsonBaseHandler):
 class CsaInfoHandler (JsonBaseHandler):
     def do (self, cur, csaId):
         uid = self.current_user
-        if not self.application.isUserMemberOfCsa(cur, uid, csaId, True):
+        if not self.application.isUserMemberOfCsa(cur, uid, csaId, False):
             raise Exception(error_codes.E_permission_denied)
         cur.execute(*self.application.sql.csa_info(csaId))
         r = self.application.sql.fetch_object(cur)
@@ -627,7 +626,7 @@ class AccountXlsHandler (BaseHandler):
         self.clear_header('Content-Disposition')
         self.add_header('Content-Disposition', 'attachment; filename="account-%s.xls"' % accId)
         with self.application.conn as cur:
-            if (not self.application.hasAccount(cur, uid, accId) and
+            if (not self.application.hasOrHadAccount(cur, uid, accId) and
                 not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCheckAccounts, uid, accId) and
                 not self.application.checkMembershipByKitty(cur, uid, accId)
                 ):

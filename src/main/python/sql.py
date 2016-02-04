@@ -257,8 +257,8 @@ def assign_contact (contact, person):
 def has_accounts (pid):
     return 'SELECT count(*) FROM account_person WHERE person_id=%s AND to_date IS NULL', [ pid ]
 
-def has_account (pid, accId):
-    return 'SELECT count(*) FROM account_person WHERE person_id=%s AND account_id=%s AND to_date IS NULL', [ pid, accId ]
+def has_or_had_account (pid, accId):
+    return 'SELECT count(*) FROM account_person WHERE person_id=%s AND account_id=%s', [ pid, accId ]
 
 #def find_visible_permissions (personId):
 #    return 'SELECT id, name, description FROM permission p WHERE visibility <= (SELECT MAX(p.visibility) FROM permission p JOIN permission_grant g ON p.id=g.perm_id JOIN person u ON g.person_id=u.id WHERE u.id=%s) ORDER BY visibility, ord, name', [ personId ]

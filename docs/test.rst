@@ -23,8 +23,6 @@
 
   accesso transazione a caso
   accesso conto a caso
-  -- deve sparire chi siamo
-  -- nel dettaglio conto owner non linkabile
 
   conto chiuso:
   select * from person p join account_person ap on ap.person_id=p.id where ap.to_date is not null and p.id not in (select person_id from permission_grant) limit 1;

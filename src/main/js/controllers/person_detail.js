@@ -21,6 +21,13 @@ function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $time
     var master = null;
     var personId = $stateParams.personId;
     var self = $scope.gassman.loggedUser.profile.id == personId;
+
+    $scope.accountClose = true;
+    angular.forEach($scope.gassman.loggedUser.accounts, function (a) {
+        if (a.to_date == null)
+            $scope.accountClose = false;
+    });
+
 /*
     $scope.visibleAddress = function (c) {
         return c.kind !== 'I';
@@ -176,9 +183,21 @@ function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $time
 
             return loadPersonProfileAndAccounts();
         }).then(undefined, function (error) {
+            if (error.data[0] != gdata.error_codes.E_permission_denied)
+                $scope.personProfileError = error.data || error;
+            else
+                return loadPersonProfileAndAccounts();
+        }).then(function () {
+            if ($scope.accountClose)
+                return loadCsaList();
+        }).then(undefined, function (error) {
             $scope.personProfileError = error.data || error;
         });
     } else {
+        loadCsaList();
+    }
+
+    function loadCsaList () {
         $scope.personProfile = angular.copy($scope.gassman.loggedUser);
 
         gdata.csaList()

@@ -88,7 +88,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
 
         // TODO: in realtà degli ordini CPY mi interessano solo le mie ordinazioni!!
         return $q.all([
-            gdata.accountAmount($scope.csa.kitty.id),
+            gdata.accountAmount($scope.csa.kitty.id)
             //gdata.accountMovements($scope.csa.kitty.id, 0, 5),
         ]);
     }).
@@ -97,7 +97,8 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
         //$scope.csa.kitty.movements = rr[1].data;
     }).
     then (undefined, function (error) {
-        $scope.loadError = error.data;
+        if (error.data[0] != gdata.error_codes.E_permission_denied)
+            $scope.loadError = error.data;
     });
 }])
 ;

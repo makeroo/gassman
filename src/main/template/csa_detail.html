@@ -8,7 +8,7 @@
      </div>
  </div>
 
- <div class="panel panel-default">
+ <div class="panel panel-default" ng-if="csa.kitty.amount != undefined">
   <div class="panel-heading">
    <h3 class="panel-title">Cassa comune</h3>
   </div>
@@ -88,6 +88,5 @@
 </div>
 
 <div ng-if="loadError">
- <p>Pagina temporaneamente non disponible.</p>
- <p>Causa: {{loadError}}</p>
+ <p>Pagina non disponible: <span ng-repeat="msg in loadError">{{ msg }}</span>.</p>
 </div>

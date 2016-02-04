@@ -167,6 +167,8 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         var pi = $rootScope.gassman.loggedUser;
 
         if (pi) {
+            var lastAccount = null;
+
             for (var i = 0; i < pi.accounts.length; ++i) {
                 // accDetails è: 0:csaId 1:accId 2:from 3:to
                 var accDetails = pi.accounts[i];
@@ -174,9 +176,13 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
                 if (accDetails.csa_id == csaId && accDetails.to_date == null) {
                     return accDetails.id;
                 }
+
+                if (lastAccount == null || lastAccount.to_date < accDetails.to_date) {
+                    lastAccount = accDetails;
+                }
             }
 
-            return null;
+            return lastAccount == null ? null : lastAccount.id;
         } else {
             throw gdata.error_codes.E_not_authenticated;
         }
