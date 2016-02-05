@@ -1148,6 +1148,8 @@ class PeopleProfilesHandler (JsonBaseHandler):
         uid = self.current_user
         isSelf = len(pids) == 1 and (pids[0] == 'me' or int(pids[0]) == uid)
         if isSelf:
+            if uid is None:
+                raise GDataException(error_codes.E_not_authenticated, 401)
             pids = [ uid ]
         #if csaId == 'null':
         #    if not isSelf:
