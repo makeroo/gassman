@@ -1155,7 +1155,7 @@ class PeopleProfilesHandler (JsonBaseHandler):
         #    if not isSelf:
         #        raise GDataException(error_codes.E_permission_denied, 403)
         #    csaId = None
-        if not isSelf and not self.application.isUserMemberOfCsa(cur, uid, csaId, True):
+        if not isSelf and not self.application.isUserMemberOfCsa(cur, uid, csaId, False):
             raise GDataException(error_codes.E_permission_denied, 403)
         canViewContacts = isSelf or self.application.hasPermissionByCsa(cur, self.application.sql.P_canViewContacts, uid, csaId)
         r = {}
