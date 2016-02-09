@@ -527,8 +527,24 @@ def log_transaction (tid, opId, logType, logDesc, tDate):
 def log_transaction_check_operator (personId, transId):
     return 'SELECT COUNT(*) FROM transaction_log WHERE transaction_id=%s AND operator_id=%s', [ transId, personId ]
 
+def transaction_on_kitty_and_user_is_member (transId, personId):
+    return '''
+SELECT count(*)
+  FROM transaction_line l
+  JOIN account a ON l.account_id=a.id
+  JOIN account a2 ON a.csa_id=a2.csa_id
+  JOIN account_person ap ON a2.id=ap.account_id
+ WHERE transaction_id=%s AND a.gc_type=%s AND ap.person_id=%s AND ap.to_date IS NULL;
+    ''', [ transId, At_Kitty, personId]
+
 def transaction_is_involved (transId, personId):
-    return 'SELECT COUNT(*) FROM transaction_line l JOIN account a ON l.account_id=a.id JOIN account_person ap ON a.id=ap.account_id WHERE l.transaction_id=%s AND ap.person_id=%s', [ transId, personId ]
+    return '''
+SELECT COUNT(*)
+  FROM transaction_line l
+  JOIN account a ON l.account_id=a.id
+  JOIN account_person ap ON a.id=ap.account_id
+ WHERE l.transaction_id=%s AND ap.person_id=%s
+''', [ transId, personId ]
 
 def transaction_previuos (transId):
     return 'SELECT id FROM transaction WHERE modified_by_id = %s', [ transId ]

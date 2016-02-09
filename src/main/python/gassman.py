@@ -322,6 +322,12 @@ class GassmanWebApp (tornado.web.Application):
         log_gassman.debug('has permissions: user=%s, perm=%s, r=%s', personId, perms, r)
         return r
 
+    def isKittyTransitionAndUserIsMember (self, cur, transId, personId):
+        cur.execute(*self.sql.transaction_on_kitty_and_user_is_member(transId, personId))
+        r = int(cur.fetchone()[0]) > 0
+        log_gassman.debug('member can view kitty transation: user=%s, trans=%s, r=%s', personId, transId, r)
+        return r
+
     def isTransactionEditor (self, cur, transId, personId):
         """
         Una transazione può essere creata/modificata da chi ha canEnterXX
@@ -635,7 +641,7 @@ class AccountXlsHandler (BaseHandler):
             style.num_format_str='YYYY-MM-DD' # FIXME: i18n
             w = xlwt.Workbook(encoding='utf-8')
             s = w.add_sheet('Conto') # FIXME: correggere e i18n
-            cur.execute(*self.application.sql.account_movements(accId, None, None))
+            cur.execute(*self.application.sql.account_movements(accId, None, None, None))
             # t.description, t.transaction_date, l.description, l.amount, t.id, c.symbol, t.cc_type
             row = 1
             tdescmaxlength = 0
@@ -842,6 +848,7 @@ class TransactionEditHandler (JsonBaseHandler):
         # è P, ho P_canEnterPayments e l'ho creata io
         # oppure P_canManageTransactions
         if (not self.application.hasPermissions(cur, [ self.application.sql.P_canManageTransactions, self.application.sql.P_canCheckAccounts ], uid, csaId) and
+            not self.application.isKittyTransitionAndUserIsMember(cur, transId, uid) and
             not (ccType in self.application.sql.editableTransactions and
                  self.application.hasPermissionByCsa(cur, self.application.sql.transactionPermissions.get(ccType), uid, csaId) and
                  self.application.isTransactionEditor(cur, transId, uid)
