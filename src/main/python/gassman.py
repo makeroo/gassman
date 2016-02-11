@@ -230,52 +230,53 @@ class GassmanWebApp (tornado.web.Application):
                     log_gassman.debug('found profile: credentials=%s, person=%s', authMode, p)
                 if len(pp) > 1:
                     self.notify('[ERROR] Multiple auth id for %s' % p, 'Check credentials %s' % authMode)
-            attrsToComplete = [('email', self.sql.Ck_Email, 'verified'),
-                               ('gProfile', self.sql.Ck_GProfile, ''),
-                               ('picture', self.sql.Ck_Picture, ''),
-                               ]
-            contactToDelete = None
-            if p is None:
-                pass
-            elif authMode[2] == self.sql.Ck_Email:
-                cur.execute(*self.sql.fetchAllContacts(p.id))
-                for pcId, aId, kind, contactType in list(cur):
-                    if kind == self.sql.Ck_Id and contactType == 'Google':
-                        contactToDelete = (pcId, aId)
+        try:
+            yield user.loadFullProfile()
+            attrsToAdd = {
+                self.sql.Ck_Email: (user.email, 'verified'),
+                self.sql.Ck_Id: (user.userId, user.authenticator),
+            }
+            attrsToUpdate = {
+                self.sql.Ck_GProfile: [user.gProfile, None, None],
+                self.sql.Ck_Picture: [user.picture, None, None],
+            }
+            with self.conn as cur:
+                if p is None:
+                    cur.execute(*self.sql.create_person(user.firstName, user.middleName, user.lastName))
+                    p_id = cur.lastrowid
+                    rfi = rss_feed_id(p_id)
+                    cur.execute(*self.sql.assign_rss_feed_id(p_id, rfi))
+                    p = Person(p_id, user.firstName, user.middleName, user.lastName, rfi)
+                    log_gassman.info('profile created: newUser=%s', p)
+                else:
+                    cur.execute(*self.sql.fetchAllContacts(p.id))
+                    for pcId, aId, kind, contactType, addr in list(cur):
+                        v = attrsToAdd.get(kind)
+                        if v == (addr, contactType):
+                            attrsToAdd.pop(kind)
+                            continue
+                        v = attrsToUpdate.get(kind)
+                        if v is None:
+                            continue
+                        elif v[0] == addr and v[1] == contactType:
+                            attrsToUpdate.pop(kind)
+                        else:
+                            v[2] = aId
+                # userId e email eventualmente li vado ad aggiungere
+                # picture e gProfile invece li vado a sostituire
+                for kind, (addr, ctype) in attrsToAdd:
+                    self.add_contact(cur, p.id, addr, kind, ctype)
+                for kind, (addr, ctype, addrPk) in attrsToAdd:
+                    if addrPk is None:
+                        self.add_contact(cur, p.id, addr, kind, ctype)
                     else:
-                        attrsToComplete = list(filter(lambda x: x[1] != kind, attrsToComplete))
-                if contactToDelete is None:
-                    attrsToComplete = []
-            else:
-                attrsToComplete = []
-            if contactToDelete:
-                cur.execute(*self.sql.removePersonContact(contactToDelete[0]))
-                cur.execute(*self.sql.removeContactAddress(contactToDelete[1]))
-        if attrsToComplete:
-            try:
-                yield user.loadFullProfile()
-                with self.conn as cur:
-                    # non ho trovato niente su db
-                    cur.execute(*self.sql.create_contact(user.userId, self.sql.Ck_Id, user.authenticator))
-                    contactId = cur.lastrowid
-                    if p is None:
-                        cur.execute(*self.sql.create_person(user.firstName, user.middleName, user.lastName))
-                        p_id = cur.lastrowid
-                        rfi = rss_feed_id(p_id)
-                        cur.execute(*self.sql.assign_rss_feed_id(p_id, rfi))
-                        p = Person(p_id, user.firstName, user.middleName, user.lastName, rfi)
-                        log_gassman.info('profile created: newUser=%s', p)
-                    else:
-                        p_id = p.id
-                    cur.execute(*self.sql.assign_contact(contactId, p_id))
-                    for attrName, kind, notes in attrsToComplete:
-                        self.add_contact(cur, p_id, getattr(user, attrName), kind, notes)
-            except:
-                etype, evalue, tb = sys.exc_info()
-                log_gassman.error('profile creation failed: cause=%s/%s\nfull stacktrace:\n%s', etype, evalue, loglib.TracebackFormatter(tb))
-                self.notify('[ERROR] User profile creation failed', 'Cause: %s/%s\nAuthId: %s (%s %s)\nTraceback:\n%s' %
-                               (etype, evalue, user.userId, user.firstName, user.lastName, loglib.TracebackFormatter(tb))
-                               )
+                        cur.execute(*self.sql.updateAddress(addrPk, addr, ctype))
+        except:
+            etype, evalue, tb = sys.exc_info()
+            log_gassman.error('profile creation failed: cause=%s/%s\nfull stacktrace:\n%s', etype, evalue, loglib.TracebackFormatter(tb))
+            self.notify('[ERROR] User profile creation failed', 'Cause: %s/%s\nAuthId: %s (%s %s)\nTraceback:\n%s' %
+                           (etype, evalue, user.userId, user.firstName, user.lastName, loglib.TracebackFormatter(tb))
+                           )
         if p is not None:
             requestHandler.set_secure_cookie("user", tornado.escape.json_encode(p.id))
             # qui registro chi si è autenticato

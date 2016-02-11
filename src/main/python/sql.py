@@ -780,6 +780,9 @@ def removePersonContacts (aids):
 def saveAddress (addr, kind, ctype):
     return '''INSERT INTO contact_address (address, kind, contact_type) VALUES (%s, %s, %s)''', [ addr, kind, ctype ]
 
+def updateAddress (pk, addr, ctype):
+    return '''UPDATE contact_address SET address=%s, contact_type=%s WHERE id=%s''', [ addr, ctype, pk ]
+
 def linkAddress (pid, aid, pri):
     return '''INSERT INTO person_contact (person_id, address_id, priority) VALUES (%s, %s, %s)''', [ pid, aid, pri ]
 
@@ -788,7 +791,7 @@ def fetchContacts (pid):
 #    return 'SELECT pc.id, pc.priority, a.id, a.kind, a.address, a.contact_type FROM person_contact pc JOIN contact_address a ON pc.address_id=a.id WHERE pc.person_id=%s ORDER BY pc.priority', [ pid ]
 
 def fetchAllContacts (pid):
-    return 'SELECT pc.id, a.id, a.kind, a.contact_type FROM person_contact pc JOIN contact_address a ON pc.address_id=a.id WHERE pc.person_id=%s', [ pid ]
+    return 'SELECT pc.id, a.id, a.kind, a.contact_type, a.address FROM person_contact pc JOIN contact_address a ON pc.address_id=a.id WHERE pc.person_id=%s', [ pid ]
 
 def revokePermissions (pid, csaId, pp):
     return (
