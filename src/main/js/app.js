@@ -286,7 +286,7 @@ function ($rootScope,   gdata,   gstorage,   $state,   $q,   $cookies,   $timeou
         $rootScope.gassman.selectedCsa = null;
 
         $timeout(function () {
-            window.location.assign('https://www.google.com/accounts/Logout');
+            window.location.reload();
         }, 500);
     };
 
