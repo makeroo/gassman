@@ -91,5 +91,23 @@ function ($localStorage,   $rootScope) {
             }
         }
     };
+
+    this.cookieBanner = function (v) {
+        /*
+         valori:
+         - undefined (default), 'show' => mostra il banner
+         - 'hide' => policy accettata
+         */
+        if (v !== undefined) {
+            $localStorage.cookieBanner = v;
+        } else {
+            v = $localStorage.cookieBanner;
+
+            if (v === undefined)
+                v = 'show';
+        }
+
+        return v;
+    }
 }])
 ;

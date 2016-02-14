@@ -1,0 +1,14 @@
+<div ng-controller="CookieBanner">
+    <div class="cookie-banner" ng-if="cookieBanner == 'show'">
+        Questo sito utilizza i cookie per gestire l'autenticazione degli utenti.
+        Per avere una descrizione più dettagliata <a href="#privacy">clicca qui</a>.
+        Se non accetti le condizioni <a ng-click="optout()">arrivederci a quando avrai cambiato idea</a>.
+        <span class="glyphicon glyphicon-remove" ng-click="accept()"></span>
+    </div>
+    <div class="cookie-optout" ng-if="cookieBanner == 'out'">
+        <p>
+            Il sito non è accessibile perché non sono stati accettati i termini di utilizzo dei cookie.
+        </p>
+        <a ng-click="reconsider()">Ci ho ripensato...</a>
+    </div>
+</div>

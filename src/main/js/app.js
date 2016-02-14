@@ -8,6 +8,7 @@ angular.module('gassmanApp', [
 
     'GassmanApp.services.Gstorage',
 
+    'GassmanApp.controllers.CookieBanner',
     'GassmanApp.controllers.HomeSelectorController',
     'GassmanApp.controllers.Navbar',
     'GassmanApp.controllers.CsaDetail',
@@ -180,6 +181,11 @@ function ($stateProvider,   $urlRouterProvider) {
             url: '/project',
             templateUrl: 'template/project.html',
             controller: 'ProjectController'
+        }).
+        state('root.privacy', {
+            url: '/privacy',
+            templateUrl: 'template/privacy.html',
+            controller: 'PrivacyController'
         }).
         state('root.not_found', {
             url: '/not_found',
