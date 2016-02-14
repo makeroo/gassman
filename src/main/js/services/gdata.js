@@ -279,11 +279,17 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
             } else if (c.kind == 'T') {
                 if (!p.mainTelephone)
                     p.mainTelephone = c.address;
+            } else if (c.kind == 'M') {
+                if (!p.mainMobile)
+                    p.mainMobile = c.address;
             } else if (c.kind == 'P') {
                 if (!p.picture)
                     p.picture = c.address;
             }
         });
+
+        if (p.mainMobile)
+            p.mainTelephone = p.mainMobile;
 
         p.gadgets = [];
         if (p.permissions.indexOf(gdata.permissions.P_canEnterCashExchange) != -1) {

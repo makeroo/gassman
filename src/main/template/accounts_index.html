@@ -27,8 +27,8 @@
             <td ng-class="{ 'col-md-8': a.accountData, 'col-md-12': !a.accountData }">
                 <div class="gadgets"><span ng-repeat="g in a.profile.gadgets" class="glyphicon glyphicon-{{ g }}" aria-hidden="true"></span></div>
                 <div class="name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
-                <small ng-show="a.profile.mainEmail">{{a.profile.mainEmail}}</small>
-                <small ng-show="a.profile.mainTelephone">{{a.profile.mainTelephone}}</small>
+                <a ng-show="a.profile.mainEmail" href="mailto:{{ a.profile.mainEmail }}" ng-click="$event.stopPropagation()"><small>{{a.profile.mainEmail}}</small></a>
+                <a ng-show="a.profile.mainTelephone" href="call:{{ a.profile.mainTelephone }}" ng-click="$event.stopPropagation()"><small>{{a.profile.mainTelephone}}</small></a>
             </td>
             <td ng-show="a.accountData" class="col-md-4 text-right">
                 <div ng-if="a.accountData && a[7]">Saldo {{ a[5] | currency : a[6] }}</div>
