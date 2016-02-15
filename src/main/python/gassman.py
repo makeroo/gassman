@@ -264,7 +264,7 @@ class GassmanWebApp (tornado.web.Application):
                             v[2] = aId
                 # userId e email eventualmente li vado ad aggiungere
                 # picture e gProfile invece li vado a sostituire
-                for kind, (addr, ctype) in attrsToAdd:
+                for kind, (addr, ctype) in attrsToAdd.items():
                     self.add_contact(cur, p.id, addr, kind, ctype)
                 for kind, (addr, ctype, addrPk) in attrsToUpdate.items():
                     if addrPk is None:
