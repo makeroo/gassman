@@ -33,7 +33,7 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
     this.permissions = {
         //P_membership: 1,
         P_canCheckAccounts: 2,
-        P_canAdminPerson: 3,
+        P_canAdminPeople: 3,
         //P_canEnterDeposit: 4,
         P_canEnterPayments: 5,
         P_canManageTransactions: 6,
@@ -384,5 +384,17 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         delete peopleProfiles[ownerId];
         return $http.post('/gm/account/' + accId + '/close?_xsrf=' + $cookies.get('_xsrf'), { owner: ownerId, tdesc: reason });
     };
+
+    this.adminPeopleIndex = function (query, csa, order, start, blockSize) {
+		return $http.post(
+            '/gm/admin/people/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies.get('_xsrf'),
+            {
+                q: query,
+                o: order,
+                csa: csa
+                //vck: [ Ck_... ]
+            }
+        );
+	};
 }])
 ;

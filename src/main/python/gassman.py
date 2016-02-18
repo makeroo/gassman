@@ -127,6 +127,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/people/(null|\d+)/profiles$', PeopleProfilesHandler),
             (r'^/gm/person/(null|\d+)/save$', PersonSaveHandler),
             (r'^/gm/person/(\d+)/check_email$', PersonCheckEmailHandler),
+            (r'^/gm/admin/people/(\d+)/(\d+)$', AdminPeopleHandler),
             ]
         #codeHome = os.path.dirname(__file__)
         sett = dict(
@@ -148,6 +149,14 @@ class GassmanWebApp (tornado.web.Application):
         self.connArgs = connArgs
         self.conn = None
         self.sql = sql
+        self.viewableContactKinds = [
+            self.sql.Ck_Telephone,
+            self.sql.Ck_Mobile,
+            self.sql.Ck_Email,
+            self.sql.Ck_Fax,
+            self.sql.Ck_Nickname,
+        ]
+
         #self.sessions = dict()
         self.connect()
         tornado.ioloop.PeriodicCallback(self.checkConn, settings.DB_CHECK_INTERVAL).start()
@@ -792,13 +801,7 @@ class AccountsIndexHandler (JsonBaseHandler):
         uid = self.current_user
         canCheckAccounts = self.application.hasPermissionByCsa(cur, self.application.sql.P_canCheckAccounts, uid, csaId)
         canViewContacts = self.application.hasPermissionByCsa(cur, self.application.sql.P_canViewContacts, uid, csaId)
-        viewableContacts = p.get('vck', [
-            self.application.sql.Ck_Telephone,
-            self.application.sql.Ck_Mobile,
-            self.application.sql.Ck_Email,
-            self.application.sql.Ck_Fax,
-            self.application.sql.Ck_Nickname,
-        ]) if canViewContacts else None
+        viewableContacts = p.get('vck', self.application.viewableContactKinds) if canViewContacts else None
         if canCheckAccounts:
             cur.execute(*self.application.sql.accounts_index(csaId, q, dp, o, ex, int(fromIdx), int(toIdx), search_contact_kinds=viewableContacts))
         elif canViewContacts:
@@ -1284,6 +1287,76 @@ class PersonCheckEmailHandler (JsonBaseHandler):
         # verifica unicità
         cur.execute(*self.application.sql.isUniqueEmail(pid, email))
         return cur.fetchone()[0]
+
+
+class AdminPeopleHandler (JsonBaseHandler):
+    def do (self, cur, fromIdx, toIdx):
+        p = self.payload
+
+        q = p.get('q')
+        if q:
+            q = '%%%s%%' % q
+        o = self.application.sql.admin_people_index_order_by[int(self.payload.get('o', 0))]
+        u = self.current_user
+        if self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, u, None):
+            csa = p.get('csa')
+            vck = p.get('vck', self.application.viewableContactKinds)
+            cur.execute(*self.application.sql.admin_people_index(
+                q,
+                csa,
+                o,
+                int(fromIdx),
+                int(toIdx),
+                vck,
+            ))
+        else:
+            raise GDataException(error_codes.E_permission_denied)
+        items = list(cur)
+        if items:
+            cur.execute(*self.application.sql.admin_count_people(q, csa, vck))
+            count = cur.fetchone()[0]
+        return {
+            'items': items,
+            'count': count
+        }
+
+
+        if len(pids) == 0:
+            return r
+        def record (pid):
+            p = r.get(pid, None)
+            if p is None:
+                p = { 'accounts':[], 'profile':None, 'permissions':[], 'contacts':[] }
+                r[pid] = p
+            return p
+        if csaId is None:
+            r[u.id] = record(u.id)
+        else:
+            accs, perms, args = self.application.sql.people_profiles2(csaId, pids)
+            if isSelf or self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
+                cur.execute(accs, args)
+                for acc in self.application.sql.iter_objects(cur):
+                    p = record(acc['person_id'])
+                    p['accounts'].append(acc)
+            cur.execute(perms, args)
+            for perm in self.application.sql.iter_objects(cur):
+                p = record(perm['person_id'])
+                if canViewContacts:
+                    p['permissions'].append(perm['perm_id'])
+        if r.keys():
+            profiles, contacts, args = self.application.sql.people_profiles1(r.keys())
+            cur.execute(profiles, args)
+            for prof in self.application.sql.iter_objects(cur):
+                p = record(prof['id'])
+                p['profile'] = prof
+            if canViewContacts:
+                cur.execute(contacts, args)
+                for addr in self.application.sql.iter_objects(cur):
+                    p = record(addr['person_id'])
+                    p['contacts'].append(addr)
+            # TODO: indirizzi
+        return r
+        pass
 
 
 if __name__ == '__main__':

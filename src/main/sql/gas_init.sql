@@ -1,5 +1,5 @@
 INSERT INTO permission (id, name) VALUES (2, 'canCheckAccounts');
-INSERT INTO permission (id, name) VALUES (3, 'canAssignAccounts');
+INSERT INTO permission (id, name) VALUES (3, 'canAdminPeople');
 INSERT INTO permission (id, name) VALUES (5, 'canEnterPayments');
 INSERT INTO permission (id, name) VALUES (6, 'canManageTransactions');
 INSERT INTO permission (id, name) VALUES (7, 'canEnterCashExchange');

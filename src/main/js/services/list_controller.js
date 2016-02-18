@@ -17,14 +17,16 @@ function () {
         if (options.storage)
             $scope.pagination = options.storage[options.storageKey];
 
-        if (!$scope.pagination)
+        if (!$scope.pagination) {
+            var sizes = options.pageSizes || [15, 30, 60, 100];
             $scope.pagination = {
                 totalItems: 0,
                 page: options.firstPage || 1,
-                pageSize: (+options.pageSize || 15).toString(),
+                pageSize: (+options.pageSize || sizes[0]).toString(),
                 filterBy: options.filterBy,
-                pageSizes: options.pageSizes || [ 15, 30, 60, 100 ]
+                pageSizes: sizes
             };
+        }
 
 		$scope.items = null;
 		$scope.initError = null;

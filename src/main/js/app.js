@@ -21,7 +21,8 @@ angular.module('gassmanApp', [
     'GassmanApp.controllers.TransactionCashExchange',
     'GassmanApp.controllers.TransactionPayment',
     'GassmanApp.controllers.TransactionMembershipFee',
-    'GassmanApp.controllers.ProjectController'
+    'GassmanApp.controllers.ProjectController',
+	'GassmanApp.controllers.AdminPeople'
 ])
 
 /*
@@ -168,6 +169,16 @@ function ($stateProvider,   $urlRouterProvider) {
             },
             templateUrl: 'template/transactions_index.html',
             controller: 'TransactionsIndex'
+        }).
+        state('root.admin', {
+            abstract: true,
+            url: '/admin',
+            template: '<div ui-view></div>'
+        }).
+        state('root.admin.people', {
+            url: '/people',
+            templateUrl: 'template/admin_people.html',
+            controller: 'AdminPeople'
         }).
         state('root.help', {
             url: '/help',

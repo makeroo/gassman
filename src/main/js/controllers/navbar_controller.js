@@ -29,6 +29,12 @@ function ($scope,   gdata,   $q) {
 */
     $scope.transactionTypes = [];
 
+    var atypes = [
+        { p:gdata.permissions.P_canAdminPeople, f:'#/admin/people', l:'Utenti' }
+    ];
+
+    $scope.adminLinks = [];
+
     $scope.$watch('gassman.loggedUser', function (pData) {
         //$scope.profile = pData;
         //$scope.csaId = null;
@@ -40,6 +46,15 @@ function ($scope,   gdata,   $q) {
                 return;
 
             $scope.transactionTypes.push(f);
+        });
+
+        angular.forEach(atypes, function (f) {
+            if (('p' in f && (!pData || pData.permissions.indexOf(f.p) == -1)) ||
+                ('e' in f && !f.e(pData))
+                )
+                return;
+
+            $scope.adminLinks.push(f);
         });
 
         $scope.membersVisible = (

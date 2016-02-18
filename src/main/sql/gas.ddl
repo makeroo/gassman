@@ -228,7 +228,7 @@ CREATE TABLE permission (
 CREATE TABLE permission_grant (
   id INT NOT NULL AUTO_INCREMENT,
 
-  csa_id INT NOT NULL,
+  csa_id INT,
   person_id INT NOT NULL,
   perm_id INT NOT NULL,
 

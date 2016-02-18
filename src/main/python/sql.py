@@ -7,7 +7,7 @@ Created on 03/mar/2014
 
 #P_membership = 1
 P_canCheckAccounts = 2
-P_canAdminPerson = 3 # very low level!
+P_canAdminPeople = 3 # very low level!
 #P_canEnterDeposit = 4 # deprecated
 P_canEnterPayments = 5
 P_canManageTransactions = 6
@@ -307,7 +307,14 @@ def has_permission_by_account (perm, personId, accId):
 #    return 'SELECT count(*) FROM permission_grant g JOIN account a ON a.csa_id=g.csa_id JOIN account_person ap ON ap.person_id=g.person_id WHERE g.perm_id=%s AND g.person_id=%s AND a.id=%s AND ap.to_date IS NULL', [ perm, personId, accId ]
 
 def has_permission_by_csa (perm, personId, csaId):
-    return 'SELECT count(*) FROM permission_grant WHERE perm_id=%s AND person_id=%s AND csa_id=%s', [ perm, personId, csaId ]
+    q = 'SELECT count(*) FROM permission_grant WHERE perm_id=%s AND person_id=%s AND csa_id'
+    a = [ perm, personId ]
+    if csaId is None:
+        q += ' IS NULL'
+    else:
+        q += '=%s'
+        a.append(csaId)
+    return q, a
 
 def has_permissions (perms, personId, csaId):
     return 'SELECT count(*) FROM permission_grant WHERE perm_id in %s AND person_id=%s AND csa_id=%s', [ set(perms), personId, csaId ]
@@ -675,11 +682,11 @@ def people_index (csaId, t, dp, o, ex, fromLine, toLine, search_contact_kinds):
     if t and search_contact_kinds:
         q += '''
   (SELECT p.*, group_concat(ca.address, ', ') AS contacts
-   FROM person p
-   LEFT JOIN person_contact pc ON pc.person_id=p.id
-   LEFT JOIN contact_address ca ON ca.id=pc.address_id
-   WHERE ca.kind IN %s
-   GROUP BY p.id) p'''
+     FROM person p
+LEFT JOIN person_contact pc ON pc.person_id=p.id
+LEFT JOIN contact_address ca ON ca.id=pc.address_id
+    WHERE ca.kind IN %s
+ GROUP BY p.id) p'''
         a.append(set(search_contact_kinds))
     else:
         q += 'person p'
@@ -810,6 +817,92 @@ def grantPermission (pid, perm, csaId):
 
 def isUniqueEmail (pid, email):
     return '''SELECT COUNT(a.id) FROM contact_address a JOIN person_contact pc ON pc.address_id=a.id WHERE pc.person_id != %s AND a.address = %s AND a.kind = %s''', [ pid, email, Ck_Email ]
+
+admin_people_index_order_by = [
+    None, # nessun ordinamento
+    'p.last_visit desc',
+    'p.first_name, p.last_name',
+    'p.last_login',
+]
+
+def admin_people_index (t, csaId, order, fromLine, toLine, search_contact_kinds):
+    q = 'SELECT p.id, p.first_name, p.middle_name, p.last_name FROM '
+    a = []
+
+    if t and search_contact_kinds:
+        q += '''
+  (SELECT p.*, group_concat(ca.address, ', ') AS contacts
+     FROM person p
+LEFT JOIN person_contact pc ON pc.person_id=p.id
+LEFT JOIN contact_address ca ON ca.id=pc.address_id
+    WHERE ca.kind IN %s
+ GROUP BY p.id) p'''
+        a.append(set(search_contact_kinds))
+    else:
+        q += 'person p'
+
+    q += '''
+ WHERE p.id NOT IN
+  (SELECT person_id
+     FROM account_person'''
+    if csaId:
+        q += ' JOIN accont a WHERE a.csa_id=%s'
+        a.append(csaId)
+    q += ')'
+
+    if t:
+        q += ' AND (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s'
+        a.extend([t, t, t])
+        if search_contact_kinds:
+            q += ' OR p.contacts LIKE %s)'
+            a.append(t)
+        else:
+            q += ')'
+
+    if order:
+        q += ' ORDER BY ' + order
+
+    if fromLine is not None:
+        q += ' LIMIT %s OFFSET %s'
+        a.extend([ toLine - fromLine + 1, fromLine ])
+
+    return q, a
+
+def admin_count_people (t, csaId, search_contact_kinds):
+    q = 'SELECT count(*) FROM '
+    a = []
+
+    if t and search_contact_kinds:
+        q += '''
+  (SELECT p.*, group_concat(ca.address, ', ') AS contacts
+     FROM person p
+LEFT JOIN person_contact pc ON pc.person_id=p.id
+LEFT JOIN contact_address ca ON ca.id=pc.address_id
+    WHERE ca.kind IN %s
+ GROUP BY p.id) p'''
+        a.append(set(search_contact_kinds))
+    else:
+        q += 'person p'
+
+    q += '''
+ WHERE p.id NOT IN
+  (SELECT person_id
+     FROM account_person'''
+    if csaId:
+        q += ' JOIN accont a WHERE a.csa_id=%s'
+        a.append(csaId)
+    q += ')'
+
+    if t:
+        q += ' AND (p.first_name LIKE %s OR p.middle_name LIKE %s OR p.last_name LIKE %s'
+        a.extend([t, t, t])
+        if search_contact_kinds:
+            q += ' OR p.contacts LIKE %s)'
+            a.append(t)
+        else:
+            q += ')'
+
+    return q, a
 
 def checkConn ():
     return 'SELECT 1'
