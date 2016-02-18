@@ -13,22 +13,10 @@ angular.module('GassmanApp.controllers.AdminPeople', [
          '$scope', '$localStorage', 'gdata', 'listController',
 function ($scope,   $localStorage,   gdata,   listController) {
 
-    function subscope (scope, prop, o) {
-        o = o || {};
-
-        scope[prop] = o;
-
-        o.$watch = function (k, f) {
-            scope.$watch(prop + '.' + k, f);
-        };
-
-        return o;
-    }
-
     $scope.others = {};
 
     listController.setupScope(
-        subscope($scope, 'others'),
+        [ $scope, 'others' ],
         // data service
         function (from, pageSize, filterBy) {
             return gdata.adminPeopleIndex(

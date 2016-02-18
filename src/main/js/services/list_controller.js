@@ -11,7 +11,23 @@ angular.module('GassmanApp.services.listController', [
 .service('listController',
 [
 function () {
+    function subscope (scope, prop, o) {
+        o = o || {};
+
+        scope[prop] = o;
+
+        o.$watch = function (k, f) {
+            scope.$watch(prop + '.' + k, f);
+        };
+
+        return o;
+    }
+
 	this.setupScope = function ($scope, dataService, options) {
+        if (angular.isArray($scope)) {
+            $scope = subscope($scope[0], $scope[1], $scope[2]);
+        }
+
         options = options || {};
 
         if (options.storage)
