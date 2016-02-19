@@ -1333,16 +1333,11 @@ class AdminPeopleProfilesHandler (JsonBaseHandler):
         r = {}
         if len(pids) == 0:
             return r
-        def record (pid):
-            p = r.get(pid, None)
-            if p is None:
-                p = { 'accounts':[], 'profile':None, 'permissions':[], 'contacts':[] }
-                r[pid] = p
-            return p
         persons, contacts, args = self.application.sql.people_profiles1(pids)
         cur.execute(contacts, args)
         for acc in self.application.sql.iter_objects(cur):
-            p = r.setdefault(acc['person_id'], { 'contacts': [] })
+            pid = acc['person_id']
+            p = r.setdefault(pid, { 'id': pid, 'contacts': [] })
             p['contacts'].append(acc)
         return r
 

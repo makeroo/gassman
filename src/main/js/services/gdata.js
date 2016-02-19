@@ -292,7 +292,9 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
             p.mainTelephone = p.mainMobile;
 
         p.gadgets = [];
-        if (p.permissions.indexOf(gdata.permissions.P_canEnterCashExchange) != -1) {
+        if (!p.permission) {
+            p.permission = [];
+        } else if (p.permissions.indexOf(gdata.permissions.P_canEnterCashExchange) != -1) {
             p.gadgets.push(gdata.gadgets.piggyBank);
         }
     };
@@ -399,7 +401,7 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
                         var foundPids = {};
 
                         angular.forEach(r.data, function (e) {
-                            var pid = e.profile.id;
+                            var pid = e.id;
 
                             foundPids[pid] = true;
 

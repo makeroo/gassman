@@ -28,7 +28,7 @@ function ($scope,   $localStorage,   gdata,   listController) {
         // options
         {
             pageLoadedHook: function () {
-                angular.forEach($scope.items, function (e) {
+                angular.forEach($scope.others.items, function (e) {
                     if (e.profile)
                         return;
                     var pid = e[0];
@@ -64,7 +64,7 @@ function ($scope,   $localStorage,   gdata,   listController) {
         // options
         {
             pageLoadedHook: function () {
-                angular.forEach($scope.items, function (e) {
+                angular.forEach($scope.members.items, function (e) {
                     if (e.profile)
                         return;
                     var pid = e[0];
