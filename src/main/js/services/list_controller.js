@@ -16,8 +16,8 @@ function () {
 
         scope[prop] = o;
 
-        o.$watch = function (k, f) {
-            scope.$watch(prop + '.' + k, f);
+        o.$watch = function (k, f, opts) {
+            scope.$watch(prop + '.' + k, f, opts);
         };
 
         return o;

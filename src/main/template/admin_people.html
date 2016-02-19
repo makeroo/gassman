@@ -15,47 +15,84 @@
     </div>
 </form>
 
-<table class="table people-admin">
-    <tbody>
+<div class="row">
+    <div class="col-md-6">
+        <table class="table people-admin people-admin-others">
+            <tbody>
 
-        <tr ng-repeat="a in others.items" class="row" ng-click="selectPerson(a)">
+                <tr ng-repeat="a in others.items" class="row" ng-click="selectPerson(a)">
 
-            <td class="col-md-12">
-                <div class="name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
-                <a ng-show="a.profile.mainEmail" href="mailto:{{ a.profile.mainEmail }}" ng-click="$event.stopPropagation()"><small>{{a.profile.mainEmail}}</small></a>
-                <a ng-show="a.profile.mainTelephone" href="call:{{ a.profile.mainTelephone }}" ng-click="$event.stopPropagation()"><small><span class="glyphicon glyphicon-phone-alt"></span> {{a.profile.mainTelephone}}</small></a>
-            </td>
+                    <td class="col-md-12">
+                        <div class="name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
+                        <a ng-show="a.profile.mainEmail" href="mailto:{{ a.profile.mainEmail }}" ng-click="$event.stopPropagation()"><small>{{a.profile.mainEmail}}</small></a>
+                        <a ng-show="a.profile.mainTelephone" href="call:{{ a.profile.mainTelephone }}" ng-click="$event.stopPropagation()"><small><span class="glyphicon glyphicon-phone-alt"></span> {{a.profile.mainTelephone}}</small></a>
+                    </td>
 
-        </tr>
+                </tr>
 
-    </tbody>
-</table>
+            </tbody>
+        </table>
 
-<div ng-show="error">Errore nel caricamento dei dati: {{accountsError}}.</div>
-
-<div class="row-fluid pagination-section">
-    <div class="col-xs-8">
-        <uib-pagination total-items="others.pagination.totalItems"
-                        items-per-page="others.pagination.pageSize"
-                        ng-model="others.pagination.page"
-                        max-size="6"
-                        class="pagination-sm"
-                        boundary-links="true"
-                        previous-text="<"
-                        next-text=">"
-                        first-text="<<"
-                        last-text=">>"></uib-pagination>
-        <span class="pagination-count">Trovati: {{ others.pagination.totalItems }}</span>
-    </div>
-
-    <div class="col-xs-4 text-right">
-        <form class="form-inline">
-            <div class="form-group pagination">
-                <label for="pageSize">Righe per pagina:</label>
-                <select class="form-control" id="pageSize" ng-model="others.pagination.pageSize">
-                    <option ng-repeat="sz in others.pagination.pageSizes">{{ sz }}</option>
-                </select>
+        <div class="row-fluid pagination-section">
+            <div class="col-xs-8">
+                <uib-pagination total-items="others.pagination.totalItems"
+                                items-per-page="others.pagination.pageSize"
+                                ng-model="others.pagination.page"
+                                max-size="6"
+                                class="pagination-sm"
+                                boundary-links="true"
+                                previous-text="<"
+                                next-text=">"
+                                first-text="<<"
+                                last-text=">>"></uib-pagination>
+                <span class="pagination-count">Trovati: {{ others.pagination.totalItems }}</span>
             </div>
-        </form>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <table class="table people-admin people-admin-members">
+            <tbody>
+
+                <tr ng-repeat="a in members.items" class="row" ng-click="selectPerson(a)">
+
+                    <td class="col-md-12">
+                        <div class="name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
+                        <a ng-show="a.profile.mainEmail" href="mailto:{{ a.profile.mainEmail }}" ng-click="$event.stopPropagation()"><small>{{a.profile.mainEmail}}</small></a>
+                        <a ng-show="a.profile.mainTelephone" href="call:{{ a.profile.mainTelephone }}" ng-click="$event.stopPropagation()"><small><span class="glyphicon glyphicon-phone-alt"></span> {{a.profile.mainTelephone}}</small></a>
+                    </td>
+
+                </tr>
+
+            </tbody>
+        </table>
+
+        <div class="row-fluid pagination-section">
+            <div class="col-xs-8">
+                <uib-pagination total-items="members.pagination.totalItems"
+                                items-per-page="members.pagination.pageSize"
+                                ng-model="members.pagination.page"
+                                max-size="6"
+                                class="pagination-sm"
+                                boundary-links="true"
+                                previous-text="<"
+                                next-text=">"
+                                first-text="<<"
+                                last-text=">>"></uib-pagination>
+                <span class="pagination-count">Trovati: {{ members.pagination.totalItems }}</span>
+            </div>
+
+            <div class="col-xs-4 text-right">
+                <form class="form-inline">
+                    <div class="form-group pagination">
+                        <label for="pageSize">Righe per pagina:</label>
+                        <select class="form-control" id="pageSize" ng-model="members.pagination.pageSize">
+                            <option ng-repeat="sz in members.pagination.pageSizes">{{ sz }}</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
+
+<div ng-show="error">Errore nel caricamento dei dati: {{accountsError}}.</div>

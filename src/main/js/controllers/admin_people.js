@@ -13,8 +13,6 @@ angular.module('GassmanApp.controllers.AdminPeople', [
          '$scope', '$localStorage', 'gdata', 'listController',
 function ($scope,   $localStorage,   gdata,   listController) {
 
-    $scope.others = {};
-
     listController.setupScope(
         [ $scope, 'others' ],
         // data service
@@ -29,7 +27,17 @@ function ($scope,   $localStorage,   gdata,   listController) {
         },
         // options
         {
-            // pageLoadedHook: function () { },
+            pageLoadedHook: function () {
+                angular.forEach($scope.items, function (e) {
+                    if (e.profile)
+                        return;
+                    var pid = e[0];
+                    gdata.adminProfile(pid).
+                    then(function (p) {
+                        e.profile = p;
+                    });
+                });
+            },
             filterBy: {
                 q: '',
                 csa: null,
@@ -38,8 +46,53 @@ function ($scope,   $localStorage,   gdata,   listController) {
 
             pageSizes: [ 5, 10, 20 ],
             storage: $localStorage,
-            storageKey: 'admin_people'
+            storageKey: 'admin_people_others'
         }
     );
+
+    listController.setupScope(
+        [ $scope, 'members' ],
+        // data service
+        function (from, pageSize, filterBy) {
+            return gdata.accountsIndex(
+                filterBy.csa,
+                filterBy,
+                from,
+                pageSize
+            );
+        },
+        // options
+        {
+            pageLoadedHook: function () {
+                angular.forEach($scope.items, function (e) {
+                    if (e.profile)
+                        return;
+                    var pid = e[0];
+                    gdata.profile($scope.members.filterBy.csa, pid).
+                    then(function (p) {
+                        e.profile = p;
+                    });
+                });
+            },
+            filterBy: {
+                q: '',
+                csa: $scope.gassman.selectedCsa,
+                o: '1',
+                dp: '-1',
+                ex: false
+            },
+            pageSizes: [ 5, 10, 20 ],
+            storage: $localStorage,
+            storageKey: 'admin_people_members'
+        }
+    );
+
+    $scope.$watch('others.pagination.filterBy.q', function (v) {
+        $scope.members.pagination.filterBy.q = v;
+    });
+
+    $scope.$watch('members.pagination.pageSize', function (v) {
+        $scope.others.pagination.pageSize = v;
+    });
 }])
 ;

@@ -247,12 +247,12 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         return $http.post('/gm/transactions/' + csaId + '/editable/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies.get('_xsrf'), { q: query, o: order });
     };
 
-    this.peopleIndex = function (csaId, query, order, start, blockSize) {
-        return $http.post('/gm/people/' + csaId + '/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies.get('_xsrf'), { q: query, o: order });
-    };
-
     this.peopleProfiles = function (csaId, pids) {
         return $http.post('/gm/people/' + csaId + '/profiles?_xsrf=' + $cookies.get('_xsrf'), { pids: pids });
+    };
+
+    this.adminPeopleProfiles = function (pids) {
+        return $http.post('/gm/admin/people/profiles?_xsrf=' + $cookies.get('_xsrf'), { pids: pids });
     };
 
     var PROFILE_REQUEST_DELAY = .300; // secondi
@@ -364,6 +364,77 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         return d.promise;
     };
 
+    var adminPeopleProfiles = {};
+    var adminProfilesToRequest = {};
+    var adminProfilesRequestTimeout = null;
+
+    this.adminProfile = function (pid) {
+        var d = $q.defer();
+
+        if (pid in adminPeopleProfiles) {
+            d.resolve(adminPeopleProfiles[pid])
+        } else {
+            var defers = adminProfilesToRequest[pid];
+
+            if (!defers) {
+                defers = [];
+                adminProfilesToRequest[pid] = defers;
+            }
+
+            defers.push(d);
+
+            if (adminProfilesRequestTimeout === null) {
+                adminProfilesRequestTimeout = $timeout(function () {
+                    adminProfilesRequestTimeout = null;
+
+                    var ptr = adminProfilesToRequest;
+
+                    adminProfilesToRequest = {};
+
+                    // ptr.keys() mi lancia un'eccezione che non ho capito
+                    var pids = keysOf(ptr);
+
+                    gdata.adminPeopleProfiles(pids).
+                    then(function (r) {
+                        var foundPids = {};
+
+                        angular.forEach(r.data, function (e) {
+                            var pid = e.profile.id;
+
+                            foundPids[pid] = true;
+
+                            instrumentProfile(e);
+
+                            adminPeopleProfiles[pid] = e;
+
+                            var defers = ptr[pid];
+
+                            angular.forEach(defers, function (d) {
+                                d.resolve(e);
+                            });
+                        });
+
+                        angular.forEach(pids, function (p) {
+                            if (foundPids.hasOwnProperty(p))
+                                return;
+
+                            var defers = ptr[p];
+
+                            angular.forEach(defers, function (d) {
+                                d.reject([ gdata.error_codes.E_person_not_found ]);
+                            });
+                        });
+                    }).
+                    then(undefined, function (error) {
+                        d.reject(error.data);
+                    });
+                }, PROFILE_REQUEST_DELAY);
+            }
+        }
+
+        return d.promise;
+    };
+
     this.saveProfile = function (csaId, p) {
         delete peopleProfiles[p.id];
         return $http.post('/gm/person/' + csaId + '/save?_xsrf=' + $cookies.get('_xsrf'), p);
@@ -387,7 +458,7 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
 
     this.adminPeopleIndex = function (query, csa, order, start, blockSize) {
 		return $http.post(
-            '/gm/admin/people/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies.get('_xsrf'),
+            '/gm/admin/people/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies.get('_xsrf'),
             {
                 q: query,
                 o: order,

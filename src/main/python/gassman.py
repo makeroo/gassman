@@ -127,7 +127,8 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/people/(null|\d+)/profiles$', PeopleProfilesHandler),
             (r'^/gm/person/(null|\d+)/save$', PersonSaveHandler),
             (r'^/gm/person/(\d+)/check_email$', PersonCheckEmailHandler),
-            (r'^/gm/admin/people/(\d+)/(\d+)$', AdminPeopleHandler),
+            (r'^/gm/admin/people/index/(\d+)/(\d+)$', AdminPeopleIndexHandler),
+            (r'^/gm/admin/people/profiles$', AdminPeopleProfilesHandler),
             ]
         #codeHome = os.path.dirname(__file__)
         sett = dict(
@@ -1289,7 +1290,7 @@ class PersonCheckEmailHandler (JsonBaseHandler):
         return cur.fetchone()[0]
 
 
-class AdminPeopleHandler (JsonBaseHandler):
+class AdminPeopleIndexHandler (JsonBaseHandler):
     def do (self, cur, fromIdx, toIdx):
         p = self.payload
 
@@ -1297,8 +1298,8 @@ class AdminPeopleHandler (JsonBaseHandler):
         if q:
             q = '%%%s%%' % q
         o = self.application.sql.admin_people_index_order_by[int(self.payload.get('o', 0))]
-        u = self.current_user
-        if self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, u, None):
+        uid = self.current_user
+        if self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
             csa = p.get('csa')
             vck = p.get('vck', self.application.viewableContactKinds)
             cur.execute(*self.application.sql.admin_people_index(
@@ -1315,12 +1316,21 @@ class AdminPeopleHandler (JsonBaseHandler):
         if items:
             cur.execute(*self.application.sql.admin_count_people(q, csa, vck))
             count = cur.fetchone()[0]
+        else:
+            count = 0
         return {
             'items': items,
             'count': count
         }
 
 
+class AdminPeopleProfilesHandler (JsonBaseHandler):
+    def do (self, cur):
+        pids = self.payload['pids']
+        uid = self.current_user
+        if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
+            raise GDataException(error_codes.E_permission_denied, 403)
+        r = {}
         if len(pids) == 0:
             return r
         def record (pid):
@@ -1329,34 +1339,12 @@ class AdminPeopleHandler (JsonBaseHandler):
                 p = { 'accounts':[], 'profile':None, 'permissions':[], 'contacts':[] }
                 r[pid] = p
             return p
-        if csaId is None:
-            r[u.id] = record(u.id)
-        else:
-            accs, perms, args = self.application.sql.people_profiles2(csaId, pids)
-            if isSelf or self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, u.id, csaId):
-                cur.execute(accs, args)
-                for acc in self.application.sql.iter_objects(cur):
-                    p = record(acc['person_id'])
-                    p['accounts'].append(acc)
-            cur.execute(perms, args)
-            for perm in self.application.sql.iter_objects(cur):
-                p = record(perm['person_id'])
-                if canViewContacts:
-                    p['permissions'].append(perm['perm_id'])
-        if r.keys():
-            profiles, contacts, args = self.application.sql.people_profiles1(r.keys())
-            cur.execute(profiles, args)
-            for prof in self.application.sql.iter_objects(cur):
-                p = record(prof['id'])
-                p['profile'] = prof
-            if canViewContacts:
-                cur.execute(contacts, args)
-                for addr in self.application.sql.iter_objects(cur):
-                    p = record(addr['person_id'])
-                    p['contacts'].append(addr)
-            # TODO: indirizzi
+        persons, contacts, args = self.application.sql.people_profiles1(pids)
+        cur.execute(contacts, args)
+        for acc in self.application.sql.iter_objects(cur):
+            p = r.setdefault(acc['person_id'], { 'contacts': [] })
+            p['contacts'].append(acc)
         return r
-        pass
 
 
 if __name__ == '__main__':
