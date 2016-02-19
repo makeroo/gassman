@@ -68,7 +68,7 @@ function ($scope,   $localStorage,   gdata,   listController) {
                     if (e.profile)
                         return;
                     var pid = e[0];
-                    gdata.profile($scope.members.filterBy.csa, pid).
+                    gdata.profile($scope.members.pagination.filterBy.csa, pid).
                     then(function (p) {
                         e.profile = p;
                     });
