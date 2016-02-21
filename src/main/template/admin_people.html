@@ -3,7 +3,7 @@
 <form class="form-inline accounts-index-search">
     <div class="form-group">
         <label for="accountsIndexNameFilter">Filtra per nome</label>
-        <input type="text" class="form-control" id="accountsIndexNameFilter" placeholder="Cerca per nome" ng-model="others.pagination.filterBy.q"/>
+        <input type="text" class="form-control" id="accountsIndexNameFilter" placeholder="Cerca per nome" ng-model="pagination.query"/>
     </div>
     <div class="form-group">
         <label for="accountsIndexOrder">Ordina per</label>
@@ -17,7 +17,7 @@
 
 <div class="row">
     <div class="col-md-6">
-        <table class="table people-admin people-admin-others">
+        <table class="table people-admin people-admin-others" ng-if="!selectedPerson">
             <tbody>
 
                 <tr ng-repeat="a in others.items" class="row" ng-click="selectPerson(a)">
@@ -26,6 +26,7 @@
                         <div class="name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
                         <a ng-show="a.profile.mainEmail" href="mailto:{{ a.profile.mainEmail }}" ng-click="$event.stopPropagation()"><small>{{a.profile.mainEmail}}</small></a>
                         <a ng-show="a.profile.mainTelephone" href="call:{{ a.profile.mainTelephone }}" ng-click="$event.stopPropagation()"><small><span class="glyphicon glyphicon-phone-alt"></span> {{a.profile.mainTelephone}}</small></a>
+                        <span class="last-access">Ultimo accesso:<br>{{ a.profile.profile.last_visit | date }}</span>
                     </td>
 
                 </tr>
@@ -33,7 +34,7 @@
             </tbody>
         </table>
 
-        <div class="row-fluid pagination-section">
+        <div class="row-fluid pagination-section" ng-if="!selectedPerson">
             <div class="col-xs-8">
                 <uib-pagination total-items="others.pagination.totalItems"
                                 items-per-page="others.pagination.pageSize"
@@ -48,12 +49,43 @@
                 <span class="pagination-count">Trovati: {{ others.pagination.totalItems }}</span>
             </div>
         </div>
+
+        <div ng-if="selectedPerson" class="selected-person">
+            <div class="row">
+                <div class="col-xs-11"><img ng-if="selectedPerson.profile.picture" ng-src="{{ selectedPerson.profile.picture }}" class="avatar"><h3>{{ selectedPerson[1] }} {{ selectedPerson[2] }} {{ selectedPerson[3] }}</h3></div>
+                <div class="col-xs-1" ng-click="selectPerson(null)"><span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span></div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                        <span class="last-access">Ultimo accesso: {{ selectedPerson.profile.profile.last_visit | date }}</span>
+                </div>
+            </div>
+            <!--
+Ck_Id = 'I'
+Ck_Nickname = 'N'
+*Ck_Picture = 'P'
+Ck_GProfile = '+'
+Ck_Web = 'W'
+-->
+            <div class="row" ng-repeat="c in selectedPerson.profile.contacts | filter: addressKind('E')">
+                <div class="col-md-6"><span class="glyphicon glyphicon-envelope" aria-hidden="true"></span> {{ c.address }}</div>
+            </div>
+            <div class="row" ng-repeat="c in selectedPerson.profile.contacts | filter: addressKind('M')">
+                <div class="col-md-6"><span class="glyphicon glyphicon-phone" aria-hidden="true"></span> {{ c.address }}</div>
+            </div>
+            <div class="row" ng-repeat="c in selectedPerson.profile.contacts | filter: addressKind('T')">
+                <div class="col-md-6"><span class="glyphicon glyphicon-earphone" aria-hidden="true"></span> {{ c.address }}</div>
+            </div>
+            <div class="row" ng-repeat="c in selectedPerson.profile.contacts | filter: addressKind('F')">
+                <div class="col-md-6"><span class="glyphicon glyphicon-print" aria-hidden="true"></span> {{ c.address }}</div>
+            </div>
+        </div>
     </div>
     <div class="col-md-6">
-        <table class="table people-admin people-admin-members">
+        <table class="table people-admin people-admin-members" ng-if="!selectedMember">
             <tbody>
 
-                <tr ng-repeat="a in members.items" class="row" ng-click="selectPerson(a)">
+                <tr ng-repeat="a in members.items" class="row" ng-click="selectMember(a)">
 
                     <td class="col-md-12">
                         <div class="name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
@@ -66,7 +98,7 @@
             </tbody>
         </table>
 
-        <div class="row-fluid pagination-section">
+        <div class="row-fluid pagination-section" ng-if="!selectedMember">
             <div class="col-xs-8">
                 <uib-pagination total-items="members.pagination.totalItems"
                                 items-per-page="members.pagination.pageSize"
@@ -85,13 +117,47 @@
                 <form class="form-inline">
                     <div class="form-group pagination">
                         <label for="pageSize">Righe per pagina:</label>
-                        <select class="form-control" id="pageSize" ng-model="members.pagination.pageSize">
+                        <select class="form-control" id="pageSize" ng-model="pagination.pageSize">
                             <option ng-repeat="sz in members.pagination.pageSizes">{{ sz }}</option>
                         </select>
                     </div>
                 </form>
             </div>
         </div>
+
+        <div ng-if="selectedMember">
+            <div class="row">
+                <div class="col-md-11"><img ng-if="selectedMember.profile.picture" ng-src="{{ selectedPerson.profile.picture }}" class="avatar"><h3>{{ selectedMember[1] }} {{ selectedMember[2] }} {{ selectedMember[3] }}</h3></div>
+                <div class="col-md-1" ng-click="selectMember(null)"><span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span></div>
+            </div>
+<!--
+Ck_Id = 'I'
+Ck_Nickname = 'N'
+*Ck_Picture = 'P'
+Ck_GProfile = '+'
+Ck_Web = 'W'
+-->
+            <div class="row" ng-repeat="c in selectedMember.profile.contacts | filter: addressKind('E')">
+                <div class="col-md-6"><span class="glyphicon glyphicon-envelope" aria-hidden="true"></span> {{ c.address }}</div>
+            </div>
+            <div class="row" ng-repeat="c in selectedMember.profile.contacts | filter: addressKind('M')">
+                <div class="col-md-6"><span class="glyphicon glyphicon-phone" aria-hidden="true"></span> {{ c.address }}</div>
+            </div>
+            <div class="row" ng-repeat="c in selectedMember.profile.contacts | filter: addressKind('T')">
+                <div class="col-md-6"><span class="glyphicon glyphicon-earphone" aria-hidden="true"></span> {{ c.address }}</div>
+            </div>
+            <div class="row" ng-repeat="c in selectedMember.profile.contacts | filter: addressKind('F')">
+                <div class="col-md-6"><span class="glyphicon glyphicon-print" aria-hidden="true"></span> {{ c.address }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <button type="button" class="btn btn-danger" ng-click="removeSelectedPerson()" ng-if="selectedPerson">Rimuovi</button>
+        <button type="button" class="btn btn-primary" ng-click="joinPerson()" ng-if="selectedPerson && selectedMember">Stessa persona</button>
+        <button type="button" class="btn btn-primary" ng-click="addMemberWithExistingAccount()" ng-if="selectedPerson && selectedAccount">Cointesta conto</button>
     </div>
 </div>
 

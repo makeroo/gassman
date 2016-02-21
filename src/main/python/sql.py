@@ -904,6 +904,30 @@ LEFT JOIN contact_address ca ON ca.id=pc.address_id
 
     return q, a
 
+def reassignContacts (newpid, oldpid):
+    return 'UPDATE person_contact SET person_id=%s WHERE person_id=%s', [ newpid, oldpid ]
+
+def reassignPermissions (newpid, oldpid):
+    return 'UPDATE permission_grant SET person_id=%s WHERE person_id=%s', [ newpid, oldpid ]
+
+def reassignAccounts (newpid, oldpid):
+    return 'UPDATE account_person SET person_id=%s WHERE person_id=%s', [ newpid, oldpid ]
+
+def deletePerson (pid):
+    return 'DELETE FROM person WHERE id=%s', [ pid ]
+
+def deleteContactsOfPerson (pid):
+    return 'DELETE FROM contact_address WHERE id IN (SELECT address_id FROM person_contact WHERE person_id=%s)', [ pid ]
+
+def deleteContactsPerson (pid):
+    return 'DELETE FROM person_contact WHERE person_id=%s', [ pid ]
+
+def deletePermissions (pid):
+    return 'DELETE FROM permission_grant WHERE person_id=%s', [ pid ]
+
+def grantAccount (pid, acc, fromDate):
+    return 'INSERT INTO account_person (person_id, account_id, from_date) VALUES (%s, %s, %s)', [ pid, acc, fromDate ]
+
 def checkConn ():
     return 'SELECT 1'
 

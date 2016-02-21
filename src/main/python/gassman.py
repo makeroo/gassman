@@ -129,6 +129,9 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/person/(\d+)/check_email$', PersonCheckEmailHandler),
             (r'^/gm/admin/people/index/(\d+)/(\d+)$', AdminPeopleIndexHandler),
             (r'^/gm/admin/people/profiles$', AdminPeopleProfilesHandler),
+            (r'^/gm/admin/people/remove', AdminPeopleRemoveHandler),
+            (r'^/gm/admin/people/join', AdminPeopleJoinHandler),
+            (r'^/gm/admin/people/add', AdminPeopleAddHandler),
             ]
         #codeHome = os.path.dirname(__file__)
         sett = dict(
@@ -1333,13 +1336,53 @@ class AdminPeopleProfilesHandler (JsonBaseHandler):
         r = {}
         if len(pids) == 0:
             return r
-        persons, contacts, args = self.application.sql.people_profiles1(pids)
+        profiles, contacts, args = self.application.sql.people_profiles1(pids)
         cur.execute(contacts, args)
+        def record (pid):
+            return r.setdefault(pid, { 'accounts':[], 'profile':None, 'permissions':[], 'contacts':[] })
         for acc in self.application.sql.iter_objects(cur):
-            pid = acc['person_id']
-            p = r.setdefault(pid, { 'id': pid, 'contacts': [] })
+            p = record(acc['person_id'])
             p['contacts'].append(acc)
+        cur.execute(profiles, args)
+        for prof in self.application.sql.iter_objects(cur):
+            p = record(prof['id'])
+            p['profile'] = prof
         return r
+
+
+class AdminPeopleRemoveHandler (JsonBaseHandler):
+    def do (self, cur):
+        pid = self.payload['pid']
+        uid = self.current_user
+        if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
+            raise GDataException(error_codes.E_permission_denied, 403)
+        cur.execute(*self.application.sql.deleteContactsOfPerson(pid))
+        cur.execute(*self.application.sql.deleteContactsPerson(pid))
+        cur.execute(*self.application.sql.deletePermissions(pid))
+        cur.execute(*self.application.sql.deletePerson(pid))
+
+
+class AdminPeopleJoinHandler (JsonBaseHandler):
+    def do (self, cur):
+        newpid = self.payload['newpid']
+        oldpid = self.payload['oldpid']
+        uid = self.current_user
+        if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
+            raise GDataException(error_codes.E_permission_denied, 403)
+        cur.execute(*self.application.sql.reassignContacts(newpid, oldpid))
+        cur.execute(*self.application.sql.reassignPermissions(newpid, oldpid))
+        cur.execute(*self.application.sql.reassignAccounts(newpid, oldpid))
+        cur.execute(*self.application.sql.deletePerson(oldpid))
+
+
+class AdminPeopleAddHandler (JsonBaseHandler):
+    def do (self, cur):
+        pid = self.payload['pid']
+        acc = self.payload['acc']
+        uid = self.current_user
+        if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
+            raise GDataException(error_codes.E_permission_denied, 403)
+        cur.execute(*self.application.sql.grantAccount(pid, acc, datetime.datetime.utcnow()))
 
 
 if __name__ == '__main__':

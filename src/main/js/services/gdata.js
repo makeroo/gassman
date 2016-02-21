@@ -292,8 +292,8 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
             p.mainTelephone = p.mainMobile;
 
         p.gadgets = [];
-        if (!p.permission) {
-            p.permission = [];
+        if (!p.permissions) {
+            p.permissions = [];
         } else if (p.permissions.indexOf(gdata.permissions.P_canEnterCashExchange) != -1) {
             p.gadgets.push(gdata.gadgets.piggyBank);
         }
@@ -401,7 +401,7 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
                         var foundPids = {};
 
                         angular.forEach(r.data, function (e) {
-                            var pid = e.id;
+                            var pid = e.profile.id;
 
                             foundPids[pid] = true;
 
@@ -469,5 +469,34 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
             }
         );
 	};
+
+    this.removePerson = function (pid) {
+		return $http.post(
+            '/gm/admin/people/remove?_xsrf=' + $cookies.get('_xsrf'),
+            {
+                pid: pid
+            }
+        );
+    };
+
+    this.joinPerson = function (newpid, oldpid) {
+		return $http.post(
+            '/gm/admin/people/join?_xsrf=' + $cookies.get('_xsrf'),
+            {
+                newpid: newpid,
+                oldpid: oldpid
+            }
+        );
+    };
+
+    this.addMemberWithExistingAccount = function (newpid, accid) {
+		return $http.post(
+            '/gm/admin/people/add?_xsrf=' + $cookies.get('_xsrf'),
+            {
+                pid: newpid,
+                acc: accid
+            }
+        );
+    };
 }])
 ;

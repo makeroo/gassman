@@ -246,6 +246,12 @@ function ($stateProvider,   $urlRouterProvider) {
 .run([
          '$rootScope', 'gdata', 'gstorage', '$state', '$q', '$cookies', '$timeout',
 function ($rootScope,   gdata,   gstorage,   $state,   $q,   $cookies,   $timeout) {
+    $rootScope.addressKind = function (k) {
+        return function (c) {
+            return c.kind == k;
+        }
+    };
+
     var appStartedDefer = $q.defer();
 
     $rootScope.gassman = {

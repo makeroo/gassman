@@ -10,8 +10,11 @@ angular.module('GassmanApp.controllers.AdminPeople', [
 ])
 
 .controller('AdminPeople', [
-         '$scope', '$localStorage', 'gdata', 'listController',
-function ($scope,   $localStorage,   gdata,   listController) {
+         '$scope', '$localStorage', 'gdata', 'listController', '$location',
+function ($scope,   $localStorage,   gdata,   listController,   $location) {
+
+    $scope.selectedPerson = null;
+    $scope.selectedMember = null;
 
     listController.setupScope(
         [ $scope, 'others' ],
@@ -87,12 +90,80 @@ function ($scope,   $localStorage,   gdata,   listController) {
         }
     );
 
-    $scope.$watch('others.pagination.filterBy.q', function (v) {
+    $scope.pagination = {
+        query: $scope.others.pagination.filterBy.q,
+        pageSize: $scope.others.pagination.pageSize
+    };
+
+    $scope.$watch('pagination.query', function (v) {
+        $scope.others.pagination.filterBy.q = v;
         $scope.members.pagination.filterBy.q = v;
     });
 
-    $scope.$watch('members.pagination.pageSize', function (v) {
+    $scope.$watch('pagination.pageSize', function (v) {
         $scope.others.pagination.pageSize = v;
+        $scope.members.pagination.pageSize = v;
     });
+
+    $scope.selectPerson = function (p) {
+        if (angular.equals(p, $scope.selectedPerson)) {
+            $scope.selectedPerson = null;
+        } else {
+            $scope.selectedPerson = p;
+        }
+
+        console.log('person selected:', $scope.selectedPerson);
+    };
+
+    $scope.selectMember = function (p) {
+        $scope.selectedAccount = null;
+
+        if (angular.equals(p, $scope.selectedMember)) {
+            $scope.selectedMember = null;
+        } else {
+            $scope.selectedMember = p;
+
+            if (p) {
+                angular.forEach(p.profile.accounts, function (a) {
+                    if (a.to_date == null) {
+                        $scope.selectedAccount = a;
+                    }
+                });
+            }
+        }
+
+        console.log('member selected:', $scope.selectedMember);
+    };
+
+    $scope.removeSelectedPerson = function () {
+        gdata.removePerson($scope.selectedPerson[0]).then(function (r) {
+            $scope.selectedPerson = null;
+
+            $scope.others.loadPage(1);
+        }).then (undefined, function (error) {
+            $scope.actionError = error;
+        });
+    };
+
+    $scope.joinPerson = function () {
+        var newpid = $scope.selectedPerson[0];
+        var oldpid = $scope.selectedMember[0];
+
+        gdata.joinPerson(newpid, oldpid).then(function (r) {
+            $location.path('/person/' + newpid + '/detail');
+        }).then (undefined, function (error) {
+            $scope.actionError = error;
+        });
+    };
+
+    $scope.addMemberWithExistingAccount = function () {
+        var newpid = $scope.selectedPerson[0];
+
+        gdata.addMemberWithExistingAccount(newpid, $scope.selectedAccount.id).then(function (r) {
+            $location.path('/person/' + newpid + '/detail');
+        }).then (undefined, function (error) {
+            $scope.actionError = error;
+        });
+    };
 }])
 ;
