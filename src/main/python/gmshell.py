@@ -153,26 +153,6 @@ class GMShell (cmd.Cmd):
                 print('created account', aid, 'for currency', csym)
                 cur.execute('insert into account_person (from_date, person_id, account_id) values (utc_timestamp(), %s, %s)', [ pid, aid ])
 
-    def help_find_person (self): print('Look for people by name, contacts, etc. Usage: find_person <LIKETEXT>')
-    @catchall
-    def do_find_person (self, line):
-        p = line.strip()
-        with self.conn as cur:
-            cur.execute('''
-select distinct p.id, p.first_name, p.middle_name, p.last_name, c.kind, c.address from person p
- left join person_contact pc on pc.person_id=p.id
- left join contact_address c on pc.address_id=c.id
- left join account_person ap on ap.person_id=p.id
- left join account a on ap.account_id=a.id
- where p.first_name like %s or
-  p.middle_name like %s or
-  p.last_name like %s or
-  c.address like %s or
-  a.gc_name like %s
-  order by p.id''', [ p, p, p, p, p ])
-            for r in list(cur):
-                print(r)
-
     def help_show_person (self): print('Show full profile info. Usage: show_person <PID>')
     @catchall
     def do_show_person (self, line):
@@ -198,59 +178,6 @@ select distinct p.id, p.first_name, p.middle_name, p.last_name, c.kind, c.addres
             for r in list(cur):
                 print(' '.join([ '%s: %s' % (f[0], v) for f, v in zip(cur.description, r) ]))
             print()
-
-    def help_add_contact (self): print('Add contact to existing person. Usage: <PID> <ADDRESS> <KIND> <TYPE>')
-    @catchall
-    def do_add_contact(self, line):
-        pid, address, kind, ctype = line.split()
-        kk = dict([ (v, k[3:]) for k, v in vars(sql).items() if k.startswith('Ck_')])
-        if kind not in kk:
-            print('illegal kind, use one of:', kk)
-            return
-        with self.conn as cur:
-            cur.execute('insert into contact_address (address,kind,contact_type) values (%s, %s, %s)', [ address, kind, ctype ])
-            aid = cur.lastrowid
-            cur.execute('insert into person_contact (person_id, address_id, priority) select p.id, %s, 0 from person p where p.id=%s', [ aid, pid ])
-
-    def help_find_account (self): print('Look for account by old GnuCash account name. Usage: find_account <LIKETEXT>')
-    @catchall
-    def do_find_account (self, line):
-        p = line.strip()
-        with self.conn as cur:
-            cur.execute('''
-select a.id, a.gc_name from account a
- where a.gc_name like %s
- order by a.id''', [ p ])
-            for r in list(cur):
-                print(r)
-
-    # TODO: creare una persona senza conto, ma agganciata al conto di un altro
-    def help_add_person (self): print('')
-    @catchall
-    def do_add_person (self, line):
-        pass
-#    def help_select_csa (self): print('Select CSA. Usage: select_csa <CSAID>')
-#    def do_select_csa (self, line):
-#        with self.conn as cur:
-#            k = line.strip()
-#            try:
-#                cur.execute('select name from csa where id=%s', [ k ])
-#                self.selectedCsaName = cur.fetchone()[0]
-#                self.selectedCsa = k
-#                self.setPrompt()
-#            except:
-#                print('Unknown csa')
-
-    @catchall
-    def do_merge_people (self, line):
-        # select * from person where first_name ='livia';
-        # select * from person_contact where person_id in (398, 452);
-        # select * from permission_grant where person_id in (398, 452);
-        # select * from account_person where person_id in (398, 452);
-        # update permission_grant set person_id = 452 where person_id = 398;
-        # update account_person set person_id = 452 where person_id = 398;
-        # delete from person where id=398;
-        pass
 
 if __name__ == '__main__':
     try:
