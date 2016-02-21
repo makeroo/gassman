@@ -843,11 +843,13 @@ LEFT JOIN contact_address ca ON ca.id=pc.address_id
 
     q += '''
  WHERE p.id NOT IN
-  (SELECT person_id
-     FROM account_person'''
+  (SELECT ap.person_id
+     FROM account_person ap'''
     if csaId:
-        q += ' JOIN accont a WHERE a.csa_id=%s'
+        q += ' JOIN account a WHERE a.csa_id=%s AND ap.to_date IS NULL'
         a.append(csaId)
+    else:
+        q += ' WHERE ap.to_date IS NULL'
     q += ')'
 
     if t:
@@ -886,11 +888,13 @@ LEFT JOIN contact_address ca ON ca.id=pc.address_id
 
     q += '''
  WHERE p.id NOT IN
-  (SELECT person_id
-     FROM account_person'''
+  (SELECT ap.person_id
+     FROM account_person ap'''
     if csaId:
-        q += ' JOIN accont a WHERE a.csa_id=%s'
+        q += ' JOIN account a WHERE a.csa_id=%s AND ap.to_date IS NULL'
         a.append(csaId)
+    else:
+        q += ' WHERE ap.to_date IS NULL'
     q += ')'
 
     if t:

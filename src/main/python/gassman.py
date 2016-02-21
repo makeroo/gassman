@@ -1347,6 +1347,9 @@ class AdminPeopleProfilesHandler (JsonBaseHandler):
         for prof in self.application.sql.iter_objects(cur):
             p = record(prof['id'])
             p['profile'] = prof
+        for pid, p in r.items():
+            cur.execute(*self.application.sql.find_user_csa(pid))
+            p['csa'] = self.application.sql.iter_objects(cur)
         return r
 
 
