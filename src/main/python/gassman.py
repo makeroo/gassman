@@ -132,6 +132,8 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/admin/people/remove', AdminPeopleRemoveHandler),
             (r'^/gm/admin/people/join', AdminPeopleJoinHandler),
             (r'^/gm/admin/people/add', AdminPeopleAddHandler),
+            (r'^/gm/admin/people/create_account', AdminPeopleCreateAccountHandler),
+            (r'^/gm/admin/people/create', AdminPeopleCreateHandler),
             ]
         #codeHome = os.path.dirname(__file__)
         sett = dict(
@@ -1359,6 +1361,10 @@ class AdminPeopleRemoveHandler (JsonBaseHandler):
         uid = self.current_user
         if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
+        # TODO: verificare che non abbia né abbia avuto conti
+        cur.execute(*self.application.sql.find_user_csa(pid))
+        if len(cur.fetchall()) > 0:
+            raise GDataException(error_codes.E_cannot_remove_person_with_accounts)
         cur.execute(*self.application.sql.deleteContactsOfPerson(pid))
         cur.execute(*self.application.sql.deleteContactsPerson(pid))
         cur.execute(*self.application.sql.deletePermissions(pid))
@@ -1386,6 +1392,59 @@ class AdminPeopleAddHandler (JsonBaseHandler):
         if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
         cur.execute(*self.application.sql.grantAccount(pid, acc, datetime.datetime.utcnow()))
+
+
+class AdminPeopleCreateAccountHandler (JsonBaseHandler):
+    def do (self, cur):
+        uid = self.current_user
+        if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
+            raise GDataException(error_codes.E_permission_denied, 403)
+        pid = self.payload['pid']
+        csa = self.payload['csa']
+        cur.execute(*self.application.sql.csa_currencies(csa))
+        for row in cur.fetchall():
+            curr = row[0]
+            cur.execute(*self.application.sql.account_create(
+                '%s' % pid,
+                self.application.sql.At_Asset,
+                csa,
+                curr,
+                0.0
+            ))
+            accId = cur.lastrowid
+            cur.execute(*self.application.sql.grantAccount(pid, accId, datetime.datetime.utcnow()))
+
+
+class AdminPeopleCreateHandler (JsonBaseHandler):
+    def do (self, cur):
+        uid = self.current_user
+        if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
+            raise GDataException(error_codes.E_permission_denied, 403)
+        first_name = self.payload['first_name']
+        last_name = self.payload['last_name']
+        csa = self.payload.get('csa')
+        cur.execute(*self.application.sql.create_person(first_name, '', last_name))
+        pid = cur.lastrowid
+        rfi = rss_feed_id(pid)
+        cur.execute(*self.application.sql.assign_rss_feed_id(pid, rfi))
+        if csa is not None:
+            cur.execute(*self.application.sql.csa_currencies(csa))
+            acc = []
+            for row in cur.fetchall():
+                curr = row[0]
+                cur.execute(*self.application.sql.account_create(
+                    '%s %s' % (first_name, last_name),
+                    self.application.sql.At_Asset,
+                    csa,
+                    curr,
+                    0.0
+                ))
+                accId = cur.lastrowid
+                cur.execute(*self.application.sql.grantAccount(pid, accId, datetime.datetime.utcnow()))
+                acc.append(accId)
+        else:
+            acc = None
+        return { 'pid': pid, 'acc': acc }
 
 
 if __name__ == '__main__':

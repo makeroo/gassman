@@ -186,7 +186,7 @@ def accounts_index (csaId, t, dp, o, ex, fromLine, toLine, search_contact_kinds)
    FROM person p
    LEFT JOIN person_contact pc ON pc.person_id=p.id
    LEFT JOIN contact_address ca ON ca.id=pc.address_id
-   WHERE ca.kind in %s
+   WHERE ca.kind IS NULL OR ca.kind in %s
    GROUP BY p.id) p'''
         a.append(set(search_contact_kinds))
     else:
@@ -430,6 +430,11 @@ def account_currencies (csaId):
     '''
     return 'SELECT a.id, c.id, c.symbol FROM account a JOIN currency c ON a.currency_id=c.id WHERE a.csa_id = %s', [ csaId ]
 
+def csa_currencies (csaId):
+    '''Tutte le valute usate in un csa.
+    '''
+    return 'SELECT a.currency_id FROM account a WHERE a.csa_id=%s AND a.gc_type=%s', [ csaId, At_Kitty ]
+
 def account_people (csaId):
     return 'SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id FROM person p JOIN account_person ap ON p.id=ap.person_id JOIN account a ON ap.account_id=a.id WHERE a.csa_id=%s AND ap.to_date IS NULL', [ csaId ]
 
@@ -474,6 +479,16 @@ UPDATE account a
 
 def account_close (closeDatetime, accountId, ownerId):
     return 'UPDATE account_person SET to_date=%s WHERE person_id=%s AND account_id = %s AND to_date IS NULL', [ closeDatetime, ownerId, accountId ]
+
+def account_create (name, atype, csaId, currId, fee):
+    return 'INSERT INTO account (state, gc_name, gc_type, csa_id, currency_id, membership_fee) VALUES (%s, %s, %s, %s, %s, %s)', [
+        As_Open,
+        name,
+        atype,
+        csaId,
+        currId,
+        fee
+    ]
 
 #def expenses_accounts (csaId):
 #    return 'SELECT id, gc_name, currency_id FROM account where gc_type =%s AND csa_id=%s AND state=%s', [ At_Expense, csaId, As_Open]
@@ -641,7 +656,7 @@ def count_people (csaId, t, dp, ex, search_contact_kinds):
    FROM person p
    LEFT JOIN person_contact pc ON pc.person_id=p.id
    LEFT JOIN contact_address ca ON ca.id=pc.address_id
-   WHERE ca.kind in %s
+   WHERE ca.kind IS NULL OR ca.kind in %s
    GROUP BY p.id) p'''
         a.append(set(search_contact_kinds))
     else:
@@ -685,7 +700,7 @@ def people_index (csaId, t, dp, o, ex, fromLine, toLine, search_contact_kinds):
      FROM person p
 LEFT JOIN person_contact pc ON pc.person_id=p.id
 LEFT JOIN contact_address ca ON ca.id=pc.address_id
-    WHERE ca.kind IN %s
+    WHERE ca.kind IS NULL OR ca.kind IN %s
  GROUP BY p.id) p'''
         a.append(set(search_contact_kinds))
     else:
@@ -835,7 +850,7 @@ def admin_people_index (t, csaId, order, fromLine, toLine, search_contact_kinds)
      FROM person p
 LEFT JOIN person_contact pc ON pc.person_id=p.id
 LEFT JOIN contact_address ca ON ca.id=pc.address_id
-    WHERE ca.kind IN %s
+    WHERE ca.kind IS NULL OR ca.kind IS NULL OR ca.kind IN %s
  GROUP BY p.id) p'''
         a.append(set(search_contact_kinds))
     else:
@@ -880,7 +895,7 @@ def admin_count_people (t, csaId, search_contact_kinds):
      FROM person p
 LEFT JOIN person_contact pc ON pc.person_id=p.id
 LEFT JOIN contact_address ca ON ca.id=pc.address_id
-    WHERE ca.kind IN %s
+    WHERE ca.kind IS NULL OR ca.kind IN %s
  GROUP BY p.id) p'''
         a.append(set(search_contact_kinds))
     else:

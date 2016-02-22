@@ -165,5 +165,48 @@ function ($scope,   $localStorage,   gdata,   listController,   $location) {
             $scope.actionError = error;
         });
     };
+
+    $scope.addMemberWithNewAccount = function () {
+        var newpid = $scope.selectedPerson[0];
+
+        gdata.addMemberWithNewAccount(newpid, $scope.members.pagination.filterBy.csa).then(function (r) {
+            $location.path('/person/' + newpid + '/detail');
+        }).then (undefined, function (error) {
+            $scope.actionError = error;
+        });
+    };
+
+    $scope.addPerson = function () {
+        $scope.newMember = {
+            first_name: '',
+            last_name: '',
+            csa: true
+        };
+    };
+
+    $scope.cancelAddMode = function () {
+        $scope.newMember = null;
+    };
+
+    $scope.createPerson = function () {
+        var account = $scope.newMember.csa;
+
+        if (account) {
+            $scope.newMember.csa = $scope.members.pagination.filterBy.csa;
+        }
+
+        gdata.createPerson($scope.newMember).then(function (r) {
+            if (account) {
+                var newpid = r.data.pid;
+
+                $location.path('/person/' + newpid + '/detail');
+            } else {
+                $scope.newMember = null;
+                $scope.others.loadPage(1);
+            }
+        }).then(undefined, function (error) {
+            this.actionError = error;
+        });
+    };
 }])
 ;

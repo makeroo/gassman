@@ -498,5 +498,19 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
             }
         );
     };
+
+    this.addMemberWithNewAccount = function (newpid, csa) {
+		return $http.post(
+            '/gm/admin/people/create_account?_xsrf=' + $cookies.get('_xsrf'),
+            {
+                pid: newpid,
+                csa: csa
+            }
+        );
+    };
+
+    this.createPerson = function (q) {
+		return $http.post('/gm/admin/people/create?_xsrf=' + $cookies.get('_xsrf'), q);
+    }
 }])
 ;
