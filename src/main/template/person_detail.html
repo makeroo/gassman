@@ -23,7 +23,7 @@
       </p>
     </div>
     <div class="alert alert-primary" ng-if="membershipRequested">Richiesta effettuata!</div>
-    <div class="alert alert-warning" ng-if="membershipRequestedError">Richiesta non effettuata a causa di problemi del server. Riprova più tardi.</div>
+    <div class="alert alert-warning" ng-if="membershipRequestedError">Richiesta non effettuata a causa di problemi del server: <span ng-repeat="msg in membershipRequestedError">{{ msg }}</span>.</div>
   </div>
 
   <h3>Informazioni personali</h3>
@@ -178,6 +178,6 @@
     <button class="btn" ng-show="!readOnly" ng-click="cancel()">Annulla</button>
   </div>
 
-  <div class="errorMessage" nh-show="!readOnly && saveError">{{saveError}}</div>
+  <div class="alert alert-warning" ng-if="!readOnly && saveError">Salvataggio fallito: <span ng-repeat="msg in saveError">{{ msg }}</span>.</div>
 
 </form>

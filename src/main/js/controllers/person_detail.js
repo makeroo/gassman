@@ -33,12 +33,6 @@ function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $time
         return c.kind !== 'I';
     };
 */
-    $scope.addressKind = function (k) {
-        return function (c) {
-            return c.kind == k;
-        }
-    };
-
     $scope.hasAddressOfKind = function (k) {
         if (!$scope.personProfile)
             return false;
