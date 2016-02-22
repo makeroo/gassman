@@ -112,47 +112,6 @@ class GMShell (cmd.Cmd):
             except:
                 print('Unknown csa')
 
-    def help_create_person (self): print('Create a person profile with account. Usage: create_person <FIRSTNAME> <LASTNAME>')
-    @catchall
-    def do_create_person (self, line):
-        if not self.selectedCsa:
-            print('No CSA selected')
-            return
-        nn = line.split()
-        fn, mn, ln = None, None, None
-        if len(nn) == 2:
-            fn = nn[0]
-            ln = nn[1]
-            q = 'insert into person (first_name, last_name) values (%s, %s)'
-            args = [ fn, ln ]
-        elif len(nn) > 2:
-            fn = nn[0]
-            ln = nn[-1]
-            mn = line.strip()[len(fn):-len(ln)].strip()
-            q = 'insert into person (first_name, middle_name, last_name) values (%s, %s, %s)'
-            args = [ fn, mn, ln ]
-        else:
-            print('Missing name')
-            return
-        with self.conn as cur:
-            cur.execute(q, args)
-            pid = cur.lastrowid
-            cur.execute('update person set rss_feed_id=%s where id=%s',
-                        [
-                         rss_feed_id(pid),
-                         pid
-                         ])
-            print('created person', pid)
-            #cur.execute('insert into permission_grant (csa_id, person_id, perm_id) values (%s, %s, %s)', [ self.selectedCsa, pid, sql.P_membership ])
-            cur.execute('select id, symbol from currency')
-            for r in list(cur):
-                cid = r[0]
-                csym = r[1]
-                cur.execute('insert into account (state, gc_type, csa_id, currency_id) values (%s, %s, %s, %s)', [ sql.As_Open, sql.At_Asset, self.selectedCsa, cid ])
-                aid = cur.lastrowid
-                print('created account', aid, 'for currency', csym)
-                cur.execute('insert into account_person (from_date, person_id, account_id) values (utc_timestamp(), %s, %s)', [ pid, aid ])
-
     def help_show_person (self): print('Show full profile info. Usage: show_person <PID>')
     @catchall
     def do_show_person (self, line):
