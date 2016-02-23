@@ -746,7 +746,7 @@ LEFT JOIN contact_address ca ON ca.id=pc.address_id
 def people_profiles2 (csaId, pids):
     return (
             'SELECT ap.from_date, ap.to_date, ap.person_id, a.* FROM account_person ap JOIN account a ON ap.account_id=a.id WHERE ap.person_id in %s AND a.csa_id=%s',
-            'SELECT csa_id, person_id, perm_id FROM permission_grant WHERE person_id IN %s AND csa_id=%s',
+            'SELECT csa_id, person_id, perm_id FROM permission_grant WHERE person_id IN %s AND csa_id=%s OR csa_id IS NULL',
             [ set(pids), csaId ],
             )
 
