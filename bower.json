@@ -27,7 +27,8 @@
     "angular-ui-select": "0.13.2",
     "bootstrap": "3.3.x",
     "jquery": "2.1.x",
-    "ngstorage": "0.3.0"
+    "ngstorage": "0.3.0",
+    "angular-ui-calendar": "~1.0.1"
   },
   "resolutions": {
     "angular": "1.4.8",
@@ -35,5 +36,5 @@
     "angular-cookies": "1.4.8",
     "angular-ui-bootstrap": "0.14.3"
   },
-  "private": false
+  "private": false,
 }

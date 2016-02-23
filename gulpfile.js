@@ -5,50 +5,57 @@
 // Please use config.js to override these selectively:
 
 var config = {
-  dest: 'target/www',
-  minify_js: true,
-  generate_js_maps: false,
+    dest: 'target/www',
+    minify_js: true,
+    generate_js_maps: false,
 
-  minify_images: true,
+    minify_images: true,
 
-  vendor: {
-    js: [
-      './bower_components/jquery/dist/jquery.js',
-      './bower_components/bootstrap/dist/js/bootstrap.js',
-      './bower_components/angular/angular.js',
-      './bower_components/angular-cookies/angular-cookies.js',
-      './bower_components/angular-sanitize/angular-sanitize.js',
+    vendor: {
+        js: [
+            './bower_components/jquery/dist/jquery.js',
+            './bower_components/bootstrap/dist/js/bootstrap.js',
+            './bower_components/moment/moment.js', // per angular-ui-calendar
+            './bower_components/angular/angular.js',
+            './bower_components/angular-cookies/angular-cookies.js',
+            './bower_components/angular-sanitize/angular-sanitize.js',
 
-      './bower_components/angular-ui-router/release/angular-ui-router.js',
+            './bower_components/angular-ui-router/release/angular-ui-router.js',
 
-      // bower_components/angular-i18n/angular-locale_it-it.js
-      './bower_components/ngstorage/ngStorage.js',
-      './bower_components/angular-ui-select/dist/select.js',
-      './bower_components/angular-bootstrap/ui-bootstrap-tpls.js'
-      //'./bower_components/datejs/build/date.js',
-      //'./bower_components/datejs/build/date-it-IT.js'
-//      './bower_components/angular-touch/angular-touch.js',
+            // bower_components/angular-i18n/angular-locale_it-it.js
+            './bower_components/ngstorage/ngStorage.js',
+            './bower_components/angular-ui-select/dist/select.js',
+            './bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
 
-//      './bower_components/angular-bootstrap/ui-bootstrap.js',
-//      './bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
-    ],
+            './bower_components/angular-ui-calendar/src/calendar.js',
+            './bower_components/fullcalendar/dist/fullcalendar.js' // per angular-ui-calendar
+            // TODO: moment locales?
+            // TODO: fullcalendar locales?
 
-    fonts: [
-      './bower_components/bootstrap/fonts/glyphicons-halflings-regular.*'
-    ],
+            //'./bower_components/datejs/build/date.js',
+            //'./bower_components/datejs/build/date-it-IT.js'
+            //'./bower_components/angular-touch/angular-touch.js',
 
-    i18n: [
-      './bower_components/angular-i18n/angular-locale_*'
-    ]
-  },
+            //'./bower_components/angular-bootstrap/ui-bootstrap.js',
+            //'./bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
+        ],
 
-  server: false
+        fonts: [
+            './bower_components/bootstrap/fonts/glyphicons-halflings-regular.*'
+        ],
+
+        i18n: [
+            './bower_components/angular-i18n/angular-locale_*'
+        ]
+    },
+
+    server: false
 };
 
 
 if (require('fs').existsSync('./config.js')) {
-  var configFn = require('./config');
-  configFn(config);
+    var configFn = require('./config');
+    configFn(config);
 }
 
 /*-----  End of Configuration  ------*/

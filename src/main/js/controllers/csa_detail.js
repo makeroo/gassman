@@ -5,6 +5,8 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.CsaDetail', [
+    'ui.calendar',
+
     'GassmanApp.services.Gdata'
 ])
 
