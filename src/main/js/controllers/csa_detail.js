@@ -24,6 +24,22 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
     $scope.draftOrders = null;
     $scope.movements = null;
 
+    $scope.calendar = {
+        //height: 450,
+        editable: false,
+        header:{
+            left: 'title', //month basicWeek basicDay agendaWeek agendaDay',
+            //center: '',
+            right: 'today prev,next'
+        },
+        titleFormat: '[Turni] MMMM YYYY'
+        //dayClick: $scope.alertEventOnClick,
+        //eventDrop: $scope.alertOnDrop,
+        //eventResize: $scope.alertOnResize
+    };
+
+    $scope.eventSources = [];
+
     $scope.editCsa = function () {
         $location.path('/csa/' + csaId + '/admin');
     };

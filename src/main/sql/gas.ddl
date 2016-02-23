@@ -217,6 +217,32 @@ CREATE TABLE account_person (
 );
 
 
+
+CREATE TABLE delivery_date (
+  id INT NOT NULL AUTO_INCREMENT,
+  delivery_place_id INT NOT NULL,
+  delivery_date DATE NOT NULL,
+  from_time TIME NOT NULL,
+  to_time TIME,
+  notes VARCHAR(255),
+
+  FOREIGN KEY (delivery_place_id) REFERENCES delivery_place(id) ON DELETE CASCADE,
+  PRIMARY KEY (id)
+);
+
+
+CREATE TABLE delivery_shift (
+  id INT NOT NULL AUTO_INCREMENT,
+  delivery_date_id INT NOT NULL,
+  person_id INT NOT NULL,
+  role VARCHAR(255),
+
+  FOREIGN KEY (delivery_date_id) REFERENCES delivery_date(id) ON DELETE CASCADE,
+  PRIMARY KEY (id)
+);
+
+
+
 CREATE TABLE permission (
   id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(32) NOT NULL,
