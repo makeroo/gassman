@@ -24,11 +24,6 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
     $scope.draftOrders = null;
     $scope.movements = null;
 
-    function alertOnEventClick (calEvent, jqueryEvent) {
-        //console.log(arguments);
-        $scope.selectedEvent = calEvent.deliveryDate;
-    };
-
     $scope.calendar = {
         //height: 450,
         editable: false,
@@ -38,76 +33,27 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
             right: 'today prev,next'
         },
         titleFormat: '[Turni] MMMM YYYY',
-        eventClick: alertOnEventClick
+        eventClick: function (calEvent, jqueryEvent) {
+            $scope.selectedEvent = calEvent.deliveryDate;
+        }
         //dayClick: $scope.alertEventOnClick,
         //eventDrop: $scope.alertOnDrop,
         //eventResize: $scope.alertOnResize
-/*        viewRender: function (view, element) {
-            gdata.deliveryDates($scope.gassman.selectedCsa, view.start.toJSON(), view.end.toJSON()).then(function (r) {
-                var events = r.data;
-                var dest = [];
-                $scope.eventSources = [ dest ];
-
-                angular.forEach(events, function (e) {
-                    var start = moment(e.delivery_date);
-                    var end = moment(start);
-
-                    start.add(e.from_time, 's');
-                    end.add(e.to_time, 's');
-
-                    dest.push({
-                        id: e.id,
-                        title: 'aaa',
-                        allDay: false,
-                        start: new Date(start).getTime() / 1000,
-                        end: new Date(end).getTime() / 1000,
-                        editable: false,
-                        color: '#f00'
-                    });
-                });
-
-                $scope.eventsError = null;
-            }).then(undefined, function (error) {
-                $scope.eventsError = error.data;
-            });
-        }*/
     };
 
     $scope.eventSources = [
-/*
-        [
-            {
-                title: 'ciao',
-                start: '2016-02-24'
-            },
-        ],
-            function (start, end, timezone, callback) {
-                callback([
-                    {
-                        title: 'boia',
-                        start: '2016-02-25'
-                    }
-                ])
-            },
-*/
         function (start, end, timezone, callback) {
             gdata.deliveryDates($scope.gassman.selectedCsa, start.toJSON(), end.toJSON()).then(function (r) {
                 var events = r.data;
                 var dest = [];
 
                 angular.forEach(events, function (e) {
-//                    var start = ;
-//                    var end = .utc();
-
                     e.from_date = moment(e.delivery_date).utc();
                     e.to_date = moment(start);
 
                     e.from_date.add(e.from_time, 's');
                     e.to_date.add(e.to_time, 's');
 
-//                    var dateFilter = $filter('date');
-//                    e.from_time_str = dateFilter(start.toJSON(), 'shortTime'); //start.local().hour() + ':' + start.local().minute();
-//                    e.to_time_str = dateFilter(end.toJSON(), 'shortTime'); // end.local().hour() + ':' + end.local().minute();
                     e.delivery_place = $scope.deliveryPlacesIndex[e.delivery_place_id];
 
                     angular.forEach(e.shifts, function (s) {
@@ -136,19 +82,6 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
                 $scope.eventsError = error.data;
             });
         }
-/*        {
-            url: '/myfeed.php',
-            type: 'POST',
-            data: {
-                custom_param1: 'something',
-                custom_param2: 'somethingelse'
-            },
-            error: function() {
-                alert('there was an error while fetching events!');
-            },
-            color: 'yellow',   // a non-ajax option
-            textColor: 'black' // a non-ajax option
-        }        */
     ];
 
     $scope.editCsa = function () {
