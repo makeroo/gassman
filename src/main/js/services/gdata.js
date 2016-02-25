@@ -204,6 +204,14 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         return $http.post('/gm/csa/' + csaId + '/delivery_places?_xsrf=' + $cookies.get('_xsrf'));
     };
 
+    this.deliveryDates = function (csaId, from, to) {
+        return $http.post('/gm/csa/' + csaId + '/delivery_dates?_xsrf=' + $cookies.get('_xsrf'),
+            {
+                from: from,
+                to: to
+            });
+    };
+
     this.chargeMembershipFee = function (csaId, p) {
         return $http.post('/gm/csa/' + csaId + '/charge_membership_fee?_xsrf=' + $cookies.get('_xsrf'), p);
     };
@@ -511,6 +519,6 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
 
     this.createPerson = function (q) {
 		return $http.post('/gm/admin/people/create?_xsrf=' + $cookies.get('_xsrf'), q);
-    }
+    };
 }])
 ;

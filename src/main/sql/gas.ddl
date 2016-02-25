@@ -1,6 +1,6 @@
 -- version 13
 
-SET SESSION storage_engine = "MyISAM";
+SET SESSION default_storage_engine = "MyISAM";
 SET SESSION time_zone = "+0:00";
 ALTER DATABASE CHARACTER SET "utf8";
 
@@ -238,6 +238,7 @@ CREATE TABLE delivery_shift (
   role VARCHAR(255),
 
   FOREIGN KEY (delivery_date_id) REFERENCES delivery_date(id) ON DELETE CASCADE,
+  FOREIGN KEY (person_id) REFERENCES person(id) ON DELETE CASCADE,
   PRIMARY KEY (id)
 );
 

@@ -122,6 +122,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/csa/(\d+)/charge_membership_fee$', CsaChargeMembershipFeeHandler),
             (r'^/gm/csa/(\d+)/request_membership$', CsaRequestMembershipHandler),
             (r'^/gm/csa/(\d+)/delivery_places$', CsaDeliveryPlacesHandler),
+            (r'^/gm/csa/(\d+)/delivery_dates$', CsaDeliveryDatesHandler),
             #(r'^/gm/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/gm/rss/(.+)$', RssFeedHandler),
             (r'^/gm/people/(null|\d+)/profiles$', PeopleProfilesHandler),
@@ -638,6 +639,25 @@ class CsaDeliveryPlacesHandler (JsonBaseHandler):
             raise GDataException(error_codes.E_permission_denied, 403)
         cur.execute(*self.application.sql.csa_delivery_places(csaId))
         return self.application.sql.iter_objects(cur)
+
+
+class CsaDeliveryDatesHandler (JsonBaseHandler):
+    def do (self, cur, csaId):
+        uid = self.current_user
+        p = self.payload
+        if not self.application.isUserMemberOfCsa(cur, uid, csaId, True):
+            raise GDataException(error_codes.E_permission_denied, 403)
+        cur.execute(*self.application.sql.csa_delivery_dates(csaId, p['from'], p['to']))
+        r = self.application.sql.iter_objects(cur)
+        if len(r):
+            #cur.execute(*self.application.sql.csa_delivery_shifts(set([ s['id'] for s in r ])))
+            #for s in self.application.sql.iter_objects(cur):
+            #    d = s['delivery_date_id']
+            #
+            for s in r:
+                cur.execute(*self.application.sql.csa_delivery_shifts(s['id']))
+                s['shifts'] = self.application.sql.iter_objects(cur)
+        return r
 
 
 class AccountXlsHandler (BaseHandler):

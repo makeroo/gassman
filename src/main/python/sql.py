@@ -417,6 +417,21 @@ SELECT p.id, p.description, a.first_line, a.second_line, a.description as addr_d
  JOIN state s ON c.state_id=s.id
  WHERE p.csa_id = %s''', [ csaId ]
 
+def csa_delivery_dates (csaId, fromDate, toDate):
+    return '''
+SELECT dd.*
+ FROM delivery_date dd
+ JOIN delivery_place dp ON dd.delivery_place_id=dp.id
+WHERE dp.csa_id=%s AND dd.delivery_date BETWEEN %s AND %s
+''', [ csaId, fromDate, toDate ]
+
+def csa_delivery_shifts (dateId):
+    return '''
+SELECT ds.*
+  FROM delivery_shift ds
+ WHERE ds.delivery_date_id=%s
+''', [ dateId ]
+
 def account_currency (accId, csaId, requiredCurr):
     return 'SELECT count(*) FROM account a WHERE a.id=%s AND a.csa_id=%s AND a.currency_id=%s', [ accId, csaId, requiredCurr ]
 
