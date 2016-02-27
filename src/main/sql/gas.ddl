@@ -221,9 +221,8 @@ CREATE TABLE account_person (
 CREATE TABLE delivery_date (
   id INT NOT NULL AUTO_INCREMENT,
   delivery_place_id INT NOT NULL,
-  delivery_date DATE NOT NULL,
-  from_time TIME NOT NULL,
-  to_time TIME,
+  from_time DATETIME NOT NULL,
+  to_time DATETIME NOT NULL,
   notes VARCHAR(255),
 
   FOREIGN KEY (delivery_place_id) REFERENCES delivery_place(id) ON DELETE CASCADE,

@@ -11,8 +11,8 @@ angular.module('GassmanApp.controllers.CsaDetail', [
 ])
 
 .controller('CsaDetail', [
-         '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q',
-function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
+         '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q', '$uibModal',
+function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibModal) {
     var csaId = $stateParams.csaId;
 
     $scope.csa = null;
@@ -48,21 +48,27 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
                 var dest = [];
 
                 angular.forEach(events, function (e) {
-                    e.from_date = moment(e.delivery_date).utc();
-                    e.to_date = moment(start);
-
-                    e.from_date.add(e.from_time, 's');
-                    e.to_date.add(e.to_time, 's');
+                    e.from_date = moment(e.from_time).utc();
+                    e.to_date = moment(e.to_time).utc();
 
                     e.delivery_place = $scope.deliveryPlacesIndex[e.delivery_place_id];
+                    var myShift = null;
 
-                    angular.forEach(e.shifts, function (s) {
+                    angular.forEach(e.shifts, function (s, idx) {
+                        if (s.person_id == $scope.gassman.loggedUser.profile.id) {
+                            myShift = idx;
+                        }
+
                         gdata.profile($scope.gassman.selectedCsa, s.person_id).then(function (r) {
                             s.person = r;
                         }).then (undefined, function (error) {
                             s.personError = error;
                         });
                     });
+
+                    if (myShift !== null) {
+                        e.myShift = e.shifts.splice(myShift, 1)[0];
+                    }
 
                     dest.push({
                         id: e.id,
@@ -83,6 +89,56 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
             });
         }
     ];
+
+    $scope.addShift = function (shift) {
+        var modalInstance = $uibModal.open({
+            animation: true,
+            templateUrl: 'template/new_shift.html',
+            controller: 'AddShiftPopup',
+            size: 'sm',
+            resolve: {
+                event: function () {
+                    return $scope.selectedEvent;
+                },
+                shift: function () {
+                    return shift;
+                }
+            }
+        });
+
+        modalInstance.result.then(function (shiftAndRole) {
+            console.log(shiftAndRole);
+
+            var shift = shiftAndRole[0];
+            var role = shiftAndRole[1];
+
+            if (role === null) {
+                if (shift !== undefined) {
+                    gdata.removeShift($scope.gassman.selectedCsa, shift.id).then(function (r) {
+                        // TODO: refresh
+                    }).then(undefined, function (error) {
+                        console.log(error); // TODO:
+                    });
+                }
+            } else {
+                if (shift === undefined || shift.role != role) {
+                    gdata.addShift(
+                        $scope.gassman.selectedCsa,
+                        $scope.selectedEvent.id,
+                        shift ? shift.id : null,
+                        role,
+                        $scope.gassman.loggedUser.profile.id
+                    ).then(function (r) {
+                        // TODO: refresh
+                    }).then(undefined, function (error) {
+                        console.log(error); // TODO:
+                    });
+                }
+            }
+        }/*, function () {
+            $log.info('Modal dismissed at: ' + new Date());
+        }*/);
+    };
 
     $scope.editCsa = function () {
         $location.path('/csa/' + csaId + '/admin');
@@ -206,5 +262,22 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
         if (error.data[0] != gdata.error_codes.E_permission_denied)
             $scope.loadError = error.data;
     });
+}])
+
+.controller('AddShiftPopup', [
+         '$scope', '$uibModalInstance', 'event', 'shift',
+function ($scope,   $uibModalInstance,   event,   shift) {
+    $scope.event = event;
+    $scope.shift = shift;
+    $scope.role = shift ? shift.role : '';
+
+    $scope.ok = function () {
+        $uibModalInstance.close([ $scope.shift, $scope.role ]);
+    };
+
+    $scope.cancel = function () {
+        $uibModalInstance.close([ $scope.shift, null ]);
+        //$uibModalInstance.dismiss('cancel');
+    };
 }])
 ;

@@ -123,6 +123,8 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/csa/(\d+)/request_membership$', CsaRequestMembershipHandler),
             (r'^/gm/csa/(\d+)/delivery_places$', CsaDeliveryPlacesHandler),
             (r'^/gm/csa/(\d+)/delivery_dates$', CsaDeliveryDatesHandler),
+            (r'^/gm/csa/(\d+)/add_shift', CsaAddShiftHandler),
+            (r'^/gm/csa/(\d+)/remove_shift', CsaRemoveShiftHandler),
             #(r'^/gm/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/gm/rss/(.+)$', RssFeedHandler),
             (r'^/gm/people/(null|\d+)/profiles$', PeopleProfilesHandler),
@@ -658,6 +660,54 @@ class CsaDeliveryDatesHandler (JsonBaseHandler):
                 cur.execute(*self.application.sql.csa_delivery_shifts(s['id']))
                 s['shifts'] = self.application.sql.iter_objects(cur)
         return r
+
+
+class CsaAddShiftHandler (JsonBaseHandler):
+    def do(self, cur, csa_id):
+        uid = self.current_user
+        p = self.payload
+        if not self.application.isUserMemberOfCsa(cur, uid, csa_id, True):
+            raise GDataException(error_codes.E_permission_denied, 403)
+
+        if uid != p['person_id'] and \
+           not self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
+            raise GDataException(error_codes.E_permission_denied, 403)
+
+        delivery_date_id = p['delivery_date_id']
+        shift_id = p['id']
+        if shift_id is None:
+            cur.execute(*self.application.sql.csa_delivery_date_check(csa_id, delivery_date_id))
+            v = cur.fetchone()[0]
+            if v == 0:
+                raise GDataException(error_codes.E_permission_denied, 403)
+            cur.execute(*self.application.sql.csa_delivery_shift_add(p))
+            return {'id': cur.lastrowid}
+        else:
+            cur.execute(*self.application.sql.csa_delivery_shift_check(csa_id, shift_id))
+            v = cur.fetchone()[0]
+            if v == 0:
+                raise GDataException(error_codes.E_permission_denied, 403)
+            cur.execute(*self.application.sql.csa_delivery_shift_update(shift_id, p['role']))
+
+
+class CsaRemoveShiftHandler (JsonBaseHandler):
+    def do(self, cur, csa_id):
+        uid = self.current_user
+        p = self.payload
+
+        shift_id = p['id']
+        if self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
+            cur.execute(*self.application.sql.csa_delivery_shift_check(csa_id, shift_id))
+            v = cur.fetchone()[0]
+            if v == 0:
+                raise GDataException(error_codes.E_permission_denied, 403)
+        else:
+            cur.execute(*self.application.sql.csa_delivery_shift_check(csa_id, shift_id, uid))
+            v = cur.fetchone()[0]
+            if v == 0:
+                raise GDataException(error_codes.E_permission_denied, 403)
+
+        cur.execute(*self.application.sql.csa_delivery_shift_remove(shift_id))
 
 
 class AccountXlsHandler (BaseHandler):

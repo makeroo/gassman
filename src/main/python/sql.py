@@ -19,6 +19,7 @@ P_canGrantPermissions = 11
 P_canEditMembershipFee = 12
 P_csaEditor = 13
 P_canCloseAccounts = 14
+P_canManageShifts = 15
 
 Tt_Deposit = 'd'         # deprecated,       READ ONLY
 Tt_Error = 'e'
@@ -422,7 +423,7 @@ def csa_delivery_dates (csaId, fromDate, toDate):
 SELECT dd.*
  FROM delivery_date dd
  JOIN delivery_place dp ON dd.delivery_place_id=dp.id
-WHERE dp.csa_id=%s AND dd.delivery_date BETWEEN %s AND %s
+WHERE dp.csa_id=%s AND dd.from_time BETWEEN %s AND %s
 ''', [ csaId, fromDate, toDate ]
 
 def csa_delivery_shifts (dateId):
@@ -431,6 +432,46 @@ SELECT ds.*
   FROM delivery_shift ds
  WHERE ds.delivery_date_id=%s
 ''', [ dateId ]
+
+
+def csa_delivery_shift_add(shift):
+    shift_id = shift['id']
+    q = 'INSERT INTO delivery_shift (delivery_date_id, person_id, role) VALUES (%s, %s, %s)'
+    a = [shift['delivery_date_id'], shift['person_id'], shift['role']]
+    return q, a
+
+
+def csa_delivery_shift_update(shift_id, role):
+    q = 'UPDATE delivery_shift SET role=%s WHERE id=%s'
+    a = [role, shift_id]
+    return q, a
+
+
+def csa_delivery_shift_check(csa_id, shift_id, user_id=None):
+    q = '''
+SELECT count(*)
+  FROM delivery_shift ds
+  JOIN delivery_date dd ON dd.id=ds.delivery_date_id
+  JOIN delivery_place p ON p.id=dd.delivery_place_id
+ WHERE ds.id=%s AND p.csa_id=%s'''
+    a = [shift_id, csa_id]
+    if user_id is not None:
+        q += ' AND ds.person_id=%s'
+        a.append(user_id)
+    return q, a
+
+
+def csa_delivery_shift_remove(shift_id):
+    return 'DELETE FROM delivery_shift WHERE id=%s', [shift_id]
+
+
+def csa_delivery_date_check (csa_id, date_id):
+    return '''
+SELECT count(*)
+  FROM delivery_date dd
+  JOIN delivery_place p ON p.id=dd.delivery_place_id
+ WHERE dd.id=%s AND p.csa_id=%s''', [date_id, csa_id]
+
 
 def account_currency (accId, csaId, requiredCurr):
     return 'SELECT count(*) FROM account a WHERE a.id=%s AND a.csa_id=%s AND a.currency_id=%s', [ accId, csaId, requiredCurr ]

@@ -43,7 +43,8 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         P_canEditContacts: 10,
         P_canEditMembershipFee: 12,
         P_csaEditor: 13,
-        P_canCloseAccounts: 14
+        P_canCloseAccounts: 14,
+        P_canManageShifts: 15
     };
 
     this.gadgets = {
@@ -210,6 +211,21 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
                 from: from,
                 to: to
             });
+    };
+
+    this.addShift = function (csaId, eventId, shiftId, role, userId) {
+        return $http.post('/gm/csa/' + csaId + '/add_shift?_xsrf=' + $cookies.get('_xsrf'), {
+            delivery_date_id: eventId,
+            person_id: userId,
+            role: role,
+            id: shiftId
+        });
+    };
+
+    this.removeShift = function (csaId, shiftId) {
+        return $http.post('/gm/csa/' + csaId + '/remove_shift?_xsrf=' + $cookies.get('_xsrf'), {
+            id: shiftId
+        });
     };
 
     this.chargeMembershipFee = function (csaId, p) {

@@ -13,11 +13,11 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-3" ng-repeat="dp in deliveryPlaces">
-                    <button type="button" class="btn btn-default btn-sm" style="margin: 2px; background-color: {{ dp.color }}">{{ dp.description }}</button>
+                <div class="col-md-12" >
+                    <button type="button" ng-repeat="dp in deliveryPlaces" class="btn btn-default btn-sm" style="margin: 2px; background-color: {{ dp.color }}">{{ dp.description }}</button>
                 </div>
             </div>
-            <div class="panel" ng-class="{ 'panel-default': selectedEvent.shifts.length > 0, 'panel-danger': selectedEvent.shifts.length == 0 }" ng-if="selectedEvent">
+            <div class="panel" ng-class="{ 'panel-default': selectedEvent.shifts.length > 0 || selectedEvent.myShift, 'panel-danger': selectedEvent.shifts.length == 0 && !selectedEvent.myShift }" ng-if="selectedEvent">
                 <div class="panel-heading">
                     <h4>{{ selectedEvent.notes }}</h4>
                 </div>
@@ -36,8 +36,22 @@
                             <a ng-if="s.person.mainTelephone" href="call:{{ s.person.mainTelephone }}" style="display: block"><small><span class="glyphicon glyphicon-phone-alt"></span> {{s.person.mainTelephone}}</small></a>
                         </div>
                     </div>
-                    <div class="alert alert-danger" ng-if="selectedEvent.shifts.length == 0">
+                    <div class="row" ng-if="selectedEvent.myShift">
+                        <div class="col-md-3">
+                            {{ selectedEvent.myShift.role }}
+                        </div>
+                        <div class="col-md-9">
+                            io
+                            <button type="button" class="btn btn-sm btn-primary" ng-click="addShift(selectedEvent.myShift)">Modifica</button>
+                        </div>
+                    </div>
+                    <div class="alert alert-danger" ng-if="selectedEvent.shifts.length == 0 && !selectedEvent.myShift">
                         Turno non coperto!
+                    </div>
+                    <div class="row" ng-if="!selectedEvent.myShift">
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-sm btn-primary" ng-click="addShift()">Mi segno</button>
+                        </div>
                     </div>
                 </div>
             </div>
