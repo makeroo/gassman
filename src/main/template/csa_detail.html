@@ -42,13 +42,13 @@
                         </div>
                         <div class="col-md-9">
                             io
-                            <button type="button" class="btn btn-sm btn-primary" ng-click="addShift(selectedEvent.myShift)">Modifica</button>
+                            <button type="button" class="btn btn-sm btn-primary" ng-click="addShift(selectedEvent.myShift)" ng-if="selectedEvent.editable">Modifica</button>
                         </div>
                     </div>
                     <div class="alert alert-danger" ng-if="selectedEvent.shifts.length == 0 && !selectedEvent.myShift">
                         Turno non coperto!
                     </div>
-                    <div class="row" ng-if="!selectedEvent.myShift">
+                    <div class="row" ng-if="!selectedEvent.myShift && selectedEvent.editable">
                         <div class="col-md-12">
                             <button type="button" class="btn btn-sm btn-primary" ng-click="addShift()">Mi segno</button>
                         </div>

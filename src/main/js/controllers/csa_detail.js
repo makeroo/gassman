@@ -54,8 +54,11 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
                     if (oldSelected && oldSelected.id == e.id)
                         $scope.selectedEvent = e;
 
+                    var now = moment().utc();
+
                     e.from_date = moment(e.from_time).utc();
                     e.to_date = moment(e.to_time).utc();
+                    e.editable = e.from_date > now;
 
                     e.delivery_place = $scope.deliveryPlacesIndex[e.delivery_place_id];
                     var myShift = null;
