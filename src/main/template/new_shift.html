@@ -1,12 +1,14 @@
-<div class="modal-header">
-    <h3 class="modal-title">Turno per la consegna del {{ event.from_date.toJSON() | date: 'shortDate' }}</h3>
-</div>
-<div class="modal-body">
-    Dalle {{ event.from_date.toJSON() | date: 'shortTime' }} alle {{ event.to_date.toJSON() | date: 'shortTime' }}.
-    <br>
-    <h4>Ruolo:</h4> <input class="form-control" type="text" ng-model="role" placeholder="Apertura, chiusura, etc.">
-</div>
-<div class="modal-footer">
-    <button class="btn btn-primary" type="button" ng-click="ok()">Mi segno</button>
-    <button class="btn btn-warning" type="button" ng-click="cancel()">Ci ho ripensato</button>
-</div>
+<form name="new_shift">
+    <div class="modal-header">
+        <h3 class="modal-title">Turno per la consegna del {{ event.from_date.toJSON() | date: 'shortDate' }}</h3>
+    </div>
+    <div class="modal-body">
+        Dalle {{ event.from_date.toJSON() | date: 'shortTime' }} alle {{ event.to_date.toJSON() | date: 'shortTime' }}.
+        <br>
+        <h4>Ruolo:</h4> <input class="form-control" type="text" ng-model="role" placeholder="Apertura, chiusura, etc." required>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" type="button" ng-click="ok()" ng-disabled="!new_shift.$valid">Mi segno</button>
+        <button class="btn btn-warning" type="button" ng-click="cancel()">Ci ho ripensato</button>
+    </div>
+</form>
