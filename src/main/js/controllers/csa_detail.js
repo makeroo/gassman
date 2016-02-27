@@ -11,8 +11,8 @@ angular.module('GassmanApp.controllers.CsaDetail', [
 ])
 
 .controller('CsaDetail', [
-         '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q', '$uibModal',
-function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibModal) {
+         '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q', '$uibModal', 'uiCalendarConfig',
+function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibModal,   uiCalendarConfig) {
     var csaId = $stateParams.csaId;
 
     $scope.csa = null;
@@ -46,8 +46,14 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
             gdata.deliveryDates($scope.gassman.selectedCsa, start.toJSON(), end.toJSON()).then(function (r) {
                 var events = r.data;
                 var dest = [];
+                var oldSelected = $scope.selectedEvent;
+
+                $scope.selectedEvent = null;
 
                 angular.forEach(events, function (e) {
+                    if (oldSelected && oldSelected.id == e.id)
+                        $scope.selectedEvent = e;
+
                     e.from_date = moment(e.from_time).utc();
                     e.to_date = moment(e.to_time).utc();
 
@@ -115,7 +121,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
             if (role === null) {
                 if (shift !== undefined) {
                     gdata.removeShift($scope.gassman.selectedCsa, shift.id).then(function (r) {
-                        // TODO: refresh
+                        uiCalendarConfig.calendars.uical.fullCalendar('refetchEvents');
                     }).then(undefined, function (error) {
                         console.log(error); // TODO:
                     });
@@ -129,7 +135,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
                         role,
                         $scope.gassman.loggedUser.profile.id
                     ).then(function (r) {
-                        // TODO: refresh
+                        uiCalendarConfig.calendars.uical.fullCalendar('refetchEvents');
                     }).then(undefined, function (error) {
                         console.log(error); // TODO:
                     });
