@@ -2,7 +2,7 @@
 
     <p ng-if="csa.description">{{csa.description}}</p>
 
-    <div class="row">
+    <div class="row last-row-w-separator">
         <div class="col-md-8">
             <div ui-calendar="calendar" ng-model="eventSources" calendar="uical"></div>
         </div>
@@ -58,69 +58,76 @@
         </div>
     </div>
 
-    <div ng-if="editableCsaInfo" class="row last-row-w-separator">
-        <div class="col-md-2">
-            <button class="btn btn-default" ng-click="editCsa()">Amministrazione GAS</button>
+    <div class="row last-row-w-separator">
+        <div class="col-md-12">
+            <button class="btn btn-default" ui-sref="root.csa_admin({csaId:gassman.selectedCsa})" ng-if="editableCsaInfo">Amministrazione GAS</button>
+            <button class="btn btn-default" ui-sref="root.csa_shifts({csaId:gassman.selectedCsa})" ng-if="editableCsaDeliveryDates">Gestione turni</button>
         </div>
     </div>
 
-    <div class="panel panel-default" ng-if="csa.kitty.amount != undefined">
-        <div class="panel-heading">
-            <h3 class="panel-title">Cassa comune</h3>
-        </div>
-        <div class="panel-body">
+    <div class="row">
+        <div class="col-md-6">
 
-            <p ng-if="csa.kitty.amount">Saldo in cassa comune: {{ csa.kitty.amount[0] | currency: csa.kitty.amount[1] }}.
-                <button class="btn btn-default" ng-click="showAccount(csa.kitty.id)">Visualizza tutti i movimenti</button>
-            </p>
-            <p ng-if="csa.last_kitty_deposit">Ultimo versamento in cassa risalente al {{ csa.last_kitty_deposit.log_date | date }} registrato da {{ csa.last_kitty_deposit.first_name}} {{ csa.last_kitty_deposit.last_name }}.
-                <button class="btn btn-default" ng-click="showTransaction([0,0,0,0,csa.last_kitty_deposit.tid])">Dettagli</button>
-            </p>
+            <div class="panel panel-default" ng-if="csa.kitty.amount != undefined">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Cassa comune</h3>
+                </div>
+                <div class="panel-body">
 
-            <div ng-if="editableMembershipFee">
-                <button class="btn btn-default" ng-if="!viewChargeMembershipForm" ng-click="showChargeMembershipFeeForm(true)">Addebita quota di partecipazione</button>
+                    <p ng-if="csa.kitty.amount">Saldo in cassa comune: {{ csa.kitty.amount[0] | currency: csa.kitty.amount[1] }}.
+                        <button class="btn btn-default" ng-click="showAccount(csa.kitty.id)">Visualizza tutti i movimenti</button>
+                    </p>
+                    <p ng-if="csa.last_kitty_deposit">Ultimo versamento in cassa risalente al {{ csa.last_kitty_deposit.log_date | date }} registrato da {{ csa.last_kitty_deposit.first_name}} {{ csa.last_kitty_deposit.last_name }}.
+                        <button class="btn btn-default" ng-click="showTransaction([0,0,0,0,csa.last_kitty_deposit.tid])">Dettagli</button>
+                    </p>
 
-                <form ng-if="viewChargeMembershipForm" name="membershipFeeForm">
-                    <div class="form-group">
-                        <label for="membership_fee">Quota di partecipazione</label>
-                        <input type="number" min="0" ng-model="csa.kitty.membership_fee" class="form-control" id="membership_fee" placeholder="TODO">
+                    <div ng-if="editableMembershipFee">
+                        <button class="btn btn-default" ng-if="!viewChargeMembershipForm" ng-click="showChargeMembershipFeeForm(true)">Addebita quota di partecipazione</button>
+
+                        <form ng-if="viewChargeMembershipForm" name="membershipFeeForm">
+                            <div class="form-group">
+                                <label for="membership_fee">Quota di partecipazione</label>
+                                <input type="number" min="0" ng-model="csa.kitty.membership_fee" class="form-control" id="membership_fee" placeholder="TODO">
+                            </div>
+                            <div class="form-group">
+                                <label for="charge_description">Annotazioni</label>
+                                <input type="text" class="form-control" ng-model="csa.kitty.charge_description" id="charge_description" placeholder="">
+                            </div>
+                            <button class="btn btn-default" ng-click="chargeMembershipFee()">Conferma</button>
+                            <button class="btn btn-default" ng-click="showChargeMembershipFeeForm(false)">Annulla</button>
+                            <div ng-if="membershipFeeError">{{membershipFeeError}}.</div>
+                        </form>
+
                     </div>
-                    <div class="form-group">
-                        <label for="charge_description">Annotazioni</label>
-                        <input type="text" class="form-control" ng-model="csa.kitty.charge_description" id="charge_description" placeholder="">
+
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div ng-if="movements" class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Ultimi movimenti sul tuo conto</h3>
+                </div>
+                <div class="panel-body">
+
+                    <h4 ng-show="personalAmount != null">Saldo personale: {{personalAmount[0] | currency : personalAmount[1] }}</h4>
+
+                    <div ng-if="movements" class="movements-syn">
+                        <table class="table table-hover">
+                            <tbody>
+                                <tr ng-repeat="mov in movements" ng-click="showTransaction(mov)">
+                                    <td class="col-md-2">{{ mov[1] | date:"shortDate" }}</td>
+                                    <td class="col-md-8">{{ mov[0] }}</td>
+                                    <td class="col-md-2">{{ mov[3] | currency : mov[5] }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button class="btn btn-default" ng-click="showAccount(gassman.selectedAccount)">Elenco completo</button>
                     </div>
-                    <button class="btn btn-default" ng-click="chargeMembershipFee()">Conferma</button>
-                    <button class="btn btn-default" ng-click="showChargeMembershipFeeForm(false)">Annulla</button>
-                    <div ng-if="membershipFeeError">{{membershipFeeError}}.</div>
-                </form>
-
-            </div>
-
-        </div>
-    </div>
-
-    <div ng-if="movements" class="panel panel-default">
-        <div class="panel-heading">
-            <h3 class="panel-title">Ultimi movimenti sul tuo conto</h3>
-        </div>
-        <div class="panel-body">
-
-            <h4 ng-show="personalAmount != null">Saldo personale: {{personalAmount[0] | currency : personalAmount[1] }}</h4>
-
-            <div ng-if="movements" class="movements-syn">
-                <table class="table table-hover">
-                    <tbody>
-                        <tr ng-repeat="mov in movements" ng-click="showTransaction(mov)">
-                            <td class="col-md-2">{{ mov[1] | date:"shortDate" }}</td>
-                            <td class="col-md-8">{{ mov[0] }}</td>
-                            <td class="col-md-2">{{ mov[3] | currency : mov[5] }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button class="btn btn-default" ng-click="showAccount(gassman.selectedAccount)">Elenco completo</button>
-            </div>
-            <div ng-if="movements != null && movements.length == 0">
-                <p>Nessuno</p>
+                    <div ng-if="movements != null && movements.length == 0">
+                        <p>Nessuno</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -149,10 +149,6 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
         }*/);
     };
 
-    $scope.editCsa = function () {
-        $location.path('/csa/' + csaId + '/admin');
-    };
-
     $scope.showAccount = function (accountId) {
         $location.path('/account/' + accountId + '/detail');
     };
@@ -189,6 +185,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
 
     $scope.editableMembershipFee = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
     $scope.editableCsaInfo = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_csaEditor) != -1;
+    $scope.editableCsaDeliveryDates = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canManageShifts) != -1;
 
     $scope.$watch('gassman.selectedAccount', function (accId) {
         if (accId) {
