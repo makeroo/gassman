@@ -11,8 +11,10 @@ angular.module('gassmanApp', [
     'GassmanApp.controllers.CookieBanner',
     'GassmanApp.controllers.HomeSelectorController',
     'GassmanApp.controllers.Navbar',
+    'GassmanApp.controllers.CsaBase',
     'GassmanApp.controllers.CsaDetail',
     'GassmanApp.controllers.CsaAdmin',
+    'GassmanApp.controllers.CsaShifts',
     'GassmanApp.controllers.AccountsIndex',
     'GassmanApp.controllers.AccountDetail',
     'GassmanApp.controllers.PersonDetail',
@@ -69,6 +71,37 @@ function ($stateProvider,   $urlRouterProvider) {
             return d.promise;
         }
     ];
+    var checkUserUserPermissions = function () {
+        var permissions = arguments;
+
+        // TODO: creare un servizio aaa con tutte le utility function tipo questa
+        function hasAll (user, perms) {
+            for (var c = perms.length; --c >= 0; ) {
+                if (user.permissions.indexOf(perms[c]) == -1) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return [
+                     '$rootScope', 'gdata', '$q',
+            function ($rootScope,   gdata,   $q) {
+                var d = $q.defer();
+
+                $rootScope.gassman.appStarted.then(function () {
+                    if (hasAll($rootScope.gassman.loggedUser, permissions)) {
+                        d.resolve($rootScope.gassman.loggedUser);
+                    } else {
+                        d.reject([gdata.error_codes.E_not_authenticated]);
+                    }
+                });
+
+                return d.promise;
+            }
+        ];
+    };
     var checkSelectedCsa = [
                  '$rootScope', 'gdata', '$q',
         function ($rootScope,   gdata,   $q) {
@@ -101,20 +134,37 @@ function ($stateProvider,   $urlRouterProvider) {
             templateUrl: 'template/master.html'
         }).
         state('root.csa', {
-            url: '/csa/:csaId/detail',
+            abstract: true,
+            url: '/csa/{csaId:[0-9]+}',
             resolve: {
-                userAuthenticated: checkLoggedUser
+                userAuthenticated: checkLoggedUser,
+                csaSelected: checkSelectedCsa
             },
+            template: '<div ui-view></div>',
+            controller: 'CsaBase'
+        }).
+        state('root.csa.detail', {
+            url: '/detail',
             templateUrl: 'template/csa_detail.html',
             controller: 'CsaDetail'
         }).
-        state('root.csa_admin', {
-            url: '/csa/{csaId:[0-9]+}/admin',
+        state('root.csa.admin', {
+            url: '/admin',
             resolve: {
-                userAuthenticated: checkLoggedUser
+                userAuthenticated: checkUserUserPermissions(13/*TODO:gdata.permissions.P_csaEditor*/),
+                csaSelected: checkSelectedCsa
             },
             templateUrl: 'template/csa_admin.html',
             controller: 'CsaAdmin'
+        }).
+        state('root.csa.shifts', {
+            url: '/csa/{csaId:[0-9]+}/shifts',
+            resolve: {
+                userAuthenticated: checkUserUserPermissions(15/*TODO:gdata.permissions.P_canManageShifts*/),
+                csaSelected: checkSelectedCsa
+            },
+            templateUrl: 'template/csa_shifts.html',
+            controller: 'CsaShifts'
         }).
         state('root.person_detail', {
             url: '/person/:personId/detail',
@@ -177,6 +227,9 @@ function ($stateProvider,   $urlRouterProvider) {
         }).
         state('root.admin.people', {
             url: '/people',
+            resolve: {
+                userAuthenticated: checkUserUserPermissions(3/*TODO:gdata.permissions.P_canAdminPeople*/)
+            },
             templateUrl: 'template/admin_people.html',
             controller: 'AdminPeople'
         }).

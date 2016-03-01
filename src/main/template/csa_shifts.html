@@ -1,0 +1,63 @@
+<div class="csa-info">
+
+    <div class="row last-row-w-separator">
+        <div class="col-md-8">
+            <div ui-calendar="calendar" ng-model="eventSources" calendar="uical"></div>
+        </div>
+        <div class="col-md-4">
+            <div class="row">
+                <div class="col-md-12">
+                    <h3>Punti di consegna</h3>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12" >
+                    <button type="button" ng-repeat="dp in deliveryPlaces" class="btn btn-default btn-sm" style="margin: 2px; background-color: {{ dp.color }}">{{ dp.description }}</button>
+                </div>
+            </div>
+            <div class="panel" ng-class="{ 'panel-default': selectedEvent.shifts.length > 0 || selectedEvent.myShift, 'panel-danger': selectedEvent.shifts.length == 0 && !selectedEvent.myShift }" ng-if="selectedEvent">
+                <div class="panel-heading">
+                    <h4>{{ selectedEvent.notes }}</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">Dalle: {{ selectedEvent.from_date.toJSON() | date: 'shortTime' }}</div>
+                        <div class="col-md-6">Alle: {{ selectedEvent.to_date.toJSON() | date: 'shortTime' }}</div>
+                    </div>
+                    <div class="row" ng-repeat="s in selectedEvent.shifts">
+                        <div class="col-md-3">
+                            {{ s.role }}
+                        </div>
+                        <div class="col-md-9">
+                            <a href="#/person/{{ s.person.profile.id }}/detail">{{ s.person.profile.first_name }} {{ s.person.profile.last_name }}</a>
+                            <a ng-if="s.person.mainEmail" href="mailto:{{ s.person.mainEmail }}" style="display: block"><small>{{s.person.mainEmail}}</small></a>
+                            <a ng-if="s.person.mainTelephone" href="call:{{ s.person.mainTelephone }}" style="display: block"><small><span class="glyphicon glyphicon-phone-alt"></span> {{s.person.mainTelephone}}</small></a>
+                        </div>
+                    </div>
+                    <div class="row" ng-if="selectedEvent.myShift">
+                        <div class="col-md-3">
+                            {{ selectedEvent.myShift.role }}
+                        </div>
+                        <div class="col-md-9">
+                            io
+                            <button type="button" class="btn btn-sm btn-primary" ng-click="addShift(selectedEvent.myShift)" ng-if="selectedEvent.editable">Modifica</button>
+                        </div>
+                    </div>
+                    <div class="alert alert-danger" ng-if="selectedEvent.shifts.length == 0 && !selectedEvent.myShift">
+                        Turno non coperto!
+                    </div>
+                    <div class="row" ng-if="!selectedEvent.myShift && selectedEvent.editable">
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-sm btn-primary" ng-click="addShift()">Mi segno</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div ng-if="loadError">
+    <p>Pagina non disponible: <span ng-repeat="msg in loadError">{{ msg }}</span>.</p>
+</div>

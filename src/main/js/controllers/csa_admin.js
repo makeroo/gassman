@@ -9,8 +9,8 @@ angular.module('GassmanApp.controllers.CsaAdmin', [
 ])
 
 .controller('CsaAdmin', [
-         '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q',
-function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
+         '$scope', '$filter', '$location', '$stateParams', 'gdata',
+function ($scope,   $filter,   $location,   $stateParams,   gdata) {
     var csaId = $stateParams.csaId;
 
     $scope.csa = null;
