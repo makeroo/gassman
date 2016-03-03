@@ -61,6 +61,8 @@ function ($stateProvider,   $urlRouterProvider) {
             var d = $q.defer();
 
             $rootScope.gassman.appStarted.then(function () {
+                return $rootScope.gassman.userLoading;
+            }).then(function () {
                 if ($rootScope.gassman.loggedUser) {
                     d.resolve($rootScope.gassman.loggedUser);
                 } else {
@@ -91,6 +93,8 @@ function ($stateProvider,   $urlRouterProvider) {
                 var d = $q.defer();
 
                 $rootScope.gassman.appStarted.then(function () {
+                    return $rootScope.gassman.userLoading;
+                }).then(function () {
                     if (hasAll($rootScope.gassman.loggedUser, permissions)) {
                         d.resolve($rootScope.gassman.loggedUser);
                     } else {
