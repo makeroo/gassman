@@ -17,40 +17,48 @@
             </div>
             <div class="panel" ng-class="{ 'panel-default': selectedEvent.shifts.length > 0 || selectedEvent.myShift, 'panel-danger': selectedEvent.shifts.length == 0 && !selectedEvent.myShift }" ng-if="selectedEvent">
                 <div class="panel-heading">
-                    <h4>{{ selectedEvent.notes }}</h4>
+                    <h4 ng-if="selectedEvent.id">Modifica turno: {{ selectedEvent.from_date.toJSON() | date: 'shortDate' }}</h4>
+                    <h4 ng-if="!selectedEvent.id">Nuovo turno: {{ selectedEvent.from_date.toJSON() | date: 'shortDate' }}</h4>
                 </div>
                 <div class="panel-body">
-                    <div class="row">
-                        <div class="col-md-6">Dalle: {{ selectedEvent.from_date.toJSON() | date: 'shortTime' }}</div>
-                        <div class="col-md-6">Alle: {{ selectedEvent.to_date.toJSON() | date: 'shortTime' }}</div>
-                    </div>
-                    <div class="row" ng-repeat="s in selectedEvent.shifts">
-                        <div class="col-md-3">
-                            {{ s.role }}
+                    <form name="delivery_date">
+                        <div class="checkbox" ng-repeat="dp in selectedEvent.delivery_places">
+                            <label>
+                                <input type="checkbox" ng-model="selectedEvent.enabled_dp[dp.id]">{{ dp.description }}
+                            </label>
                         </div>
-                        <div class="col-md-9">
-                            <a href="#/person/{{ s.person.profile.id }}/detail">{{ s.person.profile.first_name }} {{ s.person.profile.last_name }}</a>
-                            <a ng-if="s.person.mainEmail" href="mailto:{{ s.person.mainEmail }}" style="display: block"><small>{{s.person.mainEmail}}</small></a>
-                            <a ng-if="s.person.mainTelephone" href="call:{{ s.person.mainTelephone }}" style="display: block"><small><span class="glyphicon glyphicon-phone-alt"></span> {{s.person.mainTelephone}}</small></a>
+                        <div class="form-group">
+                            <label for="notes" class="control-label">Note</label>
+                            <input type="text" class="form-control" id="notes" placeholder="Verdure, etc." ng-model="selectedEvent.notes">
                         </div>
-                    </div>
-                    <div class="row" ng-if="selectedEvent.myShift">
-                        <div class="col-md-3">
-                            {{ selectedEvent.myShift.role }}
+                        <div class="row">
+                            <div class="form-group col-md-6">
+                                <label for="from_time" class="control-label">Dalle</label>
+                                <input type="text" class="form-control" id="from_time" placeholder="18:30" ng-model="selectedEvent.from_hour">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="to_time" class="control-label">Alle</label>
+                                <input type="text" class="form-control" id="to_time" placeholder="19:00" ng-model="selectedEvent.to_hour">
+                            </div>
                         </div>
-                        <div class="col-md-9">
-                            io
-                            <button type="button" class="btn btn-sm btn-primary" ng-click="addShift(selectedEvent.myShift)" ng-if="selectedEvent.editable">Modifica</button>
-                        </div>
-                    </div>
-                    <div class="alert alert-danger" ng-if="selectedEvent.shifts.length == 0 && !selectedEvent.myShift">
-                        Turno non coperto!
-                    </div>
-                    <div class="row" ng-if="!selectedEvent.myShift && selectedEvent.editable">
-                        <div class="col-md-12">
-                            <button type="button" class="btn btn-sm btn-primary" ng-click="addShift()">Mi segno</button>
-                        </div>
-                    </div>
+                        <button type="button" class="btn btn-primary" ng-click="saveEvent()">Salva</button>
+                        <button type="button" class="btn btn-danger" ng-if="selectedEvent.id" ng-click="removeEvent()">Rimuovi data di consegna</button>
+                        <button type="button" class="btn btn-danger" ng-if="!selectedEvent.id" ng-click="cancelEvent()">Annulla</button>
+                        <h3>Turnisti</h3>
+                        <ng:form name="shift" ng-repeat="s in selectedEvent.shifts">
+                            <div class="row">
+                                <div class="form-group col-md-6">
+                                    <label for="role{{ s.idx }}" class="control-label">Ruolo</label>
+                                    <input type="text" class="form-control" id="role{{ s.idx }}" placeholder="apertura" ng-model="shift.role">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="person{{ s.idx }}" class="control-label">Persona</label>
+                                    <input type="text" class="form-control" id="person{{ s.idx }}" ng-model="selectedEvent.person_id">
+                                </div>
+                            </div>
+                        </ng:form>
+                        <button type="button" class="btn btn-primary">Aggiungi turnista</button>
+                    </form>
                 </div>
             </div>
         </div>

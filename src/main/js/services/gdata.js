@@ -536,5 +536,13 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
     this.createPerson = function (q) {
 		return $http.post('/gm/admin/people/create?_xsrf=' + $cookies.get('_xsrf'), q);
     };
+
+    this.saveEvent = function (csaId, e) {
+		return $http.post('/gm/event/' + csaId + '/save?_xsrf=' + $cookies.get('_xsrf'), e);
+    };
+
+    this.removeEvent = function (csaId, eventId) {
+		return $http.post('/gm/event/' + csaId + '/remove?_xsrf=' + $cookies.get('_xsrf'), { id: eventId });
+    };
 }])
 ;

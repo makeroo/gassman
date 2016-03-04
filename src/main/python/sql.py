@@ -4,6 +4,7 @@ Created on 03/mar/2014
 @author: makeroo
 """
 
+import jsonlib
 
 #P_membership = 1
 P_canCheckAccounts = 2
@@ -471,6 +472,34 @@ SELECT count(*)
   FROM delivery_date dd
   JOIN delivery_place p ON p.id=dd.delivery_place_id
  WHERE dd.id=%s AND p.csa_id=%s''', [date_id, csa_id]
+
+
+def csa_delivery_date_update (id, delivery_place_id, from_time, to_time, notes):
+    return '''
+UPDATE delivery_date
+   SET delivery_place_id=%s,
+       from_time=%s,
+       to_time=%s,
+       notes=%s
+ WHERE id=%s''', [
+        delivery_place_id,
+        jsonlib.decode_date(from_time),
+        jsonlib.decode_date(to_time),
+        notes,
+        id
+    ]
+
+
+def csa_delivery_date_save (delivery_place_id, from_time, to_time, notes):
+    return '''
+INSERT INTO delivery_date
+            (delivery_place_id, from_time, to_time, notes)
+     VALUES (%s, %s, %s, %s)''', [
+        delivery_place_id,
+        jsonlib.decode_date(from_time),
+        jsonlib.decode_date(to_time),
+        notes
+    ]
 
 
 def account_currency (accId, csaId, requiredCurr):

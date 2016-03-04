@@ -130,6 +130,8 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/people/(null|\d+)/profiles$', PeopleProfilesHandler),
             (r'^/gm/person/(null|\d+)/save$', PersonSaveHandler),
             (r'^/gm/person/(\d+)/check_email$', PersonCheckEmailHandler),
+            (r'^/gm/event/(\d+)/save$', EventSaveHandler),
+            (r'^/gm/event/(\d+)/remove$', EventRemoveHandler),
             (r'^/gm/admin/people/index/(\d+)/(\d+)$', AdminPeopleIndexHandler),
             (r'^/gm/admin/people/profiles$', AdminPeopleProfilesHandler),
             (r'^/gm/admin/people/remove', AdminPeopleRemoveHandler),
@@ -1363,6 +1365,46 @@ class PersonCheckEmailHandler (JsonBaseHandler):
         # verifica unicità
         cur.execute(*self.application.sql.isUniqueEmail(pid, email))
         return cur.fetchone()[0]
+
+
+class EventSaveHandler (JsonBaseHandler):
+    def do (self, cur, csa_id):
+        uid = self.current_user
+        p = self.payload
+        log_gassman.debug('saving: %s', p)
+        event_id = p.get('id')
+
+        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
+            raise GDataException(error_codes.E_permission_denied, 403)
+
+        if event_id is not None:
+            cur.execute(*self.application.sql.csa_delivery_date_check(csa_id, event_id))
+            v = cur.fetchone()[0]
+            if v == 0:
+                raise GDataException(error_codes.E_permission_denied, 403)
+            cur.execute(*self.application.sql.csa_delivery_date_update(**p))
+        else:
+            cur.execute(*self.application.sql.csa_delivery_date_save(**p))
+            event_id = cur.lastrowid
+        return { 'id': event_id }
+        # TODO: salvare shifts
+
+
+class EventRemoveHandler (JsonBaseHandler):
+    def do (self, cur, csaId):
+        uid = self.current_user
+        p = self.payload
+        log_gassman.debug('removing: %s', p)
+#        pid = p['id']
+#        email = p['email']
+#        if (
+#            not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditContacts, uid, csaId) and
+#            uid != int(pid)
+#            ):
+#            raise GDataException(error_codes.E_permission_denied, 403)
+#        # verifica unicità
+#        cur.execute(*self.application.sql.isUniqueEmail(pid, email))
+#        return cur.fetchone()[0]
 
 
 class AdminPeopleIndexHandler (JsonBaseHandler):
