@@ -133,5 +133,9 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
     $scope.cancelEvent = function () {
         $scope.selectedEvent = null;
     };
+
+    $scope.addShift = function () {
+
+    };
 }])
 ;

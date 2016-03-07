@@ -1368,7 +1368,7 @@ class PersonCheckEmailHandler (JsonBaseHandler):
 
 
 class EventSaveHandler (JsonBaseHandler):
-    def do (self, cur, csa_id):
+    def do(self, cur, csa_id):
         uid = self.current_user
         p = self.payload
         log_gassman.debug('saving: %s', p)
@@ -1384,6 +1384,10 @@ class EventSaveHandler (JsonBaseHandler):
                 raise GDataException(error_codes.E_permission_denied, 403)
             cur.execute(*self.application.sql.csa_delivery_date_update(**p))
         else:
+            cur.execute(*self.application.sql.csa_delivery_place_check(csa_id, p['delivery_place_id']))
+            v = cur.fetchone()[0]
+            if v == 0:
+                raise GDataException(error_codes.E_permission_denied, 403)
             cur.execute(*self.application.sql.csa_delivery_date_save(**p))
             event_id = cur.lastrowid
         return { 'id': event_id }
@@ -1391,20 +1395,22 @@ class EventSaveHandler (JsonBaseHandler):
 
 
 class EventRemoveHandler (JsonBaseHandler):
-    def do (self, cur, csaId):
+    def do(self, cur, csa_id):
         uid = self.current_user
         p = self.payload
         log_gassman.debug('removing: %s', p)
-#        pid = p['id']
-#        email = p['email']
-#        if (
-#            not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditContacts, uid, csaId) and
-#            uid != int(pid)
-#            ):
-#            raise GDataException(error_codes.E_permission_denied, 403)
-#        # verifica unicità
-#        cur.execute(*self.application.sql.isUniqueEmail(pid, email))
-#        return cur.fetchone()[0]
+
+        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
+            raise GDataException(error_codes.E_permission_denied, 403)
+
+        date_id = p['id']
+        cur.execute(*self.application.sql.csa_delivery_date_check(csa_id, date_id))
+        v = cur.fetchone()[0]
+        if v == 0:
+            raise GDataException(error_codes.E_permission_denied, 403)
+
+        cur.execute(*self.application.sql.csa_delivery_shift_remove_all(date_id))
+        cur.execute(*self.application.sql.csa_delivery_date_remove(date_id))
 
 
 class AdminPeopleIndexHandler (JsonBaseHandler):

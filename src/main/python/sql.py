@@ -419,7 +419,12 @@ SELECT p.id, p.description, a.first_line, a.second_line, a.description as addr_d
  JOIN state s ON c.state_id=s.id
  WHERE p.csa_id = %s''', [ csaId ]
 
-def csa_delivery_dates (csaId, fromDate, toDate):
+
+def csa_delivery_place_check(csa_id, dp_id):
+    return 'SELECT count(*) FROM delivery_place WHERE id=%s AND csa_id=%s', [ dp_id, csa_id ]
+
+
+def csa_delivery_dates(csaId, fromDate, toDate):
     return '''
 SELECT dd.*
  FROM delivery_date dd
@@ -462,16 +467,24 @@ SELECT count(*)
     return q, a
 
 
+def csa_delivery_shift_remove_all(date_id):
+    return 'DELETE FROM delivery_shift WHERE delivery_date_id=%s', [date_id]
+
+
 def csa_delivery_shift_remove(shift_id):
     return 'DELETE FROM delivery_shift WHERE id=%s', [shift_id]
 
 
-def csa_delivery_date_check (csa_id, date_id):
+def csa_delivery_date_check(csa_id, date_id):
     return '''
 SELECT count(*)
   FROM delivery_date dd
   JOIN delivery_place p ON p.id=dd.delivery_place_id
  WHERE dd.id=%s AND p.csa_id=%s''', [date_id, csa_id]
+
+
+def csa_delivery_date_remove(date_id):
+    return 'DELETE FROM delivery_date WHERE id=%s', [date_id]
 
 
 def csa_delivery_date_update (id, delivery_place_id, from_time, to_time, notes):
