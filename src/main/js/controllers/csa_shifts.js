@@ -7,7 +7,8 @@
 angular.module('GassmanApp.controllers.CsaShifts', [
     'GassmanApp.services.Gdata',
     'GassmanApp.services.AccountAutocompletion',
-    'GassmanApp.directives.GmValidTime'
+    'GassmanApp.directives.GmValidTime',
+    'GassmanApp.directives.GmAfter'
 ])
 
 .controller('CsaShifts', [
@@ -47,11 +48,11 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
             $scope.selectedEvent = event;
         },
         dayClick: function (date, jsEvent, view) {
-            var start = moment(date).add(18, 'hour');
-            var end = moment(date).add(19, 'hour');
+            var start = moment(date); //.add(18, 'hour');
+            var end = moment(date); //.add(19, 'hour');
 
-            var hour_start = $filter('date')(start.toJSON(), 'shortTime');
-            var hour_end = $filter('date')(end.toJSON(), 'shortTime');
+            //var hour_start = $filter('date')(start.toJSON(), 'shortTime');
+            //var hour_end = $filter('date')(end.toJSON(), 'shortTime');
 
             var event = {
                 delivery_place_id: null,
@@ -61,8 +62,8 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
                 notes: '',
                 from_date: start,
                 to_date: end,
-                from_hour: hour_start,
-                to_hour: hour_end,
+                from_hour: '', //hour_start,
+                to_hour: '', //hour_end,
                 editable: true,
                 delivery_place: null,
                 delivery_places: [],
@@ -93,6 +94,8 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
         return false;
     };
 
+    $scope.timeFormat = $locale.DATETIME_FORMATS.shortTime;
+
     $scope.saveEvent = function () {
         var promises = [];
 
@@ -103,9 +106,8 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
             var start = $scope.selectedEvent.from_date;
             var end = $scope.selectedEvent.to_date;
 
-            var timeFormat = $locale.DATETIME_FORMATS.shortTime;
-            var hs = moment($scope.selectedEvent.from_hour, timeFormat).utc();
-            var he = moment($scope.selectedEvent.to_hour, timeFormat).utc();
+            var hs = moment($scope.selectedEvent.from_hour, $scope.timeFormat).utc();
+            var he = moment($scope.selectedEvent.to_hour, $scope.timeFormat).utc();
 
             start.hour(hs.hour());
             start.minutes(hs.minute());
