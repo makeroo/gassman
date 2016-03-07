@@ -6,12 +6,13 @@
 
 angular.module('GassmanApp.controllers.CsaShifts', [
     'GassmanApp.services.Gdata',
-    'GassmanApp.services.AccountAutocompletion'
+    'GassmanApp.services.AccountAutocompletion',
+    'GassmanApp.directives.GmValidTime'
 ])
 
 .controller('CsaShifts', [
-         '$scope', '$filter', '$location', '$stateParams', 'gdata', 'uiCalendarConfig', '$q', 'accountAutocompletion',
-function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarConfig,   $q,   accountAutocompletion) {
+         '$scope', '$filter', '$location', '$stateParams', 'gdata', 'uiCalendarConfig', '$q', 'accountAutocompletion', '$locale',
+function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarConfig,   $q,   accountAutocompletion,   $locale) {
     var csaId = $stateParams.csaId;
 
     $scope.csa = null;
@@ -102,9 +103,9 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
             var start = $scope.selectedEvent.from_date;
             var end = $scope.selectedEvent.to_date;
 
-            // FIXME: ho qui hardcoded HH:mm
-            var hs = moment($scope.selectedEvent.from_hour, 'HH:mm').utc();
-            var he = moment($scope.selectedEvent.to_hour, 'HH:mm').utc();
+            var timeFormat = $locale.DATETIME_FORMATS.shortTime;
+            var hs = moment($scope.selectedEvent.from_hour, timeFormat).utc();
+            var he = moment($scope.selectedEvent.to_hour, timeFormat).utc();
 
             start.hour(hs.hour());
             start.minutes(hs.minute());
