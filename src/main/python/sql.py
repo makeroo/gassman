@@ -441,7 +441,6 @@ SELECT ds.*
 
 
 def csa_delivery_shift_add(shift):
-    shift_id = shift['id']
     q = 'INSERT INTO delivery_shift (delivery_date_id, person_id, role) VALUES (%s, %s, %s)'
     a = [shift['delivery_date_id'], shift['person_id'], shift['role']]
     return q, a

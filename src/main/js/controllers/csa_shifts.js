@@ -5,12 +5,13 @@
 'use strict';
 
 angular.module('GassmanApp.controllers.CsaShifts', [
-    'GassmanApp.services.Gdata'
+    'GassmanApp.services.Gdata',
+    'GassmanApp.services.AccountAutocompletion'
 ])
 
 .controller('CsaShifts', [
-         '$scope', '$filter', '$location', '$stateParams', 'gdata', 'uiCalendarConfig', '$q',
-function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarConfig,   $q) {
+         '$scope', '$filter', '$location', '$stateParams', 'gdata', 'uiCalendarConfig', '$q', 'accountAutocompletion',
+function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarConfig,   $q,   accountAutocompletion) {
     var csaId = $stateParams.csaId;
 
     $scope.csa = null;
@@ -80,6 +81,17 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
         //eventResize: $scope.alertOnResize
     };
 
+    $scope.assignedDp = function () {
+        for (var l = $scope.selectedEvent.delivery_places.length; --l >= 0; ) {
+            var dp = $scope.selectedEvent.delivery_places[l];
+
+            if ($scope.selectedEvent.enabled_dp[dp.id])
+                return true;
+        }
+
+        return false;
+    };
+
     $scope.saveEvent = function () {
         var promises = [];
 
@@ -105,7 +117,8 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
                 from_time: start.toJSON(),
                 to_time: end.toJSON(),
                 notes: $scope.selectedEvent.notes,
-                delivery_place_id: dpId
+                delivery_place_id: dpId,
+                shifts: $scope.selectedEvent.shifts
             };
 
             promises.push(gdata.saveEvent($scope.gassman.selectedCsa, event));
@@ -135,7 +148,26 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
     };
 
     $scope.addShift = function () {
-
+        $scope.selectedEvent.shifts.push({
+            role: '',
+            person_id: null,
+            idx: $scope.selectedEvent.shifts.length
+        });
     };
+
+    $scope.removeShift = function (idx) {
+        $scope.selectedEvent.shifts.splice(idx, 1);
+
+        angular.forEach($scope.selectedEvent.shifts, function (e, idx) {
+            e.idx = idx;
+        });
+    };
+
+    gdata.accountsNames($scope.gassman.selectedCsa).then(function (r) {
+        $scope.currencies = accountAutocompletion.parse(r.data);
+        $scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
+    }).then(undefined, function (error) {
+        $scope.autocompletionDataError = error.data;
+    });
 }])
 ;

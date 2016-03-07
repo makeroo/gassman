@@ -24,37 +24,58 @@
                     <form name="delivery_date">
                         <div class="checkbox" ng-repeat="dp in selectedEvent.delivery_places">
                             <label>
-                                <input type="checkbox" ng-model="selectedEvent.enabled_dp[dp.id]">{{ dp.description }}
+                                <input type="checkbox" ng-model="selectedEvent.enabled_dp[dp.id]" ng-disabled="selectedEvent.id">{{ dp.description }}
                             </label>
                         </div>
                         <div class="form-group">
                             <label for="notes" class="control-label">Note</label>
-                            <input type="text" class="form-control" id="notes" placeholder="Verdure, etc." ng-model="selectedEvent.notes">
+                            <input type="text" class="form-control" id="notes" placeholder="Verdure, etc." ng-model="selectedEvent.notes" required>
                         </div>
                         <div class="row">
                             <div class="form-group col-md-6">
                                 <label for="from_time" class="control-label">Dalle</label>
-                                <input type="text" class="form-control" id="from_time" placeholder="18:30" ng-model="selectedEvent.from_hour">
+                                <input type="text" class="form-control" id="from_time" placeholder="18:30" ng-model="selectedEvent.from_hour" required>
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="to_time" class="control-label">Alle</label>
-                                <input type="text" class="form-control" id="to_time" placeholder="19:00" ng-model="selectedEvent.to_hour">
+                                <input type="text" class="form-control" id="to_time" placeholder="19:00" ng-model="selectedEvent.to_hour" required>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-primary" ng-click="saveEvent()">Salva</button>
+                        <button type="button" class="btn btn-primary" ng-disabled="!delivery_date.$valid || !assignedDp()" ng-click="saveEvent()">Salva</button>
                         <button type="button" class="btn btn-danger" ng-if="selectedEvent.id" ng-click="removeEvent()">Rimuovi data di consegna</button>
                         <button type="button" class="btn btn-danger" ng-if="!selectedEvent.id" ng-click="cancelEvent()">Annulla</button>
                         <h3>Turnisti</h3>
-                        <ng:form name="shift" ng-repeat="s in selectedEvent.shifts">
+                        <div class="row" ng-if="selectedEvent.shifts.length > 0">
+                            <div class="shift-label col-md-5">
+                                Ruolo
+                            </div>
+                            <div class="shift-label col-md-5">
+                                Persona
+                            </div>
+                            <!--
+                            <div class="form-group col-md-1">
+                            </div>
+                            -->
+                        </div>
+                        <ng:form name="shift" class="shift" ng-repeat="s in selectedEvent.shifts">
                             <div class="row">
-                                <div class="form-group col-md-6">
-                                    <label for="role{{ s.idx }}" class="control-label">Ruolo</label>
-                                    <input type="text" class="form-control" id="role{{ s.idx }}" placeholder="apertura" ng-model="shift.role">
+                                <div class="form-group col-md-5">
+                                    <input type="text" class="form-control" placeholder="apertura" ng-model="s.role" required>
                                 </div>
-                                <div class="form-group col-md-6">
-                                    <label for="person{{ s.idx }}" class="control-label">Persona</label>
-                                    <input type="text" class="form-control" id="person{{ s.idx }}" ng-model="selectedEvent.person_id">
+                                <div class="form-group col-md-5">
+                                    <ui-select theme="bootstrap"
+                                               name="person"
+                                               ng-model="s.person_id"
+                                               >
+                                        <ui-select-match placeholder="turnista">{{ $select.selected.name }}</ui-select-match>
+                                        <ui-select-choices repeat="accountInfo.acc as accountInfo in autocompletionData | filter: {name: $select.search} track by accountInfo.acc">
+                                            <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
+                                        </ui-select-choices>
+                                    </ui-select>
                                 </div>
+                                <button class="btn btn-link">
+                                    <span class="glyphicon glyphicon-remove" ng-click="removeShift(s.idx)"> </span>
+                                </button>
                             </div>
                         </ng:form>
                         <button type="button" class="btn btn-primary" ng-click="addShift()">Aggiungi turnista</button>

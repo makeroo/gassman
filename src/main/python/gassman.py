@@ -1373,6 +1373,7 @@ class EventSaveHandler (JsonBaseHandler):
         p = self.payload
         log_gassman.debug('saving: %s', p)
         event_id = p.get('id')
+        shifts = p.pop('shifts')
 
         if not self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
             raise GDataException(error_codes.E_permission_denied, 403)
@@ -1383,6 +1384,7 @@ class EventSaveHandler (JsonBaseHandler):
             if v == 0:
                 raise GDataException(error_codes.E_permission_denied, 403)
             cur.execute(*self.application.sql.csa_delivery_date_update(**p))
+            cur.execute(*self.application.sql.csa_delivery_shift_remove_all(event_id))
         else:
             cur.execute(*self.application.sql.csa_delivery_place_check(csa_id, p['delivery_place_id']))
             v = cur.fetchone()[0]
@@ -1390,8 +1392,10 @@ class EventSaveHandler (JsonBaseHandler):
                 raise GDataException(error_codes.E_permission_denied, 403)
             cur.execute(*self.application.sql.csa_delivery_date_save(**p))
             event_id = cur.lastrowid
+        for shift in shifts:
+            shift['delivery_date_id'] = event_id
+            cur.execute(*self.application.sql.csa_delivery_shift_add(shift))
         return { 'id': event_id }
-        # TODO: salvare shifts
 
 
 class EventRemoveHandler (JsonBaseHandler):
