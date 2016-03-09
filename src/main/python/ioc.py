@@ -35,3 +35,13 @@ def db_connection_arguments():
 def sql_factory():
     import sql
     return sql
+
+
+def gassman_backend():
+    import gassman.backend
+
+    return gassman.backend.GassmanWebApp(
+        sql_factory(),
+        mailer(),
+        db_connection_arguments(),
+    )
