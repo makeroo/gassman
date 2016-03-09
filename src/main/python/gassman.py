@@ -30,17 +30,17 @@ logging.config.dictConfig(settings.LOG)
 import jsonlib
 import pymysql
 import loglib
-import asyncsmtp
 
 import gassman_version
 import sql
 import error_codes
 
+
 log_gassman = logging.getLogger('gassman.application')
 log_gassman_db = logging.getLogger('gassman.application.db')
 
 
-def rss_feed_id (pid):
+def rss_feed_id(pid):
     return hashlib.sha256((settings.COOKIE_SECRET + str(pid)).encode('utf-8')).hexdigest()
 
 
@@ -51,14 +51,14 @@ class GDataException (Exception):
 class GoogleUser (object):
     authenticator = 'Google2'
 
-    def __init__ (self, id_token):
+    def __init__(self, id_token):
         oauth2token = oauth2lib.extract_payload_from_oauth2_id_token(id_token['id_token'])
         self.userId = oauth2token['sub']
         self.email = oauth2token['email']
         self.access_token = id_token['access_token']
 
     @tornado.gen.coroutine
-    def loadFullProfile (self):
+    def loadFullProfile(self):
         http = tornado.httpclient.AsyncHTTPClient()
         response = yield http.fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + self.access_token,
                                    method="GET")
@@ -74,7 +74,7 @@ class GoogleUser (object):
         # altri attributi: id, email, gender, locale
 
 
-#class Session (object):
+# class Session (object):
 #    def __init__ (self, app):
 #        self.application = app
 #        self.created = datetime.datetime.utcnow()
@@ -85,7 +85,7 @@ class Person (object):
     class DoesNotExist (Exception):
         pass
 
-    def __init__ (self, p_id, p_first_name, p_middle_name, p_last_name, p_rss_feed_id):
+    def __init__(self, p_id, p_first_name, p_middle_name, p_last_name, p_rss_feed_id):
         self.id = p_id
         self.firstName = p_first_name
         self.middleName = p_middle_name
@@ -93,14 +93,14 @@ class Person (object):
         #self.account = p_current_account_id
         self.rssFeedId = p_rss_feed_id
 
-    def __str__ (self):
+    def __str__(self):
         return '%s (%s %s)' % (self.id, self.firstName, self.lastName)
 
 
 class GassmanWebApp (tornado.web.Application):
     def __init__ (self, sql, mailer, connArgs):
         handlers = [
-            #(r'^/$', IndexHandler),
+            # (r'^/$', IndexHandler),
             (r'^/home.html$', HomeHandler),
             (r'^/gm/auth/google$', GoogleAuthLoginHandler),
             (r'^/gm/sys/version$', SysVersionHandler),
@@ -109,10 +109,10 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/account/(\d+)/amount$', AccountAmountHandler),
             (r'^/gm/account/(\d+)/xls$', AccountXlsHandler),
             (r'^/gm/account/(\d+)/close$', AccountCloseHandler),
-            #(r'^/gm/profile-info$', ProfileInfoHandler),
+            # (r'^/gm/profile-info$', ProfileInfoHandler),
             (r'^/gm/accounts/(\d+)/index/(\d+)/(\d+)$', AccountsIndexHandler),
             (r'^/gm/accounts/(\d+)/names$', AccountsNamesHandler),
-            #(r'^/gm/expenses/(\d+)/tags$', ExpensesNamesHandler),
+            # (r'^/gm/expenses/(\d+)/tags$', ExpensesNamesHandler),
             (r'^/gm/transaction/(\d+)/(\d+)/edit$', TransactionEditHandler),
             (r'^/gm/transaction/(\d+)/save$', TransactionSaveHandler),
             (r'^/gm/transactions/(\d+)/editable/(\d+)/(\d+)$', TransactionsEditableHandler),
@@ -125,7 +125,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/csa/(\d+)/delivery_dates$', CsaDeliveryDatesHandler),
             (r'^/gm/csa/(\d+)/add_shift', CsaAddShiftHandler),
             (r'^/gm/csa/(\d+)/remove_shift', CsaRemoveShiftHandler),
-            #(r'^/gm/csa/(\d+)/total_amount$', CsaAmountHandler),
+            # (r'^/gm/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/gm/rss/(.+)$', RssFeedHandler),
             (r'^/gm/people/(null|\d+)/profiles$', PeopleProfilesHandler),
             (r'^/gm/person/(null|\d+)/save$', PersonSaveHandler),
@@ -140,27 +140,27 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/admin/people/create_account', AdminPeopleCreateAccountHandler),
             (r'^/gm/admin/people/create', AdminPeopleCreateHandler),
             ]
-        #codeHome = os.path.dirname(__file__)
+        # codeHome = os.path.dirname(__file__)
         sett = dict(
-            cookie_secret = settings.COOKIE_SECRET,
-            template_path = settings.TEMPLATE_PATH, #os.path.join(codeHome, 'templates'),
-            static_path = settings.STATIC_PATH, #os.path.join(codeHome, "static"),
-            xsrf_cookies = True,
-            xsrf_cookie_version = 1,
-            #login_url = '/login.html',
-            google_oauth = {
-                            "key": settings.GOOGLE_OAUTH2_CLIENTID,
-                            "secret": settings.GOOGLE_OAUTH2_SECRET,
-                            },
+            cookie_secret=settings.COOKIE_SECRET,
+            template_path=settings.TEMPLATE_PATH,  # os.path.join(codeHome, 'templates'),
+            static_path=settings.STATIC_PATH,  # os.path.join(codeHome, "static"),
+            xsrf_cookies=True,
+            xsrf_cookie_version=1,
+            # login_url = '/login.html',
+            google_oauth={
+                "key": settings.GOOGLE_OAUTH2_CLIENTID,
+                "secret": settings.GOOGLE_OAUTH2_SECRET,
+            },
             google_oauth_redirect=settings.GOOGLE_OAUTH2_REDIRECT,
-            debug = settings.DEBUG_MODE,
+            debug=settings.DEBUG_MODE,
             )
         super().__init__(handlers, **sett)
         self.mailer = mailer
         self.connArgs = connArgs
         self.conn = None
         self.sql = sql
-        self.viewableContactKinds = [
+        self.viewable_contact_kinds = [
             self.sql.Ck_Telephone,
             self.sql.Ck_Mobile,
             self.sql.Ck_Email,
@@ -168,11 +168,11 @@ class GassmanWebApp (tornado.web.Application):
             self.sql.Ck_Nickname,
         ]
 
-        #self.sessions = dict()
+        # self.sessions = dict()
         self.connect()
-        tornado.ioloop.PeriodicCallback(self.checkConn, settings.DB_CHECK_INTERVAL).start()
+        tornado.ioloop.PeriodicCallback(self.check_conn, settings.DB_CHECK_INTERVAL).start()
 
-    def connect (self):
+    def connect(self):
         if self.conn is not None:
             try:
                 self.conn.close()
@@ -181,17 +181,18 @@ class GassmanWebApp (tornado.web.Application):
                 pass
         self.conn = pymysql.connect(**self.connArgs)
 
-    def checkConn (self):
+    def check_conn(self):
         try:
             try:
                 with self.conn as cur:
                     cur.execute(self.sql.checkConn())
                     list(cur)
             except pymysql.err.OperationalError as e:
-                if e.args[0] == 2013: # pymysql.err.OperationalError: (2013, 'Lost connection to MySQL server during query')
+                if e.args[0] == 2013:
+                    # pymysql.err.OperationalError: (2013, 'Lost connection to MySQL server during query')
                     # provo a riconnettermi
                     log_gassman.warning('mysql closed connection, reconnecting')
-                    self.conn = self.connect()
+                    self.connect()
                 else:
                     raise
         except:
@@ -201,7 +202,7 @@ class GassmanWebApp (tornado.web.Application):
                            (etype, evalue, loglib.TracebackFormatter(tb))
                            )
 
-    def notify (self, subject, body, receivers = None, replyTo=None):
+    def notify(self, subject, body, receivers = None, replyTo=None):
         if self.mailer is None:
             log_gassman.info('SMTP not configured, mail not sent: dest=%s, subj=%s\n%s', receivers, subject, body)
         else:
@@ -212,7 +213,7 @@ class GassmanWebApp (tornado.web.Application):
                              replyTo
                              )
 
-    #def find_person_by_id (self, pid):
+    # def find_person_by_id (self, pid):
     #    with self.conn as cur:
     #        cur.execute(*self.sql.find_person(pid))
     #        pdata = cur.fetchone()
@@ -220,18 +221,18 @@ class GassmanWebApp (tornado.web.Application):
     #            return Person(*pdata)
     #    return None
 
-    def hasOrHadAccount (self, cur, pid, accId):
-        cur.execute(*self.sql.has_or_had_account(pid, accId))
+    def has_or_had_account(self, cur, pid, acc_id):
+        cur.execute(*self.sql.has_or_had_account(pid, acc_id))
         return cur.fetchone()[0] > 0
 
-    def add_contact (self, cur, pid, addr, kind, notes):
+    def add_contact(self, cur, pid, addr, kind, notes):
         if addr:
             cur.execute(*self.sql.create_contact(addr, kind, notes))
             cid = cur.lastrowid
             cur.execute(*self.sql.assign_contact(cid, pid))
 
     @tornado.gen.coroutine
-    def checkProfile (self, requestHandler, user):
+    def check_profile(self, requestHandler, user):
         with self.conn as cur:
             authMode = (user.userId, user.authenticator, self.sql.Ck_Id)
             cur.execute(*self.sql.check_user(*authMode))
@@ -270,18 +271,18 @@ class GassmanWebApp (tornado.web.Application):
                     log_gassman.info('profile created: newUser=%s', p)
                 else:
                     cur.execute(*self.sql.fetchAllContacts(p.id))
-                    for pcId, aId, kind, contactType, addr in list(cur):
+                    for pc_id, a_id, kind, contact_type, addr in list(cur):
                         v = attrsToAdd.get(kind)
-                        if v == (addr, contactType):
+                        if v == (addr, contact_type):
                             attrsToAdd.pop(kind)
                             continue
                         v = attrsToUpdate.get(kind)
                         if v is None:
                             continue
-                        elif v[0] == addr and v[1] == contactType:
+                        elif v[0] == addr and v[1] == contact_type:
                             attrsToUpdate.pop(kind)
                         else:
-                            v[2] = aId
+                            v[2] = a_id
                 # userId e email eventualmente li vado ad aggiungere
                 # picture e gProfile invece li vado a sostituire
                 for kind, (addr, ctype) in attrsToAdd.items():
@@ -303,7 +304,7 @@ class GassmanWebApp (tornado.web.Application):
             cur.execute(*self.sql.update_last_login(p.id, datetime.datetime.utcnow()))
         return p
 
-#    def session (self, requestHandler):
+#    def session(self, requestHandler):
 #        xt = requestHandler.xsrf_token
 #        s = self.sessions.get(xt, None)
 #        if s is None:
@@ -311,76 +312,76 @@ class GassmanWebApp (tornado.web.Application):
 #            self.sessions[xt] = s
 #        return s
 
-    def checkMembershipByKitty (self, cur, personId, accId):
-        cur.execute(*self.sql.check_membership_by_kitty(personId, accId))
+    def check_membership_by_kitty(self, cur, personId, acc_id):
+        cur.execute(*self.sql.check_membership_by_kitty(personId, acc_id))
         r = int(cur.fetchone()[0]) > 0
-        log_gassman.debug('check membership by kitty: user=%s, acc=%s, r=%s', personId, accId, r)
+        log_gassman.debug('check membership by kitty: user=%s, acc=%s, r=%s', personId, acc_id, r)
         return r
 
-    def hasPermissionByAccount (self, cur, perm, personId, accId):
-        cur.execute(*self.sql.has_permission_by_account(perm, personId, accId))
+    def has_permission_by_account(self, cur, perm, personId, acc_id):
+        cur.execute(*self.sql.has_permission_by_account(perm, personId, acc_id))
         r = int(cur.fetchone()[0]) > 0
         log_gassman.debug('has permission: user=%s, perm=%s, r=%s', personId, perm, r)
         return r
 
-    def isUserMemberOfCsa (self, cur, personId, csaId, stillMember):
-        cur.execute(*self.sql.is_user_member_of_csa(personId, csaId, stillMember))
+    def is_member_of_csa(self, cur, personId, csa_id, stillMember):
+        cur.execute(*self.sql.is_user_member_of_csa(personId, csa_id, stillMember))
         r = int(cur.fetchone()[0]) > 0
-        log_gassman.debug('is member: user=%s, csa=%s, still=%s, r=%s', personId, csaId, stillMember, r)
+        log_gassman.debug('is member: user=%s, csa=%s, still=%s, r=%s', personId, csa_id, stillMember, r)
         return r
 
-    def hasPermissionByCsa (self, cur, perm, personId, csaId):
+    def has_permission_by_csa(self, cur, perm, personId, csa_id):
         if perm is None:
             return False
-        cur.execute(*self.sql.has_permission_by_csa(perm, personId, csaId))
+        cur.execute(*self.sql.has_permission_by_csa(perm, personId, csa_id))
         r = int(cur.fetchone()[0]) > 0
         log_gassman.debug('has permission: user=%s, perm=%s, r=%s', personId, perm, r)
         return r
 
-    def hasPermissions (self, cur, perms, personId, csaId):
-        cur.execute(*self.sql.has_permissions(perms, personId, csaId))
+    def has_permissions(self, cur, perms, personId, csa_id):
+        cur.execute(*self.sql.has_permissions(perms, personId, csa_id))
         r = int(cur.fetchone()[0]) > 0
         log_gassman.debug('has permissions: user=%s, perm=%s, r=%s', personId, perms, r)
         return r
 
-    def isKittyTransitionAndUserIsMember (self, cur, transId, personId):
-        cur.execute(*self.sql.transaction_on_kitty_and_user_is_member(transId, personId))
+    def is_kitty_transition_and_is_member(self, cur, trans_id, personId):
+        cur.execute(*self.sql.transaction_on_kitty_and_user_is_member(trans_id, personId))
         r = int(cur.fetchone()[0]) > 0
-        log_gassman.debug('member can view kitty transation: user=%s, trans=%s, r=%s', personId, transId, r)
+        log_gassman.debug('member can view kitty transation: user=%s, trans=%s, r=%s', personId, trans_id, r)
         return r
 
-    def isTransactionEditor (self, cur, transId, personId):
+    def is_transaction_editor(self, cur, trans_id, personId):
         """
         Una transazione può essere creata/modificata da chi ha canEnterXX
         o da chi ha manageTrans.
         Per verificare devo risalire la catena delle sovrascritture.
         """
-        while transId is not None:
-            cur.execute(*self.sql.log_transaction_check_operator(personId, transId))
+        while trans_id is not None:
+            cur.execute(*self.sql.log_transaction_check_operator(personId, trans_id))
             if cur.fetchone()[0] > 0:
                 return True
-            cur.execute(*self.sql.transaction_previuos(transId))
+            cur.execute(*self.sql.transaction_previuos(trans_id))
             l = cur.fetchone()
-            transId = l[0] if l is not None else None
+            trans_id = l[0] if l is not None else None
         return False
 
-    def isInvolvedInTransaction (self, cur, transId, personId):
-        while transId is not None:
-            cur.execute(*self.sql.transaction_is_involved(transId, personId))
+    def isInvolvedInTransaction(self, cur, trans_id, personId):
+        while trans_id is not None:
+            cur.execute(*self.sql.transaction_is_involved(trans_id, personId))
             if cur.fetchone()[0] > 0:
                 return True
-            cur.execute(*self.sql.transaction_previuos(transId))
+            cur.execute(*self.sql.transaction_previuos(trans_id))
             l = cur.fetchone()
-            transId = l[0] if l is not None else None
+            trans_id = l[0] if l is not None else None
         return False
 
 
 class BaseHandler (tornado.web.RequestHandler):
-    def get_current_user (self):
+    def get_current_user(self):
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
-    def notify (self, template, receivers = None, replyTo = None, **namespace):
+    def notify(self, template, receivers=None, replyTo=None, **namespace):
         subject = self.render_string(
             "%s.subject.email" % template,
             **namespace
@@ -406,7 +407,8 @@ class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAu
                 code=self.get_argument('code')
                 )
             token_user = GoogleUser(id_token)
-            yield self.application.checkProfile(self, token_user) # ritorna person ma a me interessa solo la registrazione su db
+            # check_profile ritorna person ma a me interessa solo la registrazione su db
+            yield self.application.check_profile(self, token_user)
             self.redirect("/home.html")
         else:
             yield self.authorize_redirect(
@@ -424,33 +426,36 @@ class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAu
 
 
 class HomeHandler (BaseHandler):
-    def get (self):
+    def get(self):
         u = self.current_user
         if u is not None:
             with self.application.conn as cur:
                 cur.execute(*self.application.sql.update_last_visit(u, datetime.datetime.utcnow()))
-        self.xsrf_token # leggere il cookie => generarlo
-        self.render('home.html',
-                    LOCALE=self.locale.code,
-                    )
+        self.xsrf_token  # leggere il cookie => generarlo
+        self.render(
+            'home.html',
+            LOCALE=self.locale.code,
+        )
 
 
 class JsonBaseHandler (BaseHandler):
     notifyExceptions = False
 
-    def post (self, *args):
+    def post(self, *args):
         with self.application.conn as cur:
             m = cur.execute
-            def logging_execute (sql, *args):
+
+            def logging_execute(sql, *args):
                 stmt = sql.upper().strip()
                 logm = log_gassman_db.debug if stmt.startswith('SELECT') else log_gassman_db.info
                 logm('SQL: %s / %s', sql, args)
                 m(sql, *args)
+
             cur.execute = logging_execute
             r = self.do(cur, *args)
             self.write_response(r)
 
-    def write_response (self, data):
+    def write_response(self, data):
         self.clear_header('Content-Type')
         self.add_header('Content-Type', 'application/json')
         jsonlib.write_json(data, self)
@@ -460,25 +465,26 @@ class JsonBaseHandler (BaseHandler):
         self.add_header('Content-Type', 'application/json')
         etype, evalue, tb = kwargs.get('exc_info', ('', '', None))
         if self.notifyExceptions:
-            self.application.notify('[ERROR] Json API Failed',
-                                    'Request error:\ncause=%s/%s\nother args: %s\nTraceback:\n%s' %
-                                    (etype, evalue, kwargs, loglib.TracebackFormatter(tb))
-                                    )
+            self.application.notify(
+                '[ERROR] Json API Failed',
+                'Request error:\ncause=%s/%s\nother args: %s\nTraceback:\n%s' %
+                (etype, evalue, kwargs, loglib.TracebackFormatter(tb))
+            )
         if etype == GDataException:
             args = evalue.args
-            i = [ args[0] ]
+            i = [args[0]]
             self.set_status(args[1] if len(args) > 1 else 400)
         elif hasattr(evalue, 'args'):
-            i = [ str(etype) ] + [ str(x) for x in evalue.args ]
+            i = [str(etype)] + [str(x) for x in evalue.args]
         else:
-            i = [ str(etype), str(evalue) ]
+            i = [str(etype), str(evalue)]
         # tanto logga tornado
-        #log_gassman.error('unexpected exception: %s/%s', etype, evalue)
-        #log_gassman.debug('full stacktrace:\n', loglib.TracebackFormatter(tb))
+        # log_gassman.error('unexpected exception: %s/%s', etype, evalue)
+        # log_gassman.debug('full stacktrace:\n', loglib.TracebackFormatter(tb))
         jsonlib.write_json(i, self)
 
     @property
-    def payload (self):
+    def payload(self):
         if not hasattr(self, '_payload'):
             try:
                 x = self.request.body
@@ -493,70 +499,70 @@ class JsonBaseHandler (BaseHandler):
 
 
 class SysVersionHandler (JsonBaseHandler):
-    def post (self):
-        data = [ gassman_version.version ]
+    def post(self):
+        data = [gassman_version.version]
         self.write_response(data)
 
 
 class AccountOwnerHandler (JsonBaseHandler):
-    def do (self, cur, accId):
+    def do(self, cur, acc_id):
         uid = self.current_user
-        if (not self.application.hasOrHadAccount(cur, uid, accId) and
-            not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCheckAccounts, uid, accId) and
-            not self.application.checkMembershipByKitty(cur, uid, accId)
+        if (not self.application.has_or_had_account(cur, uid, acc_id) and
+            not self.application.has_permission_by_account(cur, self.application.sql.P_canCheckAccounts, uid, acc_id) and
+            not self.application.check_membership_by_kitty(cur, uid, acc_id)
             ):
             raise GDataException(error_codes.E_permission_denied, 403)
-        cur.execute(*self.application.sql.account_owners(accId))
+        cur.execute(*self.application.sql.account_owners(acc_id))
         oo = list(cur)
         if oo:
             return dict(people=oo)
         # se il conto non è di una persona, sarà del csa
-        cur.execute(*self.application.sql.account_description(accId))
+        cur.execute(*self.application.sql.account_description(acc_id))
         return dict(desc=cur.fetchone())
 
 
 class AccountMovementsHandler (JsonBaseHandler):
-    def do (self, cur, accId, fromIdx, toIdx):
+    def do(self, cur, acc_id, fromIdx, to_idx):
         uid = self.current_user
-        if (not self.application.hasOrHadAccount(cur, uid, accId) and
-            not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCheckAccounts, uid, accId) and
-            not self.application.checkMembershipByKitty(cur, uid, accId)
+        if (not self.application.has_or_had_account(cur, uid, acc_id) and
+            not self.application.has_permission_by_account(cur, self.application.sql.P_canCheckAccounts, uid, acc_id) and
+            not self.application.check_membership_by_kitty(cur, uid, acc_id)
             ):
             raise GDataException(error_codes.E_permission_denied, 403)
         p = self.payload
         f = p.get('filter')
         if f:
             f = '%%%s%%' % f
-        cur.execute(*self.application.sql.account_movements(accId, f, int(fromIdx), int(toIdx)))
+        cur.execute(*self.application.sql.account_movements(acc_id, f, int(fromIdx), int(to_idx)))
         r = {
             'items': list(cur.fetchall())
         }
-        cur.execute(*self.application.sql.count_account_movements(accId, f))
+        cur.execute(*self.application.sql.count_account_movements(acc_id, f))
         r['count'] = cur.fetchone()[0]
         return r
 
 
 class AccountAmountHandler (JsonBaseHandler):
-    def do (self, cur, accId):
+    def do(self, cur, acc_id):
         uid = self.current_user
-        if (not self.application.hasOrHadAccount(cur, uid, accId) and
-            not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCheckAccounts, uid, accId) and
-            not self.application.checkMembershipByKitty(cur, uid, accId)
+        if (not self.application.has_or_had_account(cur, uid, acc_id) and
+            not self.application.has_permission_by_account(cur, self.application.sql.P_canCheckAccounts, uid, acc_id) and
+            not self.application.check_membership_by_kitty(cur, uid, acc_id)
             ):
             raise GDataException(error_codes.E_permission_denied, 403)
-        cur.execute(*self.application.sql.account_amount(accId))
+        cur.execute(*self.application.sql.account_amount(acc_id))
         v = cur.fetchone()
         return v[0] or 0.0, v[1]
 
 
 class CsaInfoHandler (JsonBaseHandler):
-    def do (self, cur, csaId):
+    def do(self, cur, csa_id):
         uid = self.current_user
-        if not self.application.isUserMemberOfCsa(cur, uid, csaId, False):
+        if not self.application.is_member_of_csa(cur, uid, csa_id, False):
             raise Exception(error_codes.E_permission_denied)
-        cur.execute(*self.application.sql.csa_info(csaId))
+        cur.execute(*self.application.sql.csa_info(csa_id))
         r = self.application.sql.fetch_object(cur)
-        cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty, full=True))
+        cur.execute(*self.application.sql.csa_account(csa_id, self.application.sql.At_Kitty, full=True))
         r['kitty'] = self.application.sql.fetch_object(cur) # FIXME: più di uno!
         cur.execute(*self.application.sql.csa_last_kitty_deposit(r['kitty']['id']))
         r['last_kitty_deposit'] = self.application.sql.fetch_object(cur)
@@ -564,64 +570,64 @@ class CsaInfoHandler (JsonBaseHandler):
 
 
 class CsaUpdateHandler (JsonBaseHandler):
-    def do (self, cur):
+    def do(self, cur):
         uid = self.current_user
         csa = self.payload
-        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_csaEditor, uid, csa['id']):
+        if not self.application.has_permission_by_csa(cur, self.application.sql.P_csaEditor, uid, csa['id']):
             raise GDataException(error_codes.E_permission_denied, 403)
         cur.execute(*self.application.sql.csa_update(csa))
 
 
 class CsaListHandler (JsonBaseHandler):
-    def do (self, cur):
+    def do(self, cur):
         uid = self.current_user
         cur.execute(*self.application.sql.csa_list(uid))
         return self.application.sql.iter_objects(cur)
 
 
 class CsaChargeMembershipFeeHandler (JsonBaseHandler):
-    def do (self, cur, csaId):
+    def do(self, cur, csa_id):
         uid = self.current_user
-        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditMembershipFee, uid, csaId):
+        if not self.application.has_permission_by_csa(cur, self.application.sql.P_canEditMembershipFee, uid, csa_id):
             raise GDataException(error_codes.E_permission_denied, 403)
 
         p = self.payload
-        tDesc = p['description']
+        t_desc = p['description']
         amount = p['amount']
-        kittyId = p['kitty']
+        kitty_id = p['kitty']
         if amount < 0:
             raise GDataException(error_codes.E_illegal_amount)
         now = datetime.datetime.utcnow()
-        cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty, accId=kittyId, full=True))
+        cur.execute(*self.application.sql.csa_account(csa_id, self.application.sql.At_Kitty, accId=kitty_id, full=True))
         acc = self.application.sql.fetch_object(cur)
         if acc is None:
             raise GDataException(error_codes.E_illegal_kitty)
         currencyId = acc['currency_id']
-        cur.execute(*self.application.sql.insert_transaction(tDesc,
+        cur.execute(*self.application.sql.insert_transaction(t_desc,
                                             now,
                                             self.application.sql.Tt_MembershipFee,
                                             currencyId,
-                                            csaId
+                                            csa_id
                                             )
                     )
         tid = cur.lastrowid
-        cur.execute(*self.application.sql.insert_transaction_line_membership_fee(tid, amount, csaId, currencyId))
+        cur.execute(*self.application.sql.insert_transaction_line_membership_fee(tid, amount, csa_id, currencyId))
 
-        cur.execute(*self.application.sql.insert_transaction_line(tid, '', +1, kittyId))
-        lastLineId = cur.lastrowid
-        cur.execute(*self.application.sql.transaction_calc_last_line_amount(tid, lastLineId))
+        cur.execute(*self.application.sql.insert_transaction_line(tid, '', +1, kitty_id))
+        last_line_id = cur.lastrowid
+        cur.execute(*self.application.sql.transaction_calc_last_line_amount(tid, last_line_id))
         a = cur.fetchone()[0]
         #involvedAccounts[lastAccId] = str(a)
-        cur.execute(*self.application.sql.transaction_fix_amount(lastLineId, a))
+        cur.execute(*self.application.sql.transaction_fix_amount(last_line_id, a))
 
         cur.execute(*self.application.sql.log_transaction(tid, uid, self.application.sql.Tl_Added, self.application.sql.Tn_kitty_deposit, now))
         return { 'tid': tid }
 
 
 class CsaRequestMembershipHandler (JsonBaseHandler):
-    def do (self, cur, csaId):
+    def do(self, cur, csa_id):
         uid = self.current_user
-        if self.application.isUserMemberOfCsa(cur, uid, csaId, True):
+        if self.application.is_member_of_csa(cur, uid, csa_id, True):
             raise GDataException(error_codes.E_already_member)
         profiles, contacts, args = self.application.sql.people_profiles1([uid])
         cur.execute(profiles, args)
@@ -637,25 +643,25 @@ class CsaRequestMembershipHandler (JsonBaseHandler):
 
 
 class CsaDeliveryPlacesHandler (JsonBaseHandler):
-    def do (self, cur, csaId):
+    def do(self, cur, csa_id):
         uid = self.current_user
-        if not self.application.isUserMemberOfCsa(cur, uid, csaId, True):
+        if not self.application.is_member_of_csa(cur, uid, csa_id, True):
             raise GDataException(error_codes.E_permission_denied, 403)
-        cur.execute(*self.application.sql.csa_delivery_places(csaId))
+        cur.execute(*self.application.sql.csa_delivery_places(csa_id))
         return self.application.sql.iter_objects(cur)
 
 
 class CsaDeliveryDatesHandler (JsonBaseHandler):
-    def do (self, cur, csaId):
+    def do(self, cur, csa_id):
         uid = self.current_user
         p = self.payload
-        if not self.application.isUserMemberOfCsa(cur, uid, csaId, True):
+        if not self.application.is_member_of_csa(cur, uid, csa_id, True):
             raise GDataException(error_codes.E_permission_denied, 403)
-        cur.execute(*self.application.sql.csa_delivery_dates(csaId, p['from'], p['to']))
+        cur.execute(*self.application.sql.csa_delivery_dates(csa_id, p['from'], p['to']))
         r = self.application.sql.iter_objects(cur)
         if len(r):
-            #cur.execute(*self.application.sql.csa_delivery_shifts(set([ s['id'] for s in r ])))
-            #for s in self.application.sql.iter_objects(cur):
+            # cur.execute(*self.application.sql.csa_delivery_shifts(set([ s['id'] for s in r ])))
+            # for s in self.application.sql.iter_objects(cur):
             #    d = s['delivery_date_id']
             #
             for s in r:
@@ -668,11 +674,11 @@ class CsaAddShiftHandler (JsonBaseHandler):
     def do(self, cur, csa_id):
         uid = self.current_user
         p = self.payload
-        if not self.application.isUserMemberOfCsa(cur, uid, csa_id, True):
+        if not self.application.is_member_of_csa(cur, uid, csa_id, True):
             raise GDataException(error_codes.E_permission_denied, 403)
 
         if uid != p['person_id'] and \
-           not self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
+           not self.application.has_permission_by_csa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
             raise GDataException(error_codes.E_permission_denied, 403)
 
         delivery_date_id = p['delivery_date_id']
@@ -698,7 +704,7 @@ class CsaRemoveShiftHandler (JsonBaseHandler):
         p = self.payload
 
         shift_id = p['id']
-        if self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
+        if self.application.has_permission_by_csa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
             cur.execute(*self.application.sql.csa_delivery_shift_check(csa_id, shift_id))
             v = cur.fetchone()[0]
             if v == 0:
@@ -713,23 +719,23 @@ class CsaRemoveShiftHandler (JsonBaseHandler):
 
 
 class AccountXlsHandler (BaseHandler):
-    def get (self, accId):
+    def get(self, acc_id):
         uid = self.current_user
         self.clear_header('Content-Type')
         self.add_header('Content-Type', 'application/vnd.ms-excel')
         self.clear_header('Content-Disposition')
-        self.add_header('Content-Disposition', 'attachment; filename="account-%s.xls"' % accId)
+        self.add_header('Content-Disposition', 'attachment; filename="account-%s.xls"' % acc_id)
         with self.application.conn as cur:
-            if (not self.application.hasOrHadAccount(cur, uid, accId) and
-                not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCheckAccounts, uid, accId) and
-                not self.application.checkMembershipByKitty(cur, uid, accId)
+            if (not self.application.has_or_had_account(cur, uid, acc_id) and
+                not self.application.has_permission_by_account(cur, self.application.sql.P_canCheckAccounts, uid, acc_id) and
+                not self.application.check_membership_by_kitty(cur, uid, acc_id)
                 ):
                 raise HTTPError(403)
             style = xlwt.XFStyle()
             style.num_format_str='YYYY-MM-DD' # FIXME: i18n
             w = xlwt.Workbook(encoding='utf-8')
             s = w.add_sheet('Conto') # FIXME: correggere e i18n
-            cur.execute(*self.application.sql.account_movements(accId, None, None, None))
+            cur.execute(*self.application.sql.account_movements(acc_id, None, None, None))
             # t.description, t.transaction_date, l.description, l.amount, t.id, c.symbol, t.cc_type
             row = 1
             tdescmaxlength = 0
@@ -763,69 +769,75 @@ class AccountXlsHandler (BaseHandler):
 
 
 class AccountCloseHandler (JsonBaseHandler):
-    def do (self, cur, accId):
+    def do(self, cur, acc_id):
         uid = self.current_user
         p = self.payload
-        if not self.application.hasPermissionByAccount(cur, self.application.sql.P_canCloseAccounts, uid, accId):
+        if not self.application.has_permission_by_account(cur, self.application.sql.P_canCloseAccounts, uid, acc_id):
             raise GDataException(error_codes.E_permission_denied, 403)
         # marca chiuso
         now = datetime.datetime.utcnow()
         ownerId = p['owner']
         tdesc = p.get('tdesc', '')
-        cur.execute(*self.application.sql.account_close(now, accId, ownerId))
+        cur.execute(*self.application.sql.account_close(now, acc_id, ownerId))
         affectedRows = cur.rowcount
         if affectedRows == 0:
-            log_gassman.warning('not owner, can\'t close account: account=%s, owner=%s', accId, ownerId)
+            log_gassman.warning('not owner, can\'t close account: account=%s, owner=%s', acc_id, ownerId)
             return { 'error': error_codes.E_not_owner_or_already_closed }
         if affectedRows > 1:
-            log_gassman.error('multiple account assignments: account=%s, owner=%s, rows=%s', accId, ownerId, affectedRows)
+            log_gassman.error('multiple account assignments: account=%s, owner=%s, rows=%s', acc_id, ownerId, affectedRows)
         # calcola saldo
-        cur.execute(*self.application.sql.account_has_open_owners(accId))
+        cur.execute(*self.application.sql.account_has_open_owners(acc_id))
         if cur.fetchone() is not None:
-            log_gassman.info('account still in use, no need for a "z" transaction: account=%s', accId)
-            return { 'info': error_codes.I_account_open }
+            log_gassman.info('account still in use, no need for a "z" transaction: account=%s', acc_id)
+            return {
+                'info': error_codes.I_account_open
+            }
         else:
-            cur.execute(*self.application.sql.account_amount(accId, returnCurrencyId=True))
+            cur.execute(*self.application.sql.account_amount(acc_id, returnCurrencyId=True))
             v = cur.fetchone()
             amount = v[0] or 0.0
             currencyId = v[2]
             if amount == 0.0:
                 log_gassman.info('closed account was empty, no "z" transaction needed: account=%s')
-                return { 'info': error_codes.I_empty_account }
+                return {
+                    'info': error_codes.I_empty_account
+                }
             if amount != 0.0:
                 # crea transazione z
-                cur.execute(*self.application.sql.csa_by_account(accId))
-                csaId = cur.fetchone()[0]
-                cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty, currencyId))
-                kittyId = cur.fetchone()[0]
+                cur.execute(*self.application.sql.csa_by_account(acc_id))
+                csa_id = cur.fetchone()[0]
+                cur.execute(*self.application.sql.csa_account(csa_id, self.application.sql.At_Kitty, currencyId))
+                kitty_id = cur.fetchone()[0]
 
                 cur.execute(*self.application.sql.insert_transaction(
                     tdesc,
                     now,
                     self.application.sql.Tt_AccountClosing,
                     currencyId,
-                    csaId
+                    csa_id
                 ))
                 tid = cur.lastrowid
-                cur.execute(*self.application.sql.insert_transaction_line(tid, '', amount, kittyId))
-                cur.execute(*self.application.sql.insert_transaction_line(tid, '', -amount, accId))
-                lastLineId = cur.lastrowid
-                cur.execute(*self.application.sql.transaction_calc_last_line_amount(tid, lastLineId))
+                cur.execute(*self.application.sql.insert_transaction_line(tid, '', amount, kitty_id))
+                cur.execute(*self.application.sql.insert_transaction_line(tid, '', -amount, acc_id))
+                last_line_id = cur.lastrowid
+                cur.execute(*self.application.sql.transaction_calc_last_line_amount(tid, last_line_id))
                 a = cur.fetchone()[0]
-                #involvedAccounts[lastAccId] = str(a)
-                cur.execute(*self.application.sql.transaction_fix_amount(lastLineId, a))
+                #involvedAccounts[lastacc_id] = str(a)
+                cur.execute(*self.application.sql.transaction_fix_amount(last_line_id, a))
 
                 cur.execute(*self.application.sql.log_transaction(tid, uid, self.application.sql.Tl_Added, self.application.sql.Tn_account_closing, now))
-                return { 'tid': tid }
+                return {
+                    'tid': tid
+                }
 
 
 # lo lascio per futura pagina diagnostica: deve comunque ritornare sempre 0.0
 #class CsaAmountHandler (JsonBaseHandler):
-#    def do (self, cur, csaId):
+#    def do(self, cur, csa_id):
 #        uid = self.current_user
-#        if not self.application.hasPermissionByCsa(cur, sql.P_canCheckAccounts, uid, csaId):
+#        if not self.application.has_permission_by_csa(cur, sql.P_canCheckAccounts, uid, csa_id):
 #            raise GDataException(error_codes.E_permission_denied)
-#        cur.execute(*self.application.sql.csa_amount(csaId))
+#        cur.execute(*self.application.sql.csa_amount(csa_id))
 #        return cur.fetchone()
 
 
@@ -833,14 +845,14 @@ class AccountCloseHandler (JsonBaseHandler):
 #class PermissionsHandler (JsonBaseHandler):
 #    '''Restituisce tutti i permessi visibili dall'utente loggato.
 #    '''
-#    def do (self, cur):
+#    def do(self, cur):
 #        u = self.application.session(self).get_logged_user('not authenticated')
 #        cur.execute(*self.application.sql.find_visible_permissions(u.id))
 #        return list(cur)
 
 
 #class ProfileInfoHandler (JsonBaseHandler):
-#    def do (self, cur):
+#    def do(self, cur):
 #        uid = self.current_user
 #        if uid is None:
 #            raise GDataException(error_codes.E_not_authenticated, 401)
@@ -868,7 +880,7 @@ class AccountCloseHandler (JsonBaseHandler):
 
 
 class AccountsIndexHandler (JsonBaseHandler):
-    def do (self, cur, csaId, fromIdx, toIdx):
+    def do(self, cur, csa_id, fromIdx, to_idx):
         p = self.payload
         q = p.get('q')
         if q:
@@ -877,18 +889,20 @@ class AccountsIndexHandler (JsonBaseHandler):
         ex = p.get('ex', False)
         o = self.application.sql.accounts_index_order_by[int(p['o'])]
         uid = self.current_user
-        canCheckAccounts = self.application.hasPermissionByCsa(cur, self.application.sql.P_canCheckAccounts, uid, csaId)
-        canViewContacts = self.application.hasPermissionByCsa(cur, self.application.sql.P_canViewContacts, uid, csaId)
-        viewableContacts = p.get('vck', self.application.viewableContactKinds) if canViewContacts else None
-        if canCheckAccounts:
-            cur.execute(*self.application.sql.accounts_index(csaId, q, dp, o, ex, int(fromIdx), int(toIdx), search_contact_kinds=viewableContacts))
-        elif canViewContacts:
-            cur.execute(*self.application.sql.people_index(csaId, q, dp, o, ex, int(fromIdx), int(toIdx), search_contact_kinds=viewableContacts))
+        can_check_accounts = self.application.has_permission_by_csa(cur, self.application.sql.P_canCheckAccounts, uid, csa_id)
+        can_view_contacts = self.application.has_permission_by_csa(cur, self.application.sql.P_canViewContacts, uid, csa_id)
+        viewable_contacts = p.get('vck', self.application.viewable_contact_kinds) if can_view_contacts else None
+        if can_check_accounts:
+            cur.execute(*self.application.sql.accounts_index(csa_id, q, dp, o, ex, int(fromIdx), int(to_idx), search_contact_kinds=viewable_contacts))
+        elif can_view_contacts:
+            cur.execute(*self.application.sql.people_index(csa_id, q, dp, o, ex, int(fromIdx), int(to_idx), search_contact_kinds=viewable_contacts))
         else:
             raise GDataException(error_codes.E_permission_denied, 403)
-        r = { 'items': list(cur) }
+        r = {
+            'items': list(cur)
+        }
         if len(r['items']):
-            cur.execute(*self.application.sql.count_people(csaId, q, dp, ex, search_contact_kinds=viewableContacts))
+            cur.execute(*self.application.sql.count_people(csa_id, q, dp, ex, search_contact_kinds=viewable_contacts))
             r['count'] = cur.fetchone()[0]
         else:
             r['count'] = 0
@@ -896,75 +910,86 @@ class AccountsIndexHandler (JsonBaseHandler):
 
 
 class AccountsNamesHandler (JsonBaseHandler):
-    def do (self, cur, csaId):
+    def do(self, cur, csa_id):
         uid = self.current_user
-        if not self.application.hasPermissions(cur, self.application.sql.editableTransactionPermissions, uid, csaId):
+        if not self.application.has_permissions(cur, self.application.sql.editableTransactionPermissions, uid, csa_id):
             raise GDataException(error_codes.E_permission_denied, 403)
-        cur.execute(*self.application.sql.account_currencies(csaId))
-        accountCurs = list(cur)
-        cur.execute(*self.application.sql.account_people(csaId))
-        accountPeople = list(cur)
-        cur.execute(*self.application.sql.account_people_addresses(csaId))
-        accountPeopleAddresses = list(cur)
-        cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty, full=True))
-        kitty = { x['id']: x for x in self.application.sql.iter_objects(cur) }
+        cur.execute(*self.application.sql.account_currencies(csa_id))
+        account_curs = list(cur)
+        cur.execute(*self.application.sql.account_people(csa_id))
+        account_people = list(cur)
+        cur.execute(*self.application.sql.account_people_addresses(csa_id))
+        account_people_addresses = list(cur)
+        cur.execute(*self.application.sql.csa_account(csa_id, self.application.sql.At_Kitty, full=True))
+        kitty = {
+            x['id']: x for x in self.application.sql.iter_objects(cur)
+            }
         return dict(
-            accountCurrencies = accountCurs,
-            accountPeople = accountPeople,
-            accountPeopleAddresses = accountPeopleAddresses,
-            kitty = kitty,
+            accountCurrencies=account_curs,
+            accountPeople=account_people,
+            accountPeopleAddresses=account_people_addresses,
+            kitty=kitty,
             )
 
 
 class TransactionEditHandler (JsonBaseHandler):
-    def do (self, cur, csaId, transId):
+    def do(self, cur, csa_id, trans_id):
         uid = self.current_user
-        cur.execute(*self.application.sql.transaction_edit(transId))
+        cur.execute(*self.application.sql.transaction_edit(trans_id))
 
         r = self.application.sql.fetch_struct(cur)
-        r['transId'] = transId
+        r['transId'] = trans_id
 
         ccType = r['cc_type']
         # regole per editare:
         # è D, ho P_canEnterDeposit e l'ho creata io
         # è P, ho P_canEnterPayments e l'ho creata io
         # oppure P_canManageTransactions
-        if (not self.application.hasPermissions(cur, [ self.application.sql.P_canManageTransactions, self.application.sql.P_canCheckAccounts ], uid, csaId) and
-            not self.application.isKittyTransitionAndUserIsMember(cur, transId, uid) and
+        if (not self.application.has_permissions(
+                cur,
+                [self.application.sql.P_canManageTransactions, self.application.sql.P_canCheckAccounts],
+                uid, csa_id) and
+            not self.application.is_kitty_transition_and_is_member(cur, trans_id, uid) and
             not (ccType in self.application.sql.editableTransactions and
-                 self.application.hasPermissionByCsa(cur, self.application.sql.transactionPermissions.get(ccType), uid, csaId) and
-                 self.application.isTransactionEditor(cur, transId, uid)
+                 self.application.has_permission_by_csa(
+                     cur,
+                     self.application.sql.transactionPermissions.get(ccType),
+                     uid, csa_id) and
+                 self.application.is_transaction_editor(cur, trans_id, uid)
                  ) and
-            not self.application.isInvolvedInTransaction(cur, transId, uid)
+            not self.application.isInvolvedInTransaction(cur, trans_id, uid)
             ):
             raise GDataException(error_codes.E_permission_denied, 403)
 
         p = self.payload
-        cur.execute(*self.application.sql.transaction_lines(transId))
-        r['lines'] = [ dict(account=l[1], notes=l[2], amount=l[3]) for l in cur]
+        cur.execute(*self.application.sql.transaction_lines(trans_id))
+        r['lines'] = [dict(account=l[1], notes=l[2], amount=l[3]) for l in cur]
 
         accountPeopleIndex = {}
         r['people'] = accountPeopleIndex
-        cur.execute(*self.application.sql.transaction_people(transId))
-        for accId, personId in cur.fetchall():
-            pp = accountPeopleIndex.setdefault(accId, [])
+        cur.execute(*self.application.sql.transaction_people(trans_id))
+        for acc_id, personId in cur.fetchall():
+            pp = accountPeopleIndex.setdefault(acc_id, [])
             pp.append(personId)
         if p.get('fetchKitty'):
-            cur.execute(*self.application.sql.csa_account(csaId, self.application.sql.At_Kitty, full=True))
-            r['kitty'] = { x['id']: x for x in self.application.sql.iter_objects(cur) }
+            cur.execute(*self.application.sql.csa_account(csa_id, self.application.sql.At_Kitty, full=True))
+            r['kitty'] = {
+                x['id']: x for x in self.application.sql.iter_objects(cur)
+                }
 
         return r
 
 
 class TransactionSaveHandler (JsonBaseHandler):
     notifyExceptions = True
-    def do (self, cur, csaId):
-        #involvedAccounts = dict()
 
-        csaId = int(csaId)
+    def do(self, cur, csa_id):
+        # involvedAccounts = dict()
+
+        csa_id = int(csa_id)
         uid = self.current_user
         tdef = self.payload
-        transId = tdef.get('transId', None)
+        trans_id = tdef.get('transId', None)
         ttype = tdef['cc_type']
         tcurr = tdef['currency']
         tlines = tdef['lines']
@@ -974,12 +999,12 @@ class TransactionSaveHandler (JsonBaseHandler):
         tlogDesc = error_codes.E_ok
         if tdesc is None:
             tdesc = datetime.datetime.utcnow()
-        if transId is None:
+        if trans_id is None:
             oldCc = None
             oldDesc = None
         else:
-            transId = int(transId)
-            cur.execute(*self.application.sql.transaction_type(transId))
+            trans_id = int(trans_id)
+            cur.execute(*self.application.sql.transaction_type(trans_id))
             oldCc, oldDesc, modifiedBy = cur.fetchone()
             if modifiedBy is not None:
                 raise GDataException(error_codes.E_already_modified)
@@ -995,12 +1020,12 @@ class TransactionSaveHandler (JsonBaseHandler):
                 raise GDataException(error_codes.E_type_mismatch)
             if len(tlines) == 0:
                 raise GDataException(error_codes.E_no_lines)
-            if ((not self.application.hasPermissionByCsa(cur, self.application.sql.transactionPermissions[ttype], uid, csaId) or
-                (transId is not None and not self.application.isTransactionEditor(cur, transId, uid))) and
-                not self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageTransactions, uid, csaId)):
+            if ((not self.application.has_permission_by_csa(cur, self.application.sql.transactionPermissions[ttype], uid, csa_id) or
+                (trans_id is not None and not self.application.is_transaction_editor(cur, trans_id, uid))) and
+                not self.application.has_permission_by_csa(cur, self.application.sql.P_canManageTransactions, uid, csa_id)):
                 raise GDataException(error_codes.E_permission_denied)
 
-            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csaId))
+            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csa_id))
             tid = cur.lastrowid
             if tid == 0:
                 raise GDataException(error_codes.E_illegal_currency)
@@ -1015,15 +1040,15 @@ class TransactionSaveHandler (JsonBaseHandler):
                 amount = l['amount']
                 reqAccId = l['account']
                 if reqAccId in customCsaAccounts:
-                    accId = customCsaAccounts[reqAccId]
-                    if accId is None:
-                        cur.execute(*self.application.sql.csa_account(csaId, reqAccId, tcurr))
-                        accId = cur.fetchone()[0]
-                        customCsaAccounts[reqAccId] = accId
+                    acc_id = customCsaAccounts[reqAccId]
+                    if acc_id is None:
+                        cur.execute(*self.application.sql.csa_account(csa_id, reqAccId, tcurr))
+                        acc_id = cur.fetchone()[0]
+                        customCsaAccounts[reqAccId] = acc_id
                 else:
-                    accId = reqAccId
-                cur.execute(*self.application.sql.insert_transaction_line(tid, desc, amount, accId))
-                lastLineId = cur.lastrowid
+                    acc_id = reqAccId
+                cur.execute(*self.application.sql.insert_transaction_line(tid, desc, amount, acc_id))
+                last_line_id = cur.lastrowid
 
             cur.execute(*self.application.sql.check_transaction_coherency(tid))
             v = list(cur)
@@ -1031,34 +1056,34 @@ class TransactionSaveHandler (JsonBaseHandler):
                 ttype = self.application.sql.Tt_Error
                 tlogType = self.application.sql.Tl_Error
                 tlogDesc = error_codes.E_accounts_not_omogeneous_for_currency_and_or_csa
-            elif v[0][1] != csaId:
+            elif v[0][1] != csa_id:
                 ttype = self.application.sql.Tt_Error
                 tlogType = self.application.sql.Tl_Error
                 tlogDesc = error_codes.E_accounts_do_not_belong_to_csa
             else:
-                cur.execute(*self.application.sql.transaction_calc_last_line_amount(tid, lastLineId))
+                cur.execute(*self.application.sql.transaction_calc_last_line_amount(tid, last_line_id))
                 a = cur.fetchone()[0]
-                #involvedAccounts[lastAccId] = str(a)
-                cur.execute(*self.application.sql.transaction_fix_amount(lastLineId, a))
-                tlogType = self.application.sql.Tl_Added if transId is None else self.application.sql.Tl_Modified
+                # involvedAccounts[lastAccId] = str(a)
+                cur.execute(*self.application.sql.transaction_fix_amount(last_line_id, a))
+                tlogType = self.application.sql.Tl_Added if trans_id is None else self.application.sql.Tl_Modified
 
         elif ttype == self.application.sql.Tt_Trashed:
             if oldCc not in self.application.sql.deletableTransactions:
                 raise GDataException(error_codes.E_illegal_delete)
             if len(tlines) > 0:
                 raise GDataException(error_codes.E_trashed_transactions_can_not_have_lines)
-            if transId is None:
+            if trans_id is None:
                 raise GDataException(error_codes.E_missing_trashId_of_transaction_to_be_deleted)
-            if ((not self.application.hasPermissions(cur, self.application.sql.editableTransactionPermissions, uid, csaId) or
-                not self.application.isTransactionEditor(cur, transId, uid)) and
-                not self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageTransactions, uid, csaId)):
+            if ((not self.application.has_permissions(cur, self.application.sql.editableTransactionPermissions, uid, csa_id) or
+                not self.application.is_transaction_editor(cur, trans_id, uid)) and
+                not self.application.has_permission_by_csa(cur, self.application.sql.P_canManageTransactions, uid, csa_id)):
                 raise GDataException(error_codes.E_permission_denied)
-            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csaId))
+            cur.execute(*self.application.sql.insert_transaction(tdesc, tdate, self.application.sql.Tt_Unfinished, tcurr, csa_id))
             tid = cur.lastrowid
             if tid == 0:
                 raise GDataException(error_codes.E_illegal_currency)
             tlogType = self.application.sql.Tl_Deleted
-            #tlogDesc = ''
+            # tlogDesc = ''
 
         else:
             log_gassman.error('illegal transaction type: %s', tdef)
@@ -1066,12 +1091,12 @@ class TransactionSaveHandler (JsonBaseHandler):
 
         cur.execute(*self.application.sql.finalize_transaction(tid, ttype))
         cur.execute(*self.application.sql.log_transaction(tid, uid, tlogType, tlogDesc, datetime.datetime.utcnow()))
-        if transId is not None and ttype != self.application.sql.Tt_Error:
-            cur.execute(*self.application.sql.update_transaction(transId, tid))
+        if trans_id is not None and ttype != self.application.sql.Tt_Error:
+            cur.execute(*self.application.sql.update_transaction(trans_id, tid))
         if ttype == self.application.sql.Tt_Error:
             raise GDataException(tlogDesc)
         else:
-            self.notifyAccountChange(cur, tid, tdesc, tdate, transId, oldDesc)
+            self.notify_account_change(cur, tid, tdesc, tdate, trans_id, oldDesc)
         return tid
 
     # Transaction notification types
@@ -1081,39 +1106,39 @@ class TransactionSaveHandler (JsonBaseHandler):
     Tnt_transaction_removed = 'r'
     Tnt_description_changed = 'm'
 
-    def notifyAccountChange (self, cur, transId, tdesc, tdate, modifiedTransId, oldDesc):
-        cur.execute(*self.application.sql.transaction_fetch_lines_to_compare(modifiedTransId, transId))
+    def notify_account_change(self, cur, trans_id, tdesc, tdate, modified_trans_id, oldDesc):
+        cur.execute(*self.application.sql.transaction_fetch_lines_to_compare(modified_trans_id, trans_id))
         oldLines = dict()
         newLines = dict()
         diffs = dict()
         lines = {
-            transId: newLines,
-            modifiedTransId: oldLines,
+            trans_id: newLines,
+            modified_trans_id: oldLines,
         }
-        for trans, accId, amount, lineDesc in cur.fetchall():
-            lines[trans][accId] = (amount, lineDesc)
-        for accId, newp in newLines.items():
-            oldp = oldLines.get(accId)
+        for trans, acc_id, amount, lineDesc in cur.fetchall():
+            lines[trans][acc_id] = (amount, lineDesc)
+        for acc_id, newp in newLines.items():
+            oldp = oldLines.get(acc_id)
             if oldp is None:
-                diffs[accId] = [ self.Tnt_new_transaction, newp[0], newp[1] ]
+                diffs[acc_id] = [self.Tnt_new_transaction, newp[0], newp[1]]
             elif oldp[0] != newp[0]:
-                diffs[accId] = [ self.Tnt_amount_changed, newp[0], oldp[0] ]
+                diffs[acc_id] = [self.Tnt_amount_changed, newp[0], oldp[0]]
             elif oldp[1] != newp[1]:
-                diffs[accId] = [ self.Tnt_notes_changed, newp[1], oldp[1] ]
-        for accId, oldp in oldLines.items():
-            newp = newLines.get(accId)
+                diffs[acc_id] = [self.Tnt_notes_changed, newp[1], oldp[1]]
+        for acc_id, oldp in oldLines.items():
+            newp = newLines.get(acc_id)
             if newp is None:
-                diffs[accId] = [ self.Tnt_transaction_removed ]
+                diffs[acc_id] = [self.Tnt_transaction_removed]
             #elif oldp[0] != newp[0]:
-            #    diffs[accId] = ... Tnt_amount_changed
+            #    diffs[acc_id] = ... Tnt_amount_changed
             #elif oldp[1] != newp[1]:
-            #    diffs[accId] = ... Tnt_notes_changed
-        if modifiedTransId is not None and tdesc != oldDesc:
-            for accId in newLines:
-                if accId not in diffs:
-                    diffs[accId] = [ self.Tnt_description_changed, tdesc, oldDesc ]
+            #    diffs[acc_id] = ... Tnt_notes_changed
+        if modified_trans_id is not None and tdesc != oldDesc:
+            for acc_id in newLines:
+                if acc_id not in diffs:
+                    diffs[acc_id] = [self.Tnt_description_changed, tdesc, oldDesc]
         if len(diffs) == 0:
-            log_gassman.debug('nothing to notify for transaction %s modifying transaction %s', transId, modifiedTransId)
+            log_gassman.debug('nothing to notify for transaction %s modifying transaction %s', trans_id, modified_trans_id)
             return
         # FIXME: soglia specifica di csa
         LVL_THRES = -40
@@ -1121,10 +1146,10 @@ class TransactionSaveHandler (JsonBaseHandler):
         accounts = dict() # da account (accountId) a lista di persone ([{first/middle/last_name, email}])
         # considero solo gli account i cui owner hanno nei settaggi la ricezione di ogni notifica
         cur.execute(*self.application.sql.account_owners_with_optional_email_for_notifications(diffs.keys()))
-        for accId, pid, first_name, middle_name, last_name, email in cur.fetchall():
-            #signalledPeople.setdefault(pid, []).append(accId)
+        for acc_id, pid, first_name, middle_name, last_name, email in cur.fetchall():
+            #signalledPeople.setdefault(pid, []).append(acc_id)
             accounts.setdefault(
-                accId,
+                acc_id,
                 {}
             ).setdefault(
                 'people',
@@ -1139,15 +1164,15 @@ class TransactionSaveHandler (JsonBaseHandler):
             log_gassman.info('involved accounts has no mail to notify to')
             return
         cur.execute(*self.application.sql.account_total_for_notifications(accounts.keys()))
-        for accId, total, currSym in cur.fetchall():
-            accounts[accId]['account'] = (total, currSym)
-        for accId, accData in accounts.items():
-            total, currSym = accData['account']
+        for acc_id, total, curr_sym in cur.fetchall():
+            accounts[acc_id]['account'] = (total, curr_sym)
+        for acc_id, accData in accounts.items():
+            total, curr_sym = accData['account']
             people = accData['people']
-            notificationType = diffs[accId]
-            receivers = [ p['email'] for p in people if p['email'] ]
+            notificationType = diffs[acc_id]
+            receivers = [p['email'] for p in people if p['email']]
             if len(receivers) == 0:
-                log_gassman.debug('transaction not notified, people do not have email account: people=%s, tid=%s', people, transId)
+                log_gassman.debug('transaction not notified, people do not have email account: people=%s, tid=%s', people, trans_id)
                 continue
             cur.execute(*self.application.sql.person_notification_email(self.current_user))
             try:
@@ -1157,43 +1182,45 @@ class TransactionSaveHandler (JsonBaseHandler):
             # TODO: Localizzazione del messaggio
             self.notify(
                 'account_update',
-                receivers=[ p['email'] for p in people if p['email'] ],
+                receivers=[p['email'] for p in people if p['email']],
                 replyTo=replyTo,
-                total = total,
-                currency = currSym,
-                threshold = LVL_THRES,
-                people = people,
-                tdesc = tdesc,
-                tdate = tdate,
-                dateFormatter = shortDate,
-                accId = accId,
-                transId = transId,
-                modifiedTransId = modifiedTransId,
-                oldDesc = oldDesc,
-                notificationType = notificationType,
-                publishedUrl = settings.PUBLISHED_URL,
-                Tnt_new_transaction = self.Tnt_new_transaction,
-                Tnt_amount_changed = self.Tnt_amount_changed,
-                Tnt_notes_changed = self.Tnt_notes_changed,
-                Tnt_transaction_removed = self.Tnt_transaction_removed,
-                Tnt_description_changed = self.Tnt_description_changed,
+                total=total,
+                currency=curr_sym,
+                threshold=LVL_THRES,
+                people=people,
+                tdesc=tdesc,
+                tdate=tdate,
+                dateFormatter=shortDate,
+                accId=acc_id,
+                transId=trans_id,
+                modifiedTransId=modified_trans_id,
+                oldDesc=oldDesc,
+                notificationType=notificationType,
+                publishedUrl=settings.PUBLISHED_URL,
+                Tnt_new_transaction=self.Tnt_new_transaction,
+                Tnt_amount_changed=self.Tnt_amount_changed,
+                Tnt_notes_changed=self.Tnt_notes_changed,
+                Tnt_transaction_removed=self.Tnt_transaction_removed,
+                Tnt_description_changed=self.Tnt_description_changed,
             )
 
 
 class TransactionsEditableHandler (JsonBaseHandler):
-    def do (self, cur, csaId, fromIdx, toIdx):
+    def do(self, cur, csa_id, from_idx, to_idx):
         q = '%%%s%%' % self.payload['q']
         o = self.application.sql.transactions_editable_order_by[int(self.payload['o'])]
         uid = self.current_user
-        if self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageTransactions, uid, csaId):
-            cur.execute(*self.application.sql.transactions_all(csaId, q, o, int(fromIdx), int(toIdx)))
-            q, a = self.application.sql.transactions_count_all(csaId, q)
-        elif self.application.hasPermissions(cur, self.application.sql.editableTransactionPermissions, uid, csaId):
-            cur.execute(*self.application.sql.transactions_by_editor(csaId, uid, q, o, int(fromIdx), int(toIdx)))
-            q, a = self.application.sql.transactions_count_by_editor(csaId, uid, q)
+        if self.application.has_permission_by_csa(cur, self.application.sql.P_canManageTransactions, uid, csa_id):
+            cur.execute(*self.application.sql.transactions_all(csa_id, q, o, int(from_idx), int(to_idx)))
+            q, a = self.application.sql.transactions_count_all(csa_id, q)
+        elif self.application.has_permissions(cur, self.application.sql.editableTransactionPermissions, uid, csa_id):
+            cur.execute(*self.application.sql.transactions_by_editor(csa_id, uid, q, o, int(from_idx), int(to_idx)))
+            q, a = self.application.sql.transactions_count_by_editor(csa_id, uid, q)
         else:
             raise GDataException(error_codes.E_permission_denied, 403)
-        r = { 'items': list(cur.fetchall()) }
+        r = {
+            'items': list(cur.fetchall())
+        }
         if len(r['items']):
             cur.execute(q, a)
             r['count'] = cur.fetchone()[0]
@@ -1202,20 +1229,20 @@ class TransactionsEditableHandler (JsonBaseHandler):
         return r
 
 
-def shortDate (d):
+def shortDate(d):
     return d.strftime('%Y/%m/%d') # FIXME il formato dipende dal locale dell'utente
 
 
-def pubDate (d):
+def pubDate(d):
     return d.strftime('%a, %d %b %Y %H:%M:%S GMT')
 
 
-def currency (v, sym):
+def currency(v, sym):
     return '%s%s' % (v, sym)
 
 
 class RssFeedHandler (tornado.web.RequestHandler):
-    def get (self, rssId):
+    def get(self, rssId):
         self.clear_header('Content-Type')
         self.add_header('Content-Type', 'text/xml')
         with self.application.conn as cur:
@@ -1232,36 +1259,41 @@ class RssFeedHandler (tornado.web.RequestHandler):
 
 
 class PeopleProfilesHandler (JsonBaseHandler):
-    def do (self, cur, csaId):
+    def do(self, cur, csa_id):
         pids = self.payload['pids']
         uid = self.current_user
         isSelf = len(pids) == 1 and (pids[0] == 'me' or int(pids[0]) == uid)
         if isSelf:
             if uid is None:
                 raise GDataException(error_codes.E_not_authenticated, 401)
-            pids = [ uid ]
-        #if csaId == 'null':
+            pids = [uid]
+        # if csa_id == 'null':
         #    if not isSelf:
         #        raise GDataException(error_codes.E_permission_denied, 403)
-        #    csaId = None
-        if not isSelf and not self.application.isUserMemberOfCsa(cur, uid, csaId, False):
+        #    csa_id = None
+        if not isSelf and not self.application.is_member_of_csa(cur, uid, csa_id, False):
             raise GDataException(error_codes.E_permission_denied, 403)
-        canViewContacts = isSelf or self.application.hasPermissionByCsa(cur, self.application.sql.P_canViewContacts, uid, csaId)
+        can_view_contacts = isSelf or self.application.has_permission_by_csa(cur, self.application.sql.P_canViewContacts, uid, csa_id)
         r = {}
         if len(pids) == 0:
             return r
         def record (pid):
             p = r.get(pid, None)
             if p is None:
-                p = { 'accounts':[], 'profile':None, 'permissions':[], 'contacts':[] }
+                p = {
+                    'accounts': [],
+                    'profile': None,
+                    'permissions': [],
+                    'contacts': []
+                }
                 r[pid] = p
             return p
-        if csaId == 'null':
+        if csa_id == 'null':
             record(uid)
             #p['profile'] = self.application.find_person_by_id(uid)
         else:
-            accs, perms, args = self.application.sql.people_profiles2(csaId, pids)
-            canViewAccounts = isSelf or self.application.hasPermissionByCsa(cur, self.application.sql.P_canCheckAccounts, uid, csaId)
+            accs, perms, args = self.application.sql.people_profiles2(csa_id, pids)
+            canViewAccounts = isSelf or self.application.has_permission_by_csa(cur, self.application.sql.P_canCheckAccounts, uid, csa_id)
             cur.execute(accs, args)
             for acc in self.application.sql.iter_objects(cur):
                 p = record(acc['person_id'])
@@ -1270,7 +1302,7 @@ class PeopleProfilesHandler (JsonBaseHandler):
             cur.execute(perms, args)
             for perm in self.application.sql.iter_objects(cur):
                 p = record(perm['person_id'])
-                if canViewContacts:
+                if can_view_contacts:
                     p['permissions'].append(perm['perm_id'])
         if r.keys():
             profiles, contacts, args = self.application.sql.people_profiles1(r.keys())
@@ -1278,7 +1310,7 @@ class PeopleProfilesHandler (JsonBaseHandler):
             for prof in self.application.sql.iter_objects(cur):
                 p = record(prof['id'])
                 p['profile'] = prof
-            if canViewContacts:
+            if can_view_contacts:
                 cur.execute(contacts, args)
                 for addr in self.application.sql.iter_objects(cur):
                     p = record(addr['person_id'])
@@ -1287,23 +1319,28 @@ class PeopleProfilesHandler (JsonBaseHandler):
         if isSelf:
             cur.execute(*self.application.sql.find_user_csa(uid))
             p = record(uid)
-            p['csa'] = { id: { 'name': name, 'member': member } for id, name, member in cur.fetchall() }
+            p['csa'] = {
+                id: {
+                    'name': name,
+                    'member': member
+                } for id, name, member in cur.fetchall()
+                }
         return r
 
 
 class PersonSaveHandler (JsonBaseHandler):
-    def do (self, cur, csaId):
+    def do(self, cur, csa_id):
         uid = self.current_user
         p = self.payload
         log_gassman.debug('saving: %s', p)
         profile = p['profile']
         pid = int(profile['id'])
-        if csaId == 'null':
+        if csa_id == 'null':
             if pid != uid:
                 raise GDataException(error_codes.E_permission_denied, 403)
-            csaId = None
+            csa_id = None
         elif (
-            not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditContacts, uid, csaId) and
+            not self.application.has_permission_by_csa(cur, self.application.sql.P_canEditContacts, uid, csa_id) and
             uid != pid
             ):
             raise GDataException(error_codes.E_permission_denied, 403)
@@ -1312,7 +1349,7 @@ class PersonSaveHandler (JsonBaseHandler):
         # salva contatti
         contacts = p['contacts']
         cur.execute(*self.application.sql.fetchContacts(pid))
-        ocontacts = [ x[0] for x in cur.fetchall() ]
+        ocontacts = [x[0] for x in cur.fetchall()]
         if ocontacts:
             cur.execute(*self.application.sql.removeContactAddresses(ocontacts))
             cur.execute(*self.application.sql.removePersonContacts(ocontacts))
@@ -1334,31 +1371,31 @@ class PersonSaveHandler (JsonBaseHandler):
         # salva permessi
         permissions = p.get('permissions')
         if permissions is not None and \
-           csaId is not None and \
-           self.application.hasPermissionByCsa(cur, self.application.sql.P_canGrantPermissions, uid, csaId):
-            cur.execute(*self.application.sql.find_user_permissions(uid, csaId))
-            assignable_perms = set([ row[0] for row in cur.fetchall() ])
-            cur.execute(*self.application.sql.revokePermissions(pid, csaId, assignable_perms))
+           csa_id is not None and \
+           self.application.has_permission_by_csa(cur, self.application.sql.P_canGrantPermissions, uid, csa_id):
+            cur.execute(*self.application.sql.find_user_permissions(uid, csa_id))
+            assignable_perms = set([row[0] for row in cur.fetchall()])
+            cur.execute(*self.application.sql.revokePermissions(pid, csa_id, assignable_perms))
             for p in set(permissions) & assignable_perms:
-                cur.execute(*self.application.sql.grantPermission(pid, p, csaId))
+                cur.execute(*self.application.sql.grantPermission(pid, p, csa_id))
         # TODO: salva indirizzi
         fee = p.get('membership_fee')
-        if csaId is not None and fee and self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditMembershipFee, uid, csaId):
-            #accId = fee.get('account')
+        if csa_id is not None and fee and self.application.has_permission_by_csa(cur, self.application.sql.P_canEditMembershipFee, uid, csa_id):
+            # accId = fee.get('account')
             amount = fee.get('amount')
             if float(amount) >= 0:
-                cur.execute(*self.application.sql.account_updateMembershipFee(csaId, pid, amount))
+                cur.execute(*self.application.sql.account_updateMembershipFee(csa_id, pid, amount))
 
 
 class PersonCheckEmailHandler (JsonBaseHandler):
-    def do (self, cur, csaId):
+    def do(self, cur, csa_id):
         uid = self.current_user
         p = self.payload
         log_gassman.debug('saving: %s', p)
         pid = p['id']
         email = p['email']
         if (
-            not self.application.hasPermissionByCsa(cur, self.application.sql.P_canEditContacts, uid, csaId) and
+            not self.application.has_permission_by_csa(cur, self.application.sql.P_canEditContacts, uid, csa_id) and
             uid != int(pid)
             ):
             raise GDataException(error_codes.E_permission_denied, 403)
@@ -1375,7 +1412,7 @@ class EventSaveHandler (JsonBaseHandler):
         event_id = p.get('id')
         shifts = p.pop('shifts')
 
-        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
+        if not self.application.has_permission_by_csa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
             raise GDataException(error_codes.E_permission_denied, 403)
 
         if event_id is not None:
@@ -1395,7 +1432,9 @@ class EventSaveHandler (JsonBaseHandler):
         for shift in shifts:
             shift['delivery_date_id'] = event_id
             cur.execute(*self.application.sql.csa_delivery_shift_add(shift))
-        return { 'id': event_id }
+        return {
+            'id': event_id
+        }
 
 
 class EventRemoveHandler (JsonBaseHandler):
@@ -1404,7 +1443,7 @@ class EventRemoveHandler (JsonBaseHandler):
         p = self.payload
         log_gassman.debug('removing: %s', p)
 
-        if not self.application.hasPermissionByCsa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
+        if not self.application.has_permission_by_csa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
             raise GDataException(error_codes.E_permission_denied, 403)
 
         date_id = p['id']
@@ -1418,7 +1457,7 @@ class EventRemoveHandler (JsonBaseHandler):
 
 
 class AdminPeopleIndexHandler (JsonBaseHandler):
-    def do (self, cur, fromIdx, toIdx):
+    def do(self, cur, from_idx, to_idx):
         p = self.payload
 
         q = p.get('q')
@@ -1426,15 +1465,15 @@ class AdminPeopleIndexHandler (JsonBaseHandler):
             q = '%%%s%%' % q
         o = self.application.sql.admin_people_index_order_by[int(self.payload.get('o', 0))]
         uid = self.current_user
-        if self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
+        if self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
             csa = p.get('csa')
-            vck = p.get('vck', self.application.viewableContactKinds)
+            vck = p.get('vck', self.application.viewable_contact_kinds)
             cur.execute(*self.application.sql.admin_people_index(
                 q,
                 csa,
                 o,
-                int(fromIdx),
-                int(toIdx),
+                int(from_idx),
+                int(to_idx),
                 vck,
             ))
         else:
@@ -1452,18 +1491,28 @@ class AdminPeopleIndexHandler (JsonBaseHandler):
 
 
 class AdminPeopleProfilesHandler (JsonBaseHandler):
-    def do (self, cur):
+    def do(self, cur):
         pids = self.payload['pids']
         uid = self.current_user
-        if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
+        if not self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
         r = {}
         if len(pids) == 0:
             return r
         profiles, contacts, args = self.application.sql.people_profiles1(pids)
         cur.execute(contacts, args)
-        def record (pid):
-            return r.setdefault(pid, { 'accounts':[], 'profile':None, 'permissions':[], 'contacts':[] })
+
+        def record(p_id):
+            return r.setdefault(
+                p_id,
+                {
+                    'accounts': [],
+                    'profile': None,
+                    'permissions': [],
+                    'contacts': []
+                }
+            )
+
         for acc in self.application.sql.iter_objects(cur):
             p = record(acc['person_id'])
             p['contacts'].append(acc)
@@ -1478,10 +1527,10 @@ class AdminPeopleProfilesHandler (JsonBaseHandler):
 
 
 class AdminPeopleRemoveHandler (JsonBaseHandler):
-    def do (self, cur):
+    def do(self, cur):
         pid = self.payload['pid']
         uid = self.current_user
-        if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
+        if not self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
         # TODO: verificare che non abbia né abbia avuto conti
         cur.execute(*self.application.sql.find_user_csa(pid))
@@ -1494,11 +1543,11 @@ class AdminPeopleRemoveHandler (JsonBaseHandler):
 
 
 class AdminPeopleJoinHandler (JsonBaseHandler):
-    def do (self, cur):
+    def do(self, cur):
         newpid = self.payload['newpid']
         oldpid = self.payload['oldpid']
         uid = self.current_user
-        if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
+        if not self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
         cur.execute(*self.application.sql.reassignContacts(newpid, oldpid))
         cur.execute(*self.application.sql.reassignPermissions(newpid, oldpid))
@@ -1507,19 +1556,19 @@ class AdminPeopleJoinHandler (JsonBaseHandler):
 
 
 class AdminPeopleAddHandler (JsonBaseHandler):
-    def do (self, cur):
+    def do(self, cur):
         pid = self.payload['pid']
         acc = self.payload['acc']
         uid = self.current_user
-        if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
+        if not self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
         cur.execute(*self.application.sql.grantAccount(pid, acc, datetime.datetime.utcnow()))
 
 
 class AdminPeopleCreateAccountHandler (JsonBaseHandler):
-    def do (self, cur):
+    def do(self, cur):
         uid = self.current_user
-        if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
+        if not self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
         pid = self.payload['pid']
         csa = self.payload['csa']
@@ -1538,9 +1587,9 @@ class AdminPeopleCreateAccountHandler (JsonBaseHandler):
 
 
 class AdminPeopleCreateHandler (JsonBaseHandler):
-    def do (self, cur):
+    def do(self, cur):
         uid = self.current_user
-        if not self.application.hasPermissionByCsa(cur, sql.P_canAdminPeople, uid, None):
+        if not self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
         first_name = self.payload['first_name']
         last_name = self.payload['last_name']
@@ -1569,33 +1618,26 @@ class AdminPeopleCreateHandler (JsonBaseHandler):
         return { 'pid': pid, 'acc': acc }
 
 
-if __name__ == '__main__':
-    io_loop = tornado.ioloop.IOLoop.instance()
+def main():
+    import ioc
+
+    io_loop = ioc.io_loop()
 
     tornado.locale.load_translations(settings.TRANSLATIONS_PATH)
 
-    mailer = asyncsmtp.Mailer(settings.SMTP_SERVER,
-                              settings.SMTP_PORT,
-                              settings.SMTP_NUM_THREADS,
-                              settings.SMTP_QUEUE_TIMEOUT,
-                              io_loop
-                              ) if settings.SMTP_SERVER else None
+    mailer = ioc.mailer()
 
-    connArgs = dict(
-                    host=settings.DB_HOST,
-                    port=settings.DB_PORT,
-                    user=settings.DB_USER,
-                    passwd=settings.DB_PASSWORD,
-                    db=settings.DB_NAME,
-                    charset='utf8'
-                    )
+    application = GassmanWebApp(
+        ioc.sql_factory(),
+        mailer,
+        ioc.db_connection_arguments(),
+    )
 
-    application = GassmanWebApp(sql,
-                                mailer,
-                                connArgs
-                                )
     application.listen(settings.HTTP_PORT)
 
     log_gassman.info('GASsMAN web server up and running...')
 
     io_loop.start()
+
+if __name__ == '__main__':
+    main()
