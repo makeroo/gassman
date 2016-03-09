@@ -58,8 +58,10 @@ function ($scope,   gdata,   $q) {
         });
 
         $scope.membersVisible = (
-            pData.permissions.indexOf(gdata.permissions.P_canCheckAccounts) != -1 ||
-            pData.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1
+            pData && pData.permissions && (
+                pData.permissions.indexOf(gdata.permissions.P_canCheckAccounts) != -1 ||
+                pData.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1
+            )
         );
     });
 

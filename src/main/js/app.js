@@ -78,6 +78,9 @@ function ($stateProvider,   $urlRouterProvider) {
 
         // TODO: creare un servizio aaa con tutte le utility function tipo questa
         function hasAll (user, perms) {
+            if (!user || !user.permissions)
+                return false;
+
             for (var c = perms.length; --c >= 0; ) {
                 if (user.permissions.indexOf(perms[c]) == -1) {
                     return false;
@@ -115,7 +118,7 @@ function ($stateProvider,   $urlRouterProvider) {
                 if ($rootScope.gassman.loggedUser) {
                     d.resolve($rootScope.gassman.selectedCsa);
                 } else {
-                    d.reject([gdata.error_codes.E_no_csa_found]);
+                    d.reject([gdata.error_codes.E_not_authenticated]);
                 }
             });
 
@@ -349,6 +352,7 @@ function ($rootScope,   gdata,   gstorage,   $state,   $q,   $cookies,   $timeou
         })
         .then(undefined, function (error) {
             // TODO: che fine fa loggedUser? e selectedCsa?
+            console.log('azz, ma gestito altrove', error);
         })
         .finally(function () {
             appStartedDefer.resolve(true);
