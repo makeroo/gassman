@@ -149,9 +149,9 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         return $http.post('/gm/sys/version?_xsrf=' + $cookies.get('_xsrf'));
     };
 
-    this.profileInfo = function (csaId) {
+    this.profileInfo = function (csa_id) {
         //return $http.post('/gm/profile-info?_xsrf=' + $cookies.get('_xsrf'));
-        return $http.post('/gm/people/' + csaId + '/profiles?_xsrf=' + $cookies.get('_xsrf'), { pids: ['me'] }).then(function (r) {
+        return $http.post('/gm/people/' + csa_id + '/profiles?_xsrf=' + $cookies.get('_xsrf'), { pids: ['me'] }).then(function (r) {
             var p = null;
             angular.forEach(r.data, function (o) {
                 p = o;
@@ -162,7 +162,7 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         });
     };
 
-    this.accountByCsa = function (csaId) {
+    this.accountByCsa = function (csa_id) {
         // restituisci l'account dell'utente loggato in base al csa indicato
 
         var pi = $rootScope.gassman.loggedUser;
@@ -171,10 +171,10 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
             var lastAccount = null;
 
             for (var i = 0; i < pi.accounts.length; ++i) {
-                // accDetails è: 0:csaId 1:accId 2:from 3:to
+                // accDetails è: 0:csa_id 1:accId 2:from 3:to
                 var accDetails = pi.accounts[i];
 
-                if (accDetails.csa_id == csaId && accDetails.to_date == null) {
+                if (accDetails.csa_id == csa_id && accDetails.to_date == null) {
                     return accDetails.id;
                 }
 
@@ -189,8 +189,8 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         }
     };
 
-    this.csaInfo = function (csaId) {
-        return $http.post('/gm/csa/' + csaId + '/info?_xsrf=' + $cookies.get('_xsrf'));
+    this.csaInfo = function (csa_id) {
+        return $http.post('/gm/csa/' + csa_id + '/info?_xsrf=' + $cookies.get('_xsrf'));
     };
 
     this.csaList = function () {
@@ -201,20 +201,20 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         return $http.post('/gm/csa/update?_xsrf=' + $cookies.get('_xsrf'), csa);
     };
 
-    this.deliveryPlaces = function (csaId) {
-        return $http.post('/gm/csa/' + csaId + '/delivery_places?_xsrf=' + $cookies.get('_xsrf'));
+    this.deliveryPlaces = function (csa_id) {
+        return $http.post('/gm/csa/' + csa_id + '/delivery_places?_xsrf=' + $cookies.get('_xsrf'));
     };
 
-    this.deliveryDates = function (csaId, from, to) {
-        return $http.post('/gm/csa/' + csaId + '/delivery_dates?_xsrf=' + $cookies.get('_xsrf'),
+    this.deliveryDates = function (csa_id, from, to) {
+        return $http.post('/gm/csa/' + csa_id + '/delivery_dates?_xsrf=' + $cookies.get('_xsrf'),
             {
                 from: from,
                 to: to
             });
     };
 
-    this.addShift = function (csaId, eventId, shiftId, role, userId) {
-        return $http.post('/gm/csa/' + csaId + '/add_shift?_xsrf=' + $cookies.get('_xsrf'), {
+    this.addShift = function (csa_id, eventId, shiftId, role, userId) {
+        return $http.post('/gm/csa/' + csa_id + '/add_shift?_xsrf=' + $cookies.get('_xsrf'), {
             delivery_date_id: eventId,
             person_id: userId,
             role: role,
@@ -222,25 +222,25 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         });
     };
 
-    this.removeShift = function (csaId, shiftId) {
-        return $http.post('/gm/csa/' + csaId + '/remove_shift?_xsrf=' + $cookies.get('_xsrf'), {
+    this.removeShift = function (csa_id, shiftId) {
+        return $http.post('/gm/csa/' + csa_id + '/remove_shift?_xsrf=' + $cookies.get('_xsrf'), {
             id: shiftId
         });
     };
 
-    this.chargeMembershipFee = function (csaId, p) {
-        return $http.post('/gm/csa/' + csaId + '/charge_membership_fee?_xsrf=' + $cookies.get('_xsrf'), p);
+    this.chargeMembershipFee = function (csa_id, p) {
+        return $http.post('/gm/csa/' + csa_id + '/charge_membership_fee?_xsrf=' + $cookies.get('_xsrf'), p);
     };
 
-    this.accountsIndex = function (csaId, query, start, blockSize) {
+    this.accountsIndex = function (csa_id, query, start, blockSize) {
         return $http.post(
-            '/gm/accounts/' + csaId + '/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies.get('_xsrf'),
+            '/gm/accounts/' + csa_id + '/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies.get('_xsrf'),
             query
         );
     };
 
-    this.accountsNames = function (csaId) {
-        return $http.post('/gm/accounts/' + csaId + '/names?_xsrf=' + $cookies.get('_xsrf'));
+    this.accountsNames = function (csa_id) {
+        return $http.post('/gm/accounts/' + csa_id + '/names?_xsrf=' + $cookies.get('_xsrf'));
     };
 
     this.accountAmount = function (accId) {
@@ -257,22 +257,26 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         });
     };
 
-    this.transactionForEdit = function (csaId, tid, fetchKitty) {
-        return $http.post('/gm/transaction/' + csaId + '/' + tid + '/edit?_xsrf=' + $cookies.get('_xsrf'), {
+    this.transactionForEdit = function (csa_id, tid, fetchKitty) {
+        return $http.post('/gm/transaction/' + csa_id + '/' + tid + '/edit?_xsrf=' + $cookies.get('_xsrf'), {
             fetchKitty: fetchKitty
         });
     };
 
-    this.transactionSave = function (csaId, tData) {
-        return $http.post('/gm/transaction/' + csaId + '/save?_xsrf=' + $cookies.get('_xsrf'), tData);
+    this.transactionSave = function (csa_id, tData) {
+        return $http.post('/gm/transaction/' + csa_id + '/save?_xsrf=' + $cookies.get('_xsrf'), tData);
     };
 
-    this.transactionsLog = function (csaId, query, order, start, blockSize) {
-        return $http.post('/gm/transactions/' + csaId + '/editable/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies.get('_xsrf'), { q: query, o: order });
+    this.transactionsLog = function (csa_id, query, order, start, blockSize) {
+        return $http.post('/gm/transactions/' + csa_id + '/editable/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies.get('_xsrf'), { q: query, o: order });
     };
 
-    this.peopleProfiles = function (csaId, pids) {
-        return $http.post('/gm/people/' + csaId + '/profiles?_xsrf=' + $cookies.get('_xsrf'), { pids: pids });
+    this.people_names = function (csa_id) {
+        return $http.post('/gm/people/' + csa_id + '/names?_xsrf=' + $cookies.get('_xsrf'));
+    };
+
+    this.peopleProfiles = function (csa_id, pids) {
+        return $http.post('/gm/people/' + csa_id + '/profiles?_xsrf=' + $cookies.get('_xsrf'), { pids: pids });
     };
 
     this.adminPeopleProfiles = function (pids) {
@@ -323,7 +327,7 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         }
     };
 
-    this.profile = function (csaId, pid) {
+    this.profile = function (csa_id, pid) {
         var d = $q.defer();
 
         if (pid in peopleProfiles) {
@@ -349,7 +353,7 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
                     // ptr.keys() mi lancia un'eccezione che non ho capito
                     var pids = keysOf(ptr);
 
-                    gdata.peopleProfiles(csaId, pids).
+                    gdata.peopleProfiles(csa_id, pids).
                     then(function (r) {
                         var foundPids = {};
 
@@ -461,20 +465,20 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         return d.promise;
     };
 
-    this.saveProfile = function (csaId, p) {
+    this.saveProfile = function (csa_id, p) {
         delete peopleProfiles[p.id];
-        return $http.post('/gm/person/' + csaId + '/save?_xsrf=' + $cookies.get('_xsrf'), p);
+        return $http.post('/gm/person/' + csa_id + '/save?_xsrf=' + $cookies.get('_xsrf'), p);
     };
 
-    this.uniqueEmail = function (csaId, pid, email) {
-        return $http.post('/gm/person/' + csaId + '/check_email?_xsrf=' + $cookies.get('_xsrf'), {
+    this.uniqueEmail = function (csa_id, pid, email) {
+        return $http.post('/gm/person/' + csa_id + '/check_email?_xsrf=' + $cookies.get('_xsrf'), {
             'id': pid,
             'email': email
         });
     };
 
-    this.requestMembership = function (csaId) {
-        return $http.post('/gm/csa/' + csaId + '/request_membership?_xsrf=' + $cookies.get('_xsrf'));
+    this.requestMembership = function (csa_id) {
+        return $http.post('/gm/csa/' + csa_id + '/request_membership?_xsrf=' + $cookies.get('_xsrf'));
     };
 
     this.closeAccount = function (accId, ownerId, reason) {
@@ -537,12 +541,12 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
 		return $http.post('/gm/admin/people/create?_xsrf=' + $cookies.get('_xsrf'), q);
     };
 
-    this.saveEvent = function (csaId, e) {
-		return $http.post('/gm/event/' + csaId + '/save?_xsrf=' + $cookies.get('_xsrf'), e);
+    this.saveEvent = function (csa_id, e) {
+		return $http.post('/gm/event/' + csa_id + '/save?_xsrf=' + $cookies.get('_xsrf'), e);
     };
 
-    this.removeEvent = function (csaId, eventId) {
-		return $http.post('/gm/event/' + csaId + '/remove?_xsrf=' + $cookies.get('_xsrf'), { id: eventId });
+    this.removeEvent = function (csa_id, eventId) {
+		return $http.post('/gm/event/' + csa_id + '/remove?_xsrf=' + $cookies.get('_xsrf'), { id: eventId });
     };
 }])
 ;
