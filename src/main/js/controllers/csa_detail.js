@@ -29,7 +29,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
         header:{
             left: 'title', //month basicWeek basicDay agendaWeek agendaDay',
             //center: '',
-            right: 'today prev,next'
+            right: 'prev,next' // today
         },
         titleFormat: '[Turni] MMMM YYYY',
         eventClick: function (calEvent, jqueryEvent) {
