@@ -12,7 +12,13 @@
             </div>
             <div class="row">
                 <div class="col-md-12" >
-                    <button type="button" ng-repeat="dp in deliveryPlaces" class="btn btn-default btn-sm" style="margin: 2px; background-color: {{ dp.color }}">{{ dp.description }}</button>
+                    <button type="button"
+                            ng-repeat="dp in deliveryPlaces"
+                            class="btn btn-default btn-sm delivery-point-filter"
+                            ng-class="{ active: cal_info.dp_filter[dp.id] }"
+                            style="background-color: {{ dp.color }}"
+                            ng-click="toggle_dp_filter(dp)"
+                    >{{ dp.description }}</button>
                 </div>
             </div>
             <div class="panel" ng-class="{ 'panel-default': cal_info.selected_event.shifts.length > 0 || cal_info.selected_event.myShift, 'panel-danger': cal_info.selected_event.shifts.length == 0 && !cal_info.selected_event.myShift }" ng-if="cal_info.selected_event">

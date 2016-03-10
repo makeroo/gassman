@@ -424,13 +424,18 @@ def csa_delivery_place_check(csa_id, dp_id):
     return 'SELECT count(*) FROM delivery_place WHERE id=%s AND csa_id=%s', [ dp_id, csa_id ]
 
 
-def csa_delivery_dates(csaId, fromDate, toDate):
-    return '''
+def csa_delivery_dates(csaId, fromDate, toDate, enabled_dp=None):
+    q = '''
 SELECT dd.*
  FROM delivery_date dd
  JOIN delivery_place dp ON dd.delivery_place_id=dp.id
 WHERE dp.csa_id=%s AND dd.from_time BETWEEN %s AND %s
-''', [ csaId, fromDate, toDate ]
+'''
+    a = [ csaId, fromDate, toDate ]
+    if enabled_dp:
+        q += ' AND dp.id in %s'
+        a.append(set(enabled_dp))
+    return q, a
 
 def csa_delivery_shifts (dateId):
     return '''

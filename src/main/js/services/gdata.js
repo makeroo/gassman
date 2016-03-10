@@ -205,11 +205,12 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         return $http.post('/gm/csa/' + csa_id + '/delivery_places?_xsrf=' + $cookies.get('_xsrf'));
     };
 
-    this.deliveryDates = function (csa_id, from, to) {
+    this.deliveryDates = function (csa_id, from, to, selected_dp) {
         return $http.post('/gm/csa/' + csa_id + '/delivery_dates?_xsrf=' + $cookies.get('_xsrf'),
             {
                 from: from,
-                to: to
+                to: to,
+                delivery_places: selected_dp
             });
     };
 

@@ -657,7 +657,12 @@ class CsaDeliveryDatesHandler (JsonBaseHandler):
         p = self.payload
         if not self.application.is_member_of_csa(cur, uid, csa_id, True):
             raise GDataException(error_codes.E_permission_denied, 403)
-        cur.execute(*self.application.sql.csa_delivery_dates(csa_id, p['from'], p['to']))
+        cur.execute(*self.application.sql.csa_delivery_dates(
+            csa_id,
+            p['from'],
+            p['to'],
+            [dp_id for dp_id, enabled in p.get('delivery_places', {}).items() if enabled]
+        ))
         r = self.application.sql.iter_objects(cur)
         if len(r):
             # cur.execute(*self.application.sql.csa_delivery_shifts(set([ s['id'] for s in r ])))

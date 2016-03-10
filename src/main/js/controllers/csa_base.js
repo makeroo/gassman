@@ -21,12 +21,13 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
         selected_event: null,
         prepare_event: function (delivery_date) {
             return delivery_date;
-        }
+        },
+        dp_filter: {}
     };
 
     $scope.eventSources = [
         function (start, end, timezone, callback) {
-            gdata.deliveryDates($scope.gassman.selectedCsa, start.toJSON(), end.toJSON()).then(function (r) {
+            gdata.deliveryDates($scope.gassman.selectedCsa, start.toJSON(), end.toJSON(), $scope.cal_info.dp_filter).then(function (r) {
                 var events = r.data;
                 var dest = [];
                 var oldSelected = $scope.cal_info.selected_event;
@@ -121,6 +122,12 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
         return csaDefer.promise;
     };
 
+    $scope.toggle_dp_filter = function (dp) {
+        $scope.cal_info.dp_filter[dp.id] = !$scope.cal_info.dp_filter[dp.id];
+
+        uiCalendarConfig.calendars.uical.fullCalendar('refetchEvents');
+    };
+
     $q.all([
         gdata.csaInfo(csaId),
         gdata.deliveryPlaces(csaId)
@@ -129,6 +136,10 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
         $scope.csa = r[0].data;
         $scope.csa.kitty.membership_fee = parseFloat($scope.csa.kitty.membership_fee);
         $scope.deliveryPlaces = r[1].data;
+
+        angular.forEach($scope.deliveryPlaces, function (dp) {
+            $scope.cal_info.dp_filter[dp.id] = true;
+        });
 
         csaDefer.resolve($scope.csa);
 
