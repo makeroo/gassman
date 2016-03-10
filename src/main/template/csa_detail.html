@@ -17,16 +17,16 @@
                     <button type="button" ng-repeat="dp in deliveryPlaces" class="btn btn-default btn-sm" style="margin: 2px; background-color: {{ dp.color }}">{{ dp.description }}</button>
                 </div>
             </div>
-            <div class="panel" ng-class="{ 'panel-default': selectedEvent.shifts.length > 0 || selectedEvent.myShift, 'panel-danger': selectedEvent.shifts.length == 0 && !selectedEvent.myShift }" ng-if="selectedEvent">
+            <div class="panel" ng-class="{ 'panel-default': cal_info.selected_event.shifts.length > 0 || cal_info.selected_event.myShift, 'panel-danger': cal_info.selected_event.shifts.length == 0 && !cal_info.selected_event.myShift }" ng-if="cal_info.selected_event">
                 <div class="panel-heading">
-                    <h4>{{ selectedEvent.notes }}</h4>
+                    <h4>{{ cal_info.selected_event.notes }}</h4>
                 </div>
                 <div class="panel-body">
                     <div class="row">
-                        <div class="col-md-6">Dalle: {{ selectedEvent.from_date.toJSON() | date: 'shortTime' }}</div>
-                        <div class="col-md-6">Alle: {{ selectedEvent.to_date.toJSON() | date: 'shortTime' }}</div>
+                        <div class="col-md-6">Dalle: {{ cal_info.selected_event.from_date.toJSON() | date: 'shortTime' }}</div>
+                        <div class="col-md-6">Alle: {{ cal_info.selected_event.to_date.toJSON() | date: 'shortTime' }}</div>
                     </div>
-                    <div class="row" ng-repeat="s in selectedEvent.shifts">
+                    <div class="row" ng-repeat="s in cal_info.selected_event.shifts">
                         <div class="col-md-3">
                             {{ s.role }}
                         </div>
@@ -36,19 +36,19 @@
                             <a ng-if="s.person.mainTelephone" href="call:{{ s.person.mainTelephone }}" style="display: block"><small><span class="glyphicon glyphicon-phone-alt"></span> {{s.person.mainTelephone}}</small></a>
                         </div>
                     </div>
-                    <div class="row" ng-if="selectedEvent.myShift">
+                    <div class="row" ng-if="cal_info.selected_event.myShift">
                         <div class="col-md-3">
-                            {{ selectedEvent.myShift.role }}
+                            {{ cal_info.selected_event.myShift.role }}
                         </div>
                         <div class="col-md-9">
                             io
-                            <button type="button" class="btn btn-sm btn-primary" ng-click="addShift(selectedEvent.myShift)" ng-if="selectedEvent.editable">Modifica</button>
+                            <button type="button" class="btn btn-sm btn-primary" ng-click="addShift(cal_info.selected_event.myShift)" ng-if="cal_info.selected_event.editable">Modifica</button>
                         </div>
                     </div>
-                    <div class="alert alert-danger" ng-if="selectedEvent.shifts.length == 0 && !selectedEvent.myShift">
+                    <div class="alert alert-danger" ng-if="cal_info.selected_event.shifts.length == 0 && !cal_info.selected_event.myShift">
                         Turno non coperto!
                     </div>
-                    <div class="row" ng-if="!selectedEvent.myShift && selectedEvent.editable">
+                    <div class="row" ng-if="!cal_info.selected_event.myShift && cal_info.selected_event.editable">
                         <div class="col-md-12">
                             <button type="button" class="btn btn-sm btn-primary" ng-click="addShift()">Mi segno</button>
                         </div>

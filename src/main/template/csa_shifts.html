@@ -15,37 +15,37 @@
                     <button type="button" ng-repeat="dp in deliveryPlaces" class="btn btn-default btn-sm" style="margin: 2px; background-color: {{ dp.color }}">{{ dp.description }}</button>
                 </div>
             </div>
-            <div class="panel" ng-class="{ 'panel-default': selectedEvent.shifts.length > 0 || selectedEvent.myShift, 'panel-danger': selectedEvent.shifts.length == 0 && !selectedEvent.myShift }" ng-if="selectedEvent">
+            <div class="panel" ng-class="{ 'panel-default': cal_info.selected_event.shifts.length > 0 || cal_info.selected_event.myShift, 'panel-danger': cal_info.selected_event.shifts.length == 0 && !cal_info.selected_event.myShift }" ng-if="cal_info.selected_event">
                 <div class="panel-heading">
-                    <h4 ng-if="selectedEvent.id">Modifica turno: {{ selectedEvent.from_date.toJSON() | date: 'shortDate' }}</h4>
-                    <h4 ng-if="!selectedEvent.id">Nuovo turno: {{ selectedEvent.from_date.toJSON() | date: 'shortDate' }}</h4>
+                    <h4 ng-if="cal_info.selected_event.id">Modifica turno: {{ cal_info.selected_event.from_date.toJSON() | date: 'shortDate' }}</h4>
+                    <h4 ng-if="!cal_info.selected_event.id">Nuovo turno: {{ cal_info.selected_event.from_date.toJSON() | date: 'shortDate' }}</h4>
                 </div>
                 <div class="panel-body">
                     <form name="delivery_date">
-                        <div class="checkbox" ng-repeat="dp in selectedEvent.delivery_places">
+                        <div class="checkbox" ng-repeat="dp in cal_info.selected_event.delivery_places">
                             <label>
-                                <input type="checkbox" ng-model="selectedEvent.enabled_dp[dp.id]" ng-disabled="selectedEvent.id">{{ dp.description }}
+                                <input type="checkbox" ng-model="cal_info.selected_event.enabled_dp[dp.id]" ng-disabled="cal_info.selected_event.id">{{ dp.description }}
                             </label>
                         </div>
                         <div class="form-group">
                             <label for="notes" class="control-label">Prodotti in consegna</label>
-                            <input type="text" class="form-control" id="notes" placeholder="Verdure, etc." ng-model="selectedEvent.notes" required>
+                            <input type="text" class="form-control" id="notes" placeholder="Verdure, etc." ng-model="cal_info.selected_event.notes" required>
                         </div>
                         <div class="row">
                             <div class="form-group col-md-6">
                                 <label for="from_time" class="control-label">Dalle</label>
-                                <input type="text" class="form-control" id="from_time" placeholder="{{ timeFormat }}" ng-model="selectedEvent.from_hour" required gm-valid-time>
+                                <input type="text" class="form-control" id="from_time" placeholder="{{ timeFormat }}" ng-model="cal_info.selected_event.from_hour" required gm-valid-time>
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="to_time" class="control-label">Alle</label>
-                                <input type="text" class="form-control" id="to_time" placeholder="{{ timeFormat }}" ng-model="selectedEvent.to_hour" required gm-valid-time gm-after="selectedEvent.from_hour">
+                                <input type="text" class="form-control" id="to_time" placeholder="{{ timeFormat }}" ng-model="cal_info.selected_event.to_hour" required gm-valid-time gm-after="cal_info.selected_event.from_hour">
                             </div>
                         </div>
                         <button type="button" class="btn btn-primary" ng-disabled="!delivery_date.$valid || !assignedDp()" ng-click="saveEvent()">Salva</button>
-                        <button type="button" class="btn btn-danger" ng-if="selectedEvent.id" ng-click="removeEvent()">Rimuovi data di consegna</button>
-                        <button type="button" class="btn btn-danger" ng-if="!selectedEvent.id" ng-click="cancelEvent()">Annulla</button>
+                        <button type="button" class="btn btn-danger" ng-if="cal_info.selected_event.id" ng-click="removeEvent()">Rimuovi data di consegna</button>
+                        <button type="button" class="btn btn-danger" ng-if="!cal_info.selected_event.id" ng-click="cancelEvent()">Annulla</button>
                         <h3>Turnisti</h3>
-                        <div class="row" ng-if="selectedEvent.shifts.length > 0">
+                        <div class="row" ng-if="cal_info.selected_event.shifts.length > 0">
                             <div class="col-xs-5">
                                 <span class="shift-label">Ruolo e note</span>
                                 <br/>
@@ -59,7 +59,7 @@
                             </div>
                             -->
                         </div>
-                        <ng:form name="shift" class="shift" ng-repeat="s in selectedEvent.shifts">
+                        <ng:form name="shift" class="shift" ng-repeat="s in cal_info.selected_event.shifts">
                             <div class="row">
                                 <div class="form-group col-xs-5">
                                     <input type="text" class="form-control" placeholder="apertura" ng-model="s.role">

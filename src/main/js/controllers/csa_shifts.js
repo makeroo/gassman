@@ -23,6 +23,22 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
         $location.path('/csa/' + csaId + '/detail');
     };
 
+    $scope.cal_info.prepare_event = function (delivery_date) {
+        var event = delivery_date;
+
+        event.delivery_places = [
+            event.delivery_place
+        ];
+
+        event.enabled_dp = {};
+        event.enabled_dp[event.delivery_place.id] = true;
+
+        event.from_hour = $filter('date')(event.from_date.toJSON(), 'shortTime');
+        event.to_hour = $filter('date')(event.to_date.toJSON(), 'shortTime');
+
+        return event;
+    };
+
     $scope.calendar = {
         //height: 450,
         editable: false,
@@ -33,19 +49,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
         },
         titleFormat: '[Turni] MMMM YYYY',
         eventClick: function (calEvent, jqueryEvent) {
-            var event = calEvent.deliveryDate;
-
-            event.delivery_places = [
-                event.delivery_place
-            ];
-
-            event.enabled_dp = {};
-            event.enabled_dp[event.delivery_place.id] = true;
-
-            event.from_hour = $filter('date')(event.from_date.toJSON(), 'shortTime');
-            event.to_hour = $filter('date')(event.to_date.toJSON(), 'shortTime');
-
-            $scope.selectedEvent = event;
+            $scope.cal_info.selected_event = $scope.cal_info.prepare_event(calEvent.deliveryDate);
         },
         dayClick: function (date, jsEvent, view) {
             var start = moment(date); //.add(18, 'hour');
@@ -75,7 +79,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
                 event.enabled_dp[dp.id] = false;
             });
 
-            $scope.selectedEvent = event;
+            $scope.cal_info.selected_event = event;
 
             //console.log('day click', arguments);
         }
@@ -84,10 +88,10 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
     };
 
     $scope.assignedDp = function () {
-        for (var l = $scope.selectedEvent.delivery_places.length; --l >= 0; ) {
-            var dp = $scope.selectedEvent.delivery_places[l];
+        for (var l = $scope.cal_info.selected_event.delivery_places.length; --l >= 0; ) {
+            var dp = $scope.cal_info.selected_event.delivery_places[l];
 
-            if ($scope.selectedEvent.enabled_dp[dp.id])
+            if ($scope.cal_info.selected_event.enabled_dp[dp.id])
                 return true;
         }
 
@@ -99,15 +103,15 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
     $scope.saveEvent = function () {
         var promises = [];
 
-        angular.forEach($scope.selectedEvent.enabled_dp, function (enabled, dpId) {
+        angular.forEach($scope.cal_info.selected_event.enabled_dp, function (enabled, dpId) {
             if (!enabled)
                 return;
 
-            var start = $scope.selectedEvent.from_date;
-            var end = $scope.selectedEvent.to_date;
+            var start = $scope.cal_info.selected_event.from_date;
+            var end = $scope.cal_info.selected_event.to_date;
 
-            var hs = moment($scope.selectedEvent.from_hour, $scope.timeFormat).utc();
-            var he = moment($scope.selectedEvent.to_hour, $scope.timeFormat).utc();
+            var hs = moment($scope.cal_info.selected_event.from_hour, $scope.timeFormat).utc();
+            var he = moment($scope.cal_info.selected_event.to_hour, $scope.timeFormat).utc();
 
             start.hour(hs.hour());
             start.minutes(hs.minute());
@@ -116,19 +120,19 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
             end.minute(he.minute());
 
             var event = {
-                id: $scope.selectedEvent.id,
+                id: $scope.cal_info.selected_event.id,
                 from_time: start.toJSON(),
                 to_time: end.toJSON(),
-                notes: $scope.selectedEvent.notes,
+                notes: $scope.cal_info.selected_event.notes,
                 delivery_place_id: dpId,
-                shifts: $scope.selectedEvent.shifts
+                shifts: $scope.cal_info.selected_event.shifts
             };
 
             promises.push(gdata.saveEvent($scope.gassman.selectedCsa, event));
         });
 
         $q.all(promises).then(function (r) {
-            $scope.selectedEvent.id = r[0].data.id;
+            $scope.cal_info.selected_event.id = r[0].data.id;
 
             uiCalendarConfig.calendars.uical.fullCalendar('refetchEvents');
         }).then(undefined, function (error) {
@@ -137,7 +141,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
     };
 
     $scope.removeEvent = function () {
-        gdata.removeEvent($scope.gassman.selectedCsa, $scope.selectedEvent.id).then(function (r) {
+        gdata.removeEvent($scope.gassman.selectedCsa, $scope.cal_info.selected_event.id).then(function (r) {
             $scope.cancelEvent();
             uiCalendarConfig.calendars.uical.fullCalendar('refetchEvents');
         }).then(undefined, function (error) {
@@ -147,21 +151,21 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
     };
 
     $scope.cancelEvent = function () {
-        $scope.selectedEvent = null;
+        $scope.cal_info.selected_event = null;
     };
 
     $scope.addShift = function () {
-        $scope.selectedEvent.shifts.push({
+        $scope.cal_info.selected_event.shifts.push({
             role: '',
             person_id: null,
-            idx: $scope.selectedEvent.shifts.length
+            idx: $scope.cal_info.selected_event.shifts.length
         });
     };
 
     $scope.removeShift = function (idx) {
-        $scope.selectedEvent.shifts.splice(idx, 1);
+        $scope.cal_info.selected_event.shifts.splice(idx, 1);
 
-        angular.forEach($scope.selectedEvent.shifts, function (e, idx) {
+        angular.forEach($scope.cal_info.selected_event.shifts, function (e, idx) {
             e.idx = idx;
         });
     };

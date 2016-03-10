@@ -33,7 +33,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
         },
         titleFormat: '[Turni] MMMM YYYY',
         eventClick: function (calEvent, jqueryEvent) {
-            $scope.selectedEvent = calEvent.deliveryDate;
+            $scope.cal_info.selected_event = $scope.cal_info.prepare_event(calEvent.deliveryDate);
         }
         //dayClick: $scope.alertEventOnClick,
         //eventDrop: $scope.alertOnDrop,
@@ -48,7 +48,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
             size: 'sm',
             resolve: {
                 event: function () {
-                    return $scope.selectedEvent;
+                    return $scope.cal_info.selected_event;
                 },
                 shift: function () {
                     return shift;
@@ -74,7 +74,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
                 if (shift === undefined || shift.role != role) {
                     gdata.addShift(
                         $scope.gassman.selectedCsa,
-                        $scope.selectedEvent.id,
+                        $scope.cal_info.selected_event.id,
                         shift ? shift.id : null,
                         role,
                         $scope.gassman.loggedUser.profile.id

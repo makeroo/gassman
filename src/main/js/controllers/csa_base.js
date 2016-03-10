@@ -17,20 +17,23 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
 
     $scope.csa = null;
     $scope.loadError = null;
+    $scope.cal_info = {
+        selected_event: null,
+        prepare_event: function (delivery_date) {
+            return delivery_date;
+        }
+    };
 
     $scope.eventSources = [
         function (start, end, timezone, callback) {
             gdata.deliveryDates($scope.gassman.selectedCsa, start.toJSON(), end.toJSON()).then(function (r) {
                 var events = r.data;
                 var dest = [];
-                var oldSelected = $scope.selectedEvent;
+                var oldSelected = $scope.cal_info.selected_event;
 
-                $scope.selectedEvent = null;
+                $scope.cal_info.selected_event = null;
 
                 angular.forEach(events, function (e) {
-                    if (oldSelected && oldSelected.id == e.id)
-                        $scope.selectedEvent = e;
-
                     var now = moment().utc();
 
                     e.from_date = moment(e.from_time).utc();
@@ -66,6 +69,9 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
                         color: e.delivery_place.color,
                         deliveryDate: e
                     });
+
+                    if (oldSelected && oldSelected.id == e.id)
+                        $scope.cal_info.selected_event = $scope.cal_info.prepare_event(e);
                 });
 
                 callback(dest);
