@@ -69,7 +69,7 @@
                                                required
                                                >
                                         <ui-select-match placeholder="turnista">{{ $select.selected.name }}</ui-select-match>
-                                        <ui-select-choices repeat="accountInfo.acc as accountInfo in autocompletionData | filter: {name: $select.search} track by accountInfo.acc">
+                                        <ui-select-choices repeat="accountInfo.pid as accountInfo in autocompletionData | filter: {search: $select.search} track by accountInfo.pid">
                                             <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
                                         </ui-select-choices>
                                     </ui-select>

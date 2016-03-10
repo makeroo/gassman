@@ -85,5 +85,50 @@ function () {
 
 		return resp;
 	};
+
+	this.parse_people = function (people_names_data) {
+		var accountPeople = people_names_data.people;
+		var accountPeopleAddresses = people_names_data.addresses;
+
+		var resp = { };
+
+		angular.forEach(accountPeople, function (o) {
+			// o è un array 0:pid, 1:fname, 2:mname, 3:lname, 4:accId
+			var n = (o[1] || '') + (o[2] ? (' ' + o[2]) : '') + (o[3] ? (' ' + o[3]) : '');
+
+			n = n.trim();
+
+			resp[o[0]] = { pid:o[0], name: n, refs:[], acc:o[4] };
+		});
+
+		angular.forEach(accountPeopleAddresses, function (o) {
+			// o è un array 0:addr 1:pid 2:accId
+			var pp = resp[o[1]];
+
+			if (pp) {
+				pp.refs.push(o[0]);
+			} else {
+				console.log('accountAutocompletion: address without person:', o)
+			}
+		});
+
+		return resp;
+	};
+
+	this.compose_people = function (people_index) {
+		var resp = [];
+
+		angular.forEach(people_index, function (l) {
+			if (l.refs.length)
+				l.search = l.name + ' (' + l.refs.join(', ') + ')';
+			else
+				l.search = l.name;
+
+			if (l.search)
+				resp.push(l);
+		});
+
+		return resp;
+	};
 }])
 ;

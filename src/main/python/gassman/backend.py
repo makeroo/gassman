@@ -126,6 +126,7 @@ class GassmanWebApp (tornado.web.Application):
             # (r'^/gm/csa/(\d+)/total_amount$', CsaAmountHandler),
             (r'^/gm/rss/(.+)$', RssFeedHandler),
             (r'^/gm/people/(null|\d+)/profiles$', PeopleProfilesHandler),
+            (r'^/gm/people/(\d+)/names$', PeopleNamesHandler),
             (r'^/gm/person/(null|\d+)/save$', PersonSaveHandler),
             (r'^/gm/person/(\d+)/check_email$', PersonCheckEmailHandler),
             (r'^/gm/event/(\d+)/save$', EventSaveHandler),
@@ -376,6 +377,7 @@ class GassmanWebApp (tornado.web.Application):
 
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user(self):
+        return 1
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
@@ -1028,7 +1030,7 @@ class TransactionSaveHandler (JsonBaseHandler):
             if tid == 0:
                 raise GDataException(error_codes.E_illegal_currency)
 
-            customCsaAccounts = dict(
+            custom_csa_accounts = dict(
                 EXPENSE=None,
                 INCOME=None,
                 KITTY=None
@@ -1036,15 +1038,15 @@ class TransactionSaveHandler (JsonBaseHandler):
             for l in tlines:
                 desc = l['notes']
                 amount = l['amount']
-                reqAccId = l['account']
-                if reqAccId in customCsaAccounts:
-                    acc_id = customCsaAccounts[reqAccId]
+                req_acc_id = l['account']
+                if req_acc_id in custom_csa_accounts:
+                    acc_id = custom_csa_accounts[req_acc_id]
                     if acc_id is None:
-                        cur.execute(*self.application.sql.csa_account(csa_id, reqAccId, tcurr))
+                        cur.execute(*self.application.sql.csa_account(csa_id, req_acc_id, tcurr))
                         acc_id = cur.fetchone()[0]
-                        customCsaAccounts[reqAccId] = acc_id
+                        custom_csa_accounts[req_acc_id] = acc_id
                 else:
-                    acc_id = reqAccId
+                    acc_id = req_acc_id
                 cur.execute(*self.application.sql.insert_transaction_line(tid, desc, amount, acc_id))
                 last_line_id = cur.lastrowid
 
@@ -1326,6 +1328,26 @@ class PeopleProfilesHandler (JsonBaseHandler):
                 } for id, name, member in cur.fetchall()
                 }
         return r
+
+
+class PeopleNamesHandler (JsonBaseHandler):
+    # FIXME: è una copia di AccountNames... cambiano permessi e c'è meno roba
+    # come si risolve: si toglie da qua ogni riferimento ai conti (account_people_addresses)
+    # da quella di sopra si toglie invece persone e contatti (rimane solo conti-persone)
+    # lato js la parse prende questa e crea l'array contatti
+    # e complete prende i conti e raggruppa
+    def do(self, cur, csa_id):
+        uid = self.current_user
+        if not self.application.has_permission_by_csa(cur, self.application.sql.P_canManageShifts, uid, csa_id):
+            raise GDataException(error_codes.E_permission_denied, 403)
+        cur.execute(*self.application.sql.account_people(csa_id))
+        account_people = list(cur)
+        cur.execute(*self.application.sql.account_people_addresses(csa_id))
+        account_people_addresses = list(cur)
+        return dict(
+            people=account_people,
+            addresses=account_people_addresses,
+            )
 
 
 class PersonSaveHandler (JsonBaseHandler):

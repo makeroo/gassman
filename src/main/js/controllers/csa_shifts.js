@@ -29,7 +29,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
         header:{
             left: 'title', //month basicWeek basicDay agendaWeek agendaDay',
             //center: '',
-            right: 'today prev,next'
+            right: 'prev,next' // today
         },
         titleFormat: '[Turni] MMMM YYYY',
         eventClick: function (calEvent, jqueryEvent) {
@@ -166,9 +166,9 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
         });
     };
 
-    gdata.accountsNames($scope.gassman.selectedCsa).then(function (r) {
-        $scope.currencies = accountAutocompletion.parse(r.data);
-        $scope.autocompletionData = accountAutocompletion.compose($scope.currencies);
+    gdata.people_names($scope.gassman.selectedCsa).then(function (r) {
+        $scope.peoples = accountAutocompletion.parse_people(r.data);
+        $scope.autocompletionData = accountAutocompletion.compose_people($scope.peoples);
     }).then(undefined, function (error) {
         $scope.autocompletionDataError = error.data;
     });
