@@ -28,7 +28,7 @@
                             </label>
                         </div>
                         <div class="form-group">
-                            <label for="notes" class="control-label">Note</label>
+                            <label for="notes" class="control-label">Prodotti in consegna</label>
                             <input type="text" class="form-control" id="notes" placeholder="Verdure, etc." ng-model="selectedEvent.notes" required>
                         </div>
                         <div class="row">
@@ -46,10 +46,12 @@
                         <button type="button" class="btn btn-danger" ng-if="!selectedEvent.id" ng-click="cancelEvent()">Annulla</button>
                         <h3>Turnisti</h3>
                         <div class="row" ng-if="selectedEvent.shifts.length > 0">
-                            <div class="shift-label col-md-5">
-                                Ruolo
+                            <div class="col-xs-5">
+                                <span class="shift-label">Ruolo e note</span>
+                                <br/>
+                                <small>orari, se non presente per tutto il turno</small>
                             </div>
-                            <div class="shift-label col-md-5">
+                            <div class="shift-label col-xs-5">
                                 Persona
                             </div>
                             <!--
@@ -59,10 +61,10 @@
                         </div>
                         <ng:form name="shift" class="shift" ng-repeat="s in selectedEvent.shifts">
                             <div class="row">
-                                <div class="form-group col-md-5">
-                                    <input type="text" class="form-control" placeholder="apertura" ng-model="s.role" required>
+                                <div class="form-group col-xs-5">
+                                    <input type="text" class="form-control" placeholder="apertura" ng-model="s.role">
                                 </div>
-                                <div class="form-group col-md-5">
+                                <div class="form-group col-xs-5">
                                     <ui-select theme="bootstrap"
                                                name="person"
                                                ng-model="s.person_id"
