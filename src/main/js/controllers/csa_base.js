@@ -63,8 +63,8 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
                         id: e.id,
                         title: e.notes,
 //                        allDay: false,
-                        start: e.from_date.toJSON(),
-                        end: e.to_date.toJSON(),
+                        start: moment(e.from_date.local()),
+                        end: moment(e.to_date.local()),
 //                        editable: false,
                         color: e.delivery_place.color,
                         deliveryDate: e

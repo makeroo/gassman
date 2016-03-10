@@ -52,8 +52,8 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
             $scope.cal_info.selected_event = $scope.cal_info.prepare_event(calEvent.deliveryDate);
         },
         dayClick: function (date, jsEvent, view) {
-            var start = moment(date); //.add(18, 'hour');
-            var end = moment(date); //.add(19, 'hour');
+            var start = moment(date).utc(); //.add(18, 'hour');
+            var end = moment(date).utc(); //.add(19, 'hour');
 
             //var hour_start = $filter('date')(start.toJSON(), 'shortTime');
             //var hour_end = $filter('date')(end.toJSON(), 'shortTime');
