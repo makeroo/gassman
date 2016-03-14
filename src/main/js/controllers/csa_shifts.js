@@ -110,6 +110,10 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
             var start = $scope.cal_info.selected_event.from_date;
             var end = $scope.cal_info.selected_event.to_date;
 
+            // fullcalendar me le riporta local...
+            start.utc();
+            end.utc();
+
             var hs = moment($scope.cal_info.selected_event.from_hour, $scope.timeFormat).utc();
             var he = moment($scope.cal_info.selected_event.to_hour, $scope.timeFormat).utc();
 
