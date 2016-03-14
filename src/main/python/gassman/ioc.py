@@ -1,5 +1,6 @@
 import gassman_settings as settings
 
+
 def io_loop():
     import tornado.ioloop
 
@@ -33,14 +34,24 @@ def db_connection_arguments():
 
 
 def sql_factory():
-    import sql
+    from . import sql
     return sql
 
 
 def gassman_backend():
-    import gassman.backend
+    from . import backend
 
-    return gassman.backend.GassmanWebApp(
+    return backend.GassmanWebApp(
+        sql_factory(),
+        mailer(),
+        db_connection_arguments(),
+    )
+
+
+def notification_router():
+    from . import notification_router
+
+    return notification_router.NotificationRouter(
         sql_factory(),
         mailer(),
         db_connection_arguments(),

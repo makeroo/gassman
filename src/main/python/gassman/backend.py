@@ -30,7 +30,6 @@ import pymysql
 import loglib
 
 import gassman_version
-import sql
 import error_codes
 
 
@@ -377,7 +376,6 @@ class GassmanWebApp (tornado.web.Application):
 
 class BaseHandler (tornado.web.RequestHandler):
     def get_current_user(self):
-        return 1
         c = self.get_secure_cookie('user', max_age_days=settings.COOKIE_MAX_AGE_DAYS)
         return int(c) if c else None
 
@@ -603,13 +601,13 @@ class CsaChargeMembershipFeeHandler (JsonBaseHandler):
         if acc is None:
             raise GDataException(error_codes.E_illegal_kitty)
         currencyId = acc['currency_id']
-        cur.execute(*self.application.sql.insert_transaction(t_desc,
-                                            now,
-                                            self.application.sql.Tt_MembershipFee,
-                                            currencyId,
-                                            csa_id
-                                            )
-                    )
+        cur.execute(*self.application.sql.insert_transaction(
+            t_desc,
+            now,
+            self.application.sql.Tt_MembershipFee,
+            currencyId,
+            csa_id
+        ))
         tid = cur.lastrowid
         cur.execute(*self.application.sql.insert_transaction_line_membership_fee(tid, amount, csa_id, currencyId))
 
@@ -1492,7 +1490,7 @@ class AdminPeopleIndexHandler (JsonBaseHandler):
             q = '%%%s%%' % q
         o = self.application.sql.admin_people_index_order_by[int(self.payload.get('o', 0))]
         uid = self.current_user
-        if self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
+        if self.application.has_permission_by_csa(cur, self.application.sql.P_canAdminPeople, uid, None):
             csa = p.get('csa')
             vck = p.get('vck', self.application.viewable_contact_kinds)
             cur.execute(*self.application.sql.admin_people_index(
@@ -1521,7 +1519,7 @@ class AdminPeopleProfilesHandler (JsonBaseHandler):
     def do(self, cur):
         pids = self.payload['pids']
         uid = self.current_user
-        if not self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
+        if not self.application.has_permission_by_csa(cur, self.application.sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
         r = {}
         if len(pids) == 0:
@@ -1557,7 +1555,7 @@ class AdminPeopleRemoveHandler (JsonBaseHandler):
     def do(self, cur):
         pid = self.payload['pid']
         uid = self.current_user
-        if not self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
+        if not self.application.has_permission_by_csa(cur, self.application.sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
         # TODO: verificare che non abbia né abbia avuto conti
         cur.execute(*self.application.sql.find_user_csa(pid))
@@ -1574,7 +1572,7 @@ class AdminPeopleJoinHandler (JsonBaseHandler):
         newpid = self.payload['newpid']
         oldpid = self.payload['oldpid']
         uid = self.current_user
-        if not self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
+        if not self.application.has_permission_by_csa(cur, self.application.sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
         cur.execute(*self.application.sql.reassignContacts(newpid, oldpid))
         cur.execute(*self.application.sql.reassignPermissions(newpid, oldpid))
@@ -1587,7 +1585,7 @@ class AdminPeopleAddHandler (JsonBaseHandler):
         pid = self.payload['pid']
         acc = self.payload['acc']
         uid = self.current_user
-        if not self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
+        if not self.application.has_permission_by_csa(cur, self.application.sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
         cur.execute(*self.application.sql.grantAccount(pid, acc, datetime.datetime.utcnow()))
 
@@ -1595,7 +1593,7 @@ class AdminPeopleAddHandler (JsonBaseHandler):
 class AdminPeopleCreateAccountHandler (JsonBaseHandler):
     def do(self, cur):
         uid = self.current_user
-        if not self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
+        if not self.application.has_permission_by_csa(cur, self.application.sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
         pid = self.payload['pid']
         csa = self.payload['csa']
@@ -1616,7 +1614,7 @@ class AdminPeopleCreateAccountHandler (JsonBaseHandler):
 class AdminPeopleCreateHandler (JsonBaseHandler):
     def do(self, cur):
         uid = self.current_user
-        if not self.application.has_permission_by_csa(cur, sql.P_canAdminPeople, uid, None):
+        if not self.application.has_permission_by_csa(cur, self.application.sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
         first_name = self.payload['first_name']
         last_name = self.payload['last_name']
@@ -1643,20 +1641,3 @@ class AdminPeopleCreateHandler (JsonBaseHandler):
         else:
             acc = None
         return { 'pid': pid, 'acc': acc }
-
-
-def main():
-    import ioc
-
-    tornado.locale.load_translations(settings.TRANSLATIONS_PATH)
-
-    application = ioc.gassman_backend()
-
-    application.listen(settings.HTTP_PORT)
-
-    log_gassman.info('GASsMAN web server up and running...')
-
-    ioc.io_loop().start()
-
-if __name__ == '__main__':
-    main()

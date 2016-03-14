@@ -22,7 +22,7 @@ logging.config.dictConfig(settings.LOG)
 
 
 def main():
-    import ioc
+    from gassman import ioc
 
     tornado.locale.load_translations(settings.TRANSLATIONS_PATH)
 
