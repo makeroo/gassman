@@ -6,14 +6,14 @@ Created on 03/mar/2014
 
 import jsonlib
 
-#P_membership = 1
+# P_membership = 1
 P_canCheckAccounts = 2
 P_canAdminPeople = 3 # very low level!
-#P_canEnterDeposit = 4 # deprecated
+# P_canEnterDeposit = 4 # deprecated
 P_canEnterPayments = 5
 P_canManageTransactions = 6
 P_canEnterCashExchange = 7
-#P_canEnterWithdrawal = 8 # deprecated
+# P_canEnterWithdrawal = 8 # deprecated
 P_canViewContacts = 9
 P_canEditContacts = 10
 P_canGrantPermissions = 11
@@ -22,18 +22,18 @@ P_csaEditor = 13
 P_canCloseAccounts = 14
 P_canManageShifts = 15
 
-Tt_Deposit = 'd'         # deprecated,       READ ONLY
+Tt_Deposit = 'd'          # deprecated,       READ ONLY
 Tt_Error = 'e'
-Tt_MembershipFee = 'f'   # pagamento quota,  P_canEditMembershipFee
-Tt_Generic = 'g'         # deprecated,       READ ONLY
-Tt_Payment = 'p'         # pagamento merce,  P_canEnterPayments
-Tt_PaymentExpenses = 'q' # deprecated,       READ ONLY (conto EXPENSES invece di KITTY per le spese)
+Tt_MembershipFee = 'f'    # pagamento quota,  P_canEditMembershipFee
+Tt_Generic = 'g'          # deprecated,       READ ONLY
+Tt_Payment = 'p'          # pagamento merce,  P_canEnterPayments
+Tt_PaymentExpenses = 'q'  # deprecated,       READ ONLY (conto EXPENSES invece di KITTY per le spese)
 # TODO 'r'
-Tt_Trashed = 't'         # cancellata,       P_canManageTransactions or isEditor
+Tt_Trashed = 't'          # cancellata,       P_canManageTransactions or isEditor
 Tt_Unfinished = 'u'
-Tt_Withdrawal = 'w'      # deprecated,       READ ONLY
-Tt_CashExchange = 'x'    # scambio contante, P_canEnterCashExchange
-Tt_AccountClosing = 'z'  # chiusura conto,   P_canCloseAccounts
+Tt_Withdrawal = 'w'       # deprecated,       READ ONLY
+Tt_CashExchange = 'x'     # scambio contante, P_canEnterCashExchange
+Tt_AccountClosing = 'z'   # chiusura conto,   P_canCloseAccounts
 
 An_EveryMovement = 'E'
 An_Dayly = 'D'
@@ -60,13 +60,13 @@ Ckk = set([Ck_Telephone,
            ])
 
 transactionPermissions = {
-#    Tt_Deposit: READ ONLY P_canEnterDeposit,
+    # Tt_Deposit: READ ONLY P_canEnterDeposit,
     Tt_Payment: P_canEnterPayments,
     Tt_CashExchange: P_canEnterCashExchange,
-#    Tt_Withdrawal: READ ONLY P_canEnterWithdrawal,
+    # Tt_Withdrawal: READ ONLY P_canEnterWithdrawal,
     Tt_MembershipFee: P_canEditMembershipFee,
-#    Tt_PaymentExpenses: READ ONLY P_canEnterPayments,
-#    Tt_Generic: READ ONLY P_canCheckAccounts,
+    # Tt_PaymentExpenses: READ ONLY P_canEnterPayments,
+    # Tt_Generic: READ ONLY P_canCheckAccounts,
     }
 
 editableTransactionPermissions = set(transactionPermissions.values())
@@ -1052,16 +1052,20 @@ def grantAccount (pid, acc, fromDate):
 def checkConn ():
     return 'SELECT 1'
 
-def column_names (cur):
-    return [ f[0] for f in cur.description ]
 
-def iter_objects (cur):
+def column_names(cur):
+    return [f[0] for f in cur.description]
+
+
+def iter_objects(cur):
     cn = column_names(cur)
-    return [ dict(zip(cn, x)) for x in list(cur) ]
+    return [dict(zip(cn, x)) for x in list(cur)]
 
-def fetch_object (cur, returnIfNone=None):
+
+def fetch_object(cur, return_if_none=None):
     v = cur.fetchone()
-    return dict(zip(column_names(cur), v)) if v else returnIfNone
+    return dict(zip(column_names(cur), v)) if v else return_if_none
+
 
 def fetch_struct (cur):
     def seqmode (c, k, v):
