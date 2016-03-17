@@ -11,7 +11,7 @@ log_gassman = logging.getLogger('gassman.notification_router')
 
 
 def main():
-    import ioc
+    from gassman import ioc
 
     io_loop = ioc.io_loop()
 

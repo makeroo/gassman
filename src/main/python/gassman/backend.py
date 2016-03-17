@@ -87,7 +87,7 @@ class Person (object):
         self.firstName = p_first_name
         self.middleName = p_middle_name
         self.lastName = p_last_name
-        #self.account = p_current_account_id
+        # self.account = p_current_account_id
         self.rssFeedId = p_rss_feed_id
 
     def __str__(self):
@@ -95,7 +95,7 @@ class Person (object):
 
 
 class GassmanWebApp (tornado.web.Application):
-    def __init__ (self, sql, mailer, connArgs):
+    def __init__ (self, sql, mailer, conn):
         handlers = [
             # (r'^/$', IndexHandler),
             (r'^/home.html$', HomeHandler),
@@ -155,8 +155,7 @@ class GassmanWebApp (tornado.web.Application):
             )
         super().__init__(handlers, **sett)
         self.mailer = mailer
-        self.connArgs = connArgs
-        self.conn = None
+        self.conn = conn
         self.sql = sql
         self.viewable_contact_kinds = [
             self.sql.Ck_Telephone,
@@ -165,47 +164,13 @@ class GassmanWebApp (tornado.web.Application):
             self.sql.Ck_Fax,
             self.sql.Ck_Nickname,
         ]
-
         # self.sessions = dict()
-        self.connect()
-        tornado.ioloop.PeriodicCallback(self.check_conn, settings.DB_CHECK_INTERVAL).start()
-
-    def connect(self):
-        if self.conn is not None:
-            try:
-                self.conn.close()
-                self.conn = None
-            except:
-                pass
-        self.conn = pymysql.connect(**self.connArgs)
-
-    def check_conn(self):
-        try:
-            try:
-                with self.conn as cur:
-                    cur.execute(self.sql.checkConn())
-                    list(cur)
-            except pymysql.err.OperationalError as e:
-                if e.args[0] == 2013:
-                    # pymysql.err.OperationalError: (2013, 'Lost connection to MySQL server during query')
-                    # provo a riconnettermi
-                    log_gassman.warning('mysql closed connection, reconnecting')
-                    self.connect()
-                else:
-                    raise
-        except:
-            etype, evalue, tb = sys.exc_info()
-            log_gassman.fatal('db connection failed: cause=%s/%s', etype, evalue)
-            self.notify('[FATAL] No db connection', 'Connection error: %s/%s.\nTraceback:\n%s' %
-                           (etype, evalue, loglib.TracebackFormatter(tb))
-                           )
 
     def notify(self, subject, body, receivers = None, replyTo=None):
         if self.mailer is None:
             log_gassman.info('SMTP not configured, mail not sent: dest=%s, subj=%s\n%s', receivers, subject, body)
         else:
-            self.mailer.send(settings.SMTP_SENDER,
-                             receivers or settings.SMTP_RECEIVER,
+            self.mailer.send(receivers or settings.SMTP_RECEIVER,
                              '[GASsMan] %s' % subject,
                              body,
                              replyTo
@@ -231,7 +196,7 @@ class GassmanWebApp (tornado.web.Application):
 
     @tornado.gen.coroutine
     def check_profile(self, requestHandler, user):
-        with self.conn as cur:
+        with self.conn.connection() as cur:
             authMode = (user.userId, user.authenticator, self.sql.Ck_Id)
             cur.execute(*self.sql.check_user(*authMode))
             pp = list(cur)
@@ -259,7 +224,7 @@ class GassmanWebApp (tornado.web.Application):
                 self.sql.Ck_GProfile: [user.gProfile, None, None],
                 self.sql.Ck_Picture: [user.picture, None, None],
             }
-            with self.conn as cur:
+            with self.conn.connection() as cur:
                 if p is None:
                     cur.execute(*self.sql.create_person(user.firstName, user.middleName, user.lastName))
                     p_id = cur.lastrowid
@@ -268,7 +233,7 @@ class GassmanWebApp (tornado.web.Application):
                     p = Person(p_id, user.firstName, user.middleName, user.lastName, rfi)
                     log_gassman.info('profile created: newUser=%s', p)
                 else:
-                    cur.execute(*self.sql.fetchAllContacts(p.id))
+                    cur.execute(*self.sql.contacts_fetch_all(p.id))
                     for pc_id, a_id, kind, contact_type, addr in list(cur):
                         v = attrsToAdd.get(kind)
                         if v == (addr, contact_type):
@@ -289,7 +254,7 @@ class GassmanWebApp (tornado.web.Application):
                     if addrPk is None:
                         self.add_contact(cur, p.id, addr, kind, ctype)
                     else:
-                        cur.execute(*self.sql.updateAddress(addrPk, addr, ctype))
+                        cur.execute(*self.sql.contact_address_update(addrPk, addr, ctype))
         except:
             etype, evalue, tb = sys.exc_info()
             log_gassman.error('profile creation failed: cause=%s/%s\nfull stacktrace:\n%s', etype, evalue, loglib.TracebackFormatter(tb))
@@ -427,7 +392,7 @@ class HomeHandler (BaseHandler):
     def get(self):
         u = self.current_user
         if u is not None:
-            with self.application.conn as cur:
+            with self.application.conn.connection() as cur:
                 cur.execute(*self.application.sql.update_last_visit(u, datetime.datetime.utcnow()))
         self.xsrf_token  # leggere il cookie => generarlo
         self.render(
@@ -440,7 +405,7 @@ class JsonBaseHandler (BaseHandler):
     notifyExceptions = False
 
     def post(self, *args):
-        with self.application.conn as cur:
+        with self.application.conn.connection() as cur:
             m = cur.execute
 
             def logging_execute(sql, *args):
@@ -728,7 +693,7 @@ class AccountXlsHandler (BaseHandler):
         self.add_header('Content-Type', 'application/vnd.ms-excel')
         self.clear_header('Content-Disposition')
         self.add_header('Content-Disposition', 'attachment; filename="account-%s.xls"' % acc_id)
-        with self.application.conn as cur:
+        with self.application.conn.connection() as cur:
             if (not self.application.has_or_had_account(cur, uid, acc_id) and
                 not self.application.has_permission_by_account(cur, self.application.sql.P_canCheckAccounts, uid, acc_id) and
                 not self.application.check_membership_by_kitty(cur, uid, acc_id)
@@ -796,7 +761,7 @@ class AccountCloseHandler (JsonBaseHandler):
                 'info': error_codes.I_account_open
             }
         else:
-            cur.execute(*self.application.sql.account_amount(acc_id, returnCurrencyId=True))
+            cur.execute(*self.application.sql.account_amount(acc_id, return_currency_id=True))
             v = cur.fetchone()
             amount = v[0] or 0.0
             currencyId = v[2]
@@ -1248,7 +1213,7 @@ class RssFeedHandler (tornado.web.RequestHandler):
     def get(self, rssId):
         self.clear_header('Content-Type')
         self.add_header('Content-Type', 'text/xml')
-        with self.application.conn as cur:
+        with self.application.conn.connection() as cur:
             cur.execute(*self.application.sql.rss_user(rssId))
             p = cur.fetchone()
             cur.execute(*self.application.sql.rss_feed(rssId))
@@ -1370,14 +1335,14 @@ class PersonSaveHandler (JsonBaseHandler):
             ):
             raise GDataException(error_codes.E_permission_denied, 403)
         # salva profilo
-        cur.execute(*self.application.sql.updateProfile(profile))
+        cur.execute(*self.application.sql.profile_update(profile))
         # salva contatti
         contacts = p['contacts']
-        cur.execute(*self.application.sql.fetchContacts(pid))
+        cur.execute(*self.application.sql.contacts_fetch(pid))
         ocontacts = [x[0] for x in cur.fetchall()]
         if ocontacts:
-            cur.execute(*self.application.sql.removeContactAddresses(ocontacts))
-            cur.execute(*self.application.sql.removePersonContacts(ocontacts))
+            cur.execute(*self.application.sql.contact_address_remove(ocontacts))
+            cur.execute(*self.application.sql.person_contact_remove(ocontacts))
         for c, i in zip(contacts, range(len(contacts))):
             naddress = c['address']
             nkind = c['kind']
@@ -1390,9 +1355,9 @@ class PersonSaveHandler (JsonBaseHandler):
                 continue
             #naid = c['id']
             #npriority = ncontact['priority']
-            cur.execute(*self.application.sql.saveAddress(naddress, nkind, ncontact_type))
+            cur.execute(*self.application.sql.contact_address_insert(naddress, nkind, ncontact_type))
             aid = cur.lastrowid
-            cur.execute(*self.application.sql.linkAddress(pid, aid, i))
+            cur.execute(*self.application.sql.person_contact_insert(pid, aid, i))
         # salva permessi
         permissions = p.get('permissions')
         if permissions is not None and \
@@ -1400,16 +1365,16 @@ class PersonSaveHandler (JsonBaseHandler):
            self.application.has_permission_by_csa(cur, self.application.sql.P_canGrantPermissions, uid, csa_id):
             cur.execute(*self.application.sql.find_user_permissions(uid, csa_id))
             assignable_perms = set([row[0] for row in cur.fetchall()])
-            cur.execute(*self.application.sql.revokePermissions(pid, csa_id, assignable_perms))
+            cur.execute(*self.application.sql.permission_revoke(pid, csa_id, assignable_perms))
             for p in set(permissions) & assignable_perms:
-                cur.execute(*self.application.sql.grantPermission(pid, p, csa_id))
+                cur.execute(*self.application.sql.permission_grant(pid, p, csa_id))
         # TODO: salva indirizzi
         fee = p.get('membership_fee')
         if csa_id is not None and fee and self.application.has_permission_by_csa(cur, self.application.sql.P_canEditMembershipFee, uid, csa_id):
             # accId = fee.get('account')
             amount = fee.get('amount')
             if float(amount) >= 0:
-                cur.execute(*self.application.sql.account_updateMembershipFee(csa_id, pid, amount))
+                cur.execute(*self.application.sql.account_update_membership_fee(csa_id, pid, amount))
 
 
 class PersonCheckEmailHandler (JsonBaseHandler):
@@ -1425,7 +1390,7 @@ class PersonCheckEmailHandler (JsonBaseHandler):
             ):
             raise GDataException(error_codes.E_permission_denied, 403)
         # verifica unicità
-        cur.execute(*self.application.sql.isUniqueEmail(pid, email))
+        cur.execute(*self.application.sql.is_unique_email(pid, email))
         return cur.fetchone()[0]
 
 
@@ -1561,10 +1526,10 @@ class AdminPeopleRemoveHandler (JsonBaseHandler):
         cur.execute(*self.application.sql.find_user_csa(pid))
         if len(cur.fetchall()) > 0:
             raise GDataException(error_codes.E_cannot_remove_person_with_accounts)
-        cur.execute(*self.application.sql.deleteContactsOfPerson(pid))
-        cur.execute(*self.application.sql.deleteContactsPerson(pid))
-        cur.execute(*self.application.sql.deletePermissions(pid))
-        cur.execute(*self.application.sql.deletePerson(pid))
+        cur.execute(*self.application.sql.contact_address_delete(pid))
+        cur.execute(*self.application.sql.contact_person_delete(pid))
+        cur.execute(*self.application.sql.permission_revoke_all(pid))
+        cur.execute(*self.application.sql.person_delete(pid))
 
 
 class AdminPeopleJoinHandler (JsonBaseHandler):
@@ -1574,10 +1539,10 @@ class AdminPeopleJoinHandler (JsonBaseHandler):
         uid = self.current_user
         if not self.application.has_permission_by_csa(cur, self.application.sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
-        cur.execute(*self.application.sql.reassignContacts(newpid, oldpid))
-        cur.execute(*self.application.sql.reassignPermissions(newpid, oldpid))
-        cur.execute(*self.application.sql.reassignAccounts(newpid, oldpid))
-        cur.execute(*self.application.sql.deletePerson(oldpid))
+        cur.execute(*self.application.sql.contacts_reassign(newpid, oldpid))
+        cur.execute(*self.application.sql.permissions_reassign(newpid, oldpid))
+        cur.execute(*self.application.sql.accounts_reassign(newpid, oldpid))
+        cur.execute(*self.application.sql.person_delete(oldpid))
 
 
 class AdminPeopleAddHandler (JsonBaseHandler):
@@ -1587,7 +1552,7 @@ class AdminPeopleAddHandler (JsonBaseHandler):
         uid = self.current_user
         if not self.application.has_permission_by_csa(cur, self.application.sql.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
-        cur.execute(*self.application.sql.grantAccount(pid, acc, datetime.datetime.utcnow()))
+        cur.execute(*self.application.sql.account_grant(pid, acc, datetime.datetime.utcnow()))
 
 
 class AdminPeopleCreateAccountHandler (JsonBaseHandler):
@@ -1608,7 +1573,7 @@ class AdminPeopleCreateAccountHandler (JsonBaseHandler):
                 0.0
             ))
             accId = cur.lastrowid
-            cur.execute(*self.application.sql.grantAccount(pid, accId, datetime.datetime.utcnow()))
+            cur.execute(*self.application.sql.account_grant(pid, accId, datetime.datetime.utcnow()))
 
 
 class AdminPeopleCreateHandler (JsonBaseHandler):
@@ -1636,7 +1601,7 @@ class AdminPeopleCreateHandler (JsonBaseHandler):
                     0.0
                 ))
                 accId = cur.lastrowid
-                cur.execute(*self.application.sql.grantAccount(pid, accId, datetime.datetime.utcnow()))
+                cur.execute(*self.application.sql.account_grant(pid, accId, datetime.datetime.utcnow()))
                 acc.append(accId)
         else:
             acc = None

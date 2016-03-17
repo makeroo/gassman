@@ -1,8 +1,8 @@
-'''
+"""
 Created on 11/giu/2014
 
 @author: makeroo
-'''
+"""
 
 import sys
 import logging
@@ -17,55 +17,55 @@ import tornado.ioloop
 import loglib
 from threadpool import ThreadPool
 
+
 log_email = logging.getLogger('gassman.email')
+
 
 class Mailer (object):
     MAX_TRIES = 3
     DELAY_AFTER_FAILURES = 2
 
-    def __init__ (self, smtpServer, smtpPort, numThreads, queueTimeout, ioloop = tornado.ioloop.IOLoop.instance()):
+    def __init__(self, smtp_server, smtp_port, num_threads, queue_timeout, default_sender, ioloop=tornado.ioloop.IOLoop.current()):
         self.threadpool = ThreadPool(
             poolname='Mailer',
             thread_global_data=self,
-            thread_quit_hook=self.quit_smtp,
-            num_threads=numThreads,
-            queue_timeout=queueTimeout)
-        self.smtpServer = smtpServer
-        self.smtpPort = smtpPort
+            thread_quit_hook=self._quit_smtp,
+            num_threads=num_threads,
+            queue_timeout=queue_timeout)
+        self.smtp_server = smtp_server
+        self.smtp_port = smtp_port
+        self.default_sender = default_sender
         self.ioloop = ioloop
 
-    def create_smtp (self):
+    def _create_smtp(self):
         """This method is executed in a worker thread.
 
         Initializes the per-thread state. In this case we create one
         smtp per-thread.
         """
-        smtp = smtplib.SMTP(self.smtpServer, self.smtpPort)
+        smtp = smtplib.SMTP(self.smtp_server, self.smtp_port)
         return smtp
 
-    def quit_smtp (self, global_data, local_data):
+    @staticmethod
+    def _quit_smtp(global_data, local_data):
         smtp = local_data.smtp
-        if smtp:
-            try:
-                smtp.quit()
-            except:
-                etype, evalue, tb = sys.exc_info()
-                log_email.error('can\'t quit smtp: cause=%s/%s', etype, evalue)
-                log_email.debug('full stacktrace:\n%s', loglib.TracebackFormatter(tb))
+        if smtp is not None:
+            smtp.quit()
 
-    def send (self, sender, receivers, subject, body, reply_to=None, callback=None):
+    def send(self, receivers, subject, body, sender=None, reply_to=None, callback=None):
         self.threadpool.add_task(
-            partial(self._send, sender, receivers, subject, body, reply_to),
-            callback)
+            partial(self._send, sender or self.default_sender, receivers, subject, body, reply_to),
+            callback
+        )
 
-    def _send (self, sender, receivers, subject, body, reply_to=None, global_data=None, local_data=None):
+    def _send(self, sender, receivers, subject, body, reply_to=None, global_data=None, local_data=None):
         try:
             for i in range(self.MAX_TRIES, 0, -1):
                 log_email.debug('sending: try=%d, to=%s, subj=%s', self.MAX_TRIES - i + 1, receivers, subject)
                 try:
                     smtp = local_data.smtp if hasattr(local_data, 'smtp') else None
                     if smtp is None:
-                        smtp = global_data.create_smtp()
+                        smtp = global_data._create_smtp()
                         local_data.smtp = smtp
                     msg = MIMEMultipart("alternative")
                     msg["Subject"] = subject
@@ -83,7 +83,7 @@ class Mailer (object):
                 except smtplib.SMTPException as e:
                     if i == 1:
                         raise e
-                    #global_data.quit_smtp()
+                    # global_data.quit_smtp()
                     local_data.smtp = None
                     time.sleep(self.DELAY_AFTER_FAILURES)
         except:
