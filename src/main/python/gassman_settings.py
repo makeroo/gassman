@@ -69,6 +69,12 @@ LOG = {
             'qualname': 'access',
             'propagate': 0
         },
+        'gassman.notification_router': {
+            'level': 'DEBUG',
+            'handlers': ['codeHandler'],
+            'qualname': 'access',
+            'propagate': 0
+        },
     },
     'handlers': {
         'codeHandler': {
