@@ -33,16 +33,19 @@ def datetime_floor(t, arrotondamento):
 
 class DaylyTransactionReport:
     # gira da cron tutte le sere (eg. alle 23)
+    # TODO: daily
     pass
 
 
 class WeeklyTransactionReport:
     # gira da cron tutte le settimane (eg. alle 23 di ogni sabato)
+    # TODO: weekly
     pass
 
 
 class NeverTransactionReport:
     # gira da cron tutte le sere (eg. alle 23)
+    # TODO: never
     pass
 
 

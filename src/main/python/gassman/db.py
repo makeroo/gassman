@@ -11,11 +11,12 @@ log_gassman_db = logging.getLogger('gassman.application.db')
 
 
 class Connection:
-    def __init__(self, conn_args, db_check_interval, sql_factory):
+    def __init__(self, conn_args, db_check_interval, sql_factory, notify_service):
         self.conn_args = conn_args
         self.db_check_interval = db_check_interval
         self.conn = None
         self.sql_factory = sql_factory
+        self.notify_service = notify_service
 
     def connection(self):
         if self.conn is None:
@@ -50,6 +51,6 @@ class Connection:
             etype, evalue, tb = sys.exc_info()
             log_gassman_db.fatal('db connection failed: cause=%s/%s', etype, evalue)
             # FIXME: notify!!
-            self.notify('[FATAL] No db connection', 'Connection error: %s/%s.\nTraceback:\n%s' %
+            self.notify_service.notify('[FATAL] No db connection', 'Connection error: %s/%s.\nTraceback:\n%s' %
                            (etype, evalue, loglib.TracebackFormatter(tb))
                            )

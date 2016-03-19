@@ -36,6 +36,7 @@ def db_connection():
         ),
         db_check_interval=settings.DB_CHECK_INTERVAL,
         sql_factory=sql_factory(),
+        notify_service=notify_service(),
     )
 
 
@@ -48,9 +49,8 @@ def gassman_backend():
     from . import backend
 
     return backend.GassmanWebApp(
-        sql_factory(),
-        mailer(),
         db_connection(),
+        notify_service()
     )
 
 
@@ -72,4 +72,12 @@ def template_engine():
         settings.TEMPLATE_PATH,
         # autoescape=
         # template_whitespace=
+    )
+
+
+def notify_service():
+    from .sysoputils import NotifyService
+    return NotifyService(
+        mailer(),
+        settings.SMTP_RECEIVER
     )
