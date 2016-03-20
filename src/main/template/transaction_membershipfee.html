@@ -158,7 +158,7 @@
 
  <div ng-show="tsaveError" class="deposit-post-save">
    <div ng-show="tsaveError" class="msg">
-     Registrazione fallita. Causa: {{tsaveError}}.
+        <div class="msg">Registrazione fallita: <span ng-repeat="msg in tsaveError">{{ msg }}</span>.</div>
    </div>
  </div>
 </form>
