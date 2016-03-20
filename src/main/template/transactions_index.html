@@ -30,7 +30,13 @@
     <tr ng-repeat="tl in items" ng-class="tl[6] ? 'acc-row mod' : 'acc-row'" ng-click="showTransaction(tl)">
       <!-- 0:l.id, 1:l.log_date, 2:l.op_type, 3:t.id, 4:t.description, 5:t.transaction_date, 6:t.modified_by_id, 7:t.cc_type, 8:p.id, 9:p.first_name, 10:p.middle_name, 11:p.last_name -->
       <td class="mov-odate">{{ tl[1] | date:"shortDate" }}</td>
-      <td class="mov-tdesc"><span class="tdesc">{{ tl[4] }}</span><span class="otype">{{ tl[2] == 'A' ? 'aggiunta' : tl[2] == 'M' ? 'modifica' : tl[2] == 'D' ? 'cancellazione' : tl[2] }}</span></td>
+      <td class="mov-tdesc">
+          <span class="tdesc">{{ tl[4] }}</span>
+          <span class="otype">
+              <span>{{ tl[2] == 'A' ? 'aggiunta' : tl[2] == 'M' ? 'modifica' : tl[2] == 'D' ? 'cancellazione' : tl[2] }}</span>
+              <span ng-if="tl[7] != 't'">/ {{ tl[7] == 'p' ? 'pagamento' : tl[7] == 'x' ? 'scambio contante' : tl[7] == 'd' ? 'versamento' : tl[7] == 'f' ? 'quota cassa comune' : tl[7] == 'q' ? 'pagamento (vecchia cassa)' : tl[7] == 'w' ? 'prelievo' : tl[7] == 'z' ? 'chiusura conto' : 'generica' }}</span>
+          </span>
+      </td>
       <td class="mov-tdate">{{ tl[5] | date:"shortDate" }}</td>
       <td class="mov-oper">{{ (tl[9] || '') + ' ' + (tl[10] || '') + ' ' + (tl[11] || '') }}</td>
     </tr>
