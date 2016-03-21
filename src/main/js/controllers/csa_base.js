@@ -128,14 +128,14 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
         uiCalendarConfig.calendars.uical.fullCalendar('refetchEvents');
     };
 
-    $q.all([
-        gdata.csaInfo(csaId),
-        gdata.deliveryPlaces(csaId)
-    ])
+    gdata.csaInfo(csaId)
     .then (function (r) {
-        $scope.csa = r[0].data;
+        $scope.csa = r.data;
         $scope.csa.kitty.membership_fee = parseFloat($scope.csa.kitty.membership_fee);
-        $scope.deliveryPlaces = r[1].data;
+
+        return gdata.deliveryPlaces(csaId);
+    }).then (function (r) {
+        $scope.deliveryPlaces = r.data;
 
         angular.forEach($scope.deliveryPlaces, function (dp) {
             $scope.cal_info.dp_filter[dp.id] = true;
