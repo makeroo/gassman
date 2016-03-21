@@ -116,22 +116,17 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
         'lightblue'
     ];
 
-    var csaDefer = $q.defer();
-
-    $scope.csaInfo = function () {
-        return csaDefer.promise;
-    };
-
     $scope.toggle_dp_filter = function (dp) {
         $scope.cal_info.dp_filter[dp.id] = !$scope.cal_info.dp_filter[dp.id];
 
         uiCalendarConfig.calendars.uical.fullCalendar('refetchEvents');
     };
 
-    gdata.csaInfo(csaId)
+    $scope.csaInfo = gdata.csaInfo(csaId)
     .then (function (r) {
         $scope.csa = r.data;
         $scope.csa.kitty.membership_fee = parseFloat($scope.csa.kitty.membership_fee);
+        $scope.csa.default_account_threshold = parseFloat($scope.csa.default_account_threshold);
 
         return gdata.deliveryPlaces(csaId);
     }).then (function (r) {
@@ -140,8 +135,6 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
         angular.forEach($scope.deliveryPlaces, function (dp) {
             $scope.cal_info.dp_filter[dp.id] = true;
         });
-
-        csaDefer.resolve($scope.csa);
 
         $scope.deliveryPlaces.sort(function (a, b) {
             return a.id - b.id;

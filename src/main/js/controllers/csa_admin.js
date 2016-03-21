@@ -9,12 +9,10 @@ angular.module('GassmanApp.controllers.CsaAdmin', [
 ])
 
 .controller('CsaAdmin', [
-         '$scope', '$filter', '$location', '$stateParams', 'gdata',
-function ($scope,   $filter,   $location,   $stateParams,   gdata) {
+         '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q',
+function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
     var csaId = $stateParams.csaId;
 
-    $scope.csa = null;
-    $scope.loadError = null;
     $scope.draftOrders = null;
 
     $scope.saveCsa = function () {
@@ -63,13 +61,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata) {
 
     $scope.editableMembershipFee = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
 
-    gdata.csaInfo(csaId).
-    then (function (r) {
-        $scope.csa = r.data;
-        $scope.csa.kitty.membership_fee = parseFloat($scope.csa.kitty.membership_fee);
-
-        $scope.csa.default_account_threshold = parseFloat($scope.csa.default_account_threshold);
-
+    $q.when($scope.csaInfo).then(function () {
         // TODO: in realtà degli ordini CPY mi interessano solo le mie ordinazioni!!
         return gdata.accountAmount($scope.csa.kitty.id);
     }).

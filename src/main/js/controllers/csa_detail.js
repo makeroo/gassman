@@ -142,7 +142,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
         }
     });
 
-    $scope.csaInfo().then(function (r) {
+    $q.when($scope.csaInfo).then(function () {
         return $q.all([
             gdata.accountAmount($scope.csa.kitty.id)
             //gdata.accountMovements($scope.csa.kitty.id, 0, 5),

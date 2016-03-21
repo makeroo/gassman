@@ -64,7 +64,7 @@ function ($scope,   gdata,   $q) {
             )
         );
     });
-
+/*
     $scope.$watch('gassman.selectedCsa', function (csaId) {
         $scope.initError = null;
         //$scope.csaId = csaId;
@@ -82,5 +82,6 @@ function ($scope,   gdata,   $q) {
             });
         }
     });
+    */
 }])
 ;
