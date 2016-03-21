@@ -255,8 +255,7 @@ function ($stateProvider,   $urlRouterProvider) {
         }).
         state('root.privacy', {
             url: '/privacy',
-            templateUrl: 'template/privacy.html',
-            controller: 'PrivacyController'
+            templateUrl: 'template/privacy.html'
         }).
         state('root.not_found', {
             url: '/not_found',
