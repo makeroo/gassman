@@ -58,19 +58,15 @@ function ($stateProvider,   $urlRouterProvider) {
     var checkLoggedUser = [
                  '$rootScope', 'gdata', '$q',
         function ($rootScope,   gdata,   $q) {
-            var d = $q.defer();
-
-            $rootScope.gassman.appStarted.then(function () {
+            return $rootScope.gassman.appStarted.then(function () {
                 return $rootScope.gassman.userLoading;
             }).then(function () {
                 if ($rootScope.gassman.loggedUser) {
-                    d.resolve($rootScope.gassman.loggedUser);
+                    return $rootScope.gassman.loggedUser;
                 } else {
-                    d.reject([gdata.error_codes.E_not_authenticated]);
+                    throw [gdata.error_codes.E_not_authenticated];
                 }
             });
-
-            return d.promise;
         }
     ];
     var checkUserUserPermissions = function () {
@@ -93,36 +89,28 @@ function ($stateProvider,   $urlRouterProvider) {
         return [
                      '$rootScope', 'gdata', '$q',
             function ($rootScope,   gdata,   $q) {
-                var d = $q.defer();
-
-                $rootScope.gassman.appStarted.then(function () {
+                return $rootScope.gassman.appStarted.then(function () {
                     return $rootScope.gassman.userLoading;
                 }).then(function () {
                     if (hasAll($rootScope.gassman.loggedUser, permissions)) {
-                        d.resolve($rootScope.gassman.loggedUser);
+                        return $rootScope.gassman.loggedUser;
                     } else {
-                        d.reject([gdata.error_codes.E_not_authenticated]);
+                        throw [gdata.error_codes.E_not_authenticated];
                     }
                 });
-
-                return d.promise;
             }
         ];
     };
     var checkSelectedCsa = [
                  '$rootScope', 'gdata', '$q',
         function ($rootScope,   gdata,   $q) {
-            var d = $q.defer();
-
-            $rootScope.gassman.appStarted.then(function () {
+            return $rootScope.gassman.appStarted.then(function () {
                 if ($rootScope.gassman.loggedUser) {
-                    d.resolve($rootScope.gassman.selectedCsa);
+                    return $rootScope.gassman.selectedCsa;
                 } else {
-                    d.reject([gdata.error_codes.E_not_authenticated]);
+                    throw [gdata.error_codes.E_not_authenticated];
                 }
             });
-
-            return d.promise;
         }
     ];
     var checkUserLoading = [
@@ -333,6 +321,20 @@ function ($rootScope,   gdata,   gstorage,   $state,   $q,   $cookies,   $timeou
 
         // quando cambia csa devo ricaricare il profilo perché
         // cambiano conti e permessi
+
+        $rootScope.gassman.csa = $rootScope.gassman.csaError = null;
+
+        if (v != null) {
+            gdata.csaInfo(v)
+            .then(function (r) {
+                $rootScope.gassman.csa = r.data;
+            }).then(undefined, function (error) {
+                if (error[0] != gdata.error_codes.E_no_csa_found)
+                    $rootScope.gassman.csaError = error;
+            });
+        } else {
+            $rootScope.gassman.csa = null;
+        }
 
         gdata.profileInfo(v)
         .then(function (r) {

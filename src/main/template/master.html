@@ -12,14 +12,14 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a ng-if="csa" class="navbar-brand" href="#/csa/{{ gassman.selectedCsa }}/detail">{{ csa.name }}</a>
-                <a ng-if="!csa" class="navbar-brand" href="#/">GAS Manager</a>
+                <a ng-if="gassman.csa" class="navbar-brand" href="#/csa/{{ gassman.selectedCsa }}/detail">{{ gassman.csa.name }}</a>
+                <a ng-if="!gassman.csa" class="navbar-brand" href="#/">GAS Manager</a>
             </div>
 
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
-                    <li ng-if="csa && membersVisible">
+                    <li ng-if="gassman.csa && membersVisible">
                         <a href="#/accounts/index">Chi siamo</a>
                     </li>
                     <li ng-if="transactionTypes.length" class="dropdown">
