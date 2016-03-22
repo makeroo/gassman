@@ -26,7 +26,7 @@
             <div class="panel delivery-date" ng-class="{ 'panel-default': cal_info.selected_event.shifts.length > 0 || cal_info.selected_event.myShift, 'panel-danger': cal_info.selected_event.shifts.length == 0 && !cal_info.selected_event.myShift }" ng-if="cal_info.selected_event">
                 <div class="panel-heading">
                     <small class="title-date">Turno del {{ cal_info.selected_event.from_date.toJSON() | date: 'shortDate' }}</small>
-                    <h4>{{ cal_info.selected_event.notes }}</h4>
+                    <h4>{{ cal_info.selected_event.notes }} <small>{{ cal_info.selected_event.delivery_place.description }}</small></h4>
                 </div>
                 <div class="panel-body">
                     <div class="row">
