@@ -15,7 +15,6 @@ angular.module('GassmanApp.controllers.CsaBase', [
 function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibModal,   uiCalendarConfig) {
     var csaId = $stateParams.csaId;
 
-    $scope.csa = null;
     $scope.loadError = null;
     $scope.cal_info = {
         selected_event: null,
@@ -122,14 +121,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
         uiCalendarConfig.calendars.uical.fullCalendar('refetchEvents');
     };
 
-    $scope.csaInfo = gdata.csaInfo(csaId)
-    .then (function (r) {
-        $scope.csa = r.data;
-        $scope.csa.kitty.membership_fee = parseFloat($scope.csa.kitty.membership_fee);
-        $scope.csa.default_account_threshold = parseFloat($scope.csa.default_account_threshold);
-
-        return gdata.deliveryPlaces(csaId);
-    }).then (function (r) {
+    gdata.deliveryPlaces(csaId).then (function (r) {
         $scope.deliveryPlaces = r.data;
 
         angular.forEach($scope.deliveryPlaces, function (dp) {
@@ -146,8 +138,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
 
             dp.color = colors[idx % colors.length];
         });
-    }).
-    then (undefined, function (error) {
+    }).then (undefined, function (error) {
         if (error.data[0] != gdata.error_codes.E_permission_denied)
             $scope.loadError = error.data;
     });

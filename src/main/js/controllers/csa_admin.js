@@ -18,7 +18,7 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
     $scope.saveCsa = function () {
         $scope.saveError = null;
 
-        gdata.csaUpdate($scope.csa).then (function (r) {
+        gdata.csaUpdate($scope.gassman.csa).then (function (r) {
             $location.path('/csa/' + csaId + '/detail');
         }).then (undefined, function (error) {
             $scope.saveError = error;
@@ -40,13 +40,13 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
     $scope.chargeMembershipFee = function () {
         $scope.membershipFeeError = null;
 
-        var v = $scope.csa.kitty.membership_fee;
+        var v = $scope.gassman.csa.kitty.membership_fee;
 
         if (v > 0) {
             gdata.chargeMembershipFee(csaId, {
                 amount: v,
-                kitty: $scope.csa.kitty.id,
-                description: $scope.csa.kitty.charge_description
+                kitty: $scope.gassman.csa.kitty.id,
+                description: $scope.gassman.csa.kitty.charge_description
             }).
             then (function (r) {
                 $location.path('/transaction/' + r.data.tid);
@@ -63,10 +63,10 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q) {
 
     $q.when($scope.csaInfo).then(function () {
         // TODO: in realtà degli ordini CPY mi interessano solo le mie ordinazioni!!
-        return gdata.accountAmount($scope.csa.kitty.id);
+        return gdata.accountAmount($scope.gassman.csa.kitty.id);
     }).
     then (function (r) {
-        $scope.csa.kitty.amount = r.data;
+        $scope.gassman.csa.kitty.amount = r.data;
     }).
     then (undefined, function (error) {
         $scope.loadError = error.data;

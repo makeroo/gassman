@@ -105,13 +105,13 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
     $scope.chargeMembershipFee = function () {
         $scope.membershipFeeError = null;
 
-        var v = $scope.csa.kitty.membership_fee;
+        var v = $scope.gassman.csa.kitty.membership_fee;
 
         if (v > 0) {
             gdata.chargeMembershipFee(csaId, {
                 amount: v,
-                kitty: $scope.csa.kitty.id,
-                description: $scope.csa.kitty.charge_description
+                kitty: $scope.gassman.csa.kitty.id,
+                description: $scope.gassman.csa.kitty.charge_description
             }).
             then (function (r) {
                 $location.path('/transaction/' + r.data.tid);
@@ -144,13 +144,13 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
 
     $q.when($scope.csaInfo).then(function () {
         return $q.all([
-            gdata.accountAmount($scope.csa.kitty.id)
-            //gdata.accountMovements($scope.csa.kitty.id, 0, 5),
+            gdata.accountAmount($scope.gassman.csa.kitty.id)
+            //gdata.accountMovements($scope.gassman.csa.kitty.id, 0, 5),
         ]);
     }).
     then (function (rr) {
-        $scope.csa.kitty.amount = rr[0].data;
-        //$scope.csa.kitty.movements = rr[1].data;
+        $scope.gassman.csa.kitty.amount = rr[0].data;
+        //$scope.gassman.csa.kitty.movements = rr[1].data;
     }).
     then (undefined, function (error) {
         if (error.data[0] != gdata.error_codes.E_permission_denied)

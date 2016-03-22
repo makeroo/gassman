@@ -119,164 +119,171 @@ function ($stateProvider,   $urlRouterProvider) {
             return $q.when($rootScope.gassman.userLoading);
         }
     ];
+    var checkCsaLoading = [
+                 '$rootScope', '$q',
+        function ($rootScope,   $q) {
+            return $q.when($rootScope.gassman.csaLoading);
+        }
+    ];
 
-    $stateProvider.
-        state('root', {
-            abstract: true,
-            resolve: {
-                appStarted: appStarted
-            },
-            templateUrl: 'template/master.html'
-        }).
-        state('root.csa', {
-            abstract: true,
-            url: '/csa/{csaId:[0-9]+}',
-            resolve: {
-                userAuthenticated: checkLoggedUser,
-                csaSelected: checkSelectedCsa
-            },
-            template: '<div ui-view></div>',
-            controller: 'CsaBase'
-        }).
-        state('root.csa.detail', {
-            url: '/detail',
-            templateUrl: 'template/csa_detail.html',
-            controller: 'CsaDetail'
-        }).
-        state('root.csa.admin', {
-            url: '/admin',
-            resolve: {
-                userAuthenticated: checkUserUserPermissions(13/*TODO:gdata.permissions.P_csaEditor*/),
-                csaSelected: checkSelectedCsa
-            },
-            templateUrl: 'template/csa_admin.html',
-            controller: 'CsaAdmin'
-        }).
-        state('root.csa.shifts', {
-            url: '/csa/{csaId:[0-9]+}/shifts',
-            resolve: {
-                userAuthenticated: checkUserUserPermissions(15/*TODO:gdata.permissions.P_canManageShifts*/),
-                csaSelected: checkSelectedCsa
-            },
-            templateUrl: 'template/csa_shifts.html',
-            controller: 'CsaShifts'
-        }).
-        state('root.person_detail', {
-            url: '/person/:personId/detail',
-            resolve: {
-                userAuthenticated: checkLoggedUser,
-                csaSelected: checkSelectedCsa
-            },
-            templateUrl: 'template/person_detail.html',
-            controller: 'PersonDetail'
-        }).
-        state('root.self_detail', {
-            url: '/account/self/detail',
-            resolve: {
-                userAuthenticated: checkLoggedUser,
-                csaSelected: checkSelectedCsa
-            },
-            templateUrl: 'template/account_detail.html',
-            controller: 'AccountDetail'
-        }).
-        state('root.account_detail', {
-            url: '/account/:accountId/detail',
-            resolve: {
-                userAuthenticated: checkLoggedUser,
-                csaSelected: checkSelectedCsa
-            },
-            templateUrl: 'template/account_detail.html',
-            controller: 'AccountDetail'
-        }).
-        state('root.account_list', {
-            url: '/accounts/index',
-            resolve: {
-                userAuthenticated: checkLoggedUser,
-                csaSelected: checkSelectedCsa,
-                userLoaded: checkUserLoading
-            },
-            templateUrl: 'template/accounts_index.html',
-            controller: 'AccountsIndex'
-        }).
-        state('root.transaction_detail', {
-            url: '/transaction/:transId',
-            resolve: {
-                userAuthenticated: checkLoggedUser,
-                csaSelected: checkSelectedCsa
-            },
-            templateUrl: 'template/transaction.html',
-            controller: 'Transaction'
-        }).
-        state('root.transaction_list', {
-            url: '/transactions/index',
-            resolve: {
-                csaSelected: checkSelectedCsa
-            },
-            templateUrl: 'template/transactions_index.html',
-            controller: 'TransactionsIndex'
-        }).
-        state('root.admin', {
-            abstract: true,
-            url: '/admin',
-            template: '<div ui-view></div>'
-        }).
-        state('root.admin.people', {
-            url: '/people',
-            resolve: {
-                userAuthenticated: checkUserUserPermissions(3/*TODO:gdata.permissions.P_canAdminPeople*/)
-            },
-            templateUrl: 'template/admin_people.html',
-            controller: 'AdminPeople'
-        }).
-        state('root.help', {
-            url: '/help',
-            templateUrl: 'template/help.html'
-        }).
-        state('root.faq', {
-            url: '/faq',
-            templateUrl: 'template/faq.html'
-        }).
-        state('root.project', {
-            url: '/project',
-            templateUrl: 'template/project.html',
-            controller: 'ProjectController'
-        }).
-        state('root.privacy', {
-            url: '/privacy',
-            templateUrl: 'template/privacy.html'
-        }).
-        state('root.not_found', {
-            url: '/not_found',
-            templateUrl: 'template/not_found.html',
+    $stateProvider
+    .state('root', {
+        abstract: true,
+        resolve: {
+            appStarted: appStarted
+        },
+        templateUrl: 'template/master.html'
+    })
+    .state('root.csa', {
+        abstract: true,
+        url: '/csa/{csaId:[0-9]+}',
+        resolve: {
+            userAuthenticated: checkLoggedUser,
+            csaSelected: checkSelectedCsa,
+            csaLoaded: checkCsaLoading
+        },
+        template: '<div ui-view></div>',
+        controller: 'CsaBase'
+    })
+    .state('root.csa.detail', {
+        url: '/detail',
+        templateUrl: 'template/csa_detail.html',
+        controller: 'CsaDetail'
+    })
+    .state('root.csa.admin', {
+        url: '/admin',
+        resolve: {
+            userAuthenticated: checkUserUserPermissions(13/*TODO:gdata.permissions.P_csaEditor*/),
+            csaSelected: checkSelectedCsa
+        },
+        templateUrl: 'template/csa_admin.html',
+        controller: 'CsaAdmin'
+    })
+    .state('root.csa.shifts', {
+        url: '/csa/{csaId:[0-9]+}/shifts',
+        resolve: {
+            userAuthenticated: checkUserUserPermissions(15/*TODO:gdata.permissions.P_canManageShifts*/),
+            csaSelected: checkSelectedCsa
+        },
+        templateUrl: 'template/csa_shifts.html',
+        controller: 'CsaShifts'
+    })
+    .state('root.person_detail', {
+        url: '/person/:personId/detail',
+        resolve: {
+            userAuthenticated: checkLoggedUser,
+            csaSelected: checkSelectedCsa
+        },
+        templateUrl: 'template/person_detail.html',
+        controller: 'PersonDetail'
+    })
+    .state('root.self_detail', {
+        url: '/account/self/detail',
+        resolve: {
+            userAuthenticated: checkLoggedUser,
+            csaSelected: checkSelectedCsa
+        },
+        templateUrl: 'template/account_detail.html',
+        controller: 'AccountDetail'
+    })
+    .state('root.account_detail', {
+        url: '/account/:accountId/detail',
+        resolve: {
+            userAuthenticated: checkLoggedUser,
+            csaSelected: checkSelectedCsa
+        },
+        templateUrl: 'template/account_detail.html',
+        controller: 'AccountDetail'
+    })
+    .state('root.account_list', {
+        url: '/accounts/index',
+        resolve: {
+            userAuthenticated: checkLoggedUser,
+            csaSelected: checkSelectedCsa,
+            userLoaded: checkUserLoading
+        },
+        templateUrl: 'template/accounts_index.html',
+        controller: 'AccountsIndex'
+    })
+    .state('root.transaction_detail', {
+        url: '/transaction/:transId',
+        resolve: {
+            userAuthenticated: checkLoggedUser,
+            csaSelected: checkSelectedCsa
+        },
+        templateUrl: 'template/transaction.html',
+        controller: 'Transaction'
+    })
+    .state('root.transaction_list', {
+        url: '/transactions/index',
+        resolve: {
+            csaSelected: checkSelectedCsa
+        },
+        templateUrl: 'template/transactions_index.html',
+        controller: 'TransactionsIndex'
+    })
+    .state('root.admin', {
+        abstract: true,
+        url: '/admin',
+        template: '<div ui-view></div>'
+    })
+    .state('root.admin.people', {
+        url: '/people',
+        resolve: {
+            userAuthenticated: checkUserUserPermissions(3/*TODO:gdata.permissions.P_canAdminPeople*/)
+        },
+        templateUrl: 'template/admin_people.html',
+        controller: 'AdminPeople'
+    })
+    .state('root.help', {
+        url: '/help',
+        templateUrl: 'template/help.html'
+    })
+    .state('root.faq', {
+        url: '/faq',
+        templateUrl: 'template/faq.html'
+    })
+    .state('root.project', {
+        url: '/project',
+        templateUrl: 'template/project.html',
+        controller: 'ProjectController'
+    })
+    .state('root.privacy', {
+        url: '/privacy',
+        templateUrl: 'template/privacy.html'
+    })
+    .state('root.not_found', {
+        url: '/not_found',
+        templateUrl: 'template/not_found.html',
 
-            do_not_save: true
-        }).
-        state('root.start', {
-            url: '/',
-            templateUrl: 'template/home.html',
-            controller: 'HomeSelectorController',
+        do_not_save: true
+    })
+    .state('root.start', {
+        url: '/',
+        templateUrl: 'template/home.html',
+        controller: 'HomeSelectorController',
 
-            do_not_save: true
-        }).
-        state('root.start2', {
-            url: '',
-            templateUrl: 'template/home.html',
-            controller: 'HomeSelectorController',
+        do_not_save: true
+    })
+    .state('root.start2', {
+        url: '',
+        templateUrl: 'template/home.html',
+        controller: 'HomeSelectorController',
 
-            do_not_save: true
-        }).
-        state('root.login', {
-            url: '/login',
-            templateUrl: 'template/login.html',
+        do_not_save: true
+    })
+    .state('root.login', {
+        url: '/login',
+        templateUrl: 'template/login.html',
 
-            do_not_save: true
-        }).
-        state('root.error', {
-            templateUrl: 'template/error.html',
-            params: { 'error': null },
+        do_not_save: true
+    })
+    .state('root.error', {
+        templateUrl: 'template/error.html',
+        params: { 'error': null },
 
-            do_not_save: true
-        })
+        do_not_save: true
+    })
 
 /*		.state('start', {
             url: '',
@@ -304,12 +311,15 @@ function ($rootScope,   gdata,   gstorage,   $state,   $q,   $cookies,   $timeou
     $rootScope.gassman = {
         loggedUser: null,
         selectedCsa: null,
+        csa:null,
         selectedAccount: null,
         appStarted: appStartedDefer.promise,
-        userLoading: false
+        userLoading: false,
+        csaLoading: false
     };
 
     var userLoading = null;
+    var csaLoading = null;
 
     $rootScope.$watch('gassman.selectedCsa', function (v) {
 
@@ -325,15 +335,28 @@ function ($rootScope,   gdata,   gstorage,   $state,   $q,   $cookies,   $timeou
         $rootScope.gassman.csa = $rootScope.gassman.csaError = null;
 
         if (v != null) {
+            if (csaLoading == null) {
+                csaLoading = $q.defer();
+
+                $rootScope.gassman.csaLoading = csaLoading.promise;
+            }
+
             gdata.csaInfo(v)
             .then(function (r) {
                 $rootScope.gassman.csa = r.data;
+                $rootScope.gassman.csa.kitty.membership_fee = parseFloat($rootScope.gassman.csa.kitty.membership_fee);
+                $rootScope.gassman.csa.default_account_threshold = parseFloat($rootScope.gassman.csa.default_account_threshold);
             }).then(undefined, function (error) {
                 if (error[0] != gdata.error_codes.E_no_csa_found)
                     $rootScope.gassman.csaError = error;
+            }).finally(function () {
+                csaLoading.resolve(false);
+                csaLoading = null;
             });
         } else {
             $rootScope.gassman.csa = null;
+            $rootScope.gassman.csaLoading = false;
+            csaLoading = null;
         }
 
         gdata.profileInfo(v)
