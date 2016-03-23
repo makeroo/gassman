@@ -32,8 +32,15 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
             right: 'prev,next' // today
         },
         titleFormat: '[Turni] MMMM YYYY',
+        eventRender: function(event, element) {
+            if ($scope.cal_info.selected_event && event.id == $scope.cal_info.selected_event.id) {
+                element.addClass('selected');
+            }
+            //console.log('rendering event', event, element);
+        },
         eventClick: function (calEvent, jqueryEvent) {
             $scope.cal_info.selected_event = $scope.cal_info.prepare_event(calEvent.deliveryDate);
+            uiCalendarConfig.calendars.uical.fullCalendar('rerenderEvents');
         }
         //dayClick: $scope.alertEventOnClick,
         //eventDrop: $scope.alertOnDrop,
