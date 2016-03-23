@@ -87,27 +87,21 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
     $scope.editableCsaDeliveryDates = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canManageShifts) != -1;
 
     var colors = [
-        'palevioletred',
+        'tan',
         'lightsalmon',
-        'limegreen',
-        'lemonchiffon',
-        'lavender',
-        'paletorquoise',
-        'cornsilk',
         'skyblue',
+        'cornflowerblue',
+        'lavender',
+        'palevioletred',
 
         'pink',
-        'coral',
         'palegreen',
         'papayawhip',
         'thistle',
         'cadetblue',
-        'tan',
-        'cornflowerblue',
-
-        'mediumvioletred',
-        'darkorange',
         'olivedrab',
+
+        'darkorange',
         'mocassin',
         'plum',
         'lightsteelblue',
