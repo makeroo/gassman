@@ -5,65 +5,86 @@ import logging
 log_notification_router = logging.getLogger('gassman.notification_router')
 
 
-def datetime_floor(t, arrotondamento):
+def datetime_floor(t, rounding):
     """
     :param t: datetime instance
-    :param arrotondamento: int
-       0 identity
-       1 zero microseconds (start of second)
-       2 zero seconds (start of minute)
-       3 zero minutes (start of our)
-       4 zero hours (start of day)
-       5 zero days (start of month)
-       6 zero month (start of year)
+    :param rounding: seconds
     :return: rounded datetime instance
     """
-    components = [
-        t.year,
-        t.month,
-        t.day,
-        t.hour,
-        t.minute,
-        t.second,
-        t.microsecond
-    ]
-    components = components[:len(components) - arrotondamento] + [0] * arrotondamento
-    return datetime.datetime(*components)
+    ut = t.timestamp()
+    rt = ut - ut % rounding
+    return datetime.datetime.fromtimestamp(rt)
 
 
-class DaylyTransactionReport:
+class BaseReport:
+    def __init__(self, generator, broadcaster):
+        self.generator = generator
+        self.broadcaster = broadcaster
+
+    def __call__(self, router, cur):
+        for event in self.generator.generate(router, cur):
+            for msg, address in self.broadcaster.broadcast(event, router, cur):
+                router.send_email(
+                    address,
+                    msg['subject'],
+                    msg['body']
+                )
+
+
+class DaylyTransactionReport (BaseReport):
+    class Generator:
+        def generate(self, router, cur):
+            pass
+
+    class Broadcaster:
+        def broadcast(self, msg, router, cur):
+            pass
+
     # gira da cron tutte le sere (eg. alle 23)
     # TODO: daily
     pass
 
 
-class WeeklyTransactionReport:
+class WeeklyTransactionReport (BaseReport):
     # gira da cron tutte le settimane (eg. alle 23 di ogni sabato)
     # TODO: weekly
     pass
 
 
-class NeverTransactionReport:
+class NeverTransactionReport (BaseReport):
     # gira da cron tutte le sere (eg. alle 23)
     # TODO: never
     pass
 
 
-class DeliveryDateReminder:
+class DeliveryDateReminder (BaseReport):
     class Generator:
-        def __init__(self, frequency, advance, rounding, fetch_covered, fetch_uncovered):
+        def __init__(self,
+                     frequency,
+                     advance,
+                     rounding,
+                     subject_if_covered,
+                     body_if_covered,
+                     subject_if_uncovered,
+                     body_if_uncovered
+                     ):
             """
             :param frequency: (eg. 2 ore): giro alle 6am, 8am...
             :param advance: (eg. 6 ore): notifico dalle 12am alle 2pm...
-            :param rounding: (eg. 1 ora): se giro alle 6:01, in realtà faccio finta di essere partito alle 6 esatte
+            :param rounding: int, secondi (eg. 1 ora=3600): se giro alle 6:01, in realtà faccio finta di essere partito
+                             alle 6 esatte
             :param fetch_covered: considera i turni coperti
             :param fetch_uncovered: considera i turni scoperti
             """
             self.frequency = frequency
             self.advance = advance
             self.rounding = rounding
-            self.fetch_covered = fetch_covered
-            self.fetch_uncovered = fetch_uncovered
+            self.fetch_covered = subject_if_covered is not None
+            self.fetch_uncovered = subject_if_uncovered is not None
+            self.subject_if_covered = subject_if_covered
+            self.subject_if_uncovered = subject_if_uncovered
+            self.body_if_covered = body_if_covered
+            self.body_if_uncovered = body_if_uncovered
 
         def generate(self, router, cur):
             now = datetime.datetime.utcnow()
@@ -77,7 +98,22 @@ class DeliveryDateReminder:
                 self.fetch_uncovered
             )
             cur.execute(q, a)
-            return router.sql.iter_objects(cur)
+            for msg in router.sql.iter_objects(cur):
+                subject = router.template(
+                    self.subject_if_covered if msg['shifts'] > 0 else
+                    self.subject_if_uncovered,
+                    msg
+                )
+                body = router.template(
+                    self.body_if_covered if msg['shifts'] > 0 else
+                    self.body_if_uncovered,
+                    msg
+                )
+                yield {
+                    'message': msg,
+                    'subject': subject,
+                    'body': body
+                }
 
     class Broadcaster:
         def __init__(self, notify_all):
@@ -87,7 +123,8 @@ class DeliveryDateReminder:
             """
             self.notify_all = notify_all
 
-        def broadcast(self, msg, router, cur):
+        def broadcast(self,fmtmsg, router, cur):
+            msg = fmtmsg['message']
             q, a = router.sql.people_index(
                 msg['csa_id'],
                 None,
@@ -100,33 +137,6 @@ class DeliveryDateReminder:
             )
             cur.execute(q, a)
             return [(msg, row[0]) for row in cur.fetchall()]
-
-    def __init__(self, generator, broadcaster, subject_if_covered, subject_if_uncovered, body_if_covered, body_if_uncovered):
-        self.generator = generator
-        self.broadcaster = broadcaster
-        self.subject_if_covered = subject_if_covered
-        self.subject_if_uncovered = subject_if_uncovered
-        self.body_if_covered = body_if_covered
-        self.body_if_uncovered = body_if_uncovered
-
-    def __call__(self, router, cur):
-        for event in self.generator.generate(router, cur):
-            for msg, address in self.broadcaster.broadcast(event, router, cur):
-                subject = router.template(
-                    self.subject_if_covered if msg['shifts'] > 0 else
-                    self.subject_if_uncovered,
-                    msg
-                )
-                body = router.template(
-                    self.body_if_covered if msg['shifts'] > 0 else
-                    self.body_if_uncovered,
-                    msg
-                )
-                router.send_email(
-                    address,
-                    subject,
-                    body
-                )
 
 
 class NotificationRouter:
