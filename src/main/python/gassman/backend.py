@@ -55,10 +55,12 @@ class GoogleUser (object):
         self.access_token = id_token['access_token']
 
     @tornado.gen.coroutine
-    def loadFullProfile(self):
+    def load_full_profile(self):
         http = tornado.httpclient.AsyncHTTPClient()
-        response = yield http.fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + self.access_token,
-                                   method="GET")
+        response = yield http.fetch(
+            'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=' + self.access_token,
+            method="GET"
+        )
         if response.error:
             raise Exception('Google auth error: %s' % str(response))
 
@@ -95,7 +97,7 @@ class Person (object):
 
 
 class GassmanWebApp (tornado.web.Application):
-    def __init__ (self, conn, notify_service):
+    def __init__(self, conn, notify_service):
         handlers = [
             # (r'^/$', IndexHandler),
             (r'^/home.html$', HomeHandler),
@@ -176,7 +178,7 @@ class GassmanWebApp (tornado.web.Application):
             cur.execute(*self.conn.sql_factory.assign_contact(cid, pid))
 
     @tornado.gen.coroutine
-    def check_profile(self, requestHandler, user):
+    def check_profile(self, request_handler, user):
         with self.conn.connection() as cur:
             auth_mode = (user.userId, user.authenticator, self.conn.sql_factory.Ck_Id)
             cur.execute(*self.conn.sql_factory.check_user(*auth_mode))
@@ -196,7 +198,7 @@ class GassmanWebApp (tornado.web.Application):
                 if len(pp) > 1:
                     self.notify('[ERROR] Multiple auth id for %s' % p, 'Check credentials %s' % auth_mode)
         try:
-            yield user.loadFullProfile()
+            yield user.load_full_profile()
             attrsToAdd = {
                 self.conn.sql_factory.Ck_Email: (user.email, 'verified'),
                 self.conn.sql_factory.Ck_Id: (user.userId, user.authenticator),
@@ -244,13 +246,13 @@ class GassmanWebApp (tornado.web.Application):
                            (etype, evalue, user.userId, user.firstName, user.lastName, loglib.TracebackFormatter(tb))
                            )
         if p is not None:
-            requestHandler.set_secure_cookie("user", tornado.escape.json_encode(p.id))
+            request_handler.set_secure_cookie("user", tornado.escape.json_encode(p.id))
             # qui registro chi si è autenticato
             cur.execute(*self.conn.sql_factory.update_last_login(p.id, datetime.datetime.utcnow()))
         return p
 
-#    def session(self, requestHandler):
-#        xt = requestHandler.xsrf_token
+#    def session(self, request_handler):
+#        xt = request_handler.xsrf_token
 #        s = self.sessions.get(xt, None)
 #        if s is None:
 #            s = Session(self)
@@ -452,7 +454,10 @@ class AccountOwnerHandler (JsonBaseHandler):
     def do(self, cur, acc_id):
         uid = self.current_user
         if (not self.application.has_or_had_account(cur, uid, acc_id) and
-            not self.application.has_permission_by_account(cur, self.application.conn.sql_factory.P_canCheckAccounts, uid, acc_id) and
+            not self.application.has_permission_by_account(
+                cur,
+                self.application.conn.sql_factory.P_canCheckAccounts, uid, acc_id
+            ) and
             not self.application.check_membership_by_kitty(cur, uid, acc_id)
             ):
             raise GDataException(error_codes.E_permission_denied, 403)
@@ -703,15 +708,15 @@ class AccountXlsHandler (BaseHandler):
                 ):
                 raise HTTPError(403)
             style = xlwt.XFStyle()
-            style.num_format_str='YYYY-MM-DD' # FIXME: i18n
+            style.num_format_str = 'YYYY-MM-DD'  # FIXME: i18n
             w = xlwt.Workbook(encoding='utf-8')
-            s = w.add_sheet('Conto') # FIXME: correggere e i18n
+            s = w.add_sheet('Conto')  # FIXME: correggere e i18n
             cur.execute(*self.application.conn.sql_factory.account_movements(acc_id, None, None, None))
             # t.description, t.transaction_date, l.description, l.amount, t.id, c.symbol, t.cc_type
             row = 1
             tdescmaxlength = 0
             ldescmaxlength = 0
-            s.write(0, 0, "Data") # FIXME: i18n
+            s.write(0, 0, "Data")  # FIXME: i18n
             s.write(0, 1, "#")
             s.write(0, 2, "Ammontare")
             s.write(0, 3, "Valuta")
@@ -755,7 +760,7 @@ class AccountCloseHandler (JsonBaseHandler):
         affected_rows = cur.rowcount
         if affected_rows == 0:
             log_gassman.warning('not owner, can\'t close account: account=%s, owner=%s', acc_id, owner_id)
-            return { 'error': error_codes.E_not_owner_or_already_closed }
+            return {'error': error_codes.E_not_owner_or_already_closed}
         if affected_rows > 1:
             log_gassman.error('multiple account assignments: account=%s, owner=%s, rows=%s',
                               acc_id, owner_id, affected_rows)
@@ -930,7 +935,7 @@ class TransactionEditHandler (JsonBaseHandler):
         r = self.application.conn.sql_factory.fetch_struct(cur)
         r['transId'] = trans_id
 
-        ccType = r['cc_type']
+        cc_type = r['cc_type']
         # regole per editare:
         # è D, ho P_canEnterDeposit e l'ho creata io
         # è P, ho P_canEnterPayments e l'ho creata io
@@ -942,10 +947,10 @@ class TransactionEditHandler (JsonBaseHandler):
                  ],
                 uid, csa_id) and
             not self.application.is_kitty_transition_and_is_member(cur, trans_id, uid) and
-            not (ccType in self.application.conn.sql_factory.editableTransactions and
+            not (cc_type in self.application.conn.sql_factory.editableTransactions and
                  self.application.has_permission_by_csa(
                      cur,
-                     self.application.conn.sql_factory.transactionPermissions.get(ccType),
+                     self.application.conn.sql_factory.transactionPermissions.get(cc_type),
                      uid, csa_id) and
                  self.application.is_transaction_editor(cur, trans_id, uid)
                  ) and
@@ -957,11 +962,11 @@ class TransactionEditHandler (JsonBaseHandler):
         cur.execute(*self.application.conn.sql_factory.transaction_lines(trans_id))
         r['lines'] = [dict(account=l[1], notes=l[2], amount=l[3]) for l in cur]
 
-        accountPeopleIndex = {}
-        r['people'] = accountPeopleIndex
+        account_people_index = {}
+        r['people'] = account_people_index
         cur.execute(*self.application.conn.sql_factory.transaction_people(trans_id))
         for acc_id, person_id in cur.fetchall():
-            pp = accountPeopleIndex.setdefault(acc_id, [])
+            pp = account_people_index.setdefault(acc_id, [])
             pp.append(person_id)
         if p.get('fetchKitty'):
             cur.execute(*self.application.conn.sql_factory.csa_account(
@@ -994,12 +999,12 @@ class TransactionSaveHandler (JsonBaseHandler):
         if tdesc is None:
             tdesc = datetime.datetime.utcnow()
         if trans_id is None:
-            oldCc = None
-            oldDesc = None
+            old_cc = None
+            old_desc = None
         else:
             trans_id = int(trans_id)
             cur.execute(*self.application.conn.sql_factory.transaction_type(trans_id))
-            oldCc, oldDesc, modifiedBy = cur.fetchone()
+            old_cc, old_desc, modifiedBy = cur.fetchone()
             if modifiedBy is not None:
                 raise GDataException(error_codes.E_already_modified)
 
@@ -1010,7 +1015,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                 self.application.conn.sql_factory.Tt_MembershipFee,
                 self.application.conn.sql_factory.Tt_Payment
         ):
-            if oldCc is not None and oldCc != ttype:
+            if old_cc is not None and old_cc != ttype:
                 raise GDataException(error_codes.E_type_mismatch)
             if len(tlines) == 0:
                 raise GDataException(error_codes.E_no_lines)
@@ -1069,7 +1074,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                     else self.application.conn.sql_factory.Tl_Modified
 
         elif ttype == self.application.conn.sql_factory.Tt_Trashed:
-            if oldCc not in self.application.conn.sql_factory.deletableTransactions:
+            if old_cc not in self.application.conn.sql_factory.deletableTransactions:
                 raise GDataException(error_codes.E_illegal_delete)
             if len(tlines) > 0:
                 raise GDataException(error_codes.E_trashed_transactions_can_not_have_lines)
@@ -1104,7 +1109,7 @@ class TransactionSaveHandler (JsonBaseHandler):
         if ttype == self.application.conn.sql_factory.Tt_Error:
             raise GDataException(tlogdesc)
         else:
-            self.notify_account_change(cur, tid, tdesc, tdate, trans_id, oldDesc)
+            self.notify_account_change(cur, tid, tdesc, tdate, trans_id, old_desc)
         return tid
 
     # Transaction notification types
@@ -1114,7 +1119,7 @@ class TransactionSaveHandler (JsonBaseHandler):
     Tnt_transaction_removed = 'r'
     Tnt_description_changed = 'm'
 
-    def notify_account_change(self, cur, trans_id, tdesc, tdate, modified_trans_id, oldDesc):
+    def notify_account_change(self, cur, trans_id, tdesc, tdate, modified_trans_id, old_desc):
         cur.execute(*self.application.conn.sql_factory.transaction_fetch_lines_to_compare(modified_trans_id, trans_id))
         oldLines = dict()
         newLines = dict()
@@ -1141,10 +1146,10 @@ class TransactionSaveHandler (JsonBaseHandler):
             #    diffs[acc_id] = ... Tnt_amount_changed
             #elif oldp[1] != newp[1]:
             #    diffs[acc_id] = ... Tnt_notes_changed
-        if modified_trans_id is not None and tdesc != oldDesc:
+        if modified_trans_id is not None and tdesc != old_desc:
             for acc_id in newLines:
                 if acc_id not in diffs:
-                    diffs[acc_id] = [self.Tnt_description_changed, tdesc, oldDesc]
+                    diffs[acc_id] = [self.Tnt_description_changed, tdesc, old_desc]
         if len(diffs) == 0:
             log_gassman.debug('nothing to notify for transaction %s modifying transaction %s',
                               trans_id, modified_trans_id)
@@ -1206,7 +1211,7 @@ class TransactionSaveHandler (JsonBaseHandler):
                 accId=acc_id,
                 transId=trans_id,
                 modifiedTransId=modified_trans_id,
-                oldDesc=oldDesc,
+                old_desc=old_desc,
                 notificationType=notificationType,
                 publishedUrl=settings.PUBLISHED_URL,
                 Tnt_new_transaction=self.Tnt_new_transaction,
@@ -1260,13 +1265,13 @@ def currency(v, sym):
 
 
 class RssFeedHandler (tornado.web.RequestHandler):
-    def get(self, rssId):
+    def get(self, rss_id):
         self.clear_header('Content-Type')
         self.add_header('Content-Type', 'text/xml')
         with self.application.conn.connection() as cur:
-            cur.execute(*self.application.conn.sql_factory.rss_user(rssId))
+            cur.execute(*self.application.conn.sql_factory.rss_user(rss_id))
             p = cur.fetchone()
-            cur.execute(*self.application.conn.sql_factory.rss_feed(rssId))
+            cur.execute(*self.application.conn.sql_factory.rss_feed(rss_id))
             self.render('rss.xml',
                         person=p,
                         items=cur,
@@ -1344,10 +1349,10 @@ class PeopleProfilesHandler (JsonBaseHandler):
             cur.execute(*self.application.conn.sql_factory.find_user_csa(uid))
             p = record(uid)
             p['csa'] = {
-                id: {
+                pid: {
                     'name': name,
                     'member': member
-                } for id, name, member in cur.fetchall()
+                } for pid, name, member in cur.fetchall()
                 }
         return r
 

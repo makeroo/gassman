@@ -13,7 +13,7 @@ Data: {{ dateFormatter(tdate) }}
 Per esaminare il movimento vai su: {{ publishedUrl }}/home.html#/transaction/{{ transId }}
 {% elif notificationType[0] == Tnt_transaction_removed %}è stato cancellato un movimento inserito precedentemente.
 
-Descrizione del movimento rimosso: {{ oldDesc }}
+Descrizione del movimento rimosso: {{ old_desc }}
 
 Per esaminare il movimento vai su: {{ publishedUrl }}/home.html#/transaction/{{ modifiedTransId }}
 {% elif notificationType[0] == Tnt_amount_changed %}è stato modificato l'importo di un movimento
@@ -35,7 +35,7 @@ Per esaminare il movimento vai su: {{ publishedUrl }}/home.html#/transaction/{{ 
 {% elif notificationType[0] == Tnt_description_changed %}è stata modificata la descrizione
 di un movimento inserito in precedenza.
 
-Vecchia descrizione: {{ oldDesc }}
+Vecchia descrizione: {{ old_desc }}
 Nuova descrizione: {{ tdesc }}
 
 Per esaminare il movimento vai su: {{ publishedUrl }}/home.html#/transaction/{{ transId }}
