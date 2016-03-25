@@ -1397,6 +1397,13 @@ class PersonSaveHandler (JsonBaseHandler):
             uid != pid
         ):
             raise GDataException(error_codes.E_permission_denied, 403)
+        # verifica che il delivery place appartenga al csa
+        cur.execute(*self.application.conn.sql_factory.csa_delivery_place_check(
+            csa_id,
+            profile['default_delivery_place_id']
+        ))
+        if cur.fetch()[0] == 0:
+            raise GDataException(error_codes.E_permission_denied, 403)
         # salva profilo
         cur.execute(*self.application.conn.sql_factory.profile_update(profile))
         # salva contatti
