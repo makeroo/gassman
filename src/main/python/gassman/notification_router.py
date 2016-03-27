@@ -1,5 +1,7 @@
 import datetime
 import logging
+import pydoc
+import json
 
 
 log_notification_router = logging.getLogger('gassman.notification_router')
@@ -140,20 +142,19 @@ class DeliveryDateReminder (BaseReport):
 
 
 class NotificationRouter:
-    def __init__(self, sql, mailer, conn_args, template_engine, config):
+    def __init__(self, sql, mailer, conn, template_engine, config):
         self.mailer = mailer
-        self.conn_args = conn_args
-        self.conn = None
+        self.conn = conn
         self.sql = sql
         self.template_engine = template_engine
         self.config = config
 
     def __call__(self):
-        for report in self.config:
+        for report in self.config.configuration():
             self._process_report(report)
 
     def _process_report(self, report):
-        with self.conn as cur:
+        with self.conn.connection() as cur:
             report(self, cur)
 
     def template(self, templ_name, namespace):
@@ -171,3 +172,49 @@ class NotificationRouter:
                              body,
                              reply_to
                              )
+
+
+class ClassNotFound(Exception):
+    pass
+
+
+class NotificationRouterConfigurationManager:
+    def __init__(self, sql, conn, profile):
+        self.sql = sql
+        self.conn = conn
+        self.profile = profile
+
+    def configuration(self):
+        r = []
+        with self.conn.connection() as cur:
+            q, a = self.sql.reports(self.profile)
+            cur.execute(q, a)
+            for cfg in self.sql.iter_objects(cur):
+                generator = self.instance(
+                    cfg['generator'],
+                    cfg['g_config']
+                )
+                broadcaster = self.instance(
+                    cfg['broadcaster'],
+                    cfg['b_config']
+                )
+                report = self.instance(
+                    cfg['report'],
+                    generator=generator,
+                    broadcaster=broadcaster,
+                )
+                r.append(report)
+        return r
+
+    @staticmethod
+    def instance(class_name, class_config=None, **kwargs):
+        cls = pydoc.locate(class_name)
+        if cls is None:
+            raise ClassNotFound(class_name)
+        if class_config is None:
+            cfg = kwargs
+        else:
+            cfg = json.loads(class_config)
+            cfg.update(kwargs)
+        o = cls(**cfg)
+        return o

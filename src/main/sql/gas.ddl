@@ -1,4 +1,4 @@
--- version 15
+-- version 16
 
 SET SESSION default_storage_engine = "MyISAM";
 SET SESSION time_zone = "+0:00";
@@ -379,5 +379,20 @@ CREATE TABLE producer_person (
 
   FOREIGN KEY (producer_id) REFERENCES producer(id) ON DELETE CASCADE,
   FOREIGN KEY (person_id) REFERENCES person(id) ON DELETE CASCADE,
+  PRIMARY KEY (id)
+);
+
+
+CREATE TABLE reports_configuration (
+  id INT NOT NULL AUTO_INCREMENT,
+  profile VARCHAR(255) NOT NULL,
+
+  report VARCHAR(255) NOT NULL,
+  generator VARCHAR(255) NOT NULL,
+  g_config TEXT NOT NULL,
+  broadcaster VARCHAR(255) NOT NULL,
+  b_config TEXT NOT NULL,
+
+  UNIQUE (profile),
   PRIMARY KEY (id)
 );

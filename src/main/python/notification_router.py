@@ -11,7 +11,12 @@ log_gassman = logging.getLogger('gassman.notification_router')
 
 
 def main():
+    import argparse
     from gassman import ioc
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--profile", help="select profile configuration")
+    parser.parse_args()
 
     io_loop = ioc.io_loop()
 

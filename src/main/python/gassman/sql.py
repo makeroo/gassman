@@ -1323,6 +1323,10 @@ LEFT JOIN contact_address ca ON ca.id=pc.address_id
         ]
 
     @staticmethod
+    def reports(profile):
+        return 'SELECT * FROM reports WHERE profile=%s', [profile]
+
+    @staticmethod
     def connection_check():
         return 'SELECT 1'
 

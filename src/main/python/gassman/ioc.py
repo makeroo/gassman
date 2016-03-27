@@ -54,15 +54,25 @@ def gassman_backend():
     )
 
 
-def notification_router():
-    from . import notification_router
+def notification_router(profile):
+    from .notification_router import NotificationRouter
 
-    return notification_router.NotificationRouter(
+    return NotificationRouter(
         sql_factory(),
         mailer(),
         db_connection(),
         template_engine(),
-        # TODO: config!
+        notification_router_configuration_manager(profile),
+    )
+
+
+def notification_router_configuration_manager(profile):
+    from .notification_router import NotificationRouterConfigurationManager
+
+    return NotificationRouterConfigurationManager(
+        sql_factory(),
+        db_connection(),
+        profile,
     )
 
 
