@@ -77,11 +77,10 @@ def notification_router_configuration_manager(profile):
 
 
 def template_engine():
-    from tornado import template
-    return template.Loader(
-        settings.TEMPLATE_PATH,
-        # autoescape=
-        # template_whitespace=
+    from .tornadolib import DbLoader
+    return DbLoader(
+        db_connection(),
+        sql_factory()
     )
 
 

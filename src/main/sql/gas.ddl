@@ -396,3 +396,13 @@ CREATE TABLE reports_configuration (
   UNIQUE (profile),
   PRIMARY KEY (id)
 );
+
+
+CREATE TABLE templates (
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(255) NOT NULL,
+  template TEXT NOT NULL,
+
+  UNIQUE (name),
+  PRIMARY KEY (id)
+);
