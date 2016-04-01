@@ -3,6 +3,7 @@ import logging
 import pydoc
 import json
 
+from .db import annotate_cursor_for_logging
 
 log_notification_router = logging.getLogger('gassman.notification_router')
 
@@ -25,11 +26,11 @@ class BaseReport:
 
     def __call__(self, router, cur):
         for event in self.generator.generate(router, cur):
-            for msg, address in self.broadcaster.broadcast(event, router, cur):
+            for address in self.broadcaster.broadcast(event, router, cur):
                 router.send_email(
+                    event['subject'],
+                    event['body'],
                     address,
-                    msg['subject'],
-                    msg['body']
                 )
 
 
@@ -78,8 +79,8 @@ class DeliveryDateReminder (BaseReport):
             :param fetch_covered: considera i turni coperti
             :param fetch_uncovered: considera i turni scoperti
             """
-            self.frequency = frequency
-            self.advance = advance
+            self.frequency = datetime.timedelta(seconds=frequency)
+            self.advance = datetime.timedelta(seconds=advance)
             self.rounding = rounding
             self.fetch_covered = subject_if_covered is not None
             self.fetch_uncovered = subject_if_uncovered is not None
@@ -138,7 +139,10 @@ class DeliveryDateReminder (BaseReport):
                 None
             )
             cur.execute(q, a)
-            return [(msg, row[0]) for row in cur.fetchall()]
+            pids = [row[0] for row in cur.fetchall()]
+            q, a = router.sql.people_addresses(pids, router.sql.Ck_Email)
+            cur.execute(q, a)
+            return [row[1] for row in cur.fetchall()]
 
 
 class NotificationRouter:
@@ -155,21 +159,22 @@ class NotificationRouter:
 
     def _process_report(self, report):
         with self.conn.connection() as cur:
+            annotate_cursor_for_logging(cur)
             report(self, cur)
 
     def template(self, templ_name, namespace):
         templ = self.template_engine.load(templ_name)
         return templ.generate(**namespace)
 
-    def send_email(self, subject, body, dest, reply_to):
+    def send_email(self, subject, body, dest, reply_to=None):
         s = subject.decode('UTF-8')
         b = body.decode('UTF-8')
         if self.mailer is None:
             log_notification_router.info('SMTP not configured, mail not sent: dest=%s, subj=%s\n%s', dest, subject, body)
         else:
             self.mailer.send(dest,
-                             subject,
-                             body,
+                             s,
+                             b,
                              reply_to
                              )
 
@@ -203,6 +208,7 @@ class NotificationRouterConfigurationManager:
                     generator=generator,
                     broadcaster=broadcaster,
                 )
+                log_notification_router.debug('loaded report: %s', cfg['report'])
                 r.append(report)
         return r
 
@@ -214,7 +220,7 @@ class NotificationRouterConfigurationManager:
         if class_config is None:
             cfg = kwargs
         else:
-            cfg = json.loads(class_config)
+            cfg = json.loads(class_config)  # può lanciare json.decoder.JSONDecodeError, TypeError (se None)
             cfg.update(kwargs)
-        o = cls(**cfg)
+        o = cls(**cfg)  # può lanciare TypeError
         return o

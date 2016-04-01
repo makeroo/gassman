@@ -625,13 +625,13 @@ INSERT INTO delivery_date
     @staticmethod
     def delivery_dates_for_notifications(from_time, to_time, fetch_covered, fetch_uncovered):
         q = '''
-SELECT dd.id as "delivery_date_id", dp.id as "delivery_place_id", dp.csa_id as "csa_id", count(ds.id) as "shifts"
-  FROM delivery_date dd
-  JOIN delivery_place dp ON dp.id=dd.delivery_place_id
-  JOIN delivery_shift ds ON ds.delivery_date_id=dd.id
- WHERE dd.from_time>%s AND
-       dd.from_time<%s
-GROUP BY dd.id
+   SELECT dd.id as "delivery_date_id", dp.id as "delivery_place_id", dp.csa_id as "csa_id", count(ds.id) as "shifts"
+     FROM delivery_date dd
+     JOIN delivery_place dp ON dp.id=dd.delivery_place_id
+LEFT JOIN delivery_shift ds ON ds.delivery_date_id=dd.id
+    WHERE dd.from_time>%s AND
+          dd.from_time<%s
+ GROUP BY dd.id
         '''
         a = [from_time, to_time]
         if fetch_covered and fetch_uncovered:
@@ -698,15 +698,15 @@ SELECT c.address, p.id, a.id
 
     def account_owners_with_optional_email_for_notifications(self, account_ids):
         return '''
-SELECT ap.account_id, p.id, p.first_name, p.middle_name, p.last_name, c.address
- FROM account_person ap
- JOIN person p ON ap.person_id=p.id
- LEFT JOIN person_contact pc ON p.id=pc.person_id
- LEFT JOIN contact_address c ON pc.address_id=c.id
- WHERE ap.to_date IS NULL AND
-       ap.account_id IN %s AND
-       (c.kind=%s OR c.kind IS NULL) AND
-       p.account_notifications=%s
+   SELECT ap.account_id, p.id, p.first_name, p.middle_name, p.last_name, c.address
+     FROM account_person ap
+     JOIN person p ON ap.person_id=p.id
+LEFT JOIN person_contact pc ON p.id=pc.person_id
+LEFT JOIN contact_address c ON pc.address_id=c.id
+    WHERE ap.to_date IS NULL AND
+          ap.account_id IN %s AND
+          (c.kind=%s OR c.kind IS NULL) AND
+          p.account_notifications=%s
  ORDER BY ap.account_id, pc.priority''', [set(account_ids), self.Ck_Email, self.An_EveryMovement]
 
     def account_total_for_notifications(self, account_ids):
@@ -1080,6 +1080,16 @@ ORDER BY pc.priority''',
         )
 
     @staticmethod
+    def people_addresses(pids, contact_kind):
+        return '''
+SELECT p.id, c.address
+  FROM person p
+  JOIN person_contact pc ON p.id=pc.person_id
+  JOIN contact_address c ON pc.address_id=c.id
+ WHERE c.kind=%s AND p.id in %s
+        ''', [contact_kind, set(pids)]
+
+    @staticmethod
     def people_with_transaction_report(frequency):
         return '''
 SELECT p.id, p.account_notifications, ap.account_id
@@ -1089,6 +1099,7 @@ SELECT p.id, p.account_notifications, ap.account_id
 ''', [frequency]
 
     def person_notification_email(self, pid):
+        # FIXME: scrivere a tutte le email
         return '''
 SELECT c.address
  FROM person p
@@ -1324,7 +1335,11 @@ LEFT JOIN contact_address ca ON ca.id=pc.address_id
 
     @staticmethod
     def reports(profile):
-        return 'SELECT * FROM reports WHERE profile=%s', [profile]
+        return 'SELECT * FROM reports_configuration WHERE profile=%s', [profile]
+
+    @staticmethod
+    def template(name):
+        return 'SELECT template FROM templates WHERE name=%s', [name]
 
     @staticmethod
     def connection_check():
