@@ -54,3 +54,14 @@ class Connection:
             self.notify_service.notify('[FATAL] No db connection', 'Connection error: %s/%s.\nTraceback:\n%s' %
                            (etype, evalue, loglib.TracebackFormatter(tb))
                            )
+
+
+def annotate_cursor_for_logging(cur):
+    m = cur.execute
+
+    def logging_execute(stmt, *args):
+        logm = log_gassman_db.debug if stmt.upper().strip().startswith('SELECT') else log_gassman_db.info
+        logm('SQL: %s / %s', stmt, args)
+        m(stmt, *args)
+
+    cur.execute = logging_execute

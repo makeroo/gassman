@@ -31,7 +31,7 @@ import loglib
 
 import gassman_version
 import error_codes
-
+from .db import annotate_cursor_for_logging
 
 log_gassman = logging.getLogger('gassman.backend')
 log_gassman_db = logging.getLogger('gassman.application.db')
@@ -390,14 +390,7 @@ class JsonBaseHandler (BaseHandler):
 
     def post(self, *args):
         with self.application.conn.connection() as cur:
-            m = cur.execute
-
-            def logging_execute(stmt, *args):
-                logm = log_gassman_db.debug if stmt.upper().strip().startswith('SELECT') else log_gassman_db.info
-                logm('SQL: %s / %s', stmt, args)
-                m(stmt, *args)
-
-            cur.execute = logging_execute
+            annotate_cursor_for_logging(cur)
             r = self.do(cur, *args)
             self.write_response(r)
 
@@ -1285,18 +1278,18 @@ class PeopleProfilesHandler (JsonBaseHandler):
     def do(self, cur, csa_id):
         pids = self.payload['pids']
         uid = self.current_user
-        isSelf = len(pids) == 1 and (pids[0] == 'me' or int(pids[0]) == uid)
-        if isSelf:
+        is_self = len(pids) == 1 and (pids[0] == 'me' or int(pids[0]) == uid)
+        if is_self:
             if uid is None:
                 raise GDataException(error_codes.E_not_authenticated, 401)
             pids = [uid]
         # if csa_id == 'null':
-        #    if not isSelf:
+        #    if not is_self:
         #        raise GDataException(error_codes.E_permission_denied, 403)
         #    csa_id = None
-        if not isSelf and not self.application.is_member_of_csa(cur, uid, csa_id, False):
+        if not is_self and not self.application.is_member_of_csa(cur, uid, csa_id, False):
             raise GDataException(error_codes.E_permission_denied, 403)
-        can_view_contacts = isSelf or self.application.has_permission_by_csa(
+        can_view_contacts = is_self or self.application.has_permission_by_csa(
             cur, self.application.conn.sql_factory.P_canViewContacts, uid, csa_id
         )
         r = {}
@@ -1320,7 +1313,7 @@ class PeopleProfilesHandler (JsonBaseHandler):
             #p['profile'] = self.application.find_person_by_id(uid)
         else:
             accs, perms, args = self.application.conn.sql_factory.people_profiles2(csa_id, pids)
-            can_view_accounts = isSelf or self.application.has_permission_by_csa(
+            can_view_accounts = is_self or self.application.has_permission_by_csa(
                 cur, self.application.conn.sql_factory.P_canCheckAccounts, uid, csa_id
             )
             cur.execute(accs, args)
@@ -1345,7 +1338,7 @@ class PeopleProfilesHandler (JsonBaseHandler):
                     p = record(addr['person_id'])
                     p['contacts'].append(addr)
             # TODO: indirizzi
-        if isSelf:
+        if is_self:
             cur.execute(*self.application.conn.sql_factory.find_user_csa(uid))
             p = record(uid)
             p['csa'] = {
