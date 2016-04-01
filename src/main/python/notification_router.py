@@ -16,11 +16,11 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--profile", help="select profile configuration")
-    parser.parse_args()
+    cmd_line = parser.parse_args()
 
     io_loop = ioc.io_loop()
 
-    notification_router = ioc.notification_router()
+    notification_router = ioc.notification_router(cmd_line.profile)
 
     log_notification_router = logging.getLogger('gassman.notification_router')
     log_notification_router.info('Notification Router running...')
