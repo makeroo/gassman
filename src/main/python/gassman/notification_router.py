@@ -101,14 +101,22 @@ class DeliveryDateReminder (BaseReport):
                 self.fetch_uncovered
             )
             cur.execute(q, a)
+            msgs = {}
             for msg in router.sql.iter_objects(cur):
+                real_msg = msgs.setdefault(msg['id'], msg)
+                people = real_msg.setdefault('people', {})
+                person = people.setdefault(msg['person_id'], msg)
+                contacts = person.setdefault('contacts', [])
+                contacts.append([person['contact_kind'], person['contact_address']])
+            for msg in msgs.values():
+                covered = msg['shift_role'] is not None
                 subject = router.template(
-                    self.subject_if_covered if msg['shifts'] > 0 else
+                    self.subject_if_covered if covered else
                     self.subject_if_uncovered,
                     msg
                 )
                 body = router.template(
-                    self.body_if_covered if msg['shifts'] > 0 else
+                    self.body_if_covered if covered else
                     self.body_if_uncovered,
                     msg
                 )

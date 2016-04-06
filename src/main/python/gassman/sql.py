@@ -622,26 +622,42 @@ INSERT INTO delivery_date
             notes
         ]
 
-    @staticmethod
-    def delivery_dates_for_notifications(from_time, to_time, fetch_covered, fetch_uncovered):
+    def delivery_dates_for_notifications(self, from_time, to_time, fetch_covered, fetch_uncovered):
         q = '''
-   SELECT dd.id as "delivery_date_id", dp.id as "delivery_place_id", dp.csa_id as "csa_id", count(ds.id) as "shifts"
+   SELECT dd.id, dd.notes as "delivery_notes", dd.from_time, dd.to_time,
+          dp.description as "delivery_place",
+          ds.role as "shift_role",
+          p.id as "person_id", p.first_name, p.middle_name, p.last_name,
+          pa.kind as "contact_kind", pa.address as "contact_address",
+          c.id as "csa_id", c.name as "csa",
+          sa.first_line as "address_first_line", sa.second_line as "address_second_line",
+              sa.description as "addess_description", sa.zip_code as "address_zip_code",
+          sc.name as "city"
      FROM delivery_date dd
      JOIN delivery_place dp ON dp.id=dd.delivery_place_id
 LEFT JOIN delivery_shift ds ON ds.delivery_date_id=dd.id
+     JOIN csa c ON dp.csa_id=c.id
+     JOIN street_address sa ON dp.address_id=sa.id
+     JOIN city sc ON sa.city_id=sc.id
+LEFT JOIN person p ON ds.person_id=p.id
+LEFT JOIN person_contact pc ON p.id=pc.person_id
+LEFT JOIN contact_address pa ON pa.id=pc.address_id
     WHERE dd.from_time>%s AND
-          dd.from_time<%s
- GROUP BY dd.id
+          dd.from_time<%s AND
+          (pa.kind IS NULL OR pa.kind IN %s)
         '''
         a = [from_time, to_time]
         if fetch_covered and fetch_uncovered:
             pass
         elif fetch_covered:
-            q += ' HAVING count(ds.id) > %s'
-            a.append(0)
+            q += ' AND ds.id IS NOT NULL'
+            # q += ' HAVING count(ds.id) > %s'
+            # a.append(0)
         elif fetch_uncovered:
-            q += ' HAVING count(ds.id) == %s'
-            a.append(0)
+            q += ' AND ds.id IS NULL'
+            # q += ' HAVING count(ds.id) == %s'
+            # a.append(0)
+        a.append(set([self.Ck_Email, self.Ck_Mobile, self.Ck_Telephone]))
         return q, a
 
     @staticmethod
@@ -1340,6 +1356,14 @@ LEFT JOIN contact_address ca ON ca.id=pc.address_id
     @staticmethod
     def template(name):
         return 'SELECT template FROM templates WHERE name=%s', [name]
+
+    @staticmethod
+    def template_update(name, content):
+        return 'UPDATE templates SET template=%s WHERE name=%s', [content, name]
+
+    @staticmethod
+    def template_insert(name, content):
+        return 'INSERT INTO templates (name, template) VALUES (%s, %s)', [content, name]
 
     @staticmethod
     def connection_check():
