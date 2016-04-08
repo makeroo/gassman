@@ -39,14 +39,16 @@ def main():
         with db.connection() as cur:
             annotate_cursor_for_logging(cur)
 
-            q, a = db.sql_factory.template_update(f, tpl)
+            q, a = db.sql_factory.template(f)
             cur.execute(q, a)
 
-            if cur.rowcount == 0:
+            if cur.fetchone() is None:
                 q, a = db.sql_factory.template_insert(f, tpl)
                 cur.execute(q, a)
                 logger.info('new template %s', f)
             else:
+                q, a = db.sql_factory.template_update(f, tpl)
+                cur.execute(q, a)
                 logger.info('updated template %s', f)
 
     sys.exit(0)
