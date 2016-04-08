@@ -52,6 +52,11 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarC
             if ($scope.cal_info.selected_event && event.id == $scope.cal_info.selected_event.id) {
                 element.addClass('selected');
             }
+            if (event.deliveryDate.shifts.length > 0) {
+                element.addClass('covered');
+            } else {
+                element.addClass('uncovered');
+            }
             //console.log('rendering event', event, element);
         },
         eventClick: function (calEvent, jqueryEvent) {
