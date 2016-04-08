@@ -595,7 +595,7 @@ SELECT count(*)
         return 'DELETE FROM delivery_date WHERE id=%s', [date_id]
 
     @staticmethod
-    def csa_delivery_date_update(date_id, delivery_place_id, from_time, to_time, notes):
+    def csa_delivery_date_update(id, delivery_place_id, from_time, to_time, notes):
         return '''
 UPDATE delivery_date
    SET delivery_place_id=%s,
@@ -607,7 +607,7 @@ UPDATE delivery_date
             jsonlib.decode_date(from_time),
             jsonlib.decode_date(to_time),
             notes,
-            date_id
+            id
         ]
 
     @staticmethod
@@ -631,7 +631,7 @@ INSERT INTO delivery_date
           pa.kind as "contact_kind", pa.address as "contact_address",
           c.id as "csa_id", c.name as "csa",
           sa.first_line as "address_first_line", sa.second_line as "address_second_line",
-              sa.description as "addess_description", sa.zip_code as "address_zip_code",
+              sa.description as "address_description", sa.zip_code as "address_zip_code",
           sc.name as "city"
      FROM delivery_date dd
      JOIN delivery_place dp ON dp.id=dd.delivery_place_id
@@ -1363,7 +1363,7 @@ LEFT JOIN contact_address ca ON ca.id=pc.address_id
 
     @staticmethod
     def template_insert(name, content):
-        return 'INSERT INTO templates (name, template) VALUES (%s, %s)', [content, name]
+        return 'INSERT INTO templates (name, template) VALUES (%s, %s)', [name, content]
 
     @staticmethod
     def connection_check():
