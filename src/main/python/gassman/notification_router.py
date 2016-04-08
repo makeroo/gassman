@@ -72,6 +72,34 @@ class DeliveryDateReminder (BaseReport):
                      body_if_uncovered
                      ):
             """
+            Struttura dei messaggi generati dal report (cfr. delivery_dates_for_notifications)
+            id
+            delivery_notes
+            from_time
+            to_time
+
+            delivery_place
+
+            csa
+            csa_id
+            address_first_line
+            address_second_line
+            address_description
+            address_zip_code
+            city
+
+            people
+              shift_role
+              person_id
+              first_name
+              middle_name
+              last_name
+              contacts
+                contact_address
+                contact_kind
+
+
+
             :param frequency: (eg. 2 ore): giro alle 6am, 8am...
             :param advance: (eg. 6 ore): notifico dalle 12am alle 2pm...
             :param rounding: int, secondi (eg. 1 ora=3600): se giro alle 6:01, in realtà faccio finta di essere partito
@@ -107,7 +135,8 @@ class DeliveryDateReminder (BaseReport):
                 people = real_msg.setdefault('people', {})
                 person = people.setdefault(msg['person_id'], msg)
                 contacts = person.setdefault('contacts', [])
-                contacts.append([person['contact_kind'], person['contact_address']])
+                if person['contact_kind'] is not None:
+                    contacts.append([person['contact_kind'], person['contact_address']])
             for msg in msgs.values():
                 covered = msg['shift_role'] is not None
                 subject = router.template(
