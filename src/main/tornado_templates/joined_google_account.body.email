@@ -1,0 +1,11 @@
+ciao {{profile['first_name']}} {{profile['last_name']}},
+hai acceduto al tuo conto con una nuova email.
+
+Adesso puoi accedere al tuo conto su {{publishedUrl}} con una qualsiasi delle seguenti email:
+{% for c in contacts %}
+ * {{c}}
+{% end %}
+
+
+Ricorda di verificare almeno una volta alla settimana i tuoi conti e
+non esitare a segnalare errori sia in addebito ma anche in accredito!

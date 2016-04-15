@@ -196,7 +196,7 @@ class GassmanWebApp (tornado.web.Application):
                 if len(pp) == 1:
                     log_gassman.debug('found profile: credentials=%s, person=%s', auth_mode, p)
                 if len(pp) > 1:
-                    self.notify('[ERROR] Multiple auth id for %s' % p, 'Check credentials %s' % auth_mode)
+                    self.notify_service.notify('[ERROR] Multiple auth id for %s' % p, 'Check credentials %s' % auth_mode)
         try:
             yield user.load_full_profile()
             attrsToAdd = {
@@ -242,7 +242,7 @@ class GassmanWebApp (tornado.web.Application):
             etype, evalue, tb = sys.exc_info()
             log_gassman.error('profile creation failed: cause=%s/%s\nfull stacktrace:\n%s',
                               etype, evalue, loglib.TracebackFormatter(tb))
-            self.notify('[ERROR] User profile creation failed', 'Cause: %s/%s\nAuthId: %s (%s %s)\nTraceback:\n%s' %
+            self.notify_service.notify('[ERROR] User profile creation failed', 'Cause: %s/%s\nAuthId: %s (%s %s)\nTraceback:\n%s' %
                            (etype, evalue, user.userId, user.firstName, user.lastName, loglib.TracebackFormatter(tb))
                            )
         if p is not None:
@@ -404,7 +404,7 @@ class JsonBaseHandler (BaseHandler):
         self.add_header('Content-Type', 'application/json')
         etype, evalue, tb = kwargs.get('exc_info', ('', '', None))
         if self.notifyExceptions:
-            self.application.notify(
+            self.application.notify_service.notify(
                 '[ERROR] Json API Failed',
                 'Request error:\ncause=%s/%s\nother args: %s\nTraceback:\n%s' %
                 (etype, evalue, kwargs, loglib.TracebackFormatter(tb))
@@ -1598,6 +1598,9 @@ class AdminPeopleRemoveHandler (JsonBaseHandler):
 
 
 class AdminPeopleJoinHandler (JsonBaseHandler):
+    """
+    Una stessa persona ha acceduto con un nuovo google account.
+    """
     def do(self, cur):
         newpid = self.payload['newpid']
         oldpid = self.payload['oldpid']
@@ -1608,23 +1611,46 @@ class AdminPeopleJoinHandler (JsonBaseHandler):
         cur.execute(*self.application.conn.sql_factory.permissions_reassign(newpid, oldpid))
         cur.execute(*self.application.conn.sql_factory.accounts_reassign(newpid, oldpid))
         cur.execute(*self.application.conn.sql_factory.person_delete(oldpid))
+        # Notifico, a tutte le email, l'avvenuto collegamento col preesistente account GassMan
+        prof, contacts, args = self.application.conn.sql_factory.people_profiles1([newpid])
+        cur.execute(prof, args)
+        profile = self.application.conn.sql_factory.fetch_object(cur)
+        contacts, args = self.application.conn.sql_factory.people_addresses([newpid], self.application.conn.sql_factory.Ck_Email)
+        cur.execute(contacts, args)
+        contacts = [row[1] for row in cur.fetchall()]
+        self.notify(
+            'joined_google_account',
+            receivers=contacts,
+            publishedUrl=settings.PUBLISHED_URL,
+            profile=profile,
+            contacts=contacts,
+        )
 
 
 class AdminPeopleAddHandler (JsonBaseHandler):
+    """
+    Cointesto conto.
+    """
     def do(self, cur):
         pid = self.payload['pid']
         acc = self.payload['acc']
         uid = self.current_user
         if not self.application.has_permission_by_csa(cur, self.application.conn.sql_factory.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
+        # TODO: chiudere conto precedente!!
         cur.execute(*self.application.conn.sql_factory.account_grant(pid, acc, datetime.datetime.utcnow()))
+        # TODO: Notifico, a tutte le email di tutti gli intestatari, l'avvenuto collegamento col conto GASsMan.
 
 
 class AdminPeopleCreateAccountHandler (JsonBaseHandler):
+    """
+    Creo un nuovo conto per un account GASsMan con associato un account Google.
+    """
     def do(self, cur):
         uid = self.current_user
         if not self.application.has_permission_by_csa(cur, self.application.conn.sql_factory.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
+        # TODO: errore se ha conti precedenti
         pid = self.payload['pid']
         csa = self.payload['csa']
         cur.execute(*self.application.conn.sql_factory.csa_currencies(csa))
@@ -1639,9 +1665,14 @@ class AdminPeopleCreateAccountHandler (JsonBaseHandler):
             ))
             acc_id = cur.lastrowid
             cur.execute(*self.application.conn.sql_factory.account_grant(pid, acc_id, datetime.datetime.utcnow()))
+        # TODO: notificare apertura conto
 
 
 class AdminPeopleCreateHandler (JsonBaseHandler):
+    """
+    Creo un nuovo account GASsMan, per ora non agganciato ad un account Google.
+    NB: non essendo agganciato ad un conto google non notifico niente.
+    """
     def do(self, cur):
         uid = self.current_user
         if not self.application.has_permission_by_csa(cur, self.application.conn.sql_factory.P_canAdminPeople, uid, None):
