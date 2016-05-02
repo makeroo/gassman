@@ -180,7 +180,7 @@ Ck_Web = 'W'
             <button type="button" class="btn btn-success" ng-click="addMemberWithNewAccount()" ng-if="selectedPerson && !selectedMember">Apri conto</button>
             <button type="button" class="btn btn-danger" ng-click="removeSelectedPerson()" ng-if="selectedPerson && !selectedPerson.profile.csa.length">Rimuovi contatto</button>
             <button type="button" class="btn btn-primary" ng-click="joinPerson()" ng-if="selectedPerson && selectedMember && !selectedPerson.profile.csa.length">Stessa persona</button>
-            <button type="button" class="btn btn-primary" ng-click="addMemberWithExistingAccount()" ng-if="selectedPerson && selectedAccount">Cointesta conto</button>
+            <button type="button" class="btn btn-primary" ng-click="addMemberWithExistingAccount()" ng-if="selectedPerson && selectedMember">Cointesta conto</button>
         </div>
     </div>
 </div>
