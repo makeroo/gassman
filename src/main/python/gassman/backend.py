@@ -26,12 +26,12 @@ import oauth2lib
 from tornado.web import HTTPError
 
 import jsonlib
-import pymysql
 import loglib
 
 import gassman_version
 import error_codes
 from .db import annotate_cursor_for_logging
+from .templateutils import member_name, currency, pubDate, shortDate
 
 log_gassman = logging.getLogger('gassman.backend')
 log_gassman_db = logging.getLogger('gassman.application.db')
@@ -1263,18 +1263,6 @@ class TransactionsEditableHandler (JsonBaseHandler):
         return r
 
 
-def shortDate(d):
-    return d.strftime('%Y/%m/%d') # FIXME il formato dipende dal locale dell'utente
-
-
-def pubDate(d):
-    return d.strftime('%a, %d %b %Y %H:%M:%S GMT')
-
-
-def currency(v, sym):
-    return '%s%s' % (v, sym)
-
-
 class RssFeedHandler (tornado.web.RequestHandler):
     def get(self, rss_id):
         self.clear_header('Content-Type')
@@ -1642,6 +1630,7 @@ class AdminPeopleJoinHandler (JsonBaseHandler):
             publishedUrl=settings.PUBLISHED_URL,
             profile=profile,
             contacts=contacts,
+            member_name=member_name,
         )
 
 
@@ -1696,7 +1685,7 @@ class AdminPeopleAddHandler (JsonBaseHandler):
         # Notifico, a tutte le email di tutti gli intestatari, l'avvenuto collegamento col conto GASsMan.
         prof, contacts, args = self.application.conn.sql_factory.people_profiles1([pid, mid])
         cur.execute(prof, args)
-        profile = self.application.conn.sql_factory.fetch_object(cur)
+        profiles = {x['id']: x for x in self.application.conn.sql_factory.iter_objects(cur)}
         contacts, args = self.application.conn.sql_factory.people_addresses([pid, mid], self.application.conn.sql_factory.Ck_Email)
         cur.execute(contacts, args)
         contacts = [row[1] for row in cur.fetchall()]
@@ -1704,8 +1693,13 @@ class AdminPeopleAddHandler (JsonBaseHandler):
             'joined_account',
             receivers=contacts,
             publishedUrl=settings.PUBLISHED_URL,
-            profile=profile,
+            newp=profiles[pid],
+            memp=profiles[mid],
             contacts=contacts,
+            previous_accounts=previous_accounts,
+            new_accounts=new_accounts,
+            common_accounts=common_accounts,
+            member_name=member_name,
         )
 
 
