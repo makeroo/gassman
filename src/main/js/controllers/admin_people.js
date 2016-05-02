@@ -159,10 +159,10 @@ function ($scope,   $localStorage,   gdata,   listController,   $location) {
     $scope.addMemberWithExistingAccount = function () {
         var newpid = $scope.selectedPerson[0];
 
-        gdata.addMemberWithExistingAccount($scope.gassman.selectedCsa, newpid, $scope.selectedMember.id).then(function (r) {
+        gdata.addMemberWithExistingAccount($scope.gassman.selectedCsa, newpid, $scope.selectedMember[0]).then(function (r) {
             $location.path('/person/' + newpid + '/detail');
         }).then (undefined, function (error) {
-            $scope.actionError = error;
+            $scope.actionError = error.data;
         });
     };
 
@@ -172,7 +172,7 @@ function ($scope,   $localStorage,   gdata,   listController,   $location) {
         gdata.addMemberWithNewAccount(newpid, $scope.members.pagination.filterBy.csa).then(function (r) {
             $location.path('/person/' + newpid + '/detail');
         }).then (undefined, function (error) {
-            $scope.actionError = error;
+            $scope.actionError = error.data;
         });
     };
 
