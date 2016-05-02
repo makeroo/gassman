@@ -1,0 +1,14 @@
+{% if previous_accounts %}ciao {{member_name(newp)}} e {{member_name(memp)}},
+i vostri conti sono stati uniti in uno solo.
+
+{% else %}benvenuto {{member_name(newp)}},
+da ora puoi accedere al sito di gestione della cassa su:
+
+{{publishedUrl}}
+
+Condividi il conto con {{member_name(memp)}}, che legge in copia.
+{% end %}
+Per controllare il conto potete andare su:
+{% for acc in new_accounts %}
+ {{publishedUrl}}/home.html#/account/{{acc}}/detail
+{% end %}

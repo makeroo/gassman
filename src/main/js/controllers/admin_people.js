@@ -116,20 +116,20 @@ function ($scope,   $localStorage,   gdata,   listController,   $location) {
     };
 
     $scope.selectMember = function (p) {
-        $scope.selectedAccount = null;
+        //$scope.selectedAccount = null;
 
         if (angular.equals(p, $scope.selectedMember)) {
             $scope.selectedMember = null;
         } else {
             $scope.selectedMember = p;
 
-            if (p) {
+/*            if (p) {
                 angular.forEach(p.profile.accounts, function (a) {
                     if (a.to_date == null) {
                         $scope.selectedAccount = a;
                     }
                 });
-            }
+            }*/
         }
 
         console.log('member selected:', $scope.selectedMember);
@@ -159,7 +159,7 @@ function ($scope,   $localStorage,   gdata,   listController,   $location) {
     $scope.addMemberWithExistingAccount = function () {
         var newpid = $scope.selectedPerson[0];
 
-        gdata.addMemberWithExistingAccount(newpid, $scope.selectedAccount.id).then(function (r) {
+        gdata.addMemberWithExistingAccount($scope.gassman.selectedCsa, newpid, $scope.selectedMember.id).then(function (r) {
             $location.path('/person/' + newpid + '/detail');
         }).then (undefined, function (error) {
             $scope.actionError = error;

@@ -518,12 +518,13 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         );
     };
 
-    this.addMemberWithExistingAccount = function (newpid, accid) {
+    this.addMemberWithExistingAccount = function (csaid, newpid, memberid) {
 		return $http.post(
             '/gm/admin/people/add?_xsrf=' + $cookies.get('_xsrf'),
             {
+                csa: csaid,
                 pid: newpid,
-                acc: accid
+                mid: memberid
             }
         );
     };

@@ -289,6 +289,15 @@ SELECT p.id, p.first_name, p.middle_name, p.last_name, p.rss_feed_id
         return 'SELECT count(*) FROM account_person WHERE person_id=%s AND to_date IS NULL', [pid]
 
     @staticmethod
+    def find_open_accounts(pid, csa):
+        return '''
+SELECT b.id, b.currency_id
+  FROM account b
+  JOIN account_person ap ON ap.account_id=b.id
+ WHERE ap.person_id=%s AND b.csa_id=%s AND ap.to_date IS NULL
+        ''', [pid, csa]
+
+    @staticmethod
     def has_or_had_account(pid, acc_id):
         return 'SELECT count(*) FROM account_person WHERE person_id=%s AND account_id=%s', [pid, acc_id]
 

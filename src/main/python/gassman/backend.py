@@ -737,6 +737,49 @@ class AccountXlsHandler (BaseHandler):
             self.finish()
 
 
+def insert_close_account_transaction(cur, sql_factory, from_acc_id, now, tdesc, operator_id, dest_acc_id=None):
+    cur.execute(*sql_factory.account_amount(from_acc_id, return_currency_id=True))
+    v = cur.fetchone()
+    amount = v[0] or 0.0
+    currency_id = v[2]
+
+    if amount == 0.0:
+        return None
+
+    if dest_acc_id is None:
+        cur.execute(*sql_factory.csa_by_account(from_acc_id))
+        csa_id = cur.fetchone()[0]
+        cur.execute(*sql_factory.csa_account(
+            csa_id, sql_factory.At_Kitty, currency_id
+        ))
+        dest_acc_id = cur.fetchone()[0]
+
+    cur.execute(*sql_factory.insert_transaction(
+        tdesc,
+        now,
+        sql_factory.Tt_AccountClosing,
+        currency_id,
+        csa_id
+    ))
+    tid = cur.lastrowid
+    cur.execute(*sql_factory.insert_transaction_line(tid, '', amount, dest_acc_id))
+    cur.execute(*sql_factory.insert_transaction_line(tid, '', -amount, from_acc_id))
+    last_line_id = cur.lastrowid
+    cur.execute(*sql_factory.transaction_calc_last_line_amount(tid, last_line_id))
+    a = cur.fetchone()[0]
+    # involvedAccounts[lastacc_id] = str(a)
+    cur.execute(*sql_factory.transaction_fix_amount(last_line_id, a))
+
+    cur.execute(*sql_factory.log_transaction(
+        tid,
+        operator_id,
+        sql_factory.Tl_Added,
+        sql_factory.Tn_account_closing,
+        now
+    ))
+
+    return tid
+
 class AccountCloseHandler (JsonBaseHandler):
     def do(self, cur, acc_id):
         uid = self.current_user
@@ -765,47 +808,22 @@ class AccountCloseHandler (JsonBaseHandler):
                 'info': error_codes.I_account_open
             }
         else:
-            cur.execute(*self.application.conn.sql_factory.account_amount(acc_id, return_currency_id=True))
-            v = cur.fetchone()
-            amount = v[0] or 0.0
-            currency_id = v[2]
-            if amount == 0.0:
+            tid = insert_close_account_transaction(
+                cur,
+                self.application.conn.sql_factory,
+                acc_id,
+                now,
+                tdesc,
+                uid,
+                None
+            )
+
+            if tid is None:
                 log_gassman.info('closed account was empty, no "z" transaction needed: account=%s')
                 return {
                     'info': error_codes.I_empty_account
                 }
-            if amount != 0.0:
-                # crea transazione z
-                cur.execute(*self.application.conn.sql_factory.csa_by_account(acc_id))
-                csa_id = cur.fetchone()[0]
-                cur.execute(*self.application.conn.sql_factory.csa_account(
-                    csa_id, self.application.conn.sql_factory.At_Kitty, currency_id
-                ))
-                kitty_id = cur.fetchone()[0]
-
-                cur.execute(*self.application.conn.sql_factory.insert_transaction(
-                    tdesc,
-                    now,
-                    self.application.conn.sql_factory.Tt_AccountClosing,
-                    currency_id,
-                    csa_id
-                ))
-                tid = cur.lastrowid
-                cur.execute(*self.application.conn.sql_factory.insert_transaction_line(tid, '', amount, kitty_id))
-                cur.execute(*self.application.conn.sql_factory.insert_transaction_line(tid, '', -amount, acc_id))
-                last_line_id = cur.lastrowid
-                cur.execute(*self.application.conn.sql_factory.transaction_calc_last_line_amount(tid, last_line_id))
-                a = cur.fetchone()[0]
-                # involvedAccounts[lastacc_id] = str(a)
-                cur.execute(*self.application.conn.sql_factory.transaction_fix_amount(last_line_id, a))
-
-                cur.execute(*self.application.conn.sql_factory.log_transaction(
-                    tid,
-                    uid,
-                    self.application.conn.sql_factory.Tl_Added,
-                    self.application.conn.sql_factory.Tn_account_closing,
-                    now
-                ))
+            else:
                 return {
                     'tid': tid
                 }
@@ -1587,7 +1605,7 @@ class AdminPeopleRemoveHandler (JsonBaseHandler):
         uid = self.current_user
         if not self.application.has_permission_by_csa(cur, self.application.conn.sql_factory.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
-        # TODO: verificare che non abbia né abbia avuto conti
+        # verifico che non abbia né abbia avuto conti
         cur.execute(*self.application.conn.sql_factory.find_user_csa(pid))
         if len(cur.fetchall()) > 0:
             raise GDataException(error_codes.E_cannot_remove_person_with_accounts)
@@ -1632,14 +1650,63 @@ class AdminPeopleAddHandler (JsonBaseHandler):
     Cointesto conto.
     """
     def do(self, cur):
+        csa = self.payload['csa']
         pid = self.payload['pid']
-        acc = self.payload['acc']
+        mid = self.payload['mid']  # persona già membro
         uid = self.current_user
         if not self.application.has_permission_by_csa(cur, self.application.conn.sql_factory.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
-        # TODO: chiudere conto precedente!!
-        cur.execute(*self.application.conn.sql_factory.account_grant(pid, acc, datetime.datetime.utcnow()))
-        # TODO: Notifico, a tutte le email di tutti gli intestatari, l'avvenuto collegamento col conto GASsMan.
+        # chiudo conti precedenti
+        now = datetime.datetime.utcnow()
+        cur.execute(*self.application.conn.sql_factory.find_open_accounts(pid, csa))
+        previous_accounts = {row[0]: row[1] for row in cur.fetchall()}
+        cur.execute(*self.application.conn.sql_factory.find_open_accounts(mid, csa))
+        new_accounts = {row[0]: row[1] for row in cur.fetchall()}
+        # nb: previous_accounts e new_accounts sono mappe da account id -> currency id
+        # sono invertibili perché vale che ogni membro del gas ha un conto aperto per ogni
+        # valuta gestita dal gas
+        if not new_accounts:
+            raise GDataException(error_codes.E_not_owner_or_already_closed)
+        common_accounts = previous_accounts.keys() & new_accounts.keys()
+        account_match = {}
+        for previous_acc_id, curr_id in previous_accounts.items():
+            if previous_acc_id in common_accounts:
+                continue
+            try:
+                next_acc_id = [acc_id for acc_id, nc in new_accounts.items() if nc == curr_id][0]
+            except IndexError:
+                # MOLTO strano, ogni persona del gas ha un conto per ogni valuta
+                # due errori possibili: o pid ha un conto con valuta non gestita dal gas
+                # o mid non ha un conto con valuta gestita dal gas
+                # non mi interessa distinguere, riporto pid, mid e valuta
+                raise GDataException(error_codes.E_account_currency_mismatch, pid, mid, curr_id)
+            account_match[previous_acc_id] = next_acc_id
+        for previous_acc_id, next_acc_id in account_match.items():
+            insert_close_account_transaction(
+                cur,
+                self.application.conn.sql_factory,
+                previous_acc_id,
+                now,
+                'Cointestazione',  # TODO: i18n
+                uid,
+                next_acc_id
+            )
+            cur.execute(*self.application.conn.sql_factory.account_close(now, previous_acc_id, pid))
+            cur.execute(*self.application.conn.sql_factory.account_grant(pid, next_acc_id, now))
+        # Notifico, a tutte le email di tutti gli intestatari, l'avvenuto collegamento col conto GASsMan.
+        prof, contacts, args = self.application.conn.sql_factory.people_profiles1([pid, mid])
+        cur.execute(prof, args)
+        profile = self.application.conn.sql_factory.fetch_object(cur)
+        contacts, args = self.application.conn.sql_factory.people_addresses([pid, mid], self.application.conn.sql_factory.Ck_Email)
+        cur.execute(contacts, args)
+        contacts = [row[1] for row in cur.fetchall()]
+        self.notify(
+            'joined_account',
+            receivers=contacts,
+            publishedUrl=settings.PUBLISHED_URL,
+            profile=profile,
+            contacts=contacts,
+        )
 
 
 class AdminPeopleCreateAccountHandler (JsonBaseHandler):

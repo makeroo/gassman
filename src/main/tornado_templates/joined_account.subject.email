@@ -1,0 +1,1 @@
+[GASsMan] {% if previous_accounts %}I conti unificati di {{member_name(memp)}} e {{member_name(newp)}} sono stati unificati{% else %}Il conto di {{member_name(memp)}} ha un nuovo intestatario: {{member_name(newp)}}{% end %}
