@@ -4,18 +4,13 @@ Domani c'è la consegna di {{delivery_notes}} a {{delivery_place}}.
 
 La consegna inizia alle {{from_time}} e termina alle {{to_time}}.
 
-Turnisti:
-TODO:
- turnisti
- con i loro contatti
-
+{% if people %}Turnisti:
+{% for p in people.values() %}
+ * {{ p['first_name'] }} {{ p['middle_name'] }} {{ p['last_name'] }}
+   {% for c in p['contacts'] %}
+      {{ c[1] }}
+   {% end %}{% end %}{% else %}
+Turno scoperto!
+{% end %}
 Se non puoi venire mettiti d'accordo con un altro gasista affinché ritiri
 le tue cose per te.
-
-
-altre chiavi:
-address_first_line
-address_second_line
-address_description
-address_zip_code
-city
