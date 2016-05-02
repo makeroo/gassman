@@ -207,7 +207,7 @@ class NotificationRouter:
         s = subject.decode('UTF-8')
         b = body.decode('UTF-8')
         if self.mailer is None:
-            log_notification_router.info('SMTP not configured, mail not sent: dest=%s, subj=%s\n%s', dest, subject, body)
+            log_notification_router.info('SMTP not configured, mail not sent: dest=%s, subj=%s\n%s', dest, subject, body.decode('utf-8'))
         else:
             self.mailer.send(dest,
                              s,
