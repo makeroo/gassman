@@ -1,4 +1,4 @@
-ciao {{profile['first_name']}} {{profile['last_name']}},
+ciao {{member_name(profile)}},
 hai acceduto al tuo conto con una nuova email.
 
 Adesso puoi accedere al tuo conto su {{publishedUrl}} con una qualsiasi delle seguenti email:
