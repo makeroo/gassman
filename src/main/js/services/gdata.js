@@ -155,7 +155,7 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
             var p = null;
             angular.forEach(r.data, function (o) {
                 p = o;
-                instrumentProfile(p);
+                gdata.instrumentProfile(p);
             });
             r.data = p;
             return r;
@@ -300,7 +300,7 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         return r;
     };
 
-    var instrumentProfile = function (p) {
+    this.instrumentProfile = function (p) {
         angular.forEach(p.contacts, function (c) {
             if (c.kind == 'E') {
                 if (!p.mainEmail)
@@ -363,7 +363,7 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
 
                             foundPids[pid] = true;
 
-                            instrumentProfile(e);
+                            gdata.instrumentProfile(e);
 
                             peopleProfiles[pid] = e;
 
@@ -434,7 +434,7 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
 
                             foundPids[pid] = true;
 
-                            instrumentProfile(e);
+                            gdata.instrumentProfile(e);
 
                             adminPeopleProfiles[pid] = e;
 

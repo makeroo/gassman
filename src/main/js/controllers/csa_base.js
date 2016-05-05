@@ -27,7 +27,8 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
     $scope.eventSources = [
         function (start, end, timezone, callback) {
             gdata.deliveryDates($scope.gassman.selectedCsa, start.toJSON(), end.toJSON(), $scope.cal_info.dp_filter).then(function (r) {
-                var events = r.data;
+                var events = r.data.delivery_dates;
+                var profiles = r.data.profiles;
                 var dest = [];
                 var oldSelected = $scope.cal_info.selected_event;
 
@@ -48,11 +49,9 @@ function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibM
                             myShift = idx;
                         }
 
-                        gdata.profile($scope.gassman.selectedCsa, s.person_id).then(function (r) {
-                            s.person = r;
-                        }).then (undefined, function (error) {
-                            s.personError = error;
-                        });
+                        if (s.person = profiles[s.person_id]) {
+                            gdata.instrumentProfile(s.person);
+                        }
                     });
 
                     if (myShift !== null) {

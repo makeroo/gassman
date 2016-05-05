@@ -621,16 +621,46 @@ class CsaDeliveryDatesHandler (JsonBaseHandler):
             p['to'],
             [dp_id for dp_id, enabled in p.get('delivery_places', {}).items() if enabled]
         ))
-        r = self.application.conn.sql_factory.iter_objects(cur)
-        if len(r):
+        delivery_dates = self.application.conn.sql_factory.iter_objects(cur)
+        wprofiles = {}
+        if len(delivery_dates):
             # cur.execute(*self.application.conn.sql_factory.csa_delivery_shifts(set([ s['id'] for s in r ])))
             # for s in self.application.conn.sql_factory.iter_objects(cur):
             #    d = s['delivery_date_id']
             #
-            for s in r:
+            workers = set()
+            for s in delivery_dates:
                 cur.execute(*self.application.conn.sql_factory.csa_delivery_shifts(s['id']))
                 s['shifts'] = self.application.conn.sql_factory.iter_objects(cur)
-        return r
+                workers.update([w['person_id'] for w in s['shifts']])
+            if workers:
+                profiles, contacts, args = self.application.conn.sql_factory.people_profiles1(workers)
+                cur.execute(profiles, args)
+
+                def record(pid):
+                    u = wprofiles.get(pid, None)
+                    if u is None:
+                        u = {
+                            'accounts': [],
+                            'profile': None,
+                            'permissions': [],
+                            'contacts': []
+                        }
+                        wprofiles[pid] = u
+                    return u
+
+                for prof in self.application.conn.sql_factory.iter_objects(cur):
+                    p = record(prof['id'])
+                    p['profile'] = prof
+                cur.execute(contacts, args)
+                for addr in self.application.conn.sql_factory.iter_objects(cur):
+                    p = record(addr['person_id'])
+                    p['contacts'].append(addr)
+                # TODO: indirizzi
+        return {
+            'delivery_dates': delivery_dates,
+            'profiles': wprofiles,
+        }
 
 
 class CsaAddShiftHandler (JsonBaseHandler):
@@ -1316,7 +1346,7 @@ class PeopleProfilesHandler (JsonBaseHandler):
 
         if csa_id == 'null':
             record(uid)
-            #p['profile'] = self.application.find_person_by_id(uid)
+            # p['profile'] = self.application.find_person_by_id(uid)
         else:
             accs, perms, args = self.application.conn.sql_factory.people_profiles2(csa_id, pids)
             can_view_accounts = is_self or self.application.has_permission_by_csa(
