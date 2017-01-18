@@ -36,5 +36,5 @@
     "angular-cookies": "1.4.8",
     "angular-ui-bootstrap": "0.14.3"
   },
-  "private": false,
+  "private": false
 }
