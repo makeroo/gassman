@@ -686,13 +686,24 @@ LEFT JOIN contact_address pa ON pa.id=pc.address_id
     @staticmethod
     def account_currencies(csa_id):
         """
-        Tutti i conti di un csa.
+        Tutti i conti aperti di un csa, con la data di apertura, la moneta e l'owner.
+        NB: ai fini della validazione della data di transazione mi interessa il max(ap.from_date)
+        ma fra quelli cointestati conta il minimo.
         :param csa_id:
         :return:
         """
-        return 'SELECT a.id, c.id, c.symbol FROM account a JOIN currency c ON a.currency_id=c.id WHERE a.csa_id = %s', [
+        return """
+SELECT a.id, c.id, c.symbol, ap.from_date, ap.person_id, p.first_name, p.middle_name, p.last_name
+  FROM account a
+  JOIN currency c ON a.currency_id=c.id
+  JOIN account_person ap ON ap.account_id=a.id
+  JOIN person p ON p.id=ap.person_id
+ WHERE a.csa_id = %s AND ap.to_date IS NULL""", [
             csa_id
         ]
+#        return 'SELECT a.id, c.id, c.symbol FROM account a JOIN currency c ON a.currency_id=c.id WHERE a.csa_id = %s', [
+#            csa_id
+#        ]
 
     def csa_currencies(self, csa_id):
         """
@@ -704,6 +715,7 @@ LEFT JOIN contact_address pa ON pa.id=pc.address_id
 
     @staticmethod
     def account_people(csa_id):
+        # FIXME: buttare
         return '''
 SELECT p.id, p.first_name, p.middle_name, p.last_name, a.id
   FROM person p

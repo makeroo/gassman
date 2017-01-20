@@ -10,7 +10,7 @@ function () {
 	 */
 	this.parse = function (accountNamesData) {
 		var accountCurrencies = accountNamesData.accountCurrencies;
-		var accountPeople = accountNamesData.accountPeople;
+		//var accountPeople = accountNamesData.accountPeople;
 		var accountPeopleAddresses = accountNamesData.accountPeopleAddresses;
 //		var kitty = accountNamesData.kitty;
 
@@ -19,9 +19,34 @@ function () {
 		};
 
 		angular.forEach(accountCurrencies, function (o) {
-			// o è un array a.id, c.id, c.symbol
-			resp[o[0]] = {acc: o[0], cur: [o[1], o[2]], people: {}, name: ''};
+			//              0     1     2         3             4                  5           6            7
+			// o è un array a.id, c.id, c.symbol, ap.from_date, owner (person_id), first_name, middle_name, last_name
+			// NB: un conto compare tante volte quanti sono i suoi intestatari correnti
+			var account_id = o[0];
+			var account_record = resp[account_id];
+
+			if (account_record === undefined) {
+				account_record = {
+					acc: account_id,
+					cur: [o[1], o[2]],
+					people: {},
+					name: '',
+					valid_from: o[3]
+				};
+
+				resp[account_id] = account_record;
+			} else {
+				if (o[3] < account_record.valid_from)
+					account_record.valid_from = o[3];
+			}
+
+			account_record.people[o[4]] = {
+				pid: o[4],
+				name: joinSkippingEmpties(' ', o[5], o[6], o[7]),
+				refs: []
+			}
 		});
+/*
 		angular.forEach(accountPeople, function (o) {
 			// o è un array 0:pid, 1:fname, 2:mname, 3:lname, 4:accId
 			var n = (o[1] || '') + ' ' + (o[2] || '') + ' ' + (o[3] || '');
@@ -34,6 +59,7 @@ function () {
 				console.log('accountAutocompletion: accountPeople record without currency info:', o);
 			}
 		});
+*/
 		angular.forEach(accountPeopleAddresses, function (o) {
 			// o è un array 0:addr 1:pid 2:accId
 			var aa = resp[o[2]];

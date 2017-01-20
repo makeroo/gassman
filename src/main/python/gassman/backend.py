@@ -950,8 +950,8 @@ class AccountsNamesHandler (JsonBaseHandler):
             raise GDataException(error_codes.E_permission_denied, 403)
         cur.execute(*self.application.conn.sql_factory.account_currencies(csa_id))
         account_curs = list(cur)
-        cur.execute(*self.application.conn.sql_factory.account_people(csa_id))
-        account_people = list(cur)
+        #cur.execute(*self.application.conn.sql_factory.account_people(csa_id))
+        #account_people = list(cur)
         cur.execute(*self.application.conn.sql_factory.account_people_addresses(csa_id))
         account_people_addresses = list(cur)
         cur.execute(*self.application.conn.sql_factory.csa_account(
@@ -962,7 +962,7 @@ class AccountsNamesHandler (JsonBaseHandler):
             }
         return dict(
             accountCurrencies=account_curs,
-            accountPeople=account_people,
+            #accountPeople=account_people,
             accountPeopleAddresses=account_people_addresses,
             kitty=kitty,
             )
@@ -1035,7 +1035,7 @@ class TransactionSaveHandler (JsonBaseHandler):
         tlines = tdef['lines']
         tdate = jsonlib.decode_date(tdef['date'])
         tdesc = tdef['description']
-        tlogtype = None
+        # tlogtype = None  # la metto qua per prospetto completo ma è ridefinita dopo
         tlogdesc = error_codes.E_ok
         if tdesc is None:
             tdesc = datetime.datetime.utcnow()
@@ -1048,6 +1048,10 @@ class TransactionSaveHandler (JsonBaseHandler):
             old_cc, old_desc, modifiedBy = cur.fetchone()
             if modifiedBy is not None:
                 raise GDataException(error_codes.E_already_modified)
+
+        # TODO: verificare che tdate sia successiva alla data di apertura di tutti i conti coinvolti
+        involved_accounts = [l['account'] for l in tlines]
+        #cur.execute(*self.application.conn.sql_factory.)
 
         if ttype in (
                 self.application.conn.sql_factory.Tt_Deposit,
