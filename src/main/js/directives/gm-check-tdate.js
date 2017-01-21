@@ -24,7 +24,15 @@ function ($parse) {
 
                     if (!account_id) return true;
 
-                    var valid_from = scope.currencies[account_id].valid_from;
+                    var account = scope.currencies[account_id];
+
+                    if (!account) {
+                        // sto modificando una transazione fra le cui righe si sta riferendo
+                        // un conto adesso chiuso...
+                        return true;
+                    }
+
+                    var valid_from = account.valid_from;
 
                     return !valid_from || valid_from < value;
                 }
