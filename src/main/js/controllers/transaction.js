@@ -5,6 +5,7 @@ angular.module('GassmanApp.controllers.Transaction', [
     'GassmanApp.directives.GmUniqueEmail',
     'GassmanApp.directives.GmCurrency',
     'GassmanApp.directives.GmRequiredAccount',
+    'GassmanApp.directives.GmCheckTdate',
     'GassmanApp.services.Gdata',
     'GassmanApp.services.AccountAutocompletion',
     'ui.select'
@@ -13,20 +14,6 @@ angular.module('GassmanApp.controllers.Transaction', [
 .controller('Transaction', [
          '$scope', '$stateParams', '$location', '$timeout', 'gdata', 'accountAutocompletion',
 function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAutocompletion) {
-
-    function joinSkippingEmpties () {
-        var sep = arguments[0];
-        var r = '';
-        for (var i = 1; i < arguments.length; ++i) {
-            var x = arguments[i];
-            if (typeof(x) != 'string' || x.length == 0)
-                continue;
-            if (r.length > 0)
-                r += sep;
-            r += x;
-        }
-        return r;
-    }
 
     function noLineEnteredIn (a) {
         return (a.length == 0 || (a.length == 1 && !a[0].desc && !a[0].amount));

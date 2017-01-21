@@ -31,7 +31,7 @@ function () {
 					cur: [o[1], o[2]],
 					people: {},
 					name: '',
-					valid_from: o[3]
+					valid_from: new Date(o[3])
 				};
 
 				resp[account_id] = account_record;
