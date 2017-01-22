@@ -104,8 +104,8 @@ gulp.on('err', function(e) {
 =            Clean dest folder            =
 =========================================*/
 
-gulp.task('clean', function (cb) {
-  del([ config.dest ], cb);
+gulp.task('clean', function () {
+  return del([ config.dest ]);
 });
 
 
