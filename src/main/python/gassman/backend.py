@@ -1723,6 +1723,10 @@ class AdminPeopleAddHandler (JsonBaseHandler):
             )
             cur.execute(*self.application.conn.sql_factory.account_close(now, previous_acc_id, pid))
             cur.execute(*self.application.conn.sql_factory.account_grant(pid, next_acc_id, now))
+        for next_acc_id in new_accounts:
+            if next_acc_id in common_accounts:
+                continue
+            cur.execute(*self.application.conn.sql_factory.account_grant(pid, next_acc_id, now))
         # Notifico, a tutte le email di tutti gli intestatari, l'avvenuto collegamento col conto GASsMan.
         prof, contacts, args = self.application.conn.sql_factory.people_profiles1([pid, mid])
         cur.execute(prof, args)
