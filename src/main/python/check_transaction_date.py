@@ -267,7 +267,8 @@ def main():
 
     parser.add_argument(
         '--fix',
-        type=bool,
+        action='store_true',
+        default=False,
         help='fix dates',
     )
 

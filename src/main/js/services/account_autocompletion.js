@@ -24,6 +24,7 @@ function () {
 			// NB: un conto compare tante volte quanti sono i suoi intestatari correnti
 			var account_id = o[0];
 			var account_record = resp[account_id];
+			var valid_from = new Date(o[3]);
 
 			if (account_record === undefined) {
 				account_record = {
@@ -31,13 +32,13 @@ function () {
 					cur: [o[1], o[2]],
 					people: {},
 					name: '',
-					valid_from: new Date(o[3])
+					valid_from: valid_from
 				};
 
 				resp[account_id] = account_record;
 			} else {
-				if (o[3] < account_record.valid_from)
-					account_record.valid_from = o[3];
+				if (valid_from < account_record.valid_from)
+					account_record.valid_from = valid_from;
 			}
 
 			account_record.people[o[4]] = {

@@ -201,10 +201,14 @@ function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAut
                     var pp = [];
 
                     angular.forEach(owners, function (o) {
-                        var person = $scope.accountPeopleIndex[o];
+                        var person = $scope.accountPeopleIndex[o[0]];
                         pp.push({
                             pid: person.profile.id,
-                            name: joinSkippingEmpties(' ', person.profile.first_name, person.profile.middle_name, person.profile.last_name)
+                            name: joinSkippingEmpties(
+                                ' ', person.profile.first_name, person.profile.middle_name, person.profile.last_name
+                            ),
+                            valid_from: new Date(o[1]),
+                            valid_to: new Date(o[2])
                         });
                     });
 
@@ -537,7 +541,9 @@ function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAut
 
         var x = [];
         angular.forEach(r.data.people, function (pp) {
-            angular.forEach(pp, function(p) {
+            angular.forEach(pp, function(person_and_to_date) {
+                var p = person_and_to_date[0];
+
                 if (x.indexOf(p) == -1)
                     x.push(p);
             });

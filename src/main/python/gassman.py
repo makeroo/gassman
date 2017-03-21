@@ -6,25 +6,19 @@ Created on 01/mar/2014
 @author: makeroo
 """
 
-import logging.config
-
-import tornado.ioloop
-import tornado.web
-import tornado.auth
-import tornado.gen
-import tornado.httpclient
-import tornado.escape
-
-import gassman_settings as settings
-
-
-logging.config.dictConfig(settings.LOG)
-
 
 def main():
-    from gassman import ioc
+    import logging.config
+
+    import gassman_settings as settings
+
+    logging.config.dictConfig(settings.LOG)
+
+    import tornado.locale
 
     tornado.locale.load_translations(settings.TRANSLATIONS_PATH)
+
+    from gassman import ioc
 
     application = ioc.gassman_backend()
 
@@ -34,6 +28,7 @@ def main():
     log_gassman.info('GASsMAN web server up and running...')
 
     ioc.io_loop().start()
+
 
 if __name__ == '__main__':
     main()

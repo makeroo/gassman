@@ -410,12 +410,11 @@ SELECT id, account_id, description, amount
 
     @staticmethod
     def transaction_people(tid):
-        # qui non verifico che acount_person sia del csa giusto perché è implicito nella transazione
-        # ma devo verificare che l'inserimento della transazione (quidi transaction_log.log_date e
-        # non transaction.transaction_date) ricada nell'intervallo di validità di
-        # account_person
+        # qui non verifico che account_person sia del csa giusto perché è implicito nella transazione
+        # ma devo verificare che la data della transazione (quidi transaction.transaction_date e
+        # non transaction_log.log_date) ricada nell'intervallo di validità di account_person
         return '''
-SELECT DISTINCT l.account_id, ap.person_id
+SELECT DISTINCT l.account_id, ap.person_id, ap.from_date, ap.to_date
  FROM transaction t
  JOIN transaction_line l ON t.id=l.transaction_id
  JOIN transaction_log log ON log.transaction_id=t.id

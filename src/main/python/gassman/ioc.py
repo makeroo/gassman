@@ -24,7 +24,7 @@ def mailer():
 
 
 def db_connection():
-    from gassman.db import Connection
+    from .db import Connection
     return Connection(
         conn_args=dict(
             host=settings.DB_HOST,

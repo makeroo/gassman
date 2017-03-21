@@ -950,8 +950,8 @@ class AccountsNamesHandler (JsonBaseHandler):
             raise GDataException(error_codes.E_permission_denied, 403)
         cur.execute(*self.application.conn.sql_factory.account_currencies(csa_id))
         account_curs = list(cur)
-        #cur.execute(*self.application.conn.sql_factory.account_people(csa_id))
-        #account_people = list(cur)
+        # cur.execute(*self.application.conn.sql_factory.account_people(csa_id))
+        # account_people = list(cur)
         cur.execute(*self.application.conn.sql_factory.account_people_addresses(csa_id))
         account_people_addresses = list(cur)
         cur.execute(*self.application.conn.sql_factory.csa_account(
@@ -962,7 +962,7 @@ class AccountsNamesHandler (JsonBaseHandler):
             }
         return dict(
             accountCurrencies=account_curs,
-            #accountPeople=account_people,
+            # accountPeople=account_people,
             accountPeopleAddresses=account_people_addresses,
             kitty=kitty,
             )
@@ -1006,9 +1006,9 @@ class TransactionEditHandler (JsonBaseHandler):
         account_people_index = {}
         r['people'] = account_people_index
         cur.execute(*self.application.conn.sql_factory.transaction_people(trans_id))
-        for acc_id, person_id in cur.fetchall():
+        for acc_id, person_id, from_date, to_date in cur.fetchall():
             pp = account_people_index.setdefault(acc_id, [])
-            pp.append(person_id)
+            pp.append([person_id, from_date, to_date])
         if p.get('fetchKitty'):
             cur.execute(*self.application.conn.sql_factory.csa_account(
                 csa_id, self.application.conn.sql_factory.At_Kitty, full=True
