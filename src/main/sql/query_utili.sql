@@ -171,3 +171,5 @@ select * from permission_grant where person_id=40;
 select * from account where gc_name like '%igong%';
 insert into account_person (from_date, person_id, account_id) values (now(), 83, 15);
 
+-- verifica che ogni transazione abbia il suo log
+select t.id, count(tl.id) from transaction t join transaction_log tl on tl.transaction_id = t.id group by t.id HAVING  count(tl.id) != 1;
