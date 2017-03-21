@@ -776,13 +776,19 @@ def insert_close_account_transaction(cur, sql_factory, from_acc_id, now, tdesc, 
     if amount == 0.0:
         return None
 
+    cur.execute(*sql_factory.csa_by_account(from_acc_id))
+    csa_id = cur.fetchone()[0]
+
     if dest_acc_id is None:
-        cur.execute(*sql_factory.csa_by_account(from_acc_id))
-        csa_id = cur.fetchone()[0]
         cur.execute(*sql_factory.csa_account(
             csa_id, sql_factory.At_Kitty, currency_id
         ))
         dest_acc_id = cur.fetchone()[0]
+    else:
+        cur.execute(*sql_factory.csa_by_account(dest_acc_id))
+        dest_csa_id = cur.fetchone()[0]
+        if csa_id != dest_csa_id:
+            raise Exception('From and dest accounts does belong to different CSA')
 
     cur.execute(*sql_factory.insert_transaction(
         tdesc,
@@ -809,6 +815,7 @@ def insert_close_account_transaction(cur, sql_factory, from_acc_id, now, tdesc, 
     ))
 
     return tid
+
 
 class AccountCloseHandler (JsonBaseHandler):
     def do(self, cur, acc_id):
