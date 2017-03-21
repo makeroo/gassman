@@ -50,7 +50,7 @@ function ($parse) {
                     return valid_from && valid_from > value ? 1 : 0;
                 }
 
-                var date_is_valid = 0;
+                var date_is_valid = value > new Date() ? 4 : 0;
 
                 angular.forEach(scope.trans.producers, function (p) {
                     date_is_valid |= check_date(p);
@@ -68,6 +68,7 @@ function ($parse) {
 
                 ctrl.$setValidity('trans_date_below', !(date_is_valid & 1));
                 ctrl.$setValidity('trans_date_above', !(date_is_valid & 2));
+                ctrl.$setValidity('trans_date_future', !(date_is_valid & 4));
 
                 return value;
             }
