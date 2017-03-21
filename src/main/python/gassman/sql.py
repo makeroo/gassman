@@ -138,6 +138,15 @@ SELECT p.first_name, p.middle_name, p.last_name, p.id, ap.from_date, ap.to_date
         return 'SELECT ap.id FROM account_person ap WHERE ap.account_id=%s AND ap.to_date IS NULL', [account_id]
 
     @staticmethod
+    def check_date_against_account_ownerships(accounts, date):
+        return '''
+  SELECT account_id, count(person_id)
+    FROM account_person
+   WHERE account_id IN %s AND from_date <= %s AND (to_date IS NULL OR to_date >= %s)
+GROUP BY account_id;
+''', [set(accounts), date, date]
+
+    @staticmethod
     def account_description(account_id):
         return 'SELECT a.gc_name, c.name, c.id FROM account a JOIN csa c ON a.csa_id=c.id WHERE a.id=%s', [account_id]
 
@@ -654,7 +663,7 @@ LEFT JOIN contact_address pa ON pa.id=pc.address_id
           dd.from_time<%s AND
           (pa.kind IS NULL OR pa.kind IN %s)
         '''
-        a = [from_time, to_time]
+        a = [from_time, to_time, {self.Ck_Email, self.Ck_Mobile, self.Ck_Telephone}]
         if fetch_covered and fetch_uncovered:
             pass
         elif fetch_covered:
@@ -665,7 +674,6 @@ LEFT JOIN contact_address pa ON pa.id=pc.address_id
             q += ' AND ds.id IS NULL'
             # q += ' HAVING count(ds.id) == %s'
             # a.append(0)
-        a.append(set([self.Ck_Email, self.Ck_Mobile, self.Ck_Telephone]))
         return q, a
 
     @staticmethod

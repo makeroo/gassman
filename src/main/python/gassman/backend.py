@@ -1044,8 +1044,8 @@ class TransactionSaveHandler (JsonBaseHandler):
         tdesc = tdef['description']
         # tlogtype = None  # la metto qua per prospetto completo ma è ridefinita dopo
         tlogdesc = error_codes.E_ok
-        if tdesc is None:
-            tdesc = datetime.datetime.utcnow()
+        if tdate is None:
+            tdate = datetime.datetime.utcnow()
         if trans_id is None:
             old_cc = None
             old_desc = None
@@ -1056,9 +1056,14 @@ class TransactionSaveHandler (JsonBaseHandler):
             if modifiedBy is not None:
                 raise GDataException(error_codes.E_already_modified)
 
-        # TODO: verificare che tdate sia successiva alla data di apertura di tutti i conti coinvolti
+        # verifico che tdate sia all'interno di tutti gli intervalli di intestazione o meglio:
+        # per ogni conto, raccatto le sue intestazioni e verifico che almeno una comprenda la data
         involved_accounts = [l['account'] for l in tlines]
-        #cur.execute(*self.application.conn.sql_factory.)
+        cur.execute(*self.application.conn.sql_factory.check_date_against_account_ownerships(involved_accounts, tdate))
+        account_check = {acc_id: count for acc_id, count in cur.fetchall()}
+        for acc_id in involved_accounts:
+            if account_check.get(acc_id, 0) < 1:
+                raise GDataException(error_codes.E_transaction_date_outside_ownership_range)
 
         if ttype in (
                 self.application.conn.sql_factory.Tt_Deposit,
