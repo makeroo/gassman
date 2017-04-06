@@ -233,6 +233,13 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         return $http.post('/gm/csa/' + csa_id + '/charge_membership_fee?_xsrf=' + $cookies.get('_xsrf'), p);
     };
 
+    this.setMembershipFee = function (csa_id, person_id, fee) {
+        return $http.post('/gm/person/' + csa_id + '/set_fee?_xsrf=' + $cookies.get('_xsrf'), {
+            pid: person_id,
+            fee: fee
+        });
+    };
+
     this.accountsIndex = function (csa_id, query, start, blockSize) {
         return $http.post(
             '/gm/accounts/' + csa_id + '/index/' + start + '/' + (start + blockSize) + '?_xsrf=' + $cookies.get('_xsrf'),

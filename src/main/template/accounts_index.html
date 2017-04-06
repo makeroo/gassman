@@ -24,7 +24,13 @@
 
         <tr ng-repeat="a in items" class="row" ng-click="showAccount(a[4], a[0])" ng-class="{ fee: a[8] > 0.0 }" style="opacity: {{ a[7] | alphaTimeDiff }}">
 
-            <td ng-class="{ 'col-md-8': a.accountData, 'col-md-12': !a.accountData }">
+<!--            <td ng-class="{ 'col-md-1': a.accountData }" ng-show="a.accountData">
+                <input type="checkbox">
+            </td>-->
+            <td ng-class="{ 'col-md-7': a.accountData, 'col-md-12': !a.accountData }">
+                <div class="membership_fee_flag">
+                    <input type="checkbox" ng-checked="a[8] > 0" ng-click="toggleMembership($event, a)" uib-tooltip="{{a[8] > 0 ? 'Paga la quota' : 'Non paga la quota'}}" ng-disabled="a.updatingFee">
+                </div>
                 <div class="gadgets"><span ng-repeat="g in a.profile.gadgets" class="glyphicon glyphicon-{{ g }}" aria-hidden="true"></span></div>
                 <div class="name"><img ng-if="a.profile.picture" ng-src="{{ a.profile.picture }}" class="avatar">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
                 <a ng-show="a.profile.mainEmail" href="mailto:{{ a.profile.mainEmail }}" ng-click="$event.stopPropagation()"><small>{{a.profile.mainEmail}}</small></a>

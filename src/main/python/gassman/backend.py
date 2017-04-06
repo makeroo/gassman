@@ -130,6 +130,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/people/(\d+)/names$', PeopleNamesHandler),
             (r'^/gm/person/(null|\d+)/save$', PersonSaveHandler),
             (r'^/gm/person/(\d+)/check_email$', PersonCheckEmailHandler),
+            (r'^/gm/person/(\d+)/set_fee', PersonSetFeeHandler),
             (r'^/gm/event/(\d+)/save$', EventSaveHandler),
             (r'^/gm/event/(\d+)/remove$', EventRemoveHandler),
             (r'^/gm/admin/people/index/(\d+)/(\d+)$', AdminPeopleIndexHandler),
@@ -1509,6 +1510,19 @@ class PersonCheckEmailHandler (JsonBaseHandler):
         # verifica unicità
         cur.execute(*self.application.conn.sql_factory.is_unique_email(pid, email))
         return cur.fetchone()[0]
+
+
+class PersonSetFeeHandler (JsonBaseHandler):
+    def do(self, cur, csa_id):
+        uid = self.current_user
+        p = self.payload
+        if not self.application.has_permission_by_csa(
+                cur, self.application.conn.sql_factory.P_canEditMembershipFee, uid, csa_id
+        ):
+            raise GDataException(error_codes.E_permission_denied, 403)
+        person_id = int(p['pid'])
+        fee = float(p['fee'])
+        cur.execute(*self.application.conn.sql_factory.account_update_membership_fee(csa_id, person_id, fee))
 
 
 class EventSaveHandler (JsonBaseHandler):

@@ -92,6 +92,23 @@ function ($scope,   $state,   $location,   gdata,   $localStorage,   listControl
         }
     };
 
+    $scope.toggleMembership = function (evt, item) {
+        evt.stopPropagation();
+
+        var origFee = item[8];
+        var newFee = origFee > 0.0 ? 0.0 : 1.0;
+
+        item[8] = newFee;
+        item.updatingFee = true;
+
+        gdata.setMembershipFee($scope.gassman.selectedCsa, item[0], newFee).then(function (r) {
+            item.updatingFee = false;
+        }).then(undefined, function (error) {
+            item[8] = origFee;
+            item.updatingFee = false;
+        });
+    };
+
     gdata.deliveryPlaces($scope.gassman.selectedCsa).
     then (function (resp) {
         $scope.deliveryPlaces = resp.data;
