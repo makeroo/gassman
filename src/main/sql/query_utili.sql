@@ -82,9 +82,6 @@ select * from account_person where account_id =58;
 -- non tiene conto delle cointestazioni, eg angelo albero che si unisce a rosanna marinelli...
 select distinct ap.id, AP.from_date, ap.person_id from transaction t join transaction_line l on l.transaction_id=t.id join transaction_log log on log.transaction_id=t.id join account_person ap on ap.account_id=l.account_id where ap.from_date > log.log_date order by ap.id;
 
--- conti non associati né a persone né a csa
---
-select * from account where id not in (select account_id from account_person);
 
 -- expenses
 select * from account where gc_type ='EXPENSE';
