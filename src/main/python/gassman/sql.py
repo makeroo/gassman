@@ -139,12 +139,42 @@ SELECT p.first_name, p.middle_name, p.last_name, p.id, ap.from_date, ap.to_date
 
     @staticmethod
     def check_date_against_account_ownerships(accounts, date):
+        """
+        Query to verify that transaction date is contained in account ownerships interval of new transaction.
+        Date is valid if *no* rows are returned.
+
+        :param accounts: Accounts involved in new transaction.
+        :param date: Transaction date.
+        :return: SQL query and its arguments array.
+        """
+
         return '''
-  SELECT account_id, count(person_id)
+  SELECT account_id, count(person_id) AS x
     FROM account_person
    WHERE account_id IN %s AND from_date <= %s AND (to_date IS NULL OR to_date >= %s)
-GROUP BY account_id;
+GROUP BY account_id
+  HAVING x = 0;
 ''', [set(accounts), date, date]
+
+    @staticmethod
+    def check_date_against_account_ownerships_by_trans(trans_id, date):
+        """
+        Query to verify that cancelation date is contained in account ownerships interval of deleted transaction.
+        Date is valid if *no* rows are returned.
+
+        :param trans_id: Transaction to be deleted.
+        :param date: Cancelation date.
+        :return: SQL query and its arguments array.
+        """
+        return '''
+  SELECT l.id, l.account_id, BIT_OR( IF( ap.from_date <= %s AND (ap.to_date IS NULL OR ap.to_date >= %s), 1, 0 ) ) AS x
+    FROM transaction t
+    JOIN transaction_line l ON l.transaction_id=t.id
+    JOIN account_person ap ON ap.account_id=l.account_id
+   WHERE t.id = %s
+GROUP BY l.id, l.account_id
+  HAVING x = 0
+''', [date, date, trans_id]
 
     @staticmethod
     def account_description(account_id):

@@ -1057,15 +1057,6 @@ class TransactionSaveHandler (JsonBaseHandler):
             if modifiedBy is not None:
                 raise GDataException(error_codes.E_already_modified)
 
-        # verifico che tdate sia all'interno di tutti gli intervalli di intestazione o meglio:
-        # per ogni conto, raccatto le sue intestazioni e verifico che almeno una comprenda la data
-        involved_accounts = [l['account'] for l in tlines]
-        cur.execute(*self.application.conn.sql_factory.check_date_against_account_ownerships(involved_accounts, tdate))
-        account_check = {acc_id: count for acc_id, count in cur.fetchall()}
-        for acc_id in involved_accounts:
-            if account_check.get(acc_id, 0) < 1:
-                raise GDataException(error_codes.E_transaction_date_outside_ownership_range)
-
         if ttype in (
                 self.application.conn.sql_factory.Tt_Deposit,
                 self.application.conn.sql_factory.Tt_CashExchange,
@@ -1085,6 +1076,17 @@ class TransactionSaveHandler (JsonBaseHandler):
                     cur, self.application.conn.sql_factory.P_canManageTransactions, uid, csa_id
                 )):
                 raise GDataException(error_codes.E_permission_denied)
+
+            # verifico che tdate sia all'interno di tutti gli intervalli di intestazione o meglio:
+            # per ogni conto, raccatto le sue intestazioni e verifico che almeno una comprenda la data
+            cur.execute(
+                *self.application.conn.sql_factory.check_date_against_account_ownerships(
+                    [l['account'] for l in tlines],  # involved accounts
+                    tdate
+                )
+            )
+            if len(cur.fetchall()) > 0:
+                raise GDataException(error_codes.E_transaction_date_outside_ownership_range)
 
             cur.execute(*self.application.conn.sql_factory.insert_transaction(
                 tdesc, tdate, self.application.conn.sql_factory.Tt_Unfinished, tcurr, csa_id
@@ -1146,6 +1148,15 @@ class TransactionSaveHandler (JsonBaseHandler):
                     cur, self.application.conn.sql_factory.P_canManageTransactions, uid, csa_id
                 )):
                 raise GDataException(error_codes.E_permission_denied)
+
+            # verifico che tdate sia all'interno di tutti gli intervalli di intestazione o meglio:
+            # per ogni conto, raccatto le sue intestazioni e verifico che almeno una comprenda la data
+            cur.execute(
+                *self.application.conn.sql_factory.check_date_against_account_ownerships_by_trans(trans_id, tdate)
+            )
+            if len(cur.fetchall()) > 0:
+                raise GDataException(error_codes.E_transaction_date_outside_ownership_range)
+
             cur.execute(*self.application.conn.sql_factory.insert_transaction(
                 tdesc, tdate, self.application.conn.sql_factory.Tt_Unfinished, tcurr, csa_id
             ))
