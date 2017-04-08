@@ -24,14 +24,9 @@ select p.id, p.first_name, p.last_name, c.address, a.id as 'conto', a.gc_name, k
 
 
 
--- persone senza permessi ma con conti (fantasmi)
-select * from person where id not in (select person_id from permission_grant) and id in (select person_id from account_person);
 
 -- persone senza permessi e senza conti (intrusi)
 select * from person where id not in (select person_id from permission_grant) and id not in (select person_id from account_person);
-
--- trasformare i fantasmi in membri del gas
-insert into permission_grant (csa_id, person_id, perm_id) select 1, id, 1 from person where id not in (select person_id from permission_grant) and id in (select person_id from account_person);
 
 -- conti di nessuno
 select * from account a where a.id not in (select account_id from account_person);
