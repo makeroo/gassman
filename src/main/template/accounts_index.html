@@ -28,7 +28,7 @@
                 <input type="checkbox">
             </td>-->
             <td ng-class="{ 'col-md-7': a.accountData, 'col-md-12': !a.accountData }">
-                <div class="membership_fee_flag">
+                <div class="membership_fee_flag" ng-if="editableMembershipFee">
                     <input type="checkbox" ng-checked="a[8] > 0" ng-click="toggleMembership($event, a)" uib-tooltip="{{a[8] > 0 ? 'Paga la quota' : 'Non paga la quota'}}" ng-disabled="a.updatingFee">
                 </div>
                 <div class="gadgets"><span ng-repeat="g in a.profile.gadgets" class="glyphicon glyphicon-{{ g }}" aria-hidden="true"></span></div>

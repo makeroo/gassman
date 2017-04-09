@@ -18,6 +18,8 @@ angular.module('GassmanApp.controllers.AccountsIndex', [
 function ($scope,   $state,   $location,   gdata,   $localStorage,   listController) {
     var showContacts = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
 
+    $scope.editableMembershipFee = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canEditMembershipFee) != -1;
+
 	listController.setupScope(
 		$scope,
 		// data service
