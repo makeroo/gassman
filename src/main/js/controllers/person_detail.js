@@ -115,15 +115,9 @@ function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $time
         gdata.requestMembership(csa).
         then (function (r) {
             $scope.membershipRequested = true;
-            $timeout(function () {
-                $scope.membershipRequested = false;
-            }, 10000);
         }).
         then (undefined, function (error) {
             $scope.membershipRequestedError = error.data;
-            $timeout(function () {
-                $scope.membershipRequestedError = null;
-            }, 10000);
         });
     };
 

@@ -22,7 +22,9 @@
         e richiedi di entrare a farne parte: <button class="btn btn-default" ng-click="requestMembership(csaMembershipRequestTarget)" ng-disabled="csaMembershipRequestTarget === undefined">Richiedi</button>
       </p>
     </div>
-    <div class="alert alert-primary" ng-if="membershipRequested">Richiesta effettuata!</div>
+    <div class="alert alert-primary" ng-if="membershipRequested">
+      Richiesta effettuata!<br>
+      Fra <b>qualche giorno</b> riceverai una risposta per email all'indirizzo che hai indicato: <b>{{gassman.loggedUser.mainEmail}}</b>.</div>
     <div class="alert alert-warning" ng-if="membershipRequestedError">Richiesta non effettuata a causa di problemi del server: <span ng-repeat="msg in membershipRequestedError">{{ msg }}</span>.</div>
   </div>
 
