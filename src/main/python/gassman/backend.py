@@ -1471,6 +1471,7 @@ class PersonSaveHandler (JsonBaseHandler):
         if ocontacts:
             cur.execute(*self.application.conn.sql_factory.contact_address_remove(ocontacts))
             cur.execute(*self.application.conn.sql_factory.person_contact_remove(ocontacts))
+        saved_contacts = set()
         for c, i in zip(contacts, range(len(contacts))):
             naddress = c['address']
             nkind = c['kind']
@@ -1481,8 +1482,10 @@ class PersonSaveHandler (JsonBaseHandler):
                 continue
             if nkind not in self.application.conn.sql_factory.Ckk:
                 continue
-            #naid = c['id']
-            #npriority = ncontact['priority']
+            saved_contact = (naddress, nkind, ncontact_type)
+            if saved_contact in saved_contacts:
+                continue
+            saved_contacts.add(saved_contact)
             cur.execute(*self.application.conn.sql_factory.contact_address_insert(naddress, nkind, ncontact_type))
             aid = cur.lastrowid
             cur.execute(*self.application.conn.sql_factory.person_contact_insert(pid, aid, i))
