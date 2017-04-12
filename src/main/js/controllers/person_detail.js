@@ -9,8 +9,8 @@ angular.module('GassmanApp.controllers.PersonDetail', [
 ])
 
 .controller('PersonDetail', [
-         '$scope', '$filter', '$stateParams', '$location', 'gdata', '$q', '$timeout',
-function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $timeout) {
+         '$scope', '$filter', '$stateParams', '$location', 'gdata', '$q',
+function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q) {
     $scope.personProfile = null;
     $scope.personProfileError = null;
     $scope.readOnly = true;
@@ -62,8 +62,15 @@ function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q,   $time
     $scope.save = function () {
         var f = $filter('filter');
 
+        var savedContacts = {}
         $scope.personProfile.contacts = f($scope.personProfile.contacts, function (c) {
-            return !!c.address;
+            if (!c.address)
+                return false;
+            var savedContact = [c.address, c.kind, c.contact_type];
+            if (savedContact in savedContacts)
+                return false;
+            savedContacts[savedContact] = true;
+            return true;
         });
 
         gdata.saveProfile($scope.gassman.selectedCsa, $scope.personProfile).
