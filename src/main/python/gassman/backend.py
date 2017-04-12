@@ -345,6 +345,10 @@ class BaseHandler (tornado.web.RequestHandler):
             reply_to
         )
 
+    def log_exception(self, typ, value, tb):
+        if typ is GDataException and value.args[0] == error_codes.E_not_authenticated:
+            log_gassman.warning("Not authenticated %s\n%r", self._request_summary(), self.request)
+
 
 class GoogleAuthLoginHandler (tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
     @tornado.gen.coroutine
