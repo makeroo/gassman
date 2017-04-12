@@ -1455,7 +1455,7 @@ class PersonSaveHandler (JsonBaseHandler):
         ):
             raise GDataException(error_codes.E_permission_denied, 403)
         # verifica che il delivery place appartenga al csa
-        if csa_id is not None:
+        if csa_id is not None and profile['default_delivery_place_id'] is not None:
             cur.execute(*self.application.conn.sql_factory.csa_delivery_place_check(
                 csa_id,
                 profile['default_delivery_place_id']
