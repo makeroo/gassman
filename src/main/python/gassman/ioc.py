@@ -46,9 +46,9 @@ def sql_factory():
 
 
 def gassman_backend():
-    from . import backend
+    from .backend import gasspan_app
 
-    return backend.GassmanWebApp(
+    return gasspan_app.GassmanWebApp(
         db_connection(),
         notify_service()
     )
