@@ -568,10 +568,12 @@ ORDER BY l.log_date
     @staticmethod
     def csa_list(pid):
         return '''
-   SELECT c.id, c.name, c.description, g.id AS "belong"
+   SELECT c.id, c.name, c.description, BIT_OR(g.id IS NOT NULL OR ap.id IS NOT NULL) AS "belong"
      FROM csa c
 LEFT JOIN permission_grant g ON g.person_id=%s
-    WHERE g.csa_id IS NULL OR g.csa_id=c.id''', [pid]
+LEFT JOIN account_person ap ON ap.person_id=%s
+    WHERE g.csa_id IS NULL OR g.csa_id=c.id
+ GROUP BY c.id''', [pid, pid]
 
     @staticmethod
     def csa_delivery_places(csa_id):
