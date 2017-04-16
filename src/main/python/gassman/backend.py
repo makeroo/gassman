@@ -1685,17 +1685,133 @@ class AdminPeopleRemoveHandler (JsonBaseHandler):
 class AdminPeopleJoinHandler (JsonBaseHandler):
     """
     Una stessa persona ha acceduto con un nuovo google account.
+
+    Attualmente oldpid ha conti, permessi e un profilo, mentre newpid ha solo profilo.
+    Ho complicato il merge all'inverosimile solo per permettere il merge furbo del profilo
+    ma ho finito per gestire anche permessi e conti.
+    Che una persona possa avere più conti, chiusi, in intervalli sovrapposti
+    (intendo nello stesso CSA e con la stessa moneta) non ha molto senso. Ma se per
+    quelli aperti è un vero e proprio vincolo imprescindibile, per i chiusi c'è un caso
+    d'uso possibile: qualcuno che ha iniziato a usare la piattaforma, poi ha cambiato
+    identità google, ha ripreso a usarla per poi voler recuperare le informazioni
+    sulla vecchia. A dirlo, non ha molto senso, mi rendo conto...
     """
     def do(self, cur):
         newpid = self.payload['newpid']
         oldpid = self.payload['oldpid']
+
         uid = self.current_user
         if not self.application.has_permission_by_csa(cur, self.application.conn.sql_factory.P_canAdminPeople, uid, None):
             raise GDataException(error_codes.E_permission_denied, 403)
-        cur.execute(*self.application.conn.sql_factory.contacts_reassign(newpid, oldpid))
-        cur.execute(*self.application.conn.sql_factory.permissions_reassign(newpid, oldpid))
+
+        def intersect(o1, o2):
+            """
+            So che o1.from_date <= o2.from_date e basta.
+            :param o1: ownership
+            :param o2: ownership
+            :return: True se le ownerships si intersecano
+            """
+            o1t = o1['to_date']
+            o2f = o2['from_date']
+            o2t = o2['to_date']
+            if o1t is None:
+                return True
+            if o2f > o1t:
+                return False
+            if o2t is None or o2t > o1t:
+                o1['to_date'] = o2t
+            return True
+
+        # revisione e merge delle ownership di old e new
+        cur.execute(*self.application.conn.sql_factory.person_accounts(newpid, oldpid))
+
+        # da (csa_id, currency_id) -> [bool check]
+        opens = {}
+        # da (account_id) -> [account info]
+        accounts = {}
+
+        for acc_info in self.application.conn.sql_factory.iter_objects(cur):
+            account_id = acc_info['id']
+            accounts.setdefault(account_id, []).append(acc_info)
+
+            t = acc_info['to_date']
+            if t is None:
+                csa = acc_info['csa_id']
+                currency_id = acc_info['currency_id']
+                check = opens.get((csa, currency_id), [False])
+                if check[0]:
+                    raise GDataException(error_codes.E_already_member)
+                check[0] = True
+
+        for ownerships in accounts.values():
+            current_ownership = None
+            ownerships_to_be_created = {}
+            ownerships_to_be_deleted = set()
+
+            for ownership in sorted(ownerships, key=lambda acc_info: acc_info['from_date']):
+                if current_ownership is None:
+                    current_ownership = ownership
+                elif intersect(current_ownership, ownership):
+                    ownerships_to_be_created[current_ownership['id']] = current_ownership['to_date']
+                    ownerships_to_be_deleted.add(ownership['id'])
+                else:
+                    current_ownership = ownership
+
+            if ownerships_to_be_deleted:
+                q, a = self.application.conn.sql_factory.ownership_delete(ownerships_to_be_deleted)
+                cur.execute(q, a)
+
+            for ownership_id, to_date in ownerships_to_be_created:
+                q, a = self.application.conn.sql_factory.ownership_change_to_date(ownership_id, to_date)
+                cur.execute(q, a)
+
+        # trasferisci le altre
         cur.execute(*self.application.conn.sql_factory.accounts_reassign(newpid, oldpid))
+
+        # gestione contatti
+        contacts_by_value = {}
+        contacts_by_id = set()
+        address_to_be_deleted = []
+        pc_to_be_deleted = []
+        cur.execute(*self.application.conn.sql_factory.contacts_fetch_all(newpid, oldpid))
+        for pc_id, a_id, kind, contact_type, address in cur.fetchall():
+            k = kind, contact_type, address
+            if k in contacts_by_value:
+                address_to_be_deleted.append(a_id)
+                continue
+            contacts_by_value[k] = (pc_id, a_id)
+            if a_id in contacts_by_id:
+                pc_to_be_deleted.append(pc_id)
+                continue
+            contacts_by_id.add(a_id)
+        # cancello i duplicati per valore
+        if address_to_be_deleted:
+            cur.execute(*self.application.conn.sql_factory.person_contact_remove(address_to_be_deleted))
+            cur.execute(*self.application.conn.sql_factory.contact_address_remove(address_to_be_deleted))
+        # cancello le assegnazioni duplicate
+        if pc_to_be_deleted:
+            cur.execute(*self.application.conn.sql_factory.person_contact_remove_by_id(pc_to_be_deleted))
+
+        cur.execute(*self.application.conn.sql_factory.contacts_reassign(newpid, oldpid))
+
+        # gestione permessi
+        granted_perms = set()
+        grants_to_be_deleted = []
+        cur.execute(*self.application.conn.sql_factory.permission_all(oldpid, newpid))
+        for grant_id, csa_id, person_id, perm_id in cur.fetchall():
+            k = (csa_id, perm_id)
+            if k in granted_perms:
+                grants_to_be_deleted.append(grant_id)
+            else:
+                granted_perms.add(k)
+        # elimino duplicati
+        if grants_to_be_deleted:
+            cur.execute(*self.application.conn.sql_factory.permission_revoke_by_grant(grants_to_be_deleted))
+        # riassegno i permessi
+        cur.execute(*self.application.conn.sql_factory.permissions_reassign(newpid, oldpid))
+
         cur.execute(*self.application.conn.sql_factory.person_delete(oldpid))
+
         # Notifico, a tutte le email, l'avvenuto collegamento col preesistente account GassMan
         prof, contacts, args = self.application.conn.sql_factory.people_profiles1([newpid])
         cur.execute(prof, args)

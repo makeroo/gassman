@@ -323,9 +323,9 @@ SELECT p.id, p.first_name, p.middle_name, p.last_name, p.rss_feed_id
     def assign_contact(contact, person):
         return 'INSERT INTO person_contact (person_id, address_id) VALUES (%s, %s)', [person, contact]
 
-    @staticmethod
-    def has_accounts(pid):
-        return 'SELECT count(*) FROM account_person WHERE person_id=%s AND to_date IS NULL', [pid]
+    # @staticmethod
+    # def has_accounts(pid):
+    #    return 'SELECT count(*) FROM account_person WHERE person_id=%s AND to_date IS NULL', [pid]
 
     @staticmethod
     def find_open_accounts(pid, csa):
@@ -402,6 +402,21 @@ SELECT COUNT(*)
         return q, a
 
     @staticmethod
+    def person_accounts(*people_ids):
+        return '''SELECT ap.id, ap.account_id, ap.person_id, ap.from_date, ap.to_date, a.csa_id, a.currency_id
+                    FROM account_person ap
+                    JOIN account a ON a.id = ap.account_id
+                   WHERE ap.person_id IN %s''', [set(people_ids)]
+
+    @staticmethod
+    def ownership_delete(ownership_ids):
+        return 'DELETE FROM account_person WHERE id IN %s', [set(ownership_ids)]
+
+    @staticmethod
+    def ownership_change_to_date(ownership_id, to_date):
+        return 'UPDATE account_person SET to_date = %s WHERE id = %s', [to_date, ownership_id]
+
+    @staticmethod
     def has_permission_by_account(perm, person_id, acc_id):
         """
         Uso acc_id solo per determinare la CSA, non verifico che person_id abbia intestato acc_id,
@@ -434,7 +449,7 @@ SELECT count(*)
 
     @staticmethod
     def has_permissions(perms, person_id, csa_id):
-        return 'SELECT count(*) FROM permission_grant WHERE perm_id in %s AND person_id=%s AND csa_id=%s', [
+        return 'SELECT count(*) FROM permission_grant WHERE perm_id IN %s AND person_id=%s AND csa_id=%s', [
             set(perms),
             person_id,
             csa_id
@@ -1229,6 +1244,10 @@ UPDATE person
         #            )
 
     @staticmethod
+    def person_contact_remove_by_id(pcids):
+        return 'DELETE FROM person_contact WHERE id in %s', [set(pcids)]
+
+    @staticmethod
     def contact_address_insert(addr, kind, ctype):
         return '''INSERT INTO contact_address (address, kind, contact_type) VALUES (%s, %s, %s)''', [addr, kind, ctype]
 
@@ -1250,12 +1269,12 @@ SELECT a.id
         #  JOIN contact_address a ON pc.address_id=a.id WHERE pc.person_id=%s ORDER BY pc.priority', [pid]
 
     @staticmethod
-    def contacts_fetch_all(pid):
+    def contacts_fetch_all(*pids):
         return '''
 SELECT pc.id, a.id, a.kind, a.contact_type, a.address
   FROM person_contact pc
   JOIN contact_address a ON pc.address_id=a.id
- WHERE pc.person_id=%s''', [pid]
+ WHERE pc.person_id IN %s''', [set(pids)]
 
     @staticmethod
     def permission_revoke(pid, csa_id, pp):
@@ -1400,6 +1419,14 @@ LEFT JOIN contact_address ca ON ca.id=pc.address_id
     @staticmethod
     def permission_revoke_all(pid):
         return 'DELETE FROM permission_grant WHERE person_id=%s', [pid]
+
+    @staticmethod
+    def permission_all(*pids):
+        return 'SELECT id, csa_id, person_id, perm_id FROM permission_grant WHERE person_id IN %s', [set(pids)]
+
+    @staticmethod
+    def permission_revoke_by_grant(grant_ids):
+        return 'DELETE FROM permission_grant WHERE id IN %s', [set(grant_ids)]
 
     @staticmethod
     def account_grant(pid, acc, from_date):
