@@ -13,7 +13,6 @@ angular.module('GassmanApp.controllers.PersonDetail', [
 function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q) {
     $scope.personProfile = null;
     $scope.personProfileError = null;
-    $scope.readOnly = true;
     $scope.editable = false;
     $scope.saveError = null;
     //$scope.membership_fee = null;
@@ -21,6 +20,8 @@ function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q) {
     var master = null;
     var personId = $stateParams.personId;
     var self = $scope.gassman.loggedUser.profile.id == personId;
+
+    $scope.readOnly = personId != $scope.gassman.loggedUser.profile.id;
 
     $scope.accountClose = true;
     angular.forEach($scope.gassman.loggedUser.accounts, function (a) {
