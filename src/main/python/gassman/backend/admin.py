@@ -376,3 +376,35 @@ class AdminPeopleCreateHandler (JsonBaseHandler):
         else:
             acc = None
         return {'pid': pid, 'acc': acc}
+
+
+class PermissionGrantHandler (JsonBaseHandler):
+    def do(self, cur, csa_id):
+        uid = self.current_user
+        p = self.payload
+        perm_id = p['perm_id']
+        if not self.application.has_permission_by_csa(
+            cur, self.application.conn.sql_factory.P_canGrantPermissions, uid, csa_id
+        ) or not self.application.has_permission_by_csa(
+            cur, perm_id, uid, csa_id
+        ):
+            raise GDataException(error_codes.E_permission_denied, 403)
+        person_id = p['person_id']
+        q, a = self.application.conn.sql_factory.permission_grant(person_id, perm_id, csa_id)
+        cur.execute(q, a)
+
+
+class PermissionRevokeHandler (JsonBaseHandler):
+    def do(self, cur, csa_id):
+        uid = self.current_user
+        p = self.payload
+        perm_id = p['perm_id']
+        if not self.application.has_permission_by_csa(
+            cur, self.application.conn.sql_factory.P_canGrantPermissions, uid, None
+        ) or not self.application.has_permission_by_csa(
+            cur, perm_id, uid, None
+        ):
+            raise GDataException(error_codes.E_permission_denied, 403)
+        person_id = p['person_id']
+        q, a = self.application.conn.sql_factory.permission_revoke(person_id, csa_id, [perm_id])
+        cur.execute(q, a)

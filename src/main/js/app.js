@@ -24,7 +24,8 @@ angular.module('gassmanApp', [
     'GassmanApp.controllers.TransactionPayment',
     'GassmanApp.controllers.TransactionMembershipFee',
     'GassmanApp.controllers.ProjectController',
-	'GassmanApp.controllers.AdminPeople'
+	'GassmanApp.controllers.AdminPeople',
+    'GassmanApp.controllers.AdminPerms'
 ])
 
 /*
@@ -234,6 +235,14 @@ function ($stateProvider,   $urlRouterProvider) {
         },
         templateUrl: 'template/admin_people.html',
         controller: 'AdminPeople'
+    })
+    .state('root.admin.perms', {
+        url: '/perms',
+        resolve: {
+            userAuthenticated: checkUserUserPermissions(11/*TODO:gdata.permissions.P_canGrantPermissions*/)
+        },
+        templateUrl: 'template/admin_perms.html',
+        controller: 'AdminPerms'
     })
     .state('root.help', {
         url: '/help',

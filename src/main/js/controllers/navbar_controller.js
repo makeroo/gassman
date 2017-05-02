@@ -30,7 +30,8 @@ function ($scope,   gdata,   $q) {
     $scope.transactionTypes = [];
 
     var atypes = [
-        { p:gdata.permissions.P_canAdminPeople, f:'#/admin/people', l:'Utenti' }
+        { p:gdata.permissions.P_canAdminPeople, f:'#/admin/people', l:'Utenti' },
+        { p:gdata.permissions.P_canGrantPermissions, f:'#/admin/perms', l:'Permessi' }
     ];
 
     $scope.adminLinks = [];

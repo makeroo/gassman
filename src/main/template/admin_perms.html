@@ -1,0 +1,81 @@
+<h1>Amministrazione / Permessi</h1>
+
+    <form class="form">
+        <div class="form-group">
+            <label for="permission">Permesso</label>
+            <select id="permission" ng-model="selectedPermission" ng-options="v[1] for v in grantablePermissions"></select>
+        </div>
+    </form>
+
+    <form class="form-inline accounts-index-search">
+        <div class="form-group">
+            <label for="accountsIndexNameFilter">Filtra per nome</label>
+            <input type="text" class="form-control" id="accountsIndexNameFilter" placeholder="Cerca per nome" ng-model="members.pagination.query"/>
+        </div>
+    <!--
+        <div class="form-group">
+            <label for="accountsIndexCsaFilter">Escludi appartenenti a</label>
+            <input type="text" class="form-control" id="accountsIndexCsaFilter" placeholder="Tutti i gas" ng-model="members.pagination.filterBy.csa"/>
+        </div>
+    -->
+        <div class="form-group">
+            <label for="accountsIndexOrder">Ordina per</label>
+            <select class="form-control" id="accountsIndexOrder" ng-model="members.pagination.filterBy.o">
+                <option value="1">ultimo accesso (dal più recente)</option>
+                <option value="2">nome</option>
+                <option value="3">primo accesso (dal più recente)</option>
+            </select>
+        </div>
+    </form>
+
+    <div class="row people-admin">
+
+        <div class="col-md-12">
+            <table class="table">
+                <tbody>
+                    <tr ng-repeat="a in members.items" class="row" ng-click="toggleGrant(a, $event)">
+                        <td class="col-md-12">
+                            <div class="name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
+                            <a ng-show="a.profile.mainEmail" href="mailto:{{ a.profile.mainEmail }}" ng-click="$event.stopPropagation()"><small>{{a.profile.mainEmail}}</small></a>
+                            <a ng-show="a.profile.mainTelephone" href="call:{{ a.profile.mainTelephone }}" ng-click="$event.stopPropagation()"><small><span class="glyphicon glyphicon-phone-alt"></span> {{a.profile.mainTelephone}}</small></a>
+                            <a ng-hide="a.profile.mainEmail || a.profile.mainTelephone">&nbsp;</a>
+                        </td>
+                        <td class="grant-toggle">
+                            <input type="checkbox" ng-checked="a.hasGrant()" ng-click="toggleGrant(a, $event)">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="row-fluid pagination-section">
+                <div class="col-xs-8">
+                    <uib-pagination total-items="members.pagination.totalItems"
+                                    items-per-page="members.pagination.pageSize"
+                                    ng-model="members.pagination.page"
+                                    max-size="6"
+                                    class="pagination-sm"
+                                    boundary-links="true"
+                                    previous-text="<"
+                                    next-text=">"
+                                    first-text="<<"
+                                    last-text=">>"></uib-pagination>
+                    <span class="pagination-count">Trovati: {{ members.pagination.totalItems }}</span>
+                </div>
+
+                <div class="col-xs-4 text-right">
+                    <form class="form-inline">
+                        <div class="form-group pagination">
+                            <label for="pageSize">Righe per pagina:</label>
+                            <select class="form-control" id="pageSize" ng-model="members.pagination.pageSize">
+                                <option ng-repeat="sz in members.pagination.pageSizes">{{ sz }}</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<div ng-show="actionError">{{ actionError }}</div>
+<div ng-show="error">Errore nel caricamento dei dati: {{accountsError}}.</div>

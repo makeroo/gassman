@@ -41,6 +41,7 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         //P_canEnterWithdrawal: 8,
         P_canViewContacts: 9,
         P_canEditContacts: 10,
+        P_canGrantPermissions: 11,
         P_canEditMembershipFee: 12,
         P_csaEditor: 13,
         P_canCloseAccounts: 14,
@@ -556,6 +557,20 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
 
     this.removeEvent = function (csa_id, eventId) {
 		return $http.post('/gm/event/' + csa_id + '/remove?_xsrf=' + $cookies.get('_xsrf'), { id: eventId });
+    };
+
+    this.grantPermission = function (csa_id, person_id, perm_id) {
+		return $http.post('/gm/permission/' + csa_id + '/grant?_xsrf=' + $cookies.get('_xsrf'), {
+		    person_id: person_id,
+            perm_id: perm_id
+		});
+    };
+
+    this.revokePermission = function (csa_id, person_id, perm_id) {
+		return $http.post('/gm/permission/' + csa_id + '/revoke?_xsrf=' + $cookies.get('_xsrf'), {
+		    person_id: person_id,
+            perm_id: perm_id
+		});
     };
 }])
 ;

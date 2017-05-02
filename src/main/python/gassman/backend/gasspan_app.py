@@ -3,6 +3,7 @@ import logging
 import datetime
 
 import tornado.web
+import tornado.gen
 
 import loglib
 
@@ -22,7 +23,8 @@ from .people import PeopleProfilesHandler, PeopleNamesHandler
 from .person import PersonSaveHandler, PersonCheckEmailHandler, PersonSetFeeHandler
 from .event import EventSaveHandler, EventRemoveHandler
 from .admin import AdminPeopleIndexHandler, AdminPeopleProfilesHandler, AdminPeopleRemoveHandler,\
-    AdminPeopleJoinHandler, AdminPeopleAddHandler, AdminPeopleCreateAccountHandler, AdminPeopleCreateHandler
+    AdminPeopleJoinHandler, AdminPeopleAddHandler, AdminPeopleCreateAccountHandler, AdminPeopleCreateHandler,\
+    PermissionGrantHandler, PermissionRevokeHandler
 
 import gassman_settings as settings
 
@@ -69,11 +71,13 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/event/(\d+)/remove$', EventRemoveHandler),
             (r'^/gm/admin/people/index/(\d+)/(\d+)$', AdminPeopleIndexHandler),
             (r'^/gm/admin/people/profiles$', AdminPeopleProfilesHandler),
-            (r'^/gm/admin/people/remove', AdminPeopleRemoveHandler),
-            (r'^/gm/admin/people/join', AdminPeopleJoinHandler),
-            (r'^/gm/admin/people/add', AdminPeopleAddHandler),
-            (r'^/gm/admin/people/create_account', AdminPeopleCreateAccountHandler),
-            (r'^/gm/admin/people/create', AdminPeopleCreateHandler),
+            (r'^/gm/admin/people/remove$', AdminPeopleRemoveHandler),
+            (r'^/gm/admin/people/join$', AdminPeopleJoinHandler),
+            (r'^/gm/admin/people/add$', AdminPeopleAddHandler),
+            (r'^/gm/admin/people/create_account$', AdminPeopleCreateAccountHandler),
+            (r'^/gm/admin/people/create$', AdminPeopleCreateHandler),
+            (r'^/gm/permission/(\d+)/grant$', PermissionGrantHandler),
+            (r'^/gm/permission/(\d+)/revoke$', PermissionRevokeHandler),
             ]
         # codeHome = os.path.dirname(__file__)
         sett = dict(
@@ -131,7 +135,9 @@ class GassmanWebApp (tornado.web.Application):
                 if len(pp) == 1:
                     log_gassman.debug('found profile: credentials=%s, person=%s', auth_mode, p)
                 if len(pp) > 1:
-                    self.notify_service.notify('[ERROR] Multiple auth id for %s' % p, 'Check credentials %s' % auth_mode)
+                    self.notify_service.notify(
+                        '[ERROR] Multiple auth id for, check credentials: id=%s, cred=%s' % (p, auth_mode)
+                    )
         try:
             yield user.load_full_profile()
             attrsToAdd = {
