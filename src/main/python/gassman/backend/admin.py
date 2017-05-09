@@ -400,9 +400,9 @@ class PermissionRevokeHandler (JsonBaseHandler):
         p = self.payload
         perm_id = p['perm_id']
         if not self.application.has_permission_by_csa(
-            cur, self.application.conn.sql_factory.P_canGrantPermissions, uid, None
+            cur, self.application.conn.sql_factory.P_canGrantPermissions, uid, csa_id
         ) or not self.application.has_permission_by_csa(
-            cur, perm_id, uid, None
+            cur, perm_id, uid, csa_id
         ):
             raise GDataException(error_codes.E_permission_denied, 403)
         person_id = p['person_id']
