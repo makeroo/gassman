@@ -1280,14 +1280,9 @@ SELECT pc.id, a.id, a.kind, a.contact_type, a.address
 
     @staticmethod
     def permission_revoke(pid, csa_id, pp):
-        return ('''
-DELETE permission_grant g
-  FROM permission_grant g,
-       (SELECT g.id
-          FROM permission_grant g
-          JOIN permission p ON g.perm_id=p.id
-         WHERE g.person_id=%s AND g.csa_id=%s AND p.id in %s) t
- WHERE g.id = t.id''', [pid, csa_id, pp])
+        return ('DELETE FROM permission_grant WHERE person_id=%s AND csa_id=%s AND perm_id in %s', [
+            pid, csa_id, set(pp)
+        ])
 
     @staticmethod
     def permission_grant(pid, perm, csa_id):
