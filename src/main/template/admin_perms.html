@@ -41,7 +41,8 @@
                             <a ng-hide="a.profile.mainEmail || a.profile.mainTelephone">&nbsp;</a>
                         </td>
                         <td class="grant-toggle">
-                            <input type="checkbox" ng-checked="a.hasGrant()" ng-click="toggleGrant(a, $event)">
+                            <input type="checkbox" ng-checked="a.hasGrant()" ng-click="toggleGrant(a, $event)" ng-disabled="a.perm_disabled">
+                            <div ng-if="a.perm_error">{{a.perm_error}}</div>
                         </td>
                     </tr>
                 </tbody>

@@ -10,8 +10,8 @@ angular.module('GassmanApp.controllers.AdminPerms', [
 ])
 
 .controller('AdminPerms', [
-         '$scope', '$localStorage', 'gdata', 'listController',
-function ($scope,   $localStorage,   gdata,   listController) {
+         '$scope', '$localStorage', 'gdata', 'listController', '$timeout',
+function ($scope,   $localStorage,   gdata,   listController,   $timeout) {
 
     var permissions = [
         [ gdata.permissions.P_canViewContacts, 'Vedere contatti' ],
@@ -70,6 +70,8 @@ function ($scope,   $localStorage,   gdata,   listController) {
                     e.hasGrant = function () {
                         return e.profile && e.profile.permissions.indexOf($scope.selectedPermission[0]) !== -1;
                     };
+
+                    //e.perm_enabled = true;
                 });
             },
             filterBy: {
@@ -88,23 +90,54 @@ function ($scope,   $localStorage,   gdata,   listController) {
     $scope.toggleGrant = function (p, e) {
         e.stopPropagation();
 
+        var target = e.target;
+
+        if (target.tagName != 'INPUT')
+            target = null;
+
         if (!p.profile) {
             return; // ci riprovo dopo, sto caricando
         }
+
+        if (p.perm_disabled) {
+            return;
+        }
+
+        p.perm_disabled = true;
 
         var grantPos = p.profile.permissions.indexOf($scope.selectedPermission[0]);
 
         if (grantPos !== -1) {
             gdata.revokePermission($scope.gassman.selectedCsa, p[0], $scope.selectedPermission[0]).then(function (r) {
                p.profile.permissions.splice(grantPos, 1);
+
+                p.perm_disabled = false;
             }).then (undefined, function (error) {
-                console.log('casino', error); // TODO
+                p.perm_disabled = false;
+                p.perm_error = error.data;
+
+                // devo forzare il ripristino, angular non se ne accorge
+                if (target) target.checked = true;
+
+                $timeout(function () {
+                    p.perm_error = null;
+                }, 2000);
             });
         } else {
             gdata.grantPermission($scope.gassman.selectedCsa, p[0], $scope.selectedPermission[0]).then(function (r) {
                 p.profile.permissions.push($scope.selectedPermission[0]);
+
+                p.perm_disabled = false;
             }).then(undefined, function (error) {
-                console.log('casino', error); // TODO
+                p.perm_disabled = false;
+                p.perm_error = error.data;
+
+                // devo forzare il ripristino, angular non se ne accorge
+                if (target) target.checked = false;
+
+                $timeout(function () {
+                    p.perm_error = null;
+                }, 2000);
             });
         }
     };
