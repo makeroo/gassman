@@ -10,17 +10,17 @@
     <form class="form-inline accounts-index-search">
         <div class="form-group">
             <label for="accountsIndexNameFilter">Filtra per nome</label>
-            <input type="text" class="form-control" id="accountsIndexNameFilter" placeholder="Cerca per nome" ng-model="members.pagination.query"/>
+            <input type="text" class="form-control" id="accountsIndexNameFilter" placeholder="Cerca per nome" ng-model="perms.pagination.filterBy.q"/>
         </div>
     <!--
         <div class="form-group">
             <label for="accountsIndexCsaFilter">Escludi appartenenti a</label>
-            <input type="text" class="form-control" id="accountsIndexCsaFilter" placeholder="Tutti i gas" ng-model="members.pagination.filterBy.csa"/>
+            <input type="text" class="form-control" id="accountsIndexCsaFilter" placeholder="Tutti i gas" ng-model="perms.pagination.filterBy.csa"/>
         </div>
     -->
         <div class="form-group">
             <label for="accountsIndexOrder">Ordina per</label>
-            <select class="form-control" id="accountsIndexOrder" ng-model="members.pagination.filterBy.o">
+            <select class="form-control" id="accountsIndexOrder" ng-model="perms.pagination.filterBy.o">
                 <option value="1">ultimo accesso (dal più recente)</option>
                 <option value="2">nome</option>
                 <option value="3">primo accesso (dal più recente)</option>
@@ -33,7 +33,7 @@
         <div class="col-md-12">
             <table class="table">
                 <tbody>
-                    <tr ng-repeat="a in members.items" class="row" ng-click="toggleGrant(a, $event)">
+                    <tr ng-repeat="a in perms.items" class="row" ng-click="toggleGrant(a, $event)">
                         <td class="col-md-12">
                             <div class="name">{{ a[1] }} {{ a[2] }} {{ a[3] }}</div>
                             <a ng-show="a.profile.mainEmail" href="mailto:{{ a.profile.mainEmail }}" ng-click="$event.stopPropagation()"><small>{{a.profile.mainEmail}}</small></a>
@@ -50,9 +50,9 @@
 
             <div class="row-fluid pagination-section">
                 <div class="col-xs-8">
-                    <uib-pagination total-items="members.pagination.totalItems"
-                                    items-per-page="members.pagination.pageSize"
-                                    ng-model="members.pagination.page"
+                    <uib-pagination total-items="perms.pagination.totalItems"
+                                    items-per-page="perms.pagination.pageSize"
+                                    ng-model="perms.pagination.page"
                                     max-size="6"
                                     class="pagination-sm"
                                     boundary-links="true"
@@ -60,15 +60,15 @@
                                     next-text=">"
                                     first-text="<<"
                                     last-text=">>"></uib-pagination>
-                    <span class="pagination-count">Trovati: {{ members.pagination.totalItems }}</span>
+                    <span class="pagination-count">Trovati: {{ perms.pagination.totalItems }}</span>
                 </div>
 
                 <div class="col-xs-4 text-right">
                     <form class="form-inline">
                         <div class="form-group pagination">
                             <label for="pageSize">Righe per pagina:</label>
-                            <select class="form-control" id="pageSize" ng-model="members.pagination.pageSize">
-                                <option ng-repeat="sz in members.pagination.pageSizes">{{ sz }}</option>
+                            <select class="form-control" id="pageSize" ng-model="perms.pagination.pageSize">
+                                <option ng-repeat="sz in perms.pagination.pageSizes">{{ sz }}</option>
                             </select>
                         </div>
                     </form>

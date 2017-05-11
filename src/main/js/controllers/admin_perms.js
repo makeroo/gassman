@@ -45,7 +45,7 @@ function ($scope,   $localStorage,   gdata,   listController,   $timeout) {
     $scope.selectedPermission = $scope.grantablePermissions[0];
 
     listController.setupScope(
-        [ $scope, 'members' ],
+        [ $scope, 'perms' ],
         // data service
         function (from, pageSize, filterBy) {
             return gdata.accountsIndex(
@@ -58,11 +58,11 @@ function ($scope,   $localStorage,   gdata,   listController,   $timeout) {
         // options
         {
             pageLoadedHook: function () {
-                angular.forEach($scope.members.items, function (e) {
+                angular.forEach($scope.perms.items, function (e) {
                     if (e.profile)
                         return;
                     var pid = e[0];
-                    gdata.profile($scope.members.pagination.filterBy.csa, pid).
+                    gdata.profile($scope.perms.pagination.filterBy.csa, pid).
                     then(function (p) {
                         e.profile = p;
                     });
@@ -83,7 +83,7 @@ function ($scope,   $localStorage,   gdata,   listController,   $timeout) {
             },
             pageSizes: [ 5, 10, 20 ],
             storage: $localStorage,
-            storageKey: 'admin_people_members'
+            storageKey: 'admin_perms'
         }
     );
 
