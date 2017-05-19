@@ -9,8 +9,8 @@ angular.module('GassmanApp.controllers.PersonDetail', [
 ])
 
 .controller('PersonDetail', [
-         '$scope', '$filter', '$stateParams', '$location', 'gdata', '$q',
-function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q) {
+         '$scope', '$filter', '$transition$', '$location', 'gdata', '$q',
+function ($scope,   $filter,   $transition$,   $location,   gdata,   $q) {
     $scope.personProfile = null;
     $scope.personProfileError = null;
     $scope.editable = false;
@@ -18,7 +18,7 @@ function ($scope,   $filter,   $stateParams,   $location,   gdata,   $q) {
     //$scope.membership_fee = null;
 
     var master = null;
-    var personId = $stateParams.personId;
+    var personId = $transition$.params().personId;
     var self = $scope.gassman.loggedUser.profile.id == personId;
 
     $scope.readOnly = personId != $scope.gassman.loggedUser.profile.id;

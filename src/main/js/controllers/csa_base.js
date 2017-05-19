@@ -11,9 +11,9 @@ angular.module('GassmanApp.controllers.CsaBase', [
 ])
 
 .controller('CsaBase', [
-         '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q', '$uibModal', 'uiCalendarConfig',
-function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibModal,   uiCalendarConfig) {
-    var csaId = $stateParams.csaId;
+         '$scope', '$filter', '$location', '$transition$', 'gdata', '$q', '$uibModal', 'uiCalendarConfig',
+function ($scope,   $filter,   $location,   $transition$,   gdata,   $q,   $uibModal,   uiCalendarConfig) {
+    var csaId = $transition$.params().csaId;
 
     $scope.loadError = null;
     $scope.cal_info = {

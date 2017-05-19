@@ -12,8 +12,8 @@ angular.module('GassmanApp.controllers.Transaction', [
 ])
 
 .controller('Transaction', [
-         '$scope', '$stateParams', '$location', '$timeout', 'gdata', 'accountAutocompletion',
-function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAutocompletion) {
+         '$scope', '$transition$', '$location', '$timeout', 'gdata', 'accountAutocompletion',
+function ($scope,   $transition$,   $location,   $timeout,   gdata,   accountAutocompletion) {
 
     function noLineEnteredIn (a) {
         return (a.length == 0 || (a.length == 1 && !a[0].desc && !a[0].amount));
@@ -45,7 +45,7 @@ function ($scope,   $stateParams,   $location,   $timeout,   gdata,   accountAut
     //var AUTOCOMPLETE_EXPENSESKITTY = 1;
     //var AUTOCOMPLETE_NONE = 0;
 
-    var transId = $stateParams.transId;
+    var transId = $transition$.params().transId;
     var trans = {};
 
     var kitties = null;

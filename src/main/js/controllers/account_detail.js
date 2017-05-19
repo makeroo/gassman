@@ -11,10 +11,10 @@ angular.module('GassmanApp.controllers.AccountDetail', [
 ])
 
 .controller('AccountDetail', [
-        '$scope', '$filter', '$stateParams', '$location', 'gdata', '$localStorage', 'listController',
-function($scope,   $filter,   $stateParams,   $location,   gdata,   $localStorage,   listController) {
+        '$scope', '$filter', '$transition$', '$location', 'gdata', '$localStorage', 'listController',
+function($scope,   $filter,   $transition$,   $location,   gdata,   $localStorage,   listController) {
 
-    var accId = $stateParams.accountId;
+    var accId = $transition$.params().accountId;
 
     $scope.viewableContacts = $scope.gassman.loggedUser.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1;
     $scope.accountOwnerError = null;

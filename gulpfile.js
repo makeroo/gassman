@@ -13,22 +13,22 @@ var config = {
 
     vendor: {
         js: [
-            './bower_components/jquery/dist/jquery.js',
-            './bower_components/bootstrap/dist/js/bootstrap.js',
-            './bower_components/moment/moment.js', // per angular-ui-calendar
-            './bower_components/angular/angular.js',
-            './bower_components/angular-cookies/angular-cookies.js',
-            './bower_components/angular-sanitize/angular-sanitize.js',
+            './node_modules/jquery/dist/jquery.js',
+            './node_modules/bootstrap/dist/js/bootstrap.js',
+            './node_modules/moment/moment.js', // per angular-ui-calendar
+            './node_modules/angular/angular.js',
+            './node_modules/angular-cookies/angular-cookies.js',
+            './node_modules/angular-sanitize/angular-sanitize.js',
 
-            './bower_components/angular-ui-router/release/angular-ui-router.js',
+            './node_modules/@uirouter/angularjs/release/angular-ui-router.js',
 
             // bower_components/angular-i18n/angular-locale_it-it.js
-            './bower_components/ngstorage/ngStorage.js',
-            './bower_components/angular-ui-select/dist/select.js',
-            './bower_components/angular-bootstrap/ui-bootstrap-tpls.js',
+            './node_modules/ngstorage/ngStorage.js',
+            './node_modules/ui-select/dist/select.js',
+            './node_modules/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
 
-            './bower_components/angular-ui-calendar/src/calendar.js',
-            './bower_components/fullcalendar/dist/fullcalendar.js' // per angular-ui-calendar
+            './node_modules/angular-ui-calendar/src/calendar.js',
+            './node_modules/fullcalendar/dist/fullcalendar.js' // per angular-ui-calendar
             // TODO: moment locales?
             // TODO: fullcalendar locales?
 

@@ -12,9 +12,9 @@ angular.module('GassmanApp.controllers.CsaShifts', [
 ])
 
 .controller('CsaShifts', [
-         '$scope', '$filter', '$location', '$stateParams', 'gdata', 'uiCalendarConfig', '$q', 'accountAutocompletion', '$locale',
-function ($scope,   $filter,   $location,   $stateParams,   gdata,   uiCalendarConfig,   $q,   accountAutocompletion,   $locale) {
-    var csaId = $stateParams.csaId;
+         '$scope', '$filter', '$location', '$transition$', 'gdata', 'uiCalendarConfig', '$q', 'accountAutocompletion', '$locale',
+function ($scope,   $filter,   $location,   $transition$,   gdata,   uiCalendarConfig,   $q,   accountAutocompletion,   $locale) {
+    var csaId = $transition$.params().csaId;
 
     $scope.csa = null;
     $scope.loadError = null;

@@ -1,5 +1,5 @@
 <div ng-show="accountOwner == null && accountOwnerError == null && accountDesc == null">Sto caricando...</div>
-<h3 ng-show="accountOwner">Conto di <span ng-repeat="o in accountOwner">{{$last ? ' e ' : $first ? '' : ', '}}<span ng-if="!viewableContacts" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</span><a ng-if="viewableContacts" href="#/person/{{o[3]}}/detail" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</a></span> (<a href="/gm/account/{{accId}}/xls">xls</a>)</h3>
+<h3 ng-show="accountOwner">Conto di <span ng-repeat="o in accountOwner">{{$last ? ' e ' : $first ? '' : ', '}}<span ng-if="!viewableContacts" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</span><a ng-if="viewableContacts" ui-sref="root.person_detail({personId: o[3]})" title="Da {{o[4] | date}} a {{ o[5] == null ? 'oggi' : o[5] | date}}">{{ o[0] }} {{ o[1] }} {{ o[2] }}</a></span> (<a href="/gm/account/{{accId}}/xls">xls</a>)</h3>
 <div ng-show="accountDesc">{{ accountDesc[0] }} di {{ accountDesc[1] }} (<a href="/gm/account/{{accId}}/xls">xls</a>)</div>
 <h4 ng-show="amount != null">Saldo: {{amount[0] | currency : amount[1] }}</h4>
 <div ng-show="accountOwnerError">Informazioni sul titolare del conto non disponibili: <span ng-repeat="msg in accountOwnerError">{{ msg }}</span>.</div>
@@ -30,7 +30,7 @@
 
     <div class="row-fluid pagination-section">
         <div class="col-xs-8">
-            <uib-pagination total-items="pagination.totalItems"
+            <ul uib-pagination total-items="pagination.totalItems"
                             items-per-page="pagination.pageSize"
                             ng-model="pagination.page"
                             max-size="6"
@@ -39,7 +39,7 @@
                             previous-text="<"
                             next-text=">"
                             first-text="<<"
-                            last-text=">>"></uib-pagination>
+                            last-text=">>"></ul>
             <span class="pagination-count">Movimenti: {{ pagination.totalItems }}</span>
         </div>
 

@@ -12,11 +12,11 @@ angular.module('GassmanApp.controllers.Navbar', [
          '$scope', 'gdata', '$q',
 function ($scope,   gdata,   $q) {
     var ttypes = [
-        { p:gdata.permissions.P_canEnterCashExchange, f:'#/transaction/x', l:'Inserisci scambio contante' },
-        { p:gdata.permissions.P_canEnterPayments, f:'#/transaction/p', l:'Registra pagamenti' },
+        { p:gdata.permissions.P_canEnterCashExchange, f:'root.transaction_detail', fparams:{ transId: 'x' }, l:'Inserisci scambio contante' },
+        { p:gdata.permissions.P_canEnterPayments, f:'root.transaction_detail', fparams:{ transId: 'p' }, l:'Registra pagamenti' },
         //{ p:gdata.permissions.P_canEnterDeposit, f:'#/transaction/d', l:'Registra accrediti' },
         //{ p:gdata.permissions.P_canEnterWithdrawal, f:'#/transaction/w', l:'Registra prelievi' },
-        { e: function (u) { return gdata.canEditTransactions(u); }, f:'#/transactions/index', l:' Storia dei movimenti inseriti' }
+        { e: function (u) { return gdata.canEditTransactions(u); }, f:'root.transaction_list', fparams: null, l:' Storia dei movimenti inseriti' }
         ];
 /*        //{ p:gdata.permissions.P_membership, f:'#/account/detail', l:'Il tuo conto' },
         { e:function (pp) {
@@ -30,8 +30,8 @@ function ($scope,   gdata,   $q) {
     $scope.transactionTypes = [];
 
     var atypes = [
-        { p:gdata.permissions.P_canAdminPeople, f:'#/admin/people', l:'Utenti' },
-        { p:gdata.permissions.P_canGrantPermissions, f:'#/admin/perms', l:'Permessi' }
+        { p:gdata.permissions.P_canAdminPeople, f:'root.admin.people', l:'Utenti' },
+        { p:gdata.permissions.P_canGrantPermissions, f:'root.admin.perms', l:'Permessi' }
     ];
 
     $scope.adminLinks = [];

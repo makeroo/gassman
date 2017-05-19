@@ -12,27 +12,27 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a ng-if="gassman.csa" class="navbar-brand" href="#/csa/{{ gassman.selectedCsa }}/detail">{{ gassman.csa.name }}</a>
-                <a ng-if="!gassman.csa" class="navbar-brand" href="#/">GAS Manager</a>
+                <a ng-if="gassman.csa" class="navbar-brand" ui-sref="root.csa.detail({csaId: gassman.selectedCsa})">{{ gassman.csa.name }}</a>
+                <a ng-if="!gassman.csa" class="navbar-brand" ui-sref="root.start">GAS Manager</a>
             </div>
 
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
                     <li ng-if="gassman.csa && membersVisible">
-                        <a href="#/accounts/index">Chi siamo</a>
+                        <a ui-sref="root.account_list">Chi siamo</a>
                     </li>
                     <li ng-if="transactionTypes.length" class="dropdown">
                         <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Movimenti <span class="caret"></span></a>
                         <ul class="dropdown-menu" role="menu">
-                            <li ng-repeat="m in transactionTypes"><a href="{{ m.f}}">{{ m.l }}</a></li>
+                            <li ng-repeat="m in transactionTypes"><a ui-state="m.f" ui-state-params="m.fparams">{{ m.l }}</a></li>
                             <!-- <li class="divider"></li> -->
                         </ul>
                     </li>
                     <li ng-if="adminLinks.length" class="dropdown">
                         <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Amministrazione <span class="caret"></span></a>
                         <ul class="dropdown-menu" role="menu">
-                            <li ng-repeat="m in adminLinks"><a href="{{ m.f}}">{{ m.l }}</a></li>
+                            <li ng-repeat="m in adminLinks"><a ui-state="m.f" ui-state-params="m.fparams">{{ m.l }}</a></li>
                             <!-- <li class="divider"></li> -->
                         </ul>
                     </li>
@@ -42,8 +42,8 @@
 
                         <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><img class="avatar" ng-if="gassman.loggedUser.picture" ng-src="{{ gassman.loggedUser.picture }}">{{ gassman.loggedUser.profile.first_name }}<span class="caret"></span></a>
                         <ul class="dropdown-menu" role="menu">
-                            <li><a href="#/person/{{ gassman.loggedUser.profile.id }}/detail">Profilo</a></li>
-                            <li ng-if="gassman.selectedAccount"><a href="#/account/{{ gassman.selectedAccount  }}/detail">Conto</a></li>
+                            <li><a ui-sref="root.person_detail({personId: gassman.loggedUser.profile.id})">Profilo</a></li>
+                            <li ng-if="gassman.selectedAccount"><a ui-sref="root.account_detail({accountId: gassman.selectedAccount})">Conto</a></li>
                             <li><a ng-click="logout()">Esci</a></li>
                         </ul>
                     </li>
@@ -60,10 +60,10 @@
     <div class="row">
         <div class="col-md-6 col-md-offset-3">
             <p class="text-center">
-                <a href="#/privacy">Privacy</a>
-                <a href="#/faq">FAQ</a>
-                <a href="#/help">Aiuto</a>
-                <a href="#/project">Progetto</a>
+                <a ui-sref="root.privacy">Privacy</a>
+                <a ui-sref="root.faq">FAQ</a>
+                <a ui-sref="root.help">Aiuto</a>
+                <a ui-sref="root.project">Progetto</a>
                 <a ng-if="gassman.loggedUser.profile.rss_feed_id" href="/gm/rss/{{ gassman.loggedUser.profile.rss_feed_id }}">RSS</a>
             </p>
         </div>

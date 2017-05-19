@@ -38,7 +38,7 @@
                             {{ s.role }}
                         </div>
                         <div class="col-md-9">
-                            <a href="#/person/{{ s.person.profile.id }}/detail">{{ s.person.profile.first_name }} {{ s.person.profile.last_name }}</a>
+                            <a ui-sref="root.person.detail({personId: s.person.profile.id})">{{ s.person.profile.first_name }} {{ s.person.profile.last_name }}</a>
                             <a ng-if="s.person.mainEmail" href="mailto:{{ s.person.mainEmail }}" style="display: block"><small>{{s.person.mainEmail}}</small></a>
                             <a ng-if="s.person.mainTelephone" href="call:{{ s.person.mainTelephone }}" style="display: block"><small><span class="glyphicon glyphicon-phone-alt"></span> {{s.person.mainTelephone}}</small></a>
                         </div>

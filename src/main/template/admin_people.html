@@ -51,7 +51,7 @@
 
             <div class="row-fluid pagination-section" ng-if="!selectedPerson">
                 <div class="col-xs-8">
-                    <uib-pagination total-items="others.pagination.totalItems"
+                    <ul uib-pagination total-items="others.pagination.totalItems"
                                     items-per-page="others.pagination.pageSize"
                                     ng-model="others.pagination.page"
                                     max-size="6"
@@ -60,7 +60,7 @@
                                     previous-text="<"
                                     next-text=">"
                                     first-text="<<"
-                                    last-text=">>"></uib-pagination>
+                                    last-text=">>"></ul>
                     <span class="pagination-count">Trovati: {{ others.pagination.totalItems }}</span>
                 </div>
             </div>
@@ -121,7 +121,7 @@
 
             <div class="row-fluid pagination-section" ng-if="!selectedMember">
                 <div class="col-xs-8">
-                    <uib-pagination total-items="members.pagination.totalItems"
+                    <ul uib-pagination total-items="members.pagination.totalItems"
                                     items-per-page="members.pagination.pageSize"
                                     ng-model="members.pagination.page"
                                     max-size="6"
@@ -130,7 +130,7 @@
                                     previous-text="<"
                                     next-text=">"
                                     first-text="<<"
-                                    last-text=">>"></uib-pagination>
+                                    last-text=">>"></ul>
                     <span class="pagination-count">Trovati: {{ members.pagination.totalItems }}</span>
                 </div>
 

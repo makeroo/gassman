@@ -12,9 +12,9 @@ angular.module('GassmanApp.controllers.CsaDetail', [
 ])
 
 .controller('CsaDetail', [
-         '$scope', '$filter', '$location', '$stateParams', 'gdata', '$q', '$uibModal', 'uiCalendarConfig',
-function ($scope,   $filter,   $location,   $stateParams,   gdata,   $q,   $uibModal,   uiCalendarConfig) {
-    var csaId = $stateParams.csaId;
+         '$scope', '$filter', '$location', '$transition$', 'gdata', '$q', '$uibModal', 'uiCalendarConfig',
+function ($scope,   $filter,   $location,   $transition$,   gdata,   $q,   $uibModal,   uiCalendarConfig) {
+    var csaId = $transition$.params().csaId;
 
     $scope.openOrders = null;
     //$scope.openOrdersError = null;

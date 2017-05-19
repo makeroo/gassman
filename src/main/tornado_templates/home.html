@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <title>GASsMan</title>
-        <link ng-if="gassman.loggedUser.profile.rss_feed_id" rel="alternate" type="application/rss+xml" title="RSS" href="/rss/{{! gassman.loggedUser.profile.rss_feed_id }}" />
+        <link ng-if="gassman.loggedUser.profile.rss_feed_id" rel="alternate" type="application/rss+xml" title="RSS" ng-href="/rss/{{! gassman.loggedUser.profile.rss_feed_id }}" />
         <link href="{{ static_url('css/app.min.css') }}" rel="stylesheet">
         <link href="{{ static_url('css/hover.min.css') }}" rel="stylesheet">
     </head>

@@ -50,7 +50,7 @@
 
             <div class="row-fluid pagination-section">
                 <div class="col-xs-8">
-                    <uib-pagination total-items="perms.pagination.totalItems"
+                    <ul uib-pagination total-items="perms.pagination.totalItems"
                                     items-per-page="perms.pagination.pageSize"
                                     ng-model="perms.pagination.page"
                                     max-size="6"
@@ -59,7 +59,7 @@
                                     previous-text="<"
                                     next-text=">"
                                     first-text="<<"
-                                    last-text=">>"></uib-pagination>
+                                    last-text=">>"></ul>
                     <span class="pagination-count">Trovati: {{ perms.pagination.totalItems }}</span>
                 </div>
 
