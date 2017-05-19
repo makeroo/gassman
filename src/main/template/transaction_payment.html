@@ -91,7 +91,7 @@
         </div>
     </div>
 
-    <p class="alert alert-info">Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" ui-sref="root.person.detail({personId: operator.pid})">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
+    <p class="alert alert-info">Movimento inserito da <span ng-if="!viewableContacts">{{operator.first_name}} {{operator.last_name}}</span><a ng-if="viewableContacts" ui-sref="root.person_detail({personId: operator.pid})">{{operator.first_name}} {{operator.last_name}}</a>, il {{log_date | date}}.</p>
 
     <p ng-show="modifies" class="alert alert-info">Questo inserimento ne modifica uno precedente. <button class="btn btn-info" ng-click="showTransaction(modifies)">Esamina</button></p>
 
