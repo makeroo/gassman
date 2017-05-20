@@ -19,7 +19,7 @@
 
   <div ng-repeat="l in trans.clients | filter:filledLine" class="row transaction-line">
     <div class="col-sm-6">
-      <p class="form-control-static"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></p>
+      <p class="form-control-static"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" ui-state="p.pid && viewableContacts ? 'root.person_detail' : 'root.account_detail'" ui-state-params="p.pid && viewableContacts ? { personId: p.pid } : { accountId: l.account }">{{p.name}}</a><span ng-hide="$last">, </span></span></p>
     </div>
     <div class="col-sm-2">
       <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
@@ -33,7 +33,7 @@
 
   <div ng-repeat="l in trans.producers | filter:filledLine" class="row transaction-line">
     <div class="col-sm-6">
-      <p class="form-control-static"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" href="{{ p.pid && viewableContacts ? '#/person/' + p.pid + '/detail' : '#/account/' + l.account + '/detail'}}">{{p.name}}</a><span ng-hide="$last">, </span></span></p>
+      <p class="form-control-static"><span ng-repeat="p in l.accountNames"><span ng-if="!viewableContactsOrAccounts">{{p.name}}</span><a ng-if="viewableContactsOrAccounts" ui-state="p.pid && viewableContacts ? 'root.person_detail' : 'root.account_detail'" ui-state-params="p.pid && viewableContacts ? { personId: p.pid } : { accountId: l.account }">{{p.name}}</a><span ng-hide="$last">, </span></span></p>
     </div>
     <div class="col-sm-2">
       <p class="form-control-static">{{ l.amount | currency : currency[1] }}</p>
