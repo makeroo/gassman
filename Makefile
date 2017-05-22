@@ -35,7 +35,6 @@ target/$(PKG_FILE): build
 
 prepareenv:
 	npm install
-	bower install
 
 clean:
 	gulp clean
@@ -45,7 +44,6 @@ clean:
 	find . -name "*.pyo" -exec rm {} \;
 
 distclean: clean
-	rm -fR bower_components
 	rm -fR node_modules
 
 .PHONY: clean distclean prepareenv dist build deploy target/python/gassman_version.py
