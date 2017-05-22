@@ -178,15 +178,6 @@ function ($stateProvider,   $urlRouterProvider) {
         templateUrl: 'template/person_detail.html',
         controller: 'PersonDetail'
     })
-    .state('root.self_detail', {
-        url: '/account/self/detail',
-        resolve: {
-            userAuthenticated: checkLoggedUser,
-            csaSelected: checkSelectedCsa
-        },
-        templateUrl: 'template/account_detail.html',
-        controller: 'AccountDetail'
-    })
     .state('root.account_detail', {
         url: '/account/:accountId/detail',
         resolve: {
@@ -307,8 +298,8 @@ function ($stateProvider,   $urlRouterProvider) {
 }])
 
 .run([
-         '$rootScope', 'gdata', 'gstorage', '$state', '$q', '$cookies', '$timeout',
-function ($rootScope,   gdata,   gstorage,   $state,   $q,   $cookies,   $timeout) {
+         '$rootScope', 'gdata', 'gstorage', '$state', '$transitions', '$q', '$cookies', '$timeout',
+function ($rootScope,   gdata,   gstorage,   $state,   $transitions,   $q,   $cookies,   $timeout) {
     $rootScope.addressKind = function (k) {
         return function (c) {
             return c.kind == k;
@@ -407,19 +398,34 @@ function ($rootScope,   gdata,   gstorage,   $state,   $q,   $cookies,   $timeou
         }, 500);
     };
 
-    $rootScope.$on('$stateChangeError', function (event, toState, toParams, fromState, fromParams, error) {
-        if (error && error[0] == gdata.error_codes.E_not_authenticated) {
+    $transitions.onError({}, function (transition) {
+        var error = transition.error();
+        var gmerror = error.detail;
+        var toState = transition.$to();
+
+        if (gmerror && gmerror[0] == gdata.error_codes.E_not_authenticated) {
             if (!toState.do_not_save) {
-                var req = window.location.hash.slice(1); // hash returns #/... but $location.path requires /...
+                var req = window.location.hash.slice(2); // hash returns #!/... but $location.path requires /...
 
                 gstorage.saveRequestedUrl(req);
             }
+        }
+    });
 
+    $state.defaultErrorHandler(function (error) {
+        var gmerror = error.detail;
+
+        if (gmerror && gmerror[0] == gdata.error_codes.E_not_authenticated) {
+
+            //toState.go('root.login');
             $state.go('root.login');
+            //return transition.router.stateService.target('root.login');
         } else {
             console.log('azz', arguments);
 
-            $state.go('root.error', { error: error })
+            $state.go('root.error', { error: gmerror });
+            //toState.go('root.login');
+            //return transition.router.stateService.target('root.login', { error: error });
         }
     });
 
