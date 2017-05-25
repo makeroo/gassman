@@ -10,3 +10,5 @@ INSERT INTO permission (id, name) VALUES (12, 'canEditMembershipFee');
 INSERT INTO permission (id, name) VALUES (13, 'csaEditor');
 INSERT INTO permission (id, name) VALUES (14, 'canCloseAccounts');
 INSERT INTO permission (id, name) VALUES (15, 'canManageShifts');
+
+INSERT INTO permission (id, name) VALUES (16, 'canPlaceOrders');

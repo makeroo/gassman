@@ -17,7 +17,7 @@ function ($scope,   gdata,   $q) {
         //{ p:gdata.permissions.P_canEnterDeposit, f:'#/transaction/d', l:'Registra accrediti' },
         //{ p:gdata.permissions.P_canEnterWithdrawal, f:'#/transaction/w', l:'Registra prelievi' },
         { e: function (u) { return gdata.canEditTransactions(u); }, f:'root.transaction_list', fparams: null, l:' Storia dei movimenti inseriti' }
-        ];
+    ];
 /*        //{ p:gdata.permissions.P_membership, f:'#/account/detail', l:'Il tuo conto' },
         { e:function (pp) {
             return pp.indexOf(gdata.permissions.P_canCheckAccounts) != -1 ||
@@ -27,21 +27,29 @@ function ($scope,   gdata,   $q) {
         { e: function (pp) { return gdata.canEditTransactions(null, pp) }, l:'Movimentazione contante', 'class': "grouptitle" },
         ];
 */
-    $scope.transactionTypes = [];
+    var otypes = [
+        { f:'root.orders.list', fparams:{ type:'open' }, l:'Ordini in corso' },
+        { p:gdata.permissions.P_canPlaceOrders, f:'root.orders.detail', fparams:{ id:'new' }, l:'Apri ordine' },
+        { p:gdata.permissions.P_canPlaceOrders, f:'root.orders.list', fparams:{ type:'draft' }, l:'Ordini da aprire' },
+        { p:gdata.permissions.P_canPlaceOrders, f:'root.orders.list', fparams:{ type:'closed' }, l:'Ordini in consegna' },
+        { p:gdata.permissions.P_canPlaceOrders, f:'root.orders.list', fparams:{ type:'archivied' }, l:'Archivio ordini'}
+    ];
 
     var atypes = [
         { p:gdata.permissions.P_canAdminPeople, f:'root.admin.people', l:'Utenti' },
         { p:gdata.permissions.P_canGrantPermissions, f:'root.admin.perms', l:'Permessi' }
     ];
 
-    $scope.adminLinks = [];
-
     $scope.$watch('gassman.loggedUser', function (pData) {
         //$scope.profile = pData;
         //$scope.csaId = null;
 
+        $scope.transactionTypes = [];
+        $scope.orderTypes = [];
+        $scope.adminLinks = [];
+
         angular.forEach(ttypes, function (f) {
-            if (('p' in f && (!pData || pData.permissions.indexOf(f.p) == -1)) ||
+            if (('p' in f && (!pData || pData.permissions.indexOf(f.p) === -1)) ||
                 ('e' in f && !f.e(pData))
                 )
                 return;
@@ -49,8 +57,17 @@ function ($scope,   gdata,   $q) {
             $scope.transactionTypes.push(f);
         });
 
+        angular.forEach(otypes, function (f) {
+            if (('p' in f && (!pData || pData.permissions.indexOf(f.p) === -1)) ||
+                ('e' in f && !f.e(pData))
+                )
+                return;
+
+            $scope.orderTypes.push(f);
+        });
+
         angular.forEach(atypes, function (f) {
-            if (('p' in f && (!pData || pData.permissions.indexOf(f.p) == -1)) ||
+            if (('p' in f && (!pData || pData.permissions.indexOf(f.p) === -1)) ||
                 ('e' in f && !f.e(pData))
                 )
                 return;
@@ -60,8 +77,8 @@ function ($scope,   gdata,   $q) {
 
         $scope.membersVisible = (
             pData && pData.permissions && (
-                pData.permissions.indexOf(gdata.permissions.P_canCheckAccounts) != -1 ||
-                pData.permissions.indexOf(gdata.permissions.P_canViewContacts) != -1
+                pData.permissions.indexOf(gdata.permissions.P_canCheckAccounts) !== -1 ||
+                pData.permissions.indexOf(gdata.permissions.P_canViewContacts) !== -1
             )
         );
     });

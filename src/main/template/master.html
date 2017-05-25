@@ -29,6 +29,12 @@
                             <!-- <li class="divider"></li> -->
                         </ul>
                     </li>
+                    <li ng-if="orderTypes.length" class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Ordini <span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li ng-repeat="m in orderTypes"><a ui-state="m.f" ui-state-params="m.fparams">{{ m.l }}</a></li>
+                        </ul>
+                    </li>
                     <li ng-if="adminLinks.length" class="dropdown">
                         <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Amministrazione <span class="caret"></span></a>
                         <ul class="dropdown-menu" role="menu">

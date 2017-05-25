@@ -24,6 +24,10 @@ angular.module('gassmanApp', [
     'GassmanApp.controllers.TransactionPayment',
     'GassmanApp.controllers.TransactionMembershipFee',
     'GassmanApp.controllers.ProjectController',
+	'GassmanApp.controllers.Orders',
+	'GassmanApp.controllers.OrdersList',
+	'GassmanApp.controllers.OrdersDetail',
+	'GassmanApp.controllers.OrdersDetailPlace',
 	'GassmanApp.controllers.AdminPeople',
     'GassmanApp.controllers.AdminPerms'
 ])
@@ -213,6 +217,28 @@ function ($stateProvider,   $urlRouterProvider) {
         },
         templateUrl: 'template/transactions_index.html',
         controller: 'TransactionsIndex'
+    })
+    .state('root.orders', {
+        abstract: true,
+        url: '/orders',
+        // resolve: {},
+        template: '<div ui-view></div>',
+        controller: 'Orders'
+    })
+    .state('root.orders.list', {
+        url: '/list/:type',
+        templateUrl: 'template/orders_list.html',
+        controller: 'OrdersList'
+    })
+    .state('root.orders.detail', {
+        url: '/:id/detail',
+        templateUrl: 'template/orders_detail.html',
+        controller: 'OrdersDetail'
+    })
+    .state('root.orders.detail.place', {
+        url: '/place',
+        templateUrl: 'template/orders_detail_place.html',
+        controller: 'OrdersDetailPlace'
     })
     .state('root.admin', {
         abstract: true,

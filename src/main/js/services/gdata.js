@@ -45,7 +45,8 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         P_canEditMembershipFee: 12,
         P_csaEditor: 13,
         P_canCloseAccounts: 14,
-        P_canManageShifts: 15
+        P_canManageShifts: 15,
+        P_canPlaceOrders: 16
     };
 
     this.gadgets = {

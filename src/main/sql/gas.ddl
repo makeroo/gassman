@@ -406,3 +406,53 @@ CREATE TABLE templates (
   UNIQUE (name),
   PRIMARY KEY (id)
 );
+
+
+CREATE TABLE product_order (
+  id INT NOT NULL AUTO_INCREMENT,
+  csa_id INT NOT NULL,
+
+  state CHAR(1) NOT NULL DEFAULT 'D', -- Draft, Open, in deliverY, Archivied, Canceled
+  dscription VARCHAR(255),
+  notes TEXT,
+  producer_id INT, -- la persona e non il conto (lo deduco da csa e currency)
+  currency_id INT NOT NULL,
+  placements_closed DATETIME,
+
+  account_threshold DECIMAL(15,2),
+  profile_required CHAR(1) NOT NULL DEFAULT 'N', -- Y/N
+
+  FOREIGN KEY (csa_id) REFERENCES csa(id) ON DELETE CASCADE,
+  FOREIGN KEY (producer_id) REFERENCES person(id) ON DELETE SET NULL,
+  FOREIGN KEY (currency_id) REFERENCES currency(id) ON DELETE CASCADE,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE order_delivery_place (
+  id INT NOT NULL AUTO_INCREMENT,
+  order_id INT NOT NULL,
+  delivery_date_id INT,
+
+  FOREIGN KEY (order_id) REFERENCES product_order(id) ON DELETE CASCADE,
+  FOREIGN KEY (delivery_date_id) REFERENCES delivery_date(id) ON DELETE SET NULL,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE order_product (
+  id INT NOT NULL AUTO_INCREMENT,
+  order_id INT NOT NULL,
+  description VARCHAR(255),
+
+  FOREIGN KEY (order_id) REFERENCES product_order(id) ON DELETE CASCADE,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE order_product_quantity (
+  id INT NOT NULL AUTO_INCREMENT,
+  product_id INT NOT NULL,
+  description VARCHAR(255),
+  amount DECIMAL(15,2),
+
+  FOREIGN KEY (product_id) REFERENCES order_product(id) ON DELETE CASCADE,
+  PRIMARY KEY (id)
+);
