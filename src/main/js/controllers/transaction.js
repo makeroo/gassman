@@ -15,9 +15,9 @@ angular.module('GassmanApp.controllers.Transaction', [
          '$scope', '$transition$', '$location', '$timeout', 'gdata', 'accountAutocompletion',
 function ($scope,   $transition$,   $location,   $timeout,   gdata,   accountAutocompletion) {
 
-    function noLineEnteredIn (a) {
-        return (a.length == 0 || (a.length == 1 && !a[0].desc && !a[0].amount));
-    }
+    /*function noLineEnteredIn (a) {
+        return (a.length === 0 || (a.length === 1 && !a[0].desc && !a[0].amount));
+    }*/
 
     $scope.amountEquals = function (a, b) {
         return Math.abs(a - b) < 0.00005; // FIXME: .00005 dipende da currency
@@ -509,7 +509,7 @@ function ($scope,   $transition$,   $location,   $timeout,   gdata,   accountAut
                 kitties = r.data.kitty;
             }
 
-            if ($scope.trans.transId == 'new')
+            if ($scope.trans.transId === 'new')
                 return {
                     data: {
                         transId: 'new',
@@ -536,7 +536,7 @@ function ($scope,   $transition$,   $location,   $timeout,   gdata,   accountAut
     p.then(function (r) {
         firstTransResp = r;
 
-        if (kitties == null)
+        if (kitties === null)
             kitties = r.data.kitty;
 
         var x = [];
@@ -544,7 +544,7 @@ function ($scope,   $transition$,   $location,   $timeout,   gdata,   accountAut
             angular.forEach(pp, function(person_and_to_date) {
                 var p = person_and_to_date[0];
 
-                if (x.indexOf(p) == -1)
+                if (x.indexOf(p) === -1)
                     x.push(p);
             });
         });
