@@ -22,6 +22,7 @@ from .rss import RssFeedHandler
 from .people import PeopleProfilesHandler, PeopleNamesHandler
 from .person import PersonSaveHandler, PersonCheckEmailHandler, PersonSetFeeHandler
 from .event import EventSaveHandler, EventRemoveHandler
+from .orders import OrdersOrderHandler
 from .admin import AdminPeopleIndexHandler, AdminPeopleProfilesHandler, AdminPeopleRemoveHandler,\
     AdminPeopleJoinHandler, AdminPeopleAddHandler, AdminPeopleCreateAccountHandler, AdminPeopleCreateHandler,\
     PermissionGrantHandler, PermissionRevokeHandler
@@ -69,6 +70,7 @@ class GassmanWebApp (tornado.web.Application):
             (r'^/gm/person/(\d+)/set_fee', PersonSetFeeHandler),
             (r'^/gm/event/(\d+)/save$', EventSaveHandler),
             (r'^/gm/event/(\d+)/remove$', EventRemoveHandler),
+            (r'^/gm/order$', OrdersOrderHandler),
             (r'^/gm/admin/people/index/(\d+)/(\d+)$', AdminPeopleIndexHandler),
             (r'^/gm/admin/people/profiles$', AdminPeopleProfilesHandler),
             (r'^/gm/admin/people/remove$', AdminPeopleRemoveHandler),

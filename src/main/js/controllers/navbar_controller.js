@@ -29,7 +29,7 @@ function ($scope,   gdata,   $q) {
 */
     var otypes = [
         { f:'root.orders.list', fparams:{ type:'open' }, l:'Ordini in corso' },
-        { p:gdata.permissions.P_canPlaceOrders, f:'root.orders.detail', fparams:{ id:'new' }, l:'Apri ordine' },
+        { p:gdata.permissions.P_canPlaceOrders, f:'root.orders.detail', fparams:{ orderId:'new' }, l:'Apri ordine' },
         { p:gdata.permissions.P_canPlaceOrders, f:'root.orders.list', fparams:{ type:'draft' }, l:'Ordini da aprire' },
         { p:gdata.permissions.P_canPlaceOrders, f:'root.orders.list', fparams:{ type:'closed' }, l:'Ordini in consegna' },
         { p:gdata.permissions.P_canPlaceOrders, f:'root.orders.list', fparams:{ type:'archivied' }, l:'Archivio ordini'}

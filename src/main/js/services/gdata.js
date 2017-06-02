@@ -54,6 +54,14 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         debt: 'exclamation-sign'
     };
 
+    this.order_states = {
+        draft: 'D',
+        open: 'O',
+        closed: 'C',
+        canceled: 'T',
+        completed: 'A'
+    };
+
     this.E_class = "<class 'Exception'>";
 
     this.error_codes = {
@@ -573,5 +581,11 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
             perm_id: perm_id
 		});
     };
+
+    this.order = function (orderId) {
+        return $http.post('/gm/order?_xsrf=' + $cookies.get('_xsrf'), {
+            order_id: orderId
+        });
+    }
 }])
 ;

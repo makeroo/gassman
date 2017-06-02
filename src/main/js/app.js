@@ -231,7 +231,7 @@ function ($stateProvider,   $urlRouterProvider) {
         controller: 'OrdersList'
     })
     .state('root.orders.detail', {
-        url: '/:id/detail',
+        url: '/:orderId/detail',
         templateUrl: 'template/orders_detail.html',
         controller: 'OrdersDetail'
     })

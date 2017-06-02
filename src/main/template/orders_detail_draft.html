@@ -1,1 +1,116 @@
-<form class="form-horizontal"
+<form class="form-horizontal" name="orderDraft">
+
+    <div class="form-group">
+        <label for="description" class="col-sm-2 control-label">Descrizione</label>
+        <div class="col-sm-10">
+            <input type="text" class="form-control" id="description" placeholder="Nome produttore e/o prodotti e/o tipo, eg. ordine lampo" ng-model="order.description">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="notes" class="col-sm-2 control-label">Note</label>
+        <div class="col-sm-10">
+            <textarea class="form-control" id="notes" ng-model="order.notes"></textarea>
+        </div>
+    </div>
+
+    <!-- produttore -->
+
+    <div class="form-group">
+        <label for="producer" class="col-sm-2 control-label">Produttore</label>
+        <div class="col-sm-10">
+            <ui-select theme="bootstrap"
+                       id="producer"
+                       name="producer"
+                       ng-model="order.producer_account"
+                       gm-required-account
+                       >
+                <ui-select-match placeholder="Produttore">{{ $select.selected.name }}</ui-select-match>
+                <ui-select-choices repeat="accountInfo.acc as accountInfo in autocompletionData | filter: {name: $select.search} track by accountInfo.acc">
+                    <div ng-bind-html="accountInfo.name | highlight: $select.search"></div>
+                </ui-select-choices>
+            </ui-select>
+            <p class="text-danger" ng-show="orderDraft.producer.$error.accountDefined">Indicare il produttore</p>
+        </div>
+    </div>
+
+    <!-- consegna -->
+
+    <div ng-if="order.delivery">
+        TODO
+    </div>
+    <div ng-if="!order.delivery">
+        <div class="form-group">
+            <label for="delivery-select" class="col-sm-2 control-label">Consegna</label>
+            <div class="col-sm-10">
+                <button type="button" id="delivery-select" class="btn btn-sm btn-default" ng-click="selectDelivery()">Seleziona una data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- tabella prodotti -->
+
+    <h4>Prodotti</h4>
+    <div class="container">
+
+        <div ng-repeat="p in order.products" class="row product-row">
+            <div class="col-sm-1">
+                {{ $index + 1}}
+            </div>
+            <div class="col-sm-4">
+                <textarea type="text" ng-model="p.description" placeholder="Descrizione" class="product-desc"></textarea>
+            </div>
+            <div class="col-sm-7">
+                <div class="row">
+                    <h5>Quantità</h5>
+                </div>
+                <div ng-repeat="q in p.quantities" class="row quantity-row">
+                    <div class="col-sm-1">{{ $index + 1 }}</div>
+                    <div class="col-sm-7"><input type="text" ng-model="q.description" placeholder="Descrizione" class="quantity-desc"> </div>
+                    <div class="col-sm-4">
+                        <input type="text" ng-model="q.description" placeholder="Importo" class="quantity-amount">
+                        {{order.symbol}}
+                    </div>
+                </div>
+                <div class="row">
+                    <button class="btn btn-default" ng-click="addQuantity(p)">Aggiungi quantità</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <button class="btn btn-default" ng-click="addProduct()">Aggiungi prodotto</button>
+        </div>
+    </div>
+
+    <h4>Controlli</h4>
+
+    <!-- soglia di conto -->
+    <div class="form-group">
+        <label for="account-threshold" class="col-sm-2 control-label">Limite di cassa</label>
+        <div class="col-sm-10">
+            <button type="button" id="account-threshold" class="btn btn-sm btn-default" ng-click="selectDelivery()">Seleziona una data</button>
+        </div>
+    </div>
+    <!-- profilo completo-->
+    <div class="form-group">
+        <label for="profile-with-contacts" class="col-sm-2 control-label">Profilo completo?</label>
+        <div class="col-sm-1">
+            <div class="material-switch pull-right">
+                <input id="profile-with-contacts" name="someSwitchOption001" type="checkbox"/>
+                <label for="profile-with-contacts" class="label-default"></label>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <button class="btn btn-danger" ng-if="order.orderId != 'new'" ng-click="reloadForm()">Annulla</button>
+            <button class="btn btn-default" ng-click="saveDraft()">Salva bozza</button>
+            <button class="btn btn-primary" ng-disabled="!deposit.$valid || !totalInvoice || !trans.clients[0].account" ng-click="saveCashExchange()">Apri ordine</button>
+            <button class="btn btn-danger" ng-disabled="confirmDelete" ng-show="trans.transId != 'new'" ng-click="confirmDeleteTransaction()">Elimina</button>
+            <button class="btn btn-danger" ng-if="confirmDelete" ng-click="deleteTransaction()">Conferma eliminazione</button>
+        </div>
+    </div>
+
+</form>

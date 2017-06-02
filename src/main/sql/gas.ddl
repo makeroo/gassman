@@ -413,7 +413,7 @@ CREATE TABLE product_order (
   csa_id INT NOT NULL,
 
   state CHAR(1) NOT NULL DEFAULT 'D', -- Draft, Open, in deliverY, Archivied, Canceled
-  dscription VARCHAR(255),
+  description VARCHAR(255),
   notes TEXT,
   producer_id INT, -- la persona e non il conto (lo deduco da csa e currency)
   currency_id INT NOT NULL,
@@ -441,6 +441,7 @@ CREATE TABLE order_delivery_place (
 CREATE TABLE order_product (
   id INT NOT NULL AUTO_INCREMENT,
   order_id INT NOT NULL,
+  position INT NOT NULL DEFAULT 0,
   description VARCHAR(255),
 
   FOREIGN KEY (order_id) REFERENCES product_order(id) ON DELETE CASCADE,

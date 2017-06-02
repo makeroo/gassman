@@ -1,0 +1,25 @@
+<div ng-if="orderLoadError == null && order.state == 'D'">
+<ng-include src="'template/orders_detail_draft.html'"></ng-include>
+</div>
+
+<div ng-if="orderLoadError == null && order.state == 'O'">
+<ng-include src="'template/orders_detail_open.html'"></ng-include>
+</div>
+
+<div ng-if="orderLoadError == null && order.state == 'C'">
+<ng-include src="'template/orders_detail_closed.html'"></ng-include>
+</div>
+
+<div ng-if="orderLoadError == null && order.state == 'T'">
+<ng-include src="'template/orders_detail_canceled.html'"></ng-include>
+</div>
+
+<div ng-if="orderLoadError == null && order.state == 'A'">
+<ng-include src="'template/orders_detail_archivied.html'"></ng-include>
+</div>
+
+<div ng-if="orderLoadError">
+  <div class="row">
+    <p class="alert alert-danger">Caricamento fallito, dati non disponibili: <span ng-repeat="msg in orderLoadError">{{ msg }}</span>.</p>
+  </div>
+</div>

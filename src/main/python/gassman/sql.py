@@ -23,6 +23,7 @@ class SqlFactory:
     P_csaEditor = 13
     P_canCloseAccounts = 14
     P_canManageShifts = 15
+    P_canPlaceOrders = 16
 
     Tt_Deposit = 'd'          # deprecated,       READ ONLY
     Tt_Error = 'e'
@@ -50,6 +51,12 @@ class SqlFactory:
     Ck_Nickname = 'N'
     Ck_GooglePlusProfile = '+'
     Ck_Photo = 'P'
+
+    Os_draft = 'D'
+    Os_open = 'O'
+    Os_closed = 'C'
+    Os_canceled = 'T'
+    Os_completed = 'A'
 
     Ckk = set([Ck_Telephone,
                Ck_Mobile,
@@ -1430,6 +1437,43 @@ LEFT JOIN contact_address ca ON ca.id=pc.address_id
         return 'INSERT INTO account_person (person_id, account_id, from_date) VALUES (%s, %s, %s)', [
             pid, acc, from_date
         ]
+
+    @staticmethod
+    def order_fetch(order_id):
+        return '''
+SELECT o.id, o.csa_id, o.state, o.description, o.notes, o.account_threshold, o.profile_required,
+       o.producer_id,
+       o.currency_id, cc.symbol
+  FROM product_order o
+  JOIN currency cc ON cc.id = o.currency_id
+ WHERE o.id = %s
+''', [order_id]
+
+    @staticmethod
+    def order_delivery(order_id):
+        return '''
+   SELECT p.id, p.delivery_date_id, d.from_time, d.to_time, d.notes
+     FROM order_delivery_place p
+LEFT JOIN delivery_date d ON p.delivery_date_id = d.id
+    WHERE order_id=%s''', [order_id]
+
+    @staticmethod
+    def order_products(order_id):
+        return '''
+  SELECT id, description
+    FROM order_product
+   WHERE order_id = %s
+ORDER BY position''', [order_id]
+
+    @staticmethod
+    def order_product_quantities(order_id):
+        return '''
+  SELECT p.id AS "product", q.id, q.description, q.amount
+    FROM order_product_quantity q
+    JOIN order_product p ON p.id = q.product_id
+    JOIN product_order o ON o.id = p.order_id
+   WHERE o.id = %s
+ORDER BY p.position, q.position''', [order_id]
 
     @staticmethod
     def reports(profile):
