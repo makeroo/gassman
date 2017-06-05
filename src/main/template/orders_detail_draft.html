@@ -55,7 +55,8 @@
 
         <div ng-repeat="p in order.products" class="row product-row">
             <div class="col-sm-1">
-                {{ $index + 1}}
+                <!--{{ $index + 1}}-->
+                <span class="glyphicon glyphicon-trash" ng-click="removeProduct($index)"></span>
             </div>
             <div class="col-sm-4">
                 <textarea type="text" ng-model="p.description" placeholder="Descrizione" class="product-desc"></textarea>
@@ -65,10 +66,15 @@
                     <h5>Quantità</h5>
                 </div>
                 <div ng-repeat="q in p.quantities" class="row quantity-row">
-                    <div class="col-sm-1">{{ $index + 1 }}</div>
-                    <div class="col-sm-7"><input type="text" ng-model="q.description" placeholder="Descrizione" class="quantity-desc"> </div>
+                    <div class="col-sm-1">
+                        <!--{{ $index + 1 }}-->
+                        <span class="glyphicon glyphicon-trash" ng-click="removeQuantity(p, $index)"></span>
+                    </div>
+                    <div class="col-sm-7">
+                        <input type="text" ng-model="q.description" placeholder="Descrizione" class="quantity-desc">
+                    </div>
                     <div class="col-sm-4">
-                        <input type="text" ng-model="q.description" placeholder="Importo" class="quantity-amount">
+                        <input type="text" ng-model="q.amount" placeholder="Importo" class="quantity-amount">
                         {{order.symbol}}
                     </div>
                 </div>
@@ -88,8 +94,11 @@
     <!-- soglia di conto -->
     <div class="form-group">
         <label for="account-threshold" class="col-sm-2 control-label">Limite di cassa</label>
-        <div class="col-sm-10">
-            <button type="button" id="account-threshold" class="btn btn-sm btn-default" ng-click="selectDelivery()">Seleziona una data</button>
+        <div class="col-sm-1">
+            <div class="material-switch pull-right">
+                <input id="account-threshold" name="someSwitchOption001" type="checkbox"/>
+                <label for="account-threshold" class="label-default"></label>
+            </div>
         </div>
     </div>
     <!-- profilo completo-->
@@ -97,7 +106,7 @@
         <label for="profile-with-contacts" class="col-sm-2 control-label">Profilo completo?</label>
         <div class="col-sm-1">
             <div class="material-switch pull-right">
-                <input id="profile-with-contacts" name="someSwitchOption001" type="checkbox"/>
+                <input id="profile-with-contacts" name="someSwitchOption002" type="checkbox"/>
                 <label for="profile-with-contacts" class="label-default"></label>
             </div>
         </div>

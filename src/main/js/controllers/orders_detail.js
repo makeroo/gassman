@@ -19,12 +19,20 @@ function ($scope,   $transition$,   gdata,   accountAutocompletion) {
         });
     };
 
+    $scope.removeProduct = function (idx) {
+        $scope.order.products.splice(idx, 1);
+    };
+
     $scope.addQuantity = function (p) {
         p.quantities.push({
             id: null,
             description: '',
             amount: 0
         });
+    };
+
+    $scope.removeQuantity = function (p, idx) {
+        p.quantities.splice(idx, 1);
     };
 
     gdata.accountsNames($scope.gassman.selectedCsa).then(function (r) {
