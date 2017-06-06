@@ -19,7 +19,7 @@ class OrdersOrderHandler (JsonBaseHandler):
         q, a = self.application.conn.sql_factory.order_fetch(order_id)
         cur.execute(q, a)
 
-        r = self.application.conn.fetch_object(cur)
+        r = self.application.conn.sql_factory.fetch_object(cur)
 
         if r is None:
             return None
@@ -56,6 +56,76 @@ class OrdersOrderHandler (JsonBaseHandler):
 
             for q in self.application.conn.sql_factory.iter_objects(cur):
                 p = products_index[q['product']]
-                p.setdefault('quantities', []).add(q)
+                p.setdefault('quantities', []).append(q)
 
         return r
+
+
+class OrdersSaveDraft (JsonBaseHandler):
+    def do(self, cur):
+        order_draft = self.payload
+        uid = self.current_user
+
+        if uid is None:
+            raise GDataException(error_codes.E_not_authenticated, 401)
+
+        try:
+            order_id = order_draft['id']
+            csa_id = order_draft['csa_id']
+
+            if order_draft['profile_required'] not in ('Y', 'N'):
+                raise GDataException(error_codes.E_illegal_payload)
+
+            for p in order_draft['products']:
+                for q in p['quantities']:
+                    amount = q['amount']
+                    if amount is not None and type(amount) != str:
+                        raise GDataException(error_codes.E_illegal_amount)
+
+                    if float(amount) < 0.0:
+                        raise GDataException(error_codes.E_illegal_amount)
+        except KeyError:
+            raise GDataException(error_codes.E_illegal_payload)
+        except ValueError:
+            raise GDataException(error_codes.E_illegal_amount)
+
+        if not self.application.has_permission_by_csa(
+                    cur, self.application.conn.sql_factory.P_canPlaceOrders, uid, csa_id
+                ):
+            raise GDataException(error_codes.E_permission_denied, 403)
+
+        if order_id is None:
+            # nuovo ordine
+            q, a = self.application.conn.sql_factory.order_save_draft(order_draft)
+            cur.execute(q, a)
+            order_id = cur.lastrowid
+        else:
+            # aggiornamento ordine
+            q, a = self.application.conn.sql_factory.order_update_draft(order_draft)
+            cur.execute(q, a)
+            if cur.rowcount != 1:
+                raise GDataException(error_codes.E_illegal_order)
+
+            q, a = self.application.conn.sql_factory.order_cleanup_products(order_id)
+            cur.execute(q, a)
+
+        try:
+            products = order_draft['products']
+            for p, idx in zip(products, range(len(products))):
+                quantities = p['quantities']
+
+                q, a = self.application.conn.sql_factory.order_insert_product(
+                    order_id, idx, p
+                )
+                cur.execute(q, a)
+                product_id = cur.lastrowid
+
+                for q, qidx in zip(quantities, range(len(quantities))):
+                    q, a = self.application.conn.sql_factory.order_insert_product_quantity(
+                        product_id, idx, q
+                    )
+                    cur.execute(q, a)
+        except (KeyError, TypeError):
+            raise GDataException(error_codes.E_illegal_payload)
+
+        return [order_id]

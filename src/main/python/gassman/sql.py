@@ -52,21 +52,30 @@ class SqlFactory:
     Ck_GooglePlusProfile = '+'
     Ck_Photo = 'P'
 
+    Ckk = {
+        Ck_Telephone,
+        Ck_Mobile,
+        Ck_Email,
+        Ck_Fax,
+        Ck_Id,
+        Ck_Nickname,
+        Ck_GooglePlusProfile,
+        Ck_Photo,
+    }
+
     Os_draft = 'D'
     Os_open = 'O'
     Os_closed = 'C'
     Os_canceled = 'T'
     Os_completed = 'A'
 
-    Ckk = set([Ck_Telephone,
-               Ck_Mobile,
-               Ck_Email,
-               Ck_Fax,
-               Ck_Id,
-               Ck_Nickname,
-               Ck_GooglePlusProfile,
-               Ck_Photo,
-               ])
+    Oss = {
+        Os_draft,
+        Os_open,
+        Os_closed,
+        Os_canceled,
+        Os_closed
+    }
 
     transactionPermissions = {
         # Tt_Deposit: READ ONLY P_canEnterDeposit,
@@ -80,7 +89,7 @@ class SqlFactory:
 
     editableTransactionPermissions = set(transactionPermissions.values())
 
-    deletableTransactions = set([
+    deletableTransactions = {
         Tt_Generic,
         Tt_Deposit,
         Tt_Payment,
@@ -88,9 +97,9 @@ class SqlFactory:
         Tt_Withdrawal,
         Tt_MembershipFee,
         Tt_PaymentExpenses,
-        ])
+    }
 
-    editableTransactions = set([
+    editableTransactions = {
         # Tt_Generic,
         # Tt_Deposit,
         Tt_Payment,
@@ -100,7 +109,7 @@ class SqlFactory:
         Tt_MembershipFee,
         # Tt_PaymentExpenses,
         # Tt_Unfinished,
-        ])
+    }
 
     Ck_Telephone = 'T'
     Ck_Mobile = 'M'
@@ -1474,6 +1483,161 @@ ORDER BY position''', [order_id]
     JOIN product_order o ON o.id = p.order_id
    WHERE o.id = %s
 ORDER BY p.position, q.position''', [order_id]
+
+    def order_save_draft(self, order_draft):
+        csa_id = order_draft['csa_id']
+
+        producer_id = order_draft['producer_id']
+        currency_id = order_draft['currency_id']
+
+        q = '''
+INSERT INTO product_order (csa_id, state, description, notes, placements_closed, account_threshold, profile_required,
+                           producer_id, currency_id)
+     SELECT a.csa_id, %s, %s, %s, NULL, %s, %s
+'''
+        a = [
+            self.Os_draft,
+            order_draft['description'],
+            order_draft['notes'],
+            order_draft['account_threshold'] if order_draft['apply_account_threshold'] else None,
+            order_draft['profile_required'],
+        ]
+
+        if producer_id is None:
+            q += ', NULL'
+        else:
+            q += ', p.id'
+
+        if currency_id is None:
+            q += ', NULL'
+        else:
+            q += ', a.currency_id'
+
+        q += ' FROM account a'
+
+        if producer_id is not None:
+            q += ''', person p
+ JOIN account_person ap ON p.id = ap.person_id
+ JOIN account apa ON ap.account_id = apa.id AND ap.to_date IS NULL'''
+
+        q += ' WHERE a.csa_id = %s AND a.currency_id = %s AND a.gc_type = %s'
+        a.append(csa_id)
+        a.append(currency_id)
+        a.append(self.At_Kitty)
+
+        if producer_id is not None:
+            q += ' AND p.id = %s AND apa.csa_id = %s'
+            a.append(producer_id)
+            a.append(csa_id)
+
+        return q, a
+
+    def order_update_draft(self, order_draft):
+        producer_id = order_draft['producer_id']
+        currency_id = order_draft['currency_id']
+
+        if currency_id is None and producer_id is None:
+            q = '''
+UPDATE product_order o
+   SET o.description=%s, o.notes=%s, o.account_threshold=%s, o.profile_required=%s, o.currency_id=%s, o.producer_id=%s
+ WHERE o.id=%s AND o.state=%s
+            '''
+            a = [
+                order_draft['description'],
+                order_draft['notes'],
+                order_draft['account_threshold'] if order_draft['apply_account_threshold'] else None,
+                order_draft['profile_required'],
+                None,
+                None,
+                order_draft['id'],
+                self.Os_draft,
+            ]
+        elif currency_id is not None:
+            q = '''
+UPDATE product_order o
+  JOIN account a ON a.csa_id=o.csa_id
+   SET o.description=%s, o.notes=%s, o.account_threshold=%s, o.profile_required=%s,
+       o.currency_id=a.currency_id, o.producer_id=%s
+ WHERE o.id=%s AND o.state=%s AND a.currency_id=%s AND a.gc_type=%s'''
+            a = [
+                order_draft['description'],
+                order_draft['notes'],
+                order_draft['account_threshold'] if order_draft['apply_account_threshold'] else None,
+                order_draft['profile_required'],
+                None,
+                order_draft['id'],
+                self.Os_draft,
+                currency_id,
+                self.At_Kitty,
+            ]
+        elif producer_id is not None:
+            q = '''
+UPDATE product_order o
+  JOIN account a ON a.csa_id=o.csa_id
+  JOIN account_person ap ON ap.account_id=a.id
+  JOIN person p ON p.id=ap.person_id
+   SET o.description=%s, o.notes=%s, o.account_threshold=%s, o.profile_required=%s,
+       o.currency_id=%s, o.producer_id=p.id
+ WHERE o.id=%s AND o.state=%s AND ap.to_date IS NULL AND p.id=%s'''
+            a = [
+                order_draft['description'],
+                order_draft['notes'],
+                order_draft['account_threshold'] if order_draft['apply_account_threshold'] else None,
+                order_draft['profile_required'],
+                None,
+                order_draft['id'],
+                self.Os_draft,
+                producer_id,
+            ]
+        else:
+            q = '''
+UPDATE product_order o
+  JOIN account a ON a.csa_id=o.csa_id
+  JOIN account_person ap ON ap.account_id=a.id
+  JOIN person p ON p.id=ap.person_id
+   SET o.description=%s, o.notes=%s, o.account_threshold=%s, o.profile_required=%s,
+       o.currency_id=a.currency_id, o.producer_id=p.id
+ WHERE o.id=%s AND o.state=%s AND ap.to_date IS NULL AND p.id=%s AND a.currency_id=%s'''
+            a = [
+                order_draft['description'],
+                order_draft['notes'],
+                order_draft['account_threshold'] if order_draft['apply_account_threshold'] else None,
+                order_draft['profile_required'],
+                None,
+                order_draft['id'],
+                self.Os_draft,
+                producer_id,
+                currency_id,
+            ]
+
+        return q, a
+
+    @staticmethod
+    def order_cleanup_products(order_id):
+        return '''
+DELETE p, q
+  FROM order_product p
+  JOIN order_product_quantity q ON p.id=q.product_id
+ WHERE p.order_id=%s
+''', [order_id]
+
+    @staticmethod
+    def order_insert_product(order_id, position, product):
+        return 'INSERT INTO order_product (order_id, position, description) VALUES (%s, %s, %s)', [
+            order_id,
+            position,
+            product['description']
+        ]
+
+    @staticmethod
+    def order_insert_product_quantity(product_id, position, quantity):
+        return '''
+INSERT INTO order_product_quantity (product_id, position, description, amount) VALUES (%s, %s, %s, %s)''', [
+            product_id,
+            position,
+            quantity['description'],
+            quantity['amount'],
+        ]
 
     @staticmethod
     def reports(profile):

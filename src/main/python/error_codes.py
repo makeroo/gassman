@@ -29,3 +29,5 @@ E_illegal_kitty = 'illegal kitty'
 E_cannot_remove_person_with_accounts = 'cannot remove person with accounts'
 E_account_currency_mismatch = 'account currency mismatch'
 E_transaction_date_outside_ownership_range = 'transaction date outside ownership range'
+E_illegal_order = 'illegal order'  # tryed to update a non-existent order or state mismatch
+

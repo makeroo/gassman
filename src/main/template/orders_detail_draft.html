@@ -96,9 +96,15 @@
         <label for="account-threshold" class="col-sm-2 control-label">Limite di cassa</label>
         <div class="col-sm-1">
             <div class="material-switch pull-right">
-                <input id="account-threshold" name="someSwitchOption001" type="checkbox"/>
+                <input id="account-threshold" ng-model="order.apply_account_threshold" type="checkbox"/>
                 <label for="account-threshold" class="label-default"></label>
             </div>
+        </div>
+        <div class="col-sm-3" ng-if="order.apply_account_threshold">
+            <input type="text" ng-model="order.account_threshold" placeholder="Soglia"> {{order.symbol}}
+        </div>
+        <div class="col-sm-4" ng-if="order.apply_account_threshold">
+            Gli ordini saranno effettuabili solo da chi ha un saldo di cassa superiore alla soglia indicata.
         </div>
     </div>
     <!-- profilo completo-->
@@ -106,9 +112,12 @@
         <label for="profile-with-contacts" class="col-sm-2 control-label">Profilo completo?</label>
         <div class="col-sm-1">
             <div class="material-switch pull-right">
-                <input id="profile-with-contacts" name="someSwitchOption002" type="checkbox"/>
+                <input id="profile-with-contacts" ng-model="order.profile_required" ng-true-value="'Y'" ng-false-value="'N'" type="checkbox"/>
                 <label for="profile-with-contacts" class="label-default"></label>
             </div>
+        </div>
+        <div class="col-sm-4" ng-if="order.profile_required == 'Y'">
+            Gli ordini saranno effettuabili solo da chi ha inserito una email e un numero telefonico.
         </div>
     </div>
 

@@ -586,6 +586,10 @@ function ($http,   $q,   $cookies,   $rootScope,   $timeout) {
         return $http.post('/gm/order?_xsrf=' + $cookies.get('_xsrf'), {
             order_id: orderId
         });
-    }
+    };
+
+    this.saveOrderDraft = function (orderDraft) {
+        return $http.post('/gm/order_save_draft?_xsrf=' + $cookies.get('_xsrf'), orderDraft);
+    };
 }])
 ;

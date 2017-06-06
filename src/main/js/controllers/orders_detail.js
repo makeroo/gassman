@@ -27,12 +27,29 @@ function ($scope,   $transition$,   gdata,   accountAutocompletion) {
         p.quantities.push({
             id: null,
             description: '',
-            amount: 0
+            amount: '0'
         });
     };
 
     $scope.removeQuantity = function (p, idx) {
         p.quantities.splice(idx, 1);
+    };
+
+    $scope.saveDraft = function () {
+        $scope.saving = true;
+
+        gdata.saveOrderDraft($scope.order).then(function (resp) {
+            if ($scope.order.id == null) {
+                $scope.order.id = resp.data[0];
+                // TODO: si cambia url?
+            }
+        }).then(undefined, function (error) {
+            $scope.saveError = error.data;
+        }).finally(
+            function () {
+                $scope.saving = false;
+            }
+        );
     };
 
     gdata.accountsNames($scope.gassman.selectedCsa).then(function (r) {
@@ -71,6 +88,7 @@ function ($scope,   $transition$,   gdata,   accountAutocompletion) {
             description: '',
             notes: '',
             account_threshold: null,
+            apply_account_threshold: false,
             profile_required: 'N',
             producer_id: null,
             currency_id: null,
